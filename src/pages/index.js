@@ -94,12 +94,14 @@ export default function LandingPage({ initialOpenings }) {
             Welcome to the <br></br>Pan-African Agency Network (PAAN)
           </h1>
           <p className="text-[#231812] mb-4 text-base">
-            We are an alliance of agencies shaping the future of communication,
-            marketing, and tech across Africa.
+            We are an alliance of agencies shaping the futureCommunication,
+            marketing, PR, Tech, Research, Digital, and creative industries
+            across Africa.
           </p>
           <hr className="h-px my-8 bg-[#F05D23] border-0 dark:bg-gray-700" />
           <p className="text-[#231812] mb-8 text-base">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
+            Please fill out the below expression of interest(EOI) to activate
+            membership.
           </p>
           <div className="mb-6">
             <label
@@ -115,7 +117,7 @@ export default function LandingPage({ initialOpenings }) {
               className="w-full sm:w-3/4 mx-auto p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f05d23] focus:border-[#f05d23] transition-all duration-200 bg-white text-[#231812]"
             >
               <option value="" disabled>
-                Select an EOI
+                Select an EOI below
               </option>
               {openings.map((opening) => (
                 <option key={opening} value={opening}>

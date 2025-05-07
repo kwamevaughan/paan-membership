@@ -468,6 +468,7 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
               uploadProgress={uploadProgress}
               setUploadProgress={setUploadProgress}
               mode={mode}
+              handleNext={handleNext}
               {...fileUploadProps}
             />
           )}

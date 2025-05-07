@@ -498,7 +498,7 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
                 disabled={(step === 2 && !isPageComplete()) || isSubmitting}
                 className={`flex items-center justify-center px-4 py-2 bg-[#f05d23] text-white rounded-lg hover:bg-[#d94f1e] disabled:bg-gray-300 disabled:text-gray-600 transition-all duration-200 shadow-md`}
               >
-                {step === 3 ? (
+                {/* {step === 3 ? (
                   <>
                     Submit
                     <Icon icon="mdi:send" className="ml-2 w-5 h-5" />
@@ -508,7 +508,7 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
                     Next
                     <Icon icon="mdi:arrow-right" className="ml-2 w-5 h-5" />
                   </>
-                )}
+                )} */}
               </button>
             </div>
           )}

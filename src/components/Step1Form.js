@@ -145,7 +145,7 @@ export default function Step1Form({ formData, handleChange, mode }) {
                 id="agencyName"
                 value={formData.agencyName}
                 onChange={handleInputChange}
-                placeholder="e.g., Growthpad Consulting Agency"
+                placeholder="e.g., Company XYZ"
                 required
                 className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200 ${
                   mode === "dark"

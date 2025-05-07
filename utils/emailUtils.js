@@ -18,10 +18,7 @@ export async function sendStatusEmail({
     },
   });
 
-  // Use the provided subject, fallback to a default if not supplied
   const emailSubject = subject || "Application Status Update";
-
-  // Use the provided template (body) as-is, assuming it’s fully edited
   const html = template;
 
   await transporter.sendMail({
@@ -37,12 +34,18 @@ export async function sendStatusEmail({
 }
 
 export async function sendEmails({
+  agencyName,
+  yearEstablished,
+  headquartersLocation,
+  registeredOfficeAddress,
+  websiteUrl,
   primaryContactName,
+  primaryContactRole,
   primaryContactEmail,
   primaryContactPhone,
   primaryContactLinkedin,
-  agencyName,
   opening,
+  opening_id,
   companyRegistrationUrl,
   portfolioWorkUrl,
   agencyProfileUrl,
@@ -66,7 +69,6 @@ export async function sendEmails({
     },
   });
 
-  // Format submission date (e.g., "7th May 2025")
   const formatDate = (isoString) => {
     const date = new Date(isoString);
     const day = date.getDate();
@@ -99,7 +101,7 @@ export async function sendEmails({
     .replace("{{agencyName}}", agencyName)
     .replace("[Reference Number]", referenceNumber || "PAAN-UNKNOWN")
     .replace("[Submission Date]", formatDate(submittedAt))
-    .replace("[Selected Tier]", "[Selected Tier]"); // Placeholder for now
+    .replace("[Selected Tier]", "[Selected Tier]");
 
   await transporter.sendMail({
     from: `"Pan-African Agency Network (PAAN)" <${process.env.EMAIL_USER}>`,
@@ -140,7 +142,7 @@ export async function sendEmails({
     .replace(
       "{{taxRegistrationUrl}}",
       taxRegistrationUrl
-        ? `<a href="${companyRegistrationUrl}" style="color: #f05d23;">Download</a>`
+        ? `<a href="${taxRegistrationUrl}" style="color: #f05d23;">Download</a>`
         : "Not provided"
     )
     .replace(

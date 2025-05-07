@@ -29,7 +29,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Use the new fields from formData
     const {
       agencyName,
       yearEstablished,
@@ -53,10 +52,8 @@ export default async function handler(req, res) {
     const userAgent = req.headers["user-agent"] || "Unknown";
     let device = "Unknown";
 
-    // Log the raw User-Agent for debugging
     console.log("Raw User-Agent Header:", userAgent);
 
-    // Parse device information
     try {
       const parser = new UAParser(userAgent);
       const result = parser.getResult();
@@ -75,12 +72,10 @@ export default async function handler(req, res) {
       device = "Unknown";
     }
 
-    // Warn if no User-Agent is provided
     if (userAgent === "Unknown") {
       console.warn("No User-Agent header provided by client");
     }
 
-    // Fetch country from IP if Cloudflare header is "Unknown"
     if (country === "Unknown") {
       try {
         const ip =
@@ -104,6 +99,23 @@ export default async function handler(req, res) {
     const submittedAt = new Date().toISOString();
     const referenceNumber = generateReferenceNumber();
 
+    // Match opening to job_openings.title to get opening_id
+    let opening_id = null;
+    if (opening) {
+      const { data: jobOpening, error: jobError } = await supabaseServer
+        .from("job_openings")
+        .select("id")
+        .eq("title", opening)
+        .single();
+      if (jobError && jobError.code !== "PGRST116") {
+        console.error("Error fetching job opening:", jobError);
+      } else if (jobOpening) {
+        opening_id = jobOpening.id;
+      } else {
+        console.warn(`No job opening found for title: ${opening}`);
+      }
+    }
+
     console.log("Received data:", {
       agencyName,
       yearEstablished,
@@ -116,6 +128,7 @@ export default async function handler(req, res) {
       primaryContactPhone,
       primaryContactLinkedin,
       opening,
+      opening_id,
       answers,
       companyRegistration: companyRegistration ? "present" : "none",
       portfolioWork: portfolioWork ? "present" : "none",
@@ -127,7 +140,6 @@ export default async function handler(req, res) {
       referenceNumber,
     });
 
-    // Validate required fields
     if (
       !agencyName ||
       !yearEstablished ||
@@ -141,7 +153,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // Fetch questions from the database
     const { data: questions, error: questionsError } = await supabaseServer
       .from("interview_questions")
       .select("*")
@@ -154,7 +165,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // Upsert candidate data, including reference_number
     const { userId, error: candidateError } = await upsertCandidate({
       agencyName,
       yearEstablished,
@@ -168,6 +178,7 @@ export default async function handler(req, res) {
       primaryContactLinkedin,
       opening,
       reference_number: referenceNumber,
+      opening_id,
     });
 
     if (candidateError) {
@@ -177,7 +188,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // Upsert the response data
     const { error: responseError } = await upsertResponse({
       userId,
       answers,
@@ -200,7 +210,6 @@ export default async function handler(req, res) {
         .json({ error: responseError.message, details: responseError.details });
     }
 
-    // Trigger background processing
     const isLocal = process.env.NODE_ENV === "development";
     const baseUrl = isLocal
       ? process.env.BASE_URL || "http://localhost:3001"
@@ -228,6 +237,7 @@ export default async function handler(req, res) {
           primaryContactPhone,
           primaryContactLinkedin,
           opening,
+          opening_id,
           answers,
           companyRegistration,
           portfolioWork,

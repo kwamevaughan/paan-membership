@@ -19,11 +19,17 @@ export default async function handler(req, res) {
     const {
       userId,
       agencyName,
+      yearEstablished,
+      headquartersLocation,
+      registeredOfficeAddress,
+      websiteUrl,
       primaryContactName,
+      primaryContactRole,
       primaryContactEmail,
       primaryContactPhone,
       primaryContactLinkedin,
       opening,
+      opening_id,
       answers,
       companyRegistration,
       portfolioWork,
@@ -121,7 +127,6 @@ export default async function handler(req, res) {
       throw new Error("Failed to update response with Drive URLs");
     }
 
-    // Fetch templates from database
     const { data: templates, error: templateError } = await supabaseServer
       .from("email_templates")
       .select("name, subject, body")
@@ -148,11 +153,17 @@ export default async function handler(req, res) {
 
     await sendEmails({
       agencyName,
+      yearEstablished,
+      headquartersLocation,
+      registeredOfficeAddress,
+      websiteUrl,
       primaryContactName,
+      primaryContactRole,
       primaryContactEmail,
       primaryContactPhone,
       primaryContactLinkedin,
       opening,
+      opening_id,
       companyRegistrationUrl: companyRegistrationResult.url,
       portfolioWorkUrl: portfolioWorkResult.url,
       agencyProfileUrl: agencyProfileResult.url,

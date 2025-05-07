@@ -94,9 +94,9 @@ export default function LandingPage({ initialOpenings }) {
             Welcome to the <br></br>Pan-African Agency Network (PAAN)
           </h1>
           <p className="text-[#231812] mb-4 text-base">
-            We are an alliance of agencies shaping the futureCommunication,
-            marketing, PR, Tech, Research, Digital, and creative industries
-            across Africa.
+            We are an alliance of agencies shaping the future of Africa's
+            communication, marketing, PR, tech, research, digital, and creative
+            industries.
           </p>
           <hr className="h-px my-8 bg-[#F05D23] border-0 dark:bg-gray-700" />
           <p className="text-[#231812] mb-8 text-base">
@@ -108,7 +108,7 @@ export default function LandingPage({ initialOpenings }) {
               htmlFor="opening"
               className="block text-lg font-medium text-[#231812] mb-2"
             >
-              Current Opportunities <span className="text-red-500">*</span>
+              Current EOIs <span className="text-red-500">*</span>
             </label>
             <select
               id="opening"

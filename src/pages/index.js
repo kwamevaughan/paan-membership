@@ -141,7 +141,7 @@ export default function LandingPage({ initialOpenings }) {
             )}
           </div>
 
-          <Link href="/hr/login">
+          <Link href="/hr/login" className="hidden">
             <span className="flex items-center gap-2 font-bold p-4 z-10 transform transition-transform hover:translate-y-[-2px] sm:absolute sm:bottom-0 sm:right-0 sm:flex sm:mt-4 w-full sm:w-auto justify-center">
               Admin Login
               <Image

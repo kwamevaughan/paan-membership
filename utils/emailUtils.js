@@ -202,7 +202,8 @@ export async function sendEmails({
     const logoResponse = await fetch(
       "https://www.paan.africa/assets/images/logo.png"
     );
-    logoBuffer = await logoResponse.buffer();
+    const arrayBuffer = await logoResponse.arrayBuffer();
+    logoBuffer = Buffer.from(arrayBuffer);
   } catch (error) {
     console.error("Failed to fetch PAAN logo:", error.message);
     logoBuffer = null;
@@ -339,7 +340,8 @@ export async function sendEmails({
     )}`
   )
     .replace(/{{primaryContactName}}/g, primaryContactName || "Applicant")
-    .replace(/{{agencyName}}/g, agencyName || "Agency");
+    .replace(/{{agencyName}}/g, agencyName || "Agency")
+    .replace(/{{opening}}/g, opening || "N/A");
 
   // Replace placeholders in admin HTML
   const adminHtml = adminTemplate

@@ -262,7 +262,7 @@ export default function QuestionForm({
             <button
               type="button"
               onClick={onCancel}
-              className="text-[#f05d23] font-bold hover:text-gray-700 focus:outline-none p-2 transition-all duration-100 ease-in-out transform hover:scale-105"
+              className="text-[#f05d23] font-bold hover:text-gray-700 focus:outline-none p-2 transition-all duration-100 ease-in-out transform hover:scale-105 sticky top-0 z-[10000]"
               aria-label="Cancel"
             >
               <Icon icon="mdi:close" width={30} height={30} />

@@ -90,23 +90,79 @@ export async function sendEmails({
     return `${day}${suffix(day)} ${month} ${year}`;
   };
 
-  const formattedAnswers = answers.map((answer, idx) => {
+  // Parse answers
+  let parsedAnswers;
+  try {
+    parsedAnswers = typeof answers === "string" ? JSON.parse(answers) : answers;
+  } catch (error) {
+    console.error("Failed to parse answers:", error.message);
+    parsedAnswers = [];
+  }
+
+  // Find the membership tier question
+  let selectedTier = "Not specified";
+  try {
+    // Primary: Look for question with "tier" in text
+    let tierQuestion = questions.find((q) =>
+      q?.text?.toLowerCase().includes("tier")
+    );
+
+    // Fallback: Look for question with tier-related options
+    if (!tierQuestion) {
+      tierQuestion = questions.find((q) =>
+        q?.options?.some((opt) => opt?.toLowerCase().includes("tier"))
+      );
+    }
+
+    if (tierQuestion && tierQuestion.id) {
+      const answer = parsedAnswers[tierQuestion.id - 1];
+      if (Array.isArray(answer) && answer.length > 0) {
+        // Extract the first answer and clean it
+        selectedTier =
+          answer[0].replace(/ - Requirement:.*$/, "").trim() || "Not specified";
+      } else if (typeof answer === "string" && answer.trim()) {
+        selectedTier =
+          answer.replace(/ - Requirement:.*$/, "").trim() || "Not specified";
+      } else {
+        console.log(
+          `No answer provided for tier question (QID=${tierQuestion.id})`
+        );
+      }
+      // Temporary debug log
+      console.log(
+        `Tier question found: QID=${tierQuestion.id}, Text="${tierQuestion.text}", Answer=`,
+        answer
+      );
+    } else {
+      console.log("No tier question found in questions array");
+    }
+  } catch (error) {
+    console.error("Failed to extract selected tier:", error.message);
+  }
+
+  const formattedAnswers = parsedAnswers.map((answer, idx) => {
     const question = questions[idx]?.text || `Question ${idx + 1}`;
     const answerText = Array.isArray(answer) ? answer.join(", ") : answer;
     return { question, answer: answerText };
   });
 
+  // Replace placeholders in candidate subject
+  const processedCandidateSubject = candidateSubject
+    .replace(/{{fullName}}/g, primaryContactName || "Applicant")
+    .replace(/{{agencyName}}/g, agencyName || "Agency");
+
+  // Replace placeholders in candidate HTML
   const candidateHtml = candidateTemplate
-    .replace("{{fullName}}", primaryContactName)
-    .replace("{{agencyName}}", agencyName)
-    .replace("[Reference Number]", referenceNumber || "PAAN-UNKNOWN")
-    .replace("[Submission Date]", formatDate(submittedAt))
-    .replace("[Selected Tier]", "[Selected Tier]");
+    .replace(/{{fullName}}/g, primaryContactName || "Applicant")
+    .replace(/{{agencyName}}/g, agencyName || "Agency")
+    .replace(/\[Reference Number\]/g, referenceNumber || "PAAN-UNKNOWN")
+    .replace(/\[Submission Date\]/g, formatDate(submittedAt))
+    .replace(/\[Selected Tier\]/g, selectedTier);
 
   await transporter.sendMail({
     from: `"Pan-African Agency Network (PAAN)" <${process.env.EMAIL_USER}>`,
     to: primaryContactEmail,
-    subject: candidateSubject,
+    subject: processedCandidateSubject,
     html: candidateHtml,
   });
 

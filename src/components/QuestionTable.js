@@ -1,5 +1,4 @@
 import { Icon } from "@iconify/react";
-import toast from "react-hot-toast";
 import DraggableQuestion from "@/components/DraggableQuestion";
 import { stripHtmlTags } from "@/../utils/questionUtils";
 
@@ -27,49 +26,31 @@ export default function QuestionTable({
     return category ? category.name : "—";
   };
 
+
+  const isQuestionComplete = (question) => {
+    if (!question.text?.trim()) return false;
+    if (
+      !question.is_open_ended &&
+      (!Array.isArray(question.options) || !question.options.length)
+    ) {
+      return false;
+    }
+    return true;
+  };
+
   const handleMobileDelete = (question) => {
     const cleanText = stripHtmlTags(question.text);
-    toast.custom(
-      (t) => (
-        <div
-          className={`${
-            t.visible ? "animate-enter" : "animate-leave"
-          } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
-        >
-          <div className="flex-1 w-0 p-4">
-            <div className="flex items-start">
-              <div className="ml-3 flex-1">
-                <p className="text-xl font-medium text-gray-900">
-                  Delete Question?
-                </p>
-                <p className="mt-2 text-base text-gray-500">
-                  Are you sure you want to delete the question "{cleanText}"?
-                </p>
-              </div>
-            </div>
-          </div>
-          <div className="flex border-l border-gray-200">
-            <button
-              onClick={async () => {
-                toast.dismiss(t.id);
-                deleteQuestion(question.id, question.text);
-                toast.success("Question deleted successfully!", { icon: "🗑️" });
-              }}
-              className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-[#f05d23] hover:text-[#d94f1e] hover:bg-[#ffe0b3] transition-colors focus:outline-none"
-            >
-              Yes
-            </button>
-            <button
-              onClick={() => toast.dismiss(t.id)}
-              className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-gray-600 hover:text-gray-500 hover:bg-[#f3f4f6] transition-colors focus:outline-none"
-            >
-              No
-            </button>
-          </div>
-        </div>
-      ),
-      { duration: Infinity }
+    console.log(
+      `Delete Question? Are you sure you want to delete "${cleanText}"?`
     );
+    // Simulate confirmation (replace with UI if needed)
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${cleanText}"?`
+    );
+    if (confirmed) {
+      deleteQuestion(question.id, question.text);
+      console.log("Question deleted successfully!");
+    }
   };
 
   return (
@@ -170,6 +151,7 @@ export default function QuestionTable({
                 deleteQuestion={deleteQuestion}
                 categories={categories}
                 getCategoryName={getCategoryName}
+                isComplete={isQuestionComplete(question)}
               />
             ))}
           </tbody>
@@ -184,7 +166,7 @@ export default function QuestionTable({
                 mode === "dark"
                   ? "bg-gray-700 border-gray-600 text-gray-200"
                   : "bg-gray-50 border-gray-200 text-gray-800"
-              }`}
+              } ${!isQuestionComplete(question) ? "border-red-500" : ""}`}
             >
               <div className="flex items-center mb-2">
                 <Icon
@@ -203,12 +185,14 @@ export default function QuestionTable({
                 <span className="font-medium">Question:</span>
                 <div
                   className="prose max-w-none line-clamp-2 inline ml-1"
-                  dangerouslySetInnerHTML={{ __html: question.text }}
+                  dangerouslySetInnerHTML={{ __html: question.text || "—" }}
                 />
               </div>
               <div className="text-xs mb-1">
                 <span className="font-medium">Options:</span>{" "}
-                {question.options.join("; ")}
+                {Array.isArray(question.options)
+                  ? question.options.join("; ")
+                  : "—"}
               </div>
               <div className="text-xs mb-1">
                 <span className="font-medium">Category:</span>{" "}
@@ -216,14 +200,7 @@ export default function QuestionTable({
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    console.log(
-                      "Mobile Edit button clicked for question:",
-                      question
-                    );
-                    onEdit(question);
-                  }}
+                  onClick={() => onEdit(question)}
                   className="px-2 py-1 bg-[#f05d23] text-white rounded-lg hover:bg-[#d94f1e] transition duration-200 flex items-center gap-1 text-xs"
                 >
                   <Icon

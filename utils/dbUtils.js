@@ -59,6 +59,7 @@ export async function upsertCandidate({
             opening,
             reference_number,
             opening_id,
+            updated_at: new Date().toISOString(),
           })
           .eq("primaryContactEmail", primaryContactEmail)
           .select()
@@ -98,6 +99,7 @@ export async function upsertCandidate({
             opening,
             reference_number,
             opening_id,
+            updated_at: new Date().toISOString(),
           },
         ])
         .select()

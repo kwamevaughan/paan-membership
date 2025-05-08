@@ -122,22 +122,36 @@ export default function QuestionForm({
       text === "<p><br></p>" ||
       text === "<p> </p>";
 
-    if (isTextEmpty || (!isOpenEnded && optionsArray.length === 0)) {
-      toast.error("Please provide a question and required fields.");
+    // Validation
+    if (isTextEmpty) {
+      toast.error("Question text is required.");
       return;
     }
 
-    if (isOpenEnded && maxAnswers && isNaN(maxAnswers)) {
-      toast.error("Maximum answers must be a number.");
+    if (!isOpenEnded && optionsArray.length === 0) {
+      toast.error("Please provide at least one option for non-open-ended questions.");
       return;
     }
 
-    if (isOpenEnded && maxWords && isNaN(maxWords)) {
+    if (!category) {
+      toast.error("Please select a category.");
+      return;
+    }
+
+    if (isOpenEnded && maxAnswers) {
+      const maxAnswersNum = parseInt(maxAnswers);
+      if (isNaN(maxAnswersNum) || maxAnswersNum <= 0) {
+        toast.error("Maximum answers must be a positive number.");
+        return;
+      }
+    }
+
+    if (isOpenEnded && maxWords && isNaN(parseInt(maxWords))) {
       toast.error("Maximum words must be a number.");
       return;
     }
 
-    if (textInputMaxAnswers && isNaN(textInputMaxAnswers)) {
+    if (textInputMaxAnswers && isNaN(parseInt(textInputMaxAnswers))) {
       toast.error("Maximum text inputs must be a number.");
       return;
     }
@@ -149,8 +163,21 @@ export default function QuestionForm({
       !optionsArray.includes(textInputOption.option)
     ) {
       toast.error(
-        "Selected text input option must be one of the provided options."
+        "Selected text input option must be one of the provided options or 'Any'."
       );
+      return;
+    }
+
+    if (dependsOnQuestionId) {
+      const questionIds = questions.map((q) => q.id);
+      if (!questionIds.includes(parseInt(dependsOnQuestionId))) {
+        toast.error("Dependency question ID must reference an existing question.");
+        return;
+      }
+    }
+
+    if (answerStructure === "client_references" && !isOpenEnded) {
+      toast.error("Structured answers are only supported for open-ended questions.");
       return;
     }
 
@@ -197,11 +224,21 @@ export default function QuestionForm({
     };
 
     console.log("Submitting questionData:", questionData);
-    const success = question
-      ? await onSubmit(question.id, questionData)
-      : await onSubmit(questionData);
-
-    if (success) onCancel();
+    try {
+      const success = question
+        ? await onSubmit(question.id, questionData)
+        : await onSubmit(questionData);
+      if (success) {
+        toast.success(question ? "Question updated successfully!" : "Question added successfully!");
+        onCancel();
+      } else {
+        console.error("Failed to submit question:", questionData);
+        toast.error("Failed to save question. Please try again.");
+      }
+    } catch (error) {
+      console.error("Submission error:", error.message);
+      toast.error("An error occurred while saving the question.");
+    }
   };
 
   if (!isOpen) return null;

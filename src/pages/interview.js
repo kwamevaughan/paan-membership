@@ -39,7 +39,6 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
     handleChange,
     handleOptionToggle,
     fileToBase64,
-    initializeAnswers,
   } = useFormData();
 
   const { errors, validateForm } = useFormValidation();
@@ -63,50 +62,21 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
         opening: decodeURIComponent(opening),
       }));
     }
-    if (formData.answers.length === 0) {
-      initializeAnswers(initialQuestions.length);
-    }
-  }, [
-    router.query.opening,
-    formData.opening,
-    formData.answers.length,
-    initializeAnswers,
-  ]);
+  }, [router.query.opening, formData.opening, setFormData]);
 
   const handleNext = async () => {
-    console.log("handleNext called", {
-      step,
-      currentPage,
-      formDataAnswers: formData.answers,
-      timestamp: new Date().toISOString(),
-    });
-
     if (step === 1) {
       const validationErrors = validateForm(formData);
       if (Object.keys(validationErrors).length > 0) {
-        console.log("Step 1 validation failed", { errors: validationErrors });
         toast.error("Please fill out all required fields correctly.", {
           icon: "⚠️",
         });
         return;
       }
-
-      console.log("Step 1 validation passed, moving to Step 2");
       setStep(2);
       toast.success("Great! Let’s move to the questions.", { icon: "🎉" });
     } else if (step === 2) {
       const pageComplete = isPageComplete();
-      console.log("Step 2 validation check", {
-        isPageComplete: pageComplete,
-        currentQuestions: currentQuestions.map((q) => ({
-          id: q.id,
-          answers: formData.answers[q.id - 1] || [],
-        })),
-        currentPage,
-        totalPages,
-        timestamp: new Date().toISOString(),
-      });
-
       if (!pageComplete) {
         const missingOtherInput = currentQuestions.find((q) => {
           const answers = formData.answers[q.id - 1] || [];
@@ -117,37 +87,25 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
           );
         });
         if (missingOtherInput) {
-          console.log("Step 2 validation failed: Missing 'Other' input", {
-            questionId: missingOtherInput.id,
-            answers: formData.answers[missingOtherInput.id - 1],
-          });
           toast.error("Please provide input for all 'Other' selections.", {
             icon: "⚠️",
           });
         } else {
-          console.log("Step 2 validation failed: Incomplete questions");
           toast.error("Please answer all questions on this page.", {
             icon: "⚠️",
           });
         }
         return;
       }
-
       if (currentPage < totalPages - 1) {
-        console.log("Advancing to next page via handleNext", {
-          currentPage,
-          totalPages,
-        });
         handleNextPage();
       } else {
-        console.log("All pages complete, moving to Step 3");
         setStep(3);
         toast.success("All questions completed! Upload your documents next.", {
           icon: "📝",
         });
       }
     } else if (step === 3) {
-      console.log("Step 3: Starting submission");
       setIsSubmitting(true);
       const maxFileSize = 5 * 1024 * 1024;
 
@@ -157,10 +115,7 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
         !formData.agencyProfile ||
         !formData.taxRegistration
       ) {
-        console.log("Step 3 validation failed: Missing required fields");
-        toast.error("Please provide all required documents.", {
-          icon: "⚠️",
-        });
+        toast.error("Please provide all required documents.", { icon: "⚠️" });
         setIsSubmitting(false);
         return;
       }
@@ -171,7 +126,6 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
         formData.agencyProfile &&
         formData.taxRegistration > maxFileSize
       ) {
-        console.log("Step 3 validation failed: File size exceeds 5MB");
         toast.error("File size exceeds 5MB limit.", { icon: "⚠️" });
         setIsSubmitting(false);
         return;
@@ -203,16 +157,6 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
           ? await fileToBase64(formData.taxRegistration)
           : null,
       };
-
-      console.log("Step 3: Data to send:", {
-        ...dataToSend,
-        companyRegistration: dataToSend.companyRegistration
-          ? "present"
-          : "none",
-        portfolioWork: dataToSend.portfolioWork ? "present" : "none",
-        agencyProfile: dataToSend.agencyProfile ? "present" : "none",
-        taxRegistration: dataToSend.taxRegistration ? "present" : "none",
-      });
 
       const submitToast = toast.loading("Submitting your application...");
 
@@ -247,7 +191,6 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
         });
         const result = await response.json();
         if (response.ok) {
-          console.log("Step 3: Submission successful", { score: result.score });
           clearInterval(progressInterval);
           setUploadProgress({
             companyRegistration: 100,
@@ -265,7 +208,6 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
           throw new Error(result.error || "Unknown error");
         }
       } catch (error) {
-        console.log("Step 3: Submission failed", { error: error.message });
         clearInterval(progressInterval);
         toast.error(`Submission failed: ${error.message}`, {
           id: submitToast,
@@ -334,9 +276,6 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
       if (q.skippable && answers.length === 0) return true;
 
       if (answers.length === 0) {
-        console.log(`No answers for q.id=${q.id} in isPageComplete`, {
-          answers,
-        });
         return false;
       }
 
@@ -385,6 +324,7 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
 
   return (
     <>
+      <Toaster />
       <Head>
         <title>
           Expression of Interest | Pan-African Agency Network (PAAN)
@@ -448,16 +388,11 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
               formData={formData}
               setFormData={setFormData}
               handleOptionToggle={handleOptionToggle}
-              currentPage={currentPage}
-              questionsPerPage={questionsPerPage}
               questions={questions}
               categories={categories || []}
               isLoading={isLoading}
-              handleNextPage={handleNextPage}
-              totalPages={totalPages}
               onComplete={handleQuestionsComplete}
               mode={mode}
-              initializeAnswers={initializeAnswers}
             />
           )}
           {step === 3 && (
@@ -521,12 +456,10 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
 
 export async function getStaticProps() {
   try {
-    console.time("fetchInterviewQuestions");
     const { data: questions, error } = await supabase
       .from("interview_questions")
       .select("*, max_answers")
       .order("id", { ascending: true });
-    console.timeEnd("fetchInterviewQuestions");
 
     if (error) throw error;
 
@@ -537,7 +470,6 @@ export async function getStaticProps() {
       revalidate: 60,
     };
   } catch (error) {
-    console.error("Error fetching questions in getStaticProps:", error);
     return {
       props: {
         initialQuestions: [],

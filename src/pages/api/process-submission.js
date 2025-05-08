@@ -68,42 +68,52 @@ export default async function handler(req, res) {
     const oldAgencyProfileFileId = existingResponse?.agency_profile_file_id;
     const oldTaxRegistrationFileId = existingResponse?.tax_registration_file_id;
 
-    const companyRegistrationResult = companyRegistration
-      ? await uploadFileToDrive(
-          primaryContactName,
-          opening,
-          companyRegistration,
-          "company-registration",
-          oldCompanyRegistrationFileId
-        )
-      : { url: null, fileId: null };
-    const portfolioWorkResult = portfolioWork
-      ? await uploadFileToDrive(
-          primaryContactName,
-          opening,
-          portfolioWork,
-          "portfolio-work",
-          oldPortfolioWorkFileId
-        )
-      : { url: null, fileId: null };
-    const agencyProfileResult = agencyProfile
-      ? await uploadFileToDrive(
-          primaryContactName,
-          opening,
-          agencyProfile,
-          "agency-profile",
-          oldAgencyProfileFileId
-        )
-      : { url: null, fileId: null };
-    const taxRegistrationResult = taxRegistration
-      ? await uploadFileToDrive(
-          primaryContactName,
-          opening,
-          taxRegistration,
-          "tax-registration",
-          oldTaxRegistrationFileId
-        )
-      : { url: null, fileId: null };
+    // Parallel file uploads
+    const uploadPromises = [
+      companyRegistration
+        ? uploadFileToDrive(
+            primaryContactName,
+            opening,
+            companyRegistration,
+            "company-registration",
+            oldCompanyRegistrationFileId
+          )
+        : Promise.resolve({ url: null, fileId: null }),
+      portfolioWork
+        ? uploadFileToDrive(
+            primaryContactName,
+            opening,
+            portfolioWork,
+            "portfolio-work",
+            oldPortfolioWorkFileId
+          )
+        : Promise.resolve({ url: null, fileId: null }),
+      agencyProfile
+        ? uploadFileToDrive(
+            primaryContactName,
+            opening,
+            agencyProfile,
+            "agency-profile",
+            oldAgencyProfileFileId
+          )
+        : Promise.resolve({ url: null, fileId: null }),
+      taxRegistration
+        ? uploadFileToDrive(
+            primaryContactName,
+            opening,
+            taxRegistration,
+            "tax-registration",
+            oldTaxRegistrationFileId
+          )
+        : Promise.resolve({ url: null, fileId: null }),
+    ];
+
+    const [
+      companyRegistrationResult,
+      portfolioWorkResult,
+      agencyProfileResult,
+      taxRegistrationResult,
+    ] = await Promise.all(uploadPromises);
 
     const { error: updateError } = await supabaseServer
       .from("responses")
@@ -119,11 +129,19 @@ export default async function handler(req, res) {
         country,
         device,
         submitted_at: submittedAt,
+        status: "completed",
       })
       .eq("user_id", userId);
 
     if (updateError) {
       console.error("Update response error:", updateError);
+      await supabaseServer.from("submission_errors").insert([
+        {
+          user_id: userId,
+          error_message: "Failed to update response with Drive URLs",
+          error_details: { message: updateError.message },
+        },
+      ]);
       throw new Error("Failed to update response with Drive URLs");
     }
 
@@ -132,7 +150,16 @@ export default async function handler(req, res) {
       .select("name, subject, body")
       .in("name", ["candidateEmail", "adminEmail"]);
 
-    if (templateError) throw templateError;
+    if (templateError) {
+      await supabaseServer.from("submission_errors").insert([
+        {
+          user_id: userId,
+          error_message: "Failed to fetch email templates",
+          error_details: { message: templateError.message },
+        },
+      ]);
+      throw templateError;
+    }
 
     const candidateTemplate =
       templates.find((t) => t.name === "candidateEmail")?.body || "";
@@ -181,6 +208,17 @@ export default async function handler(req, res) {
     return res.status(200).json({ message: "Background processing completed" });
   } catch (error) {
     console.error("Background processing error:", error.message);
+    await supabaseServer.from("submission_errors").insert([
+      {
+        user_id: req.body.userId,
+        error_message: "Background processing failed",
+        error_details: { message: error.message, stack: error.stack },
+      },
+    ]);
+    await supabaseServer
+      .from("responses")
+      .update({ status: "failed" })
+      .eq("user_id", req.body.userId);
     return res
       .status(500)
       .json({ error: "Background processing failed", details: error.message });

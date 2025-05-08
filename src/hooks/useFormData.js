@@ -13,7 +13,7 @@ export const useFormData = () => {
     primaryContactPhone: "",
     primaryContactLinkedin: "",
     opening: "",
-    answers: [],
+    answers: Array.from({ length: 17 }, () => []),
     companyRegistration: null,
     portfolioWork: null,
     agencyProfile: null,
@@ -35,16 +35,30 @@ export const useFormData = () => {
     setFormData((prev) => {
       const newAnswers = [...prev.answers];
       newAnswers[questionIndex] = newAnswers[questionIndex] || [];
-      let updatedAnswers;
 
+      let updatedAnswers;
       if (option === null && Array.isArray(customText)) {
-        // Handle open-ended or structured answers
-        updatedAnswers = customText.filter(
-          (ans) =>
-            ans.customText &&
-            typeof ans.customText === "string" &&
-            ans.customText.trim() !== ""
-        );
+        updatedAnswers = customText.filter((ans) => {
+          if (ans.customText) {
+            try {
+              const parsed =
+                typeof ans.customText === "string"
+                  ? JSON.parse(ans.customText)
+                  : ans.customText;
+              return (
+                Object.values(parsed).every(
+                  (val) => typeof val === "string" && val.trim() !== ""
+                ) || ans.customText.trim() !== ""
+              );
+            } catch {
+              return (
+                typeof ans.customText === "string" &&
+                ans.customText.trim() !== ""
+              );
+            }
+          }
+          return false;
+        });
       } else if (option === "Other") {
         const existingOther = newAnswers[questionIndex].find(
           (ans) => typeof ans === "object" && ans.option === "Other"
@@ -74,7 +88,6 @@ export const useFormData = () => {
         }
       } else {
         if (isMultiSelect) {
-          // Multi-select: Toggle option
           if (
             newAnswers[questionIndex].some(
               (ans) =>
@@ -96,7 +109,6 @@ export const useFormData = () => {
             ];
           }
         } else {
-          // Single-select: Replace with new option
           updatedAnswers = [
             customText !== null && typeof customText === "string"
               ? { option, customText }
@@ -105,8 +117,23 @@ export const useFormData = () => {
         }
       }
 
-      newAnswers[questionIndex] = updatedAnswers;
-      
+      newAnswers[questionIndex] = updatedAnswers.filter(
+        (ans) =>
+          (typeof ans === "string" && ans.trim() !== "") ||
+          (typeof ans === "object" &&
+            (ans.option ||
+              (ans.customText &&
+                (typeof ans.customText === "string"
+                  ? ans.customText.trim() !== ""
+                  : Object.values(
+                      typeof ans.customText === "string"
+                        ? JSON.parse(ans.customText || "{}")
+                        : ans.customText
+                    ).every(
+                      (val) => typeof val === "string" && val.trim() !== ""
+                    )))))
+      );
+
       return { ...prev, answers: newAnswers };
     });
   };
@@ -119,11 +146,53 @@ export const useFormData = () => {
       reader.onerror = (error) => reject(error);
     });
 
-  const initializeAnswers = (questionCount) => {
-    setFormData((prev) => ({
-      ...prev,
-      answers: Array.from({ length: questionCount }, () => []),
-    }));
+  const handleSubmit = async () => {
+    try {
+      setSubmissionStatus("submitting");
+      const cleanedFormData = {
+        ...formData,
+        answers: formData.answers.map((answer) =>
+          Array.isArray(answer)
+            ? answer.filter(
+                (ans) =>
+                  (typeof ans === "string" && ans.trim() !== "") ||
+                  (typeof ans === "object" &&
+                    (ans.option ||
+                      (ans.customText &&
+                        (typeof ans.customText === "string"
+                          ? ans.customText.trim() !== ""
+                          : Object.values(
+                              typeof ans.customText === "string"
+                                ? JSON.parse(ans.customText || "{}")
+                                : ans.customText
+                            ).every(
+                              (val) =>
+                                typeof val === "string" && val.trim() !== ""
+                            )))))
+              )
+            : answer
+        ),
+      };
+
+      const response = await fetch("/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(cleanedFormData),
+      });
+
+      const result = await response.json();
+      if (!response.ok) {
+        throw new Error(result.error || "Submission failed");
+      }
+
+      setSubmissionStatus("success");
+      console.log("Submission sent! You'll receive a confirmation email soon.");
+      return result;
+    } catch (error) {
+      setSubmissionStatus("error");
+      console.log("Submission failed. Please try again.");
+      throw error;
+    }
   };
 
   return {
@@ -134,6 +203,6 @@ export const useFormData = () => {
     handleChange,
     handleOptionToggle,
     fileToBase64,
-    initializeAnswers,
+    handleSubmit,
   };
 };

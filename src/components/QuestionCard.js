@@ -69,7 +69,7 @@ export default function QuestionCard({
             text: currentAnswers[idx]?.text || "",
           })
         );
-        
+
         setDynamicAnswers((prev) => ({ ...prev, [q.id]: initialAnswers }));
       }
     }
@@ -109,7 +109,6 @@ export default function QuestionCard({
   };
 
   const handleStructuredInputChange = (qId, idx, field, value) => {
-    
     setDynamicAnswers((prev) => {
       const updatedAnswers = [...(prev[qId] || [{}])];
       updatedAnswers[idx] = { ...updatedAnswers[idx], [field]: value };
@@ -118,7 +117,7 @@ export default function QuestionCard({
         customText: JSON.stringify(ans),
         link: "",
       }));
-      
+
       handleOptionToggle(qId - 1, null, updatedFormAnswers);
       return { ...prev, [qId]: updatedAnswers };
     });
@@ -202,8 +201,6 @@ export default function QuestionCard({
   };
 
   const handleOptionToggleWrapper = (qIndex, option, customText) => {
-    
-
     const currentAnswers = formData.answers[qIndex] || [];
     let updatedAnswers;
 
@@ -254,14 +251,12 @@ export default function QuestionCard({
               text: currentAnswers[idx]?.text || "",
             })
           );
-          
+
           return { ...prev, [q.id]: initialAnswers };
         }
         return prev;
       });
     }
-
-    
 
     handleOptionToggle(qIndex, option, updatedAnswers, q.is_multi_select);
   };
@@ -365,7 +360,6 @@ export default function QuestionCard({
                           q.id
                         }-${idx}-${field.name.toLowerCase()}-label`}
                       />
-                      
                     </div>
                   ))}
                   {dynamicAnswers[q.id]?.length > 1 && (
@@ -519,8 +513,6 @@ export default function QuestionCard({
                 : formData.answers[q.id - 1]?.[0]?.option === opt ||
                   formData.answers[q.id - 1]?.[0] === opt;
 
-              
-
               return (
                 <div key={opt} className="space-y-2">
                   <button
@@ -589,7 +581,9 @@ export default function QuestionCard({
                     }`}
                   >
                     {q.text_input_option?.option === "Any"
-                      ? `${q.text_input_option.placeholder || "Details"} for ${selectedTextInputOption}`
+                      ? `${
+                          q.text_input_option.placeholder || "Details"
+                        } for ${selectedTextInputOption}`
                       : q.text_input_option.placeholder || "Details"}
                   </label>
                   <textarea

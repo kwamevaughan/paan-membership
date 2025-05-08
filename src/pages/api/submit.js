@@ -202,6 +202,7 @@ export default async function handler(req, res) {
       country,
       device,
       submittedAt,
+      status: "pending",
     });
 
     if (responseError) {
@@ -215,60 +216,53 @@ export default async function handler(req, res) {
       ? process.env.BASE_URL || "http://localhost:3001"
       : process.env.PRODUCTION_URL || "https://membership.paan.africa";
     const processUrl = `${baseUrl}/api/process-submission`;
-    console.log("Triggering background process at URL:", processUrl, {
+    console.log("Triggering background process at URL:", processUrl);
+
+    // Fire-and-forget background process
+    fetch(processUrl, {
+      method: "POST",
       headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId,
+        agencyName,
+        yearEstablished,
+        headquartersLocation,
+        registeredOfficeAddress,
+        websiteUrl,
+        primaryContactName,
+        primaryContactRole,
+        primaryContactEmail,
+        primaryContactPhone,
+        primaryContactLinkedin,
+        opening,
+        opening_id,
+        answers,
+        companyRegistration,
+        portfolioWork,
+        agencyProfile,
+        taxRegistration,
+        questions,
+        country,
+        device,
+        submittedAt,
+        referenceNumber,
+      }),
+      keepalive: true,
+    }).catch(async (error) => {
+      console.error("Background process failed:", error.message);
+      await supabaseServer.from("submission_errors").insert([
+        {
+          user_id: userId,
+          error_message: "Background process failed",
+          error_details: { message: error.message, stack: error.stack },
+        },
+      ]);
     });
 
-    let backgroundError = null;
-    try {
-      const response = await fetch(processUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId,
-          agencyName,
-          yearEstablished,
-          headquartersLocation,
-          registeredOfficeAddress,
-          websiteUrl,
-          primaryContactName,
-          primaryContactRole,
-          primaryContactEmail,
-          primaryContactPhone,
-          primaryContactLinkedin,
-          opening,
-          opening_id,
-          answers,
-          companyRegistration,
-          portfolioWork,
-          agencyProfile,
-          taxRegistration,
-          questions,
-          country,
-          device,
-          submittedAt,
-          referenceNumber,
-        }),
-        keepalive: true,
-      });
-
-      console.log("Background process response status:", response.status);
-      if (!response.ok) {
-        const text = await response.text();
-        throw new Error(
-          `Background process failed with status ${response.status}: ${text}`
-        );
-      }
-    } catch (error) {
-      console.error("Background processing request failed:", error.message);
-      backgroundError = error.message;
-    }
-
     return res.status(200).json({
-      message: "Submission successful, processing in background",
+      message: "Submission received, processing in background",
       agencyName,
-      backgroundProcessing:
-        backgroundError || "Background process triggered successfully",
+      referenceNumber,
     });
   } catch (error) {
     console.error("Submission error:", error.message);

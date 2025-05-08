@@ -1,6 +1,5 @@
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Icon } from "@iconify/react";
-import toast from "react-hot-toast";
 import QuestionCard from "./QuestionCard";
 
 export default function Step2Questions({
@@ -12,7 +11,6 @@ export default function Step2Questions({
   isLoading = false,
   onComplete,
   mode,
-  initializeAnswers,
 }) {
   const containerRef = useRef(null);
   const questionRefs = useRef({});
@@ -20,6 +18,9 @@ export default function Step2Questions({
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [otherInputs, setOtherInputs] = useState({});
   const [dynamicAnswers, setDynamicAnswers] = useState({});
+  const [errorMessages, setErrorMessages] = useState({});
+  const isDynamicAnswersInitialized = useRef(false);
+
   const borderColors = [
     "border-red-500",
     "border-blue-500",
@@ -28,17 +29,29 @@ export default function Step2Questions({
     "border-purple-500",
   ];
 
-  const validCategories = categories.filter(
-    (cat) => cat && cat.id && questions.some((q) => q && q.category === cat.id)
+  const validCategories = useMemo(
+    () =>
+      categories.filter(
+        (cat) =>
+          cat && cat.id && questions.some((q) => q && q.category === cat.id)
+      ),
+    [categories, questions]
   );
+
   const currentCategory = validCategories[currentCategoryIndex];
-  const currentQuestions = currentCategory
-    ? questions.filter(
-        (q) => q && q.id && q.text && q.category === currentCategory.id
-      )
-    : [];
+  const currentQuestions = useMemo(
+    () =>
+      currentCategory
+        ? questions.filter(
+            (q) => q && q.id && q.text && q.category === currentCategory.id
+          )
+        : [],
+    [currentCategory, questions]
+  );
 
   useEffect(() => {
+    if (isDynamicAnswersInitialized.current) return;
+
     const initialDynamicAnswers = {};
     questions.forEach((q) => {
       if (q && q.id) {
@@ -59,11 +72,7 @@ export default function Step2Questions({
                       }),
                       {}
                     );
-                  } catch (e) {
-                    console.error(
-                      `Failed to parse structured answer for q.id=${q.id}`,
-                      e
-                    );
+                  } catch {
                     return q.structured_answers.fields.reduce(
                       (acc, field) => ({
                         ...acc,
@@ -106,130 +115,108 @@ export default function Step2Questions({
                 text: "",
               }))
             : [{ text: "" }];
+        } else {
+          initialDynamicAnswers[q.id] = answers.length
+            ? answers
+            : q.is_multi_select
+            ? []
+            : [""];
         }
       }
     });
-    console.log("Initializing dynamicAnswers:", initialDynamicAnswers);
     setDynamicAnswers(initialDynamicAnswers);
+    isDynamicAnswersInitialized.current = true;
+  }, [questions, formData.answers]);
 
-    if (formData.answers.length < questions.length) {
-      setFormData((prev) => ({
-        ...prev,
-        answers: Array.from({ length: questions.length }, () => []),
-      }));
-    }
-  }, [questions, setDynamicAnswers, setFormData]);
+  const checkQuestionComplete = useCallback(
+    (qId) => {
+      const q = questions.find((q) => q && q.id === qId);
+      if (!q) {
+        return false;
+      }
 
-  const checkQuestionComplete = (qId) => {
-    const q = questions.find((q) => q && q.id === qId);
-    if (!q) {
-      console.log(`No question found for qId=${qId}`);
-      return false;
-    }
+      if (q.skippable && !formData.answers[qId - 1]?.length) return true;
 
-    if (q.skippable && !formData.answers[qId - 1]?.length) {
-      console.log(`q.id=${qId} is skippable and has no answers`);
-      return true;
-    }
-
-    const answers = formData.answers[qId - 1] || [];
-    if (q.is_open_ended) {
+      const answers = formData.answers[qId - 1] || [];
       const dynamic = dynamicAnswers[qId] || [];
-      if (q.structured_answers) {
-        const answerCount = dynamic.filter((ans) =>
-          q.structured_answers.fields.every(
-            (field) =>
-              typeof ans[field.name.toLowerCase()] === "string" &&
-              ans[field.name.toLowerCase()].trim() !== ""
-          )
+
+      if (!answers.length && !q.skippable) {
+        
+        return false;
+      }
+
+      if (q.is_open_ended) {
+        if (q.structured_answers) {
+          const answerCount = dynamic.filter((ans) =>
+            q.structured_answers.fields.every(
+              (field) =>
+                ans[field.name.toLowerCase()] !== undefined &&
+                typeof ans[field.name.toLowerCase()] === "string" &&
+                ans[field.name.toLowerCase()].trim() !== ""
+            )
+          ).length;
+          const isComplete = q.skippable
+            ? answerCount === 0 || answerCount >= (q.max_answers || 1)
+            : answerCount >= (q.max_answers || 1);
+          
+          return isComplete;
+        }
+        const answerCount = dynamic.filter(
+          (ans) => typeof ans.text === "string" && ans.text.trim() !== ""
         ).length;
-        console.log(`Structured answers validation for q.id=${qId}:`, {
-          answerCount,
-          dynamic,
-          requiredFields: q.structured_answers.fields,
-          requiredAnswers: q.max_answers || 1,
+        const isComplete = q.skippable
+          ? answerCount === 0 || answerCount >= (q.max_answers || 1)
+          : answerCount >= (q.max_answers || 1);
+       
+        return isComplete;
+      }
+
+      if (q.text_input_option) {
+        const requiredAnswers = q.text_input_max_answers || 1;
+        const answerCount = dynamic.filter(
+          (ans) => typeof ans.text === "string" && ans.text.trim() !== ""
+        ).length;
+        const isValid = answers.every((ans) => {
+          if (typeof ans === "string") return ans.trim() !== "";
+          const customText =
+            typeof ans.customText === "string" ? ans.customText : "";
+          if (
+            q.text_input_option?.option &&
+            q.text_input_option.option !== "Any"
+          ) {
+            return (
+              ans.option === q.text_input_option.option &&
+              customText.trim() !== ""
+            );
+          }
+          return ans.option && customText.trim() !== "";
         });
-        return q.skippable
-          ? answerCount === 0 || answerCount >= 1
-          : q.max_answers && q.max_answers > 1
-          ? answerCount >= q.max_answers
-          : answerCount >= 1;
+        const isComplete = isValid && answerCount >= requiredAnswers;
+        
+        return isComplete;
       }
-      const answerCount = dynamic.filter(
-        (ans) => typeof ans.text === "string" && ans.text.trim()
-      ).length;
+
+      const isComplete = answers.every((ans) =>
+        typeof ans === "string"
+          ? ans.trim() !== ""
+          : ans.option || ans.customText?.trim()
+      );
       
-      return q.skippable
-        ? answerCount === 0 || answerCount >= 1
-        : q.max_answers && q.max_answers > 1
-        ? answerCount >= q.max_answers
-        : answerCount >= 1;
-    }
-
-    if (!answers.length) {
-      console.log(`No answers for q.id=${qId}`, { answers });
-      return false;
-    }
-
-    if (q.text_input_option) {
-      const dynamic = dynamicAnswers[qId] || [{ text: "" }];
-      const requiredAnswers = q.text_input_max_answers || 1;
-      const answerCount = dynamic.filter(
-        (ans) => typeof ans.text === "string" && ans.text.trim()
-      ).length;
-      const isValid = answers.every((ans) => {
-        if (typeof ans === "string") {
-          return ans.trim() !== "";
-        }
-        const customText =
-          typeof ans.customText === "string" ? ans.customText : "";
-        if (
-          q.text_input_option?.option &&
-          q.text_input_option.option !== "Any"
-        ) {
-          return (
-            ans.option === q.text_input_option.option &&
-            customText.trim() !== ""
-          );
-        }
-        return ans.option && customText.trim() !== "";
-      });
-      console.log(`Text input validation for q.id=${qId}:`, {
-        isValid,
-        answerCount,
-        answers,
-        dynamic,
-        requiredAnswers,
-      });
-      return isValid && answerCount >= requiredAnswers;
-    }
-
-    const isValid = answers.every((ans) => {
-      if (typeof ans === "string") {
-        return ans.trim() !== "";
-      }
-      const customText =
-        typeof ans.customText === "string" ? ans.customText : "";
-      return ans.option || customText.trim() !== "";
-    });
-    
-    return isValid;
-  };
+      return isComplete;
+    },
+    [questions, formData.answers, dynamicAnswers]
+  );
 
   const handleTextInputChange = useCallback(
     (qId, idx, value) => {
       setDynamicAnswers((prev) => {
         const updatedAnswers = [...(prev[qId] || [{ text: "" }])];
         updatedAnswers[idx] = { text: value };
-        console.log(`handleTextInputChange for q.id=${qId}, idx=${idx}`, {
-          value,
-          updatedAnswers,
-        });
         return { ...prev, [qId]: updatedAnswers };
       });
 
       const selectedOption = formData.answers[qId - 1]?.[0]?.option;
-      const question = questions.find((q) => q.id === qId);
+      const question = questions.find((q) => q && q.id === qId);
       if (selectedOption) {
         const updatedAnswers = (dynamicAnswers[qId] || [{ text: "" }]).map(
           (ans, i) => ({
@@ -237,10 +224,6 @@ export default function Step2Questions({
             customText: i === idx ? value : ans.text,
           })
         );
-        console.log(`Updating formData.answers for q.id=${qId}`, {
-          selectedOption,
-          updatedAnswers,
-        });
         handleOptionToggle(
           qId - 1,
           selectedOption,
@@ -252,21 +235,35 @@ export default function Step2Questions({
     [dynamicAnswers, formData.answers, handleOptionToggle, questions]
   );
 
-  const areCurrentQuestionsComplete = currentQuestions.every((q) =>
-    checkQuestionComplete(q.id)
+  const handleOptionToggleWrapper = useMemo(
+    () =>
+      function (qIndex, option, answers) {
+        const question = questions.find((q) => q && q.id === qIndex + 1);
+        handleOptionToggle(
+          qIndex,
+          option,
+          answers,
+          question?.is_multi_select || false
+        );
+      },
+    [handleOptionToggle, questions]
   );
-  const areAllQuestionsComplete = questions
-    .filter((q) => q && q.id)
-    .every((q) => checkQuestionComplete(q.id));
 
-  const handleOptionToggleWrapper = (qIndex, option, answers) => {
-    const question = questions.find((q) => q && q.id === qIndex + 1);
-    const isMultiSelect = question?.is_multi_select || false;
-    
-    handleOptionToggle(qIndex, option, answers, isMultiSelect);
-  };
+  const areCurrentQuestionsComplete = useMemo(
+    () => currentQuestions.every((q) => checkQuestionComplete(q.id)),
+    [currentQuestions, checkQuestionComplete]
+  );
+
+  const areAllQuestionsComplete = useMemo(
+    () =>
+      questions
+        .filter((q) => q && q.id)
+        .every((q) => checkQuestionComplete(q.id)),
+    [questions, checkQuestionComplete]
+  );
 
   const handleUploadCVClick = () => {
+    setErrorMessages({});
     if (!areAllQuestionsComplete) {
       const incompleteQuestion = questions.find(
         (q) => q && q.id && !checkQuestionComplete(q.id)
@@ -282,10 +279,15 @@ export default function Step2Questions({
             dynamicAnswers[incompleteQuestion.id] || []
           ).filter((ans) => ans.text?.trim()).length;
           if (answerCount < incompleteQuestion.max_answers) {
-            toast.error(
-              `Please provide ${incompleteQuestion.max_answers} answers for "${incompleteQuestion.text}".`,
-              { icon: "⚠️" }
-            );
+            setErrorMessages({
+              [incompleteQuestion.id]: `Please provide ${incompleteQuestion.max_answers} answers for "${incompleteQuestion.text}".`,
+            });
+            if (questionRefs.current[incompleteQuestion.id]) {
+              questionRefs.current[incompleteQuestion.id].scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
+            }
             return;
           }
         } else if (
@@ -298,19 +300,23 @@ export default function Step2Questions({
             dynamicAnswers[incompleteQuestion.id] || []
           ).filter((ans) => ans.text?.trim()).length;
           if (answerCount < incompleteQuestion.text_input_max_answers) {
-            toast.error(
-              `Please provide ${incompleteQuestion.text_input_max_answers} details for "${incompleteQuestion.text}".`,
-              { icon: "⚠️" }
-            );
+            setErrorMessages({
+              [incompleteQuestion.id]: `Please provide ${incompleteQuestion.text_input_max_answers} details for "${incompleteQuestion.text}".`,
+            });
+            if (questionRefs.current[incompleteQuestion.id]) {
+              questionRefs.current[incompleteQuestion.id].scrollIntoView({
+                behavior: "smooth",
+                block: "center",
+              });
+            }
             return;
           }
         }
-        toast.error(
-          incompleteQuestion.is_open_ended
+        setErrorMessages({
+          [incompleteQuestion.id]: incompleteQuestion.is_open_ended
             ? `Please answer "${incompleteQuestion.text}".`
             : `Select an option and provide details for "${incompleteQuestion.text}".`,
-          { icon: "⚠️" }
-        );
+        });
         if (questionRefs.current[incompleteQuestion.id]) {
           questionRefs.current[incompleteQuestion.id].scrollIntoView({
             behavior: "smooth",
@@ -324,21 +330,19 @@ export default function Step2Questions({
   };
 
   const handleNext = () => {
+    setErrorMessages({});
     const currentQuestion = currentQuestions[currentQuestionIndex];
     if (!checkQuestionComplete(currentQuestion?.id)) {
-      if (currentQuestion) {
-        toast.error(
-          currentQuestion.is_open_ended
-            ? `Please answer "${currentQuestion.text}".`
-            : `Select an option and provide details for "${currentQuestion.text}".`,
-          { icon: "⚠️" }
-        );
-        if (questionRefs.current[currentQuestion.id]) {
-          questionRefs.current[currentQuestion.id].scrollIntoView({
-            behavior: "smooth",
-            block: "center",
-          });
-        }
+      setErrorMessages({
+        [currentQuestion.id]: currentQuestion.is_open_ended
+          ? `Please answer "${currentQuestion.text}".`
+          : `Select an option and provide details for "${currentQuestion.text}".`,
+      });
+      if (questionRefs.current[currentQuestion.id]) {
+        questionRefs.current[currentQuestion.id].scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
       }
       return;
     }
@@ -353,6 +357,7 @@ export default function Step2Questions({
   };
 
   const handleBack = () => {
+    setErrorMessages({});
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex((prev) => prev - 1);
       containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
@@ -368,15 +373,15 @@ export default function Step2Questions({
   };
 
   const handleSkip = (qId) => {
+    setErrorMessages({});
     const question = questions.find((q) => q && q.id === qId);
-    const isMultiSelect = question?.is_multi_select || false;
     setDynamicAnswers((prev) => ({ ...prev, [qId]: [] }));
     setOtherInputs((prev) => ({ ...prev, [qId]: "" }));
-    handleOptionToggle(qId - 1, null, [], isMultiSelect);
+    handleOptionToggle(qId - 1, null, [], question?.is_multi_select || false);
     if (currentQuestionIndex < currentQuestions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
       containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
-    } else {
+    } else if (currentCategoryIndex < validCategories.length - 1) {
       setCurrentCategoryIndex((prev) => prev + 1);
       setCurrentQuestionIndex(0);
       containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
@@ -406,7 +411,7 @@ export default function Step2Questions({
             No questions available.
           </p>
           <button onClick={handleUploadCVClick} className={buttonStyles}>
-            Submit Document
+            Next
           </button>
         </div>
       </div>
@@ -494,33 +499,28 @@ export default function Step2Questions({
                   isNextDisabled ? "opacity-50 cursor-not-allowed" : ""
                 }`}
                 aria-label={
-                  isNextDisabled
-                    ? currentCategoryIndex === validCategories.length - 1 &&
-                      currentQuestionIndex === currentQuestions.length - 1
-                      ? "Answer all questions to submit"
-                      : "Answer all questions to proceed"
-                    : currentCategoryIndex === validCategories.length - 1 &&
-                      currentQuestionIndex === currentQuestions.length - 1
-                    ? "Submit Document"
-                    : "Next"
+                  isNextDisabled ? "Answer all questions to proceed" : "Next"
                 }
               >
-                {currentCategoryIndex === validCategories.length - 1 &&
-                currentQuestionIndex === currentQuestions.length - 1
-                  ? "Submit Document"
-                  : "Next"}
+                Next
               </button>
               {isNextDisabled && (
                 <div className="absolute hidden group-hover:block top-[-40px] left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-sm rounded p-2 whitespace-nowrap z-10">
-                  {currentCategoryIndex === validCategories.length - 1 &&
-                  currentCategoryIndex === validCategories.length - 1 &&
-                  currentQuestionIndex === currentQuestions.length - 1
-                    ? "Answer all questions to submit"
-                    : "Answer all questions to proceed"}
+                  Answer all questions to proceed
                 </div>
               )}
             </div>
           </div>
+          {Object.values(errorMessages).map((msg, idx) => (
+            <p
+              key={idx}
+              className={`mt-2 text-sm text-red-500 ${
+                mode === "dark" ? "text-red-400" : ""
+              }`}
+            >
+              {msg}
+            </p>
+          ))}
         </div>
       </div>
     </div>

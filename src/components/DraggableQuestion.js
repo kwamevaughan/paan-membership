@@ -1,7 +1,8 @@
 import { Icon } from "@iconify/react";
 import { useDrag, useDrop } from "react-dnd";
-import toast from "react-hot-toast";
 import { ItemType, stripHtmlTags } from "@/../utils/questionUtils";
+import toast from "react-hot-toast";
+
 
 const DraggableQuestion = ({
   question,
@@ -12,8 +13,8 @@ const DraggableQuestion = ({
   deleteQuestion,
   categories,
   getCategoryName,
+  isComplete,
 }) => {
-  console.log("onEdit in DraggableQuestion:", onEdit); // Debug
   const [, drag] = useDrag({
     type: ItemType.QUESTION,
     item: { index },
@@ -55,7 +56,6 @@ const DraggableQuestion = ({
               onClick={async () => {
                 toast.dismiss(t.id);
                 deleteQuestion(question.id, question.text);
-                toast.success("Question deleted successfully!", { icon: "🗑️" });
               }}
               className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-[#f05d23] hover:text-[#d94f1e] hover:bg-[#ffe0b3] transition-colors focus:outline-none"
             >
@@ -70,9 +70,9 @@ const DraggableQuestion = ({
           </div>
         </div>
       ),
-      { duration: Infinity }
     );
   };
+
 
   return (
     <tr
@@ -85,7 +85,7 @@ const DraggableQuestion = ({
           : `border-gray-200 hover:bg-gray-50 ${
               isOver ? "bg-gray-200" : ""
             } text-gray-800`
-      }`}
+      } ${!isComplete ? "border-l-4 border-red-500" : ""}`}
     >
       <td className="p-2 sm:p-4 w-8 sm:w-12">
         <Icon
@@ -101,22 +101,18 @@ const DraggableQuestion = ({
           className={`prose max-w-none line-clamp-2 ${
             mode === "dark" ? "text-gray-200" : "text-gray-800"
           }`}
-          dangerouslySetInnerHTML={{ __html: question.text }}
+          dangerouslySetInnerHTML={{ __html: question.text || "—" }}
         />
       </td>
       <td className="p-2 sm:p-4 text-xs sm:text-base">
-        {question.options.join("; ")}
+        {Array.isArray(question.options) ? question.options.join("; ") : "—"}
       </td>
       <td className="p-2 sm:p-4 text-xs sm:text-base">
         {getCategoryName(question.category)}
       </td>
       <td className="p-2 sm:p-4 text-xs sm:text-base flex flex-col sm:flex-row gap-2">
         <button
-          onClick={(e) => {
-            e.stopPropagation();
-            console.log("Edit button clicked for question:", question);
-            onEdit(question);
-          }}
+          onClick={() => onEdit(question)}
           className="px-2 sm:px-3 py-1 bg-[#f05d23] text-white rounded-lg hover:bg-[#d94f1e] transition duration-200 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm"
         >
           <Icon

@@ -148,6 +148,7 @@ export default function HRInterviewQuestions({
                 onSubmit={editingQuestion ? editQuestion : addQuestion}
                 onCancel={handleFormCancel}
                 isOpen={isQuestionModalOpen}
+                questions={questions}
               />
 
               <div className="mb-6 flex flex-col md:flex-row gap-4">
@@ -216,7 +217,7 @@ export async function getServerSideProps(context) {
     const { data: questions, error } = await supabase
       .from("interview_questions")
       .select(
-        "*, max_answers, depends_on_question_id, depends_on_answer, has_links"
+        "*, max_answers, depends_on_question_id, depends_on_answer, has_links, is_country_select"
       )
       .order("id", { ascending: true });
     console.timeEnd("fetchInterviewQuestions");

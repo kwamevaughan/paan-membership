@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Icon } from "@iconify/react";
 import toast from "react-hot-toast";
+import Select from "react-select";
+import { useCountry } from "@/hooks/useCountry";
 
 // Debounce utility to prevent multiple toast triggers
 const debounce = (func, wait) => {
@@ -25,6 +27,7 @@ export default function QuestionCard({
   onSkip,
   handleTextInputChange,
 }) {
+  const { countryOptions } = useCountry();
   const inputStyles = `w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition ${
     mode === "dark"
       ? "bg-gray-700 border-gray-600 text-white"
@@ -200,6 +203,25 @@ export default function QuestionCard({
     });
   };
 
+  const handleCountrySelectChange = (qId, selectedOptions) => {
+    const selectedValues = selectedOptions
+      ? selectedOptions.map((opt) => opt.value)
+      : [];
+    console.log(
+      `handleCountrySelectChange: qId=${qId}, selectedValues=`,
+      selectedValues
+    );
+    if (selectedValues.length === 0) {
+      toast.error("Please select at least one country.");
+      handleOptionToggle(qId - 1, null, []);
+      return;
+    }
+    handleOptionToggle(qId - 1, null, selectedValues);
+    debouncedToast(`Selected ${selectedValues.length} countries.`, {
+      id: `select-${qId}-countries`,
+    });
+  };
+
   const handleOptionToggleWrapper = (qIndex, option, customText) => {
     const currentAnswers = formData.answers[qIndex] || [];
     let updatedAnswers;
@@ -289,6 +311,85 @@ export default function QuestionCard({
     return isTextInputOption && isSelected && opt !== "Other";
   });
 
+  const selectStyles = {
+    control: (provided) => ({
+      ...provided,
+      backgroundColor: mode === "dark" ? "#374151" : "#F9FAFB",
+      borderColor: !isComplete
+        ? "#EF4444"
+        : mode === "dark"
+        ? "#4B5563"
+        : "#D1D5DB",
+      color: mode === "dark" ? "#FFFFFF" : "#231812",
+      minHeight: "40px",
+      "&:hover": { borderColor: "#F05D23" },
+      boxShadow: "none",
+    }),
+    menu: (provided) => ({
+      ...provided,
+      backgroundColor: mode === "dark" ? "#374151" : "#FFFFFF",
+      color: mode === "dark" ? "#FFFFFF" : "#231812",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? "#F05D23"
+        : state.isFocused
+        ? mode === "dark"
+          ? "#4B5563"
+          : "#F3F4F6"
+        : "transparent",
+      color: state.isSelected
+        ? "#FFFFFF"
+        : mode === "dark"
+        ? "#FFFFFF"
+        : "#231812",
+      "&:hover": {
+        backgroundColor: mode === "dark" ? "#4B5563" : "#F3F4F6",
+      },
+    }),
+    multiValue: (provided) => ({
+      ...provided,
+      backgroundColor: "#F05D23",
+    }),
+    multiValueLabel: (provided) => ({
+      ...provided,
+      color: "#FFFFFF",
+    }),
+    multiValueRemove: (provided) => ({
+      ...provided,
+      color: "#FFFFFF",
+      "&:hover": {
+        backgroundColor: "#D94F1E",
+        color: "#FFFFFF",
+      },
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: mode === "dark" ? "#9CA3AF" : "#6B7280",
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: mode === "dark" ? "#FFFFFF" : "#231812",
+    }),
+  };
+
+  // Debug formData.answers and selectedCountries
+  console.log(
+    `Question ID: ${q.id}, formData.answers[${q.id - 1}]:`,
+    formData.answers[q.id - 1]
+  );
+
+  // Get selected country labels for display
+  const selectedCountries = formData.answers[q.id - 1]?.length
+    ? formData.answers[q.id - 1].map((value) => {
+        const country = countryOptions.find((opt) => opt.value === value);
+        console.log(`Mapping value: ${value}, found country:`, country);
+        return country ? country.label : value;
+      })
+    : [];
+  console.log(`Selected Countries for Q${q.id}:`, selectedCountries);
+
   return (
     <div
       className={`shadow-lg rounded-lg p-6 border-t-4 border-[#f05d23] ${
@@ -318,7 +419,51 @@ export default function QuestionCard({
         )}
       </div>
 
-      {q.is_open_ended ? (
+      {q.is_country_select ? (
+        <div className="space-y-2">
+          <label
+            htmlFor={`q-${q.id}-country-select`}
+            className={`text-sm font-medium ${
+              mode === "dark" ? "text-gray-300" : "text-[#231812]"
+            }`}
+          >
+            Select Countries
+          </label>
+          <Select
+            id={`q-${q.id}-country-select`}
+            options={countryOptions}
+            isMulti
+            value={countryOptions.filter((opt) =>
+              formData.answers[q.id - 1]?.includes(opt.value)
+            )}
+            onChange={(selected) => handleCountrySelectChange(q.id, selected)}
+            placeholder="Select geographic markets served"
+            styles={selectStyles}
+            classNamePrefix="react-select"
+            aria-label="Select geographic markets served"
+          />
+          {selectedCountries.length > 0 ? (
+            <div
+              className={`text-sm mt-2 ${
+                mode === "dark" ? "text-gray-300" : "text-[#231812]"
+              }`}
+              aria-live="polite"
+            >
+              <span className="font-medium">Selected Countries: </span>
+              {selectedCountries.join(", ")}
+            </div>
+          ) : (
+            <div
+              className={`text-sm mt-2 ${
+                mode === "dark" ? "text-gray-400" : "text-gray-500"
+              }`}
+              aria-live="polite"
+            >
+              No countries selected.
+            </div>
+          )}
+        </div>
+      ) : q.is_open_ended ? (
         q.structured_answers ? (
           <div className="space-y-4">
             {(dynamicAnswers[q.id] || [{}])

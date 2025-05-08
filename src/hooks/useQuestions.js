@@ -18,7 +18,7 @@ export const useQuestions = () => {
     const { data, error } = await supabase
       .from("interview_questions")
       .select(
-        "*, category:question_categories(name), max_answers, depends_on_question_id, depends_on_answer, max_words, skippable, text_input_option, text_input_max_answers, structured_answers, has_links"
+        "*, category:question_categories(name), max_answers, depends_on_question_id, depends_on_answer, max_words, skippable, text_input_option, text_input_max_answers, structured_answers, has_links, is_country_select"
       )
       .order(sortField, { ascending: sortDirection === "asc" });
 
@@ -51,6 +51,7 @@ export const useQuestions = () => {
       otherOptionText,
       categoryId,
       isOpenEnded,
+      isCountrySelect,
       maxAnswers,
       dependsOnQuestionId,
       dependsOnAnswer,
@@ -62,11 +63,13 @@ export const useQuestions = () => {
       structuredAnswers,
     } = questionData;
 
-    if (!text || (!isOpenEnded && (!options || options.length === 0))) {
+    if (
+      !text ||
+      (!isOpenEnded && !isCountrySelect && (!options || options.length === 0))
+    ) {
       toast.error("Please provide a question and required fields.");
       return false;
     }
-
 
     const { data, error } = await supabase
       .from("interview_questions")
@@ -78,6 +81,7 @@ export const useQuestions = () => {
           is_multi_select: isMultiSelect || false,
           other_option_text: otherOptionText || "",
           is_open_ended: isOpenEnded || false,
+          is_country_select: isCountrySelect || false,
           order: questions.length,
           category: categoryId,
           max_answers: maxAnswers || null,
@@ -115,6 +119,7 @@ export const useQuestions = () => {
       otherOptionText,
       categoryId,
       isOpenEnded,
+      isCountrySelect,
       maxAnswers,
       dependsOnQuestionId,
       dependsOnAnswer,
@@ -126,7 +131,10 @@ export const useQuestions = () => {
       structuredAnswers,
     } = questionData;
 
-    if (!text || (!isOpenEnded && (!options || options.length === 0))) {
+    if (
+      !text ||
+      (!isOpenEnded && !isCountrySelect && (!options || options.length === 0))
+    ) {
       toast.error("Please provide a question and required fields.");
       return false;
     }
@@ -142,6 +150,7 @@ export const useQuestions = () => {
         is_multi_select: isMultiSelect || false,
         other_option_text: otherOptionText || "",
         is_open_ended: isOpenEnded || false,
+        is_country_select: isCountrySelect || false,
         updated_at: new Date().toISOString(),
         category: categoryId,
         max_answers: maxAnswers || null,
@@ -206,6 +215,7 @@ export const useQuestions = () => {
       is_multi_select: q.is_multi_select || false,
       other_option_text: q.other_option_text || "",
       is_open_ended: q.is_open_ended || false,
+      is_country_select: q.is_country_select || false,
       order: q.order,
       created_at: q.created_at,
       updated_at: q.updated_at,
@@ -218,7 +228,7 @@ export const useQuestions = () => {
       text_input_max_answers: q.text_input_max_answers || null,
       max_words: q.max_words || null,
       skippable: q.skippable || false,
-      structured_answers: q.stuctured_answers || null,
+      structured_answers: q.structured_answers || null,
     }));
 
     const { error } = await supabase

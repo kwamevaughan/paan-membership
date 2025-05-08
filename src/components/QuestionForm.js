@@ -7,6 +7,7 @@ import QuestionTextEditor from "./QuestionTextEditor";
 import OpenEndedOptions from "./OpenEndedOptions";
 import NonOpenEndedOptions from "./NonOpenEndedOptions";
 import DependencyFields from "./DependencyFields";
+import { useCountry } from "@/hooks/useCountry";
 
 export default function QuestionForm({
   mode,
@@ -26,6 +27,7 @@ export default function QuestionForm({
   const [otherOptionText, setOtherOptionText] = useState("");
   const [category, setCategory] = useState("");
   const [isOpenEnded, setIsOpenEnded] = useState(false);
+  const [isCountrySelect, setIsCountrySelect] = useState(false);
   const [maxAnswers, setMaxAnswers] = useState("");
   const [dependsOnQuestionId, setDependsOnQuestionId] = useState("");
   const [dependsOnAnswer, setDependsOnAnswer] = useState("");
@@ -36,6 +38,8 @@ export default function QuestionForm({
   const [maxWords, setMaxWords] = useState("");
   const [skippable, setSkippable] = useState(false);
   const [answerStructure, setAnswerStructure] = useState("");
+
+  const { countryOptions } = useCountry();
 
   useEffect(() => {
     if (isOpen) {
@@ -56,6 +60,7 @@ export default function QuestionForm({
         setIsOtherEnabled(question.options?.includes("Other") || false);
         setOtherOptionText(question.other_option_text || "");
         setIsOpenEnded(question.is_open_ended || false);
+        setIsCountrySelect(question.is_country_select || false);
         setMaxAnswers(question.max_answers?.toString() || "");
         setDependsOnQuestionId(
           question.depends_on_question_id?.toString() || ""
@@ -83,6 +88,7 @@ export default function QuestionForm({
         setIsOtherEnabled(false);
         setOtherOptionText("");
         setIsOpenEnded(false);
+        setIsCountrySelect(false);
         setMaxAnswers("");
         setDependsOnQuestionId("");
         setDependsOnAnswer("");
@@ -105,15 +111,19 @@ export default function QuestionForm({
   const handleFormSubmit = async (e) => {
     e.preventDefault();
 
-    const optionsArray = isOpenEnded
-      ? []
-      : options
-          .split("\n")
-          .map((opt) => opt.trim())
-          .filter((opt) => opt);
-
-    if (isOtherEnabled && !isOpenEnded) {
-      optionsArray.push("Other");
+    let optionsArray = [];
+    if (isCountrySelect) {
+      optionsArray = countryOptions.map((opt) => opt.value);
+    } else if (isOpenEnded) {
+      optionsArray = [];
+    } else {
+      optionsArray = options
+        .split("\n")
+        .map((opt) => opt.trim())
+        .filter((opt) => opt);
+      if (isOtherEnabled) {
+        optionsArray.push("Other");
+      }
     }
 
     const isTextEmpty =
@@ -128,8 +138,10 @@ export default function QuestionForm({
       return;
     }
 
-    if (!isOpenEnded && optionsArray.length === 0) {
-      toast.error("Please provide at least one option for non-open-ended questions.");
+    if (!isOpenEnded && !isCountrySelect && optionsArray.length === 0) {
+      toast.error(
+        "Please provide at least one option for non-open-ended questions."
+      );
       return;
     }
 
@@ -160,7 +172,8 @@ export default function QuestionForm({
       !isOtherEnabled &&
       textInputOption?.option &&
       textInputOption.option !== "Any" &&
-      !optionsArray.includes(textInputOption.option)
+      !optionsArray.includes(textInputOption.option) &&
+      !isCountrySelect
     ) {
       toast.error(
         "Selected text input option must be one of the provided options or 'Any'."
@@ -171,13 +184,27 @@ export default function QuestionForm({
     if (dependsOnQuestionId) {
       const questionIds = questions.map((q) => q.id);
       if (!questionIds.includes(parseInt(dependsOnQuestionId))) {
-        toast.error("Dependency question ID must reference an existing question.");
+        toast.error(
+          "Dependency question ID must reference an existing question."
+        );
         return;
       }
     }
 
     if (answerStructure === "client_references" && !isOpenEnded) {
-      toast.error("Structured answers are only supported for open-ended questions.");
+      toast.error(
+        "Structured answers are only supported for open-ended questions."
+      );
+      return;
+    }
+
+    if (
+      isCountrySelect &&
+      (isOpenEnded || isOtherEnabled || textInputOption?.option)
+    ) {
+      toast.error(
+        "Country select questions cannot be open-ended or have other/text input options."
+      );
       return;
     }
 
@@ -185,10 +212,20 @@ export default function QuestionForm({
       text,
       description,
       options: optionsArray,
-      isMultiSelect: isOpenEnded ? false : isMultiSelect,
-      otherOptionText: isOpenEnded ? "" : isOtherEnabled ? otherOptionText : "",
+      isMultiSelect: isCountrySelect
+        ? true
+        : isOpenEnded
+        ? false
+        : isMultiSelect,
+      otherOptionText:
+        isOpenEnded || isCountrySelect
+          ? ""
+          : isOtherEnabled
+          ? otherOptionText
+          : "",
       categoryId: category,
       isOpenEnded,
+      isCountrySelect,
       maxAnswers: isOpenEnded && maxAnswers ? parseInt(maxAnswers) : null,
       dependsOnQuestionId: dependsOnQuestionId
         ? parseInt(dependsOnQuestionId)
@@ -199,14 +236,20 @@ export default function QuestionForm({
           ? hasLinks
           : false,
       textInputOption:
-        !isOpenEnded && !isOtherEnabled && textInputOption?.option
+        !isOpenEnded &&
+        !isOtherEnabled &&
+        textInputOption?.option &&
+        !isCountrySelect
           ? {
               option: textInputOption.option,
               placeholder: textInputPlaceholder,
             }
           : null,
       textInputMaxAnswers:
-        !isOpenEnded && textInputOption?.option && textInputMaxAnswers
+        !isOpenEnded &&
+        textInputOption?.option &&
+        textInputMaxAnswers &&
+        !isCountrySelect
           ? parseInt(textInputMaxAnswers)
           : null,
       maxWords: isOpenEnded && maxWords ? parseInt(maxWords) : null,
@@ -223,13 +266,20 @@ export default function QuestionForm({
           : null,
     };
 
-    console.log("Submitting questionData:", questionData);
+    console.log(
+      "Submitting questionData:",
+      JSON.stringify(questionData, null, 2)
+    );
     try {
       const success = question
         ? await onSubmit(question.id, questionData)
         : await onSubmit(questionData);
       if (success) {
-        toast.success(question ? "Question updated successfully!" : "Question added successfully!");
+        toast.success(
+          question
+            ? "Question updated successfully!"
+            : "Question added successfully!"
+        );
         onCancel();
       } else {
         console.error("Failed to submit question:", questionData);
@@ -282,29 +332,63 @@ export default function QuestionForm({
             mode={mode}
           />
 
-          <label
-            className={`inline-flex items-center gap-2 mt-4 mb-2 cursor-pointer hover:text-[#f05d23] ${
-              mode === "dark" ? "text-gray-300" : "text-[#231812]"
-            }`}
-          >
-            <input
-              type="checkbox"
-              checked={isOpenEnded}
-              onChange={(e) => setIsOpenEnded(e.target.checked)}
-              className="hidden"
-              id="open-ended-checkbox"
-            />
-            <span>This is an open-ended question (no predefined options)</span>
-            <Icon
-              icon={
-                isOpenEnded
-                  ? "mdi:checkbox-marked"
-                  : "mdi:checkbox-blank-outline"
-              }
-              width={20}
-              height={20}
-            />
-          </label>
+          <div className="space-y-2">
+            <label
+              className={`inline-flex items-center gap-2 cursor-pointer hover:text-[#f05d23] ${
+                mode === "dark" ? "text-gray-300" : "text-[#231812]"
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={isOpenEnded}
+                onChange={(e) => {
+                  setIsOpenEnded(e.target.checked);
+                  if (e.target.checked) setIsCountrySelect(false);
+                }}
+                className="hidden"
+                id="open-ended-checkbox"
+                disabled={isCountrySelect}
+              />
+              <span>Open-ended question (no predefined options)</span>
+              <Icon
+                icon={
+                  isOpenEnded
+                    ? "mdi:checkbox-marked"
+                    : "mdi:checkbox-blank-outline"
+                }
+                width={20}
+                height={20}
+              />
+            </label>
+
+            <label
+              className={`inline-flex items-center gap-2 cursor-pointer hover:text-[#f05d23] ${
+                mode === "dark" ? "text-gray-300" : "text-[#231812]"
+              }`}
+            >
+              <input
+                type="checkbox"
+                checked={isCountrySelect}
+                onChange={(e) => {
+                  setIsCountrySelect(e.target.checked);
+                  if (e.target.checked) setIsOpenEnded(false);
+                }}
+                className="hidden"
+                id="country-select-checkbox"
+                disabled={isOpenEnded}
+              />
+              <span>Country select question (multi-select dropdown)</span>
+              <Icon
+                icon={
+                  isCountrySelect
+                    ? "mdi:checkbox-marked"
+                    : "mdi:checkbox-blank-outline"
+                }
+                width={20}
+                height={20}
+              />
+            </label>
+          </div>
 
           {isOpenEnded ? (
             <OpenEndedOptions
@@ -320,7 +404,7 @@ export default function QuestionForm({
               setHasLinks={setHasLinks}
               mode={mode}
             />
-          ) : (
+          ) : isCountrySelect ? null : (
             <NonOpenEndedOptions
               options={options}
               handleOptionChange={handleOptionChange}

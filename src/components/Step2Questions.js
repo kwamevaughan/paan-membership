@@ -5,7 +5,7 @@ import QuestionCard from "./QuestionCard";
 export default function Step2Questions({
   formData,
   setFormData,
-  handleOptionToggle,
+  handleOptionToggle, // Use prop from InterviewPage.jsx
   questions,
   categories = [],
   isLoading = false,
@@ -141,7 +141,6 @@ export default function Step2Questions({
       const dynamic = dynamicAnswers[qId] || [];
 
       if (!answers.length && !q.skippable) {
-        
         return false;
       }
 
@@ -158,7 +157,6 @@ export default function Step2Questions({
           const isComplete = q.skippable
             ? answerCount === 0 || answerCount >= (q.max_answers || 1)
             : answerCount >= (q.max_answers || 1);
-          
           return isComplete;
         }
         const answerCount = dynamic.filter(
@@ -167,7 +165,6 @@ export default function Step2Questions({
         const isComplete = q.skippable
           ? answerCount === 0 || answerCount >= (q.max_answers || 1)
           : answerCount >= (q.max_answers || 1);
-       
         return isComplete;
       }
 
@@ -192,7 +189,6 @@ export default function Step2Questions({
           return ans.option && customText.trim() !== "";
         });
         const isComplete = isValid && answerCount >= requiredAnswers;
-        
         return isComplete;
       }
 
@@ -201,7 +197,6 @@ export default function Step2Questions({
           ? ans.trim() !== ""
           : ans.option || ans.customText?.trim()
       );
-      
       return isComplete;
     },
     [questions, formData.answers, dynamicAnswers]

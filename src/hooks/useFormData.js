@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export const useFormData = () => {
+export const useFormData = (questionCount = 0) => {
   const [formData, setFormData] = useState({
     agencyName: "",
     yearEstablished: "",
@@ -13,7 +13,7 @@ export const useFormData = () => {
     primaryContactPhone: "",
     primaryContactLinkedin: "",
     opening: "",
-    answers: Array.from({ length: 17 }, () => []),
+    answers: Array(questionCount).fill([]),
     companyRegistration: null,
     portfolioWork: null,
     agencyProfile: null,
@@ -32,33 +32,45 @@ export const useFormData = () => {
     customText = null,
     isMultiSelect = false
   ) => {
+    console.log(
+      `useFormData handleOptionToggle: questionIndex=${questionIndex}, option=${option}, customText=`,
+      customText,
+      `isMultiSelect=${isMultiSelect}`
+    );
     setFormData((prev) => {
       const newAnswers = [...prev.answers];
       newAnswers[questionIndex] = newAnswers[questionIndex] || [];
 
       let updatedAnswers;
       if (option === null && Array.isArray(customText)) {
-        updatedAnswers = customText.filter((ans) => {
-          if (ans.customText) {
-            try {
-              const parsed =
-                typeof ans.customText === "string"
-                  ? JSON.parse(ans.customText)
-                  : ans.customText;
-              return (
-                Object.values(parsed).every(
-                  (val) => typeof val === "string" && val.trim() !== ""
-                ) || ans.customText.trim() !== ""
-              );
-            } catch {
-              return (
-                typeof ans.customText === "string" &&
-                ans.customText.trim() !== ""
-              );
+        // Handle country select (array of strings) or structured answers (array of objects)
+        if (customText.every((item) => typeof item === "string")) {
+          // Country select: customText is ['Kenya', 'Nigeria', ...]
+          updatedAnswers = customText.filter((ans) => ans.trim() !== "");
+        } else {
+          // Structured/open-ended answers
+          updatedAnswers = customText.filter((ans) => {
+            if (ans.customText) {
+              try {
+                const parsed =
+                  typeof ans.customText === "string"
+                    ? JSON.parse(ans.customText)
+                    : ans.customText;
+                return (
+                  Object.values(parsed).every(
+                    (val) => typeof val === "string" && val.trim() !== ""
+                  ) || ans.customText.trim() !== ""
+                );
+              } catch {
+                return (
+                  typeof ans.customText === "string" &&
+                  ans.customText.trim() !== ""
+                );
+              }
             }
-          }
-          return false;
-        });
+            return false;
+          });
+        }
       } else if (option === "Other") {
         const existingOther = newAnswers[questionIndex].find(
           (ans) => typeof ans === "object" && ans.option === "Other"
@@ -134,6 +146,10 @@ export const useFormData = () => {
                     )))))
       );
 
+      console.log(
+        `Updated formData.answers[${questionIndex}]:`,
+        newAnswers[questionIndex]
+      );
       return { ...prev, answers: newAnswers };
     });
   };

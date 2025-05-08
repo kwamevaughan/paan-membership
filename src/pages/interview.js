@@ -31,6 +31,7 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
   const { categories, isLoading, addCategory, editCategory, deleteCategory } =
     useCategories();
 
+  // Pass initialQuestions.length to useFormData
   const {
     formData,
     setFormData,
@@ -39,7 +40,7 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
     handleChange,
     handleOptionToggle,
     fileToBase64,
-  } = useFormData();
+  } = useFormData(initialQuestions.length);
 
   const { errors, validateForm } = useFormValidation();
 
@@ -54,6 +55,7 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
   );
 
   useEffect(() => {
+    console.log("initialQuestions.length:", initialQuestions.length);
     setIsClient(true);
     const opening = router.query.opening;
     if (opening && !formData.opening) {
@@ -470,6 +472,7 @@ export async function getStaticProps() {
       revalidate: 60,
     };
   } catch (error) {
+    console.error("Error fetching questions:", error);
     return {
       props: {
         initialQuestions: [],

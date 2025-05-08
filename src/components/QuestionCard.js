@@ -62,7 +62,15 @@ export default function QuestionCard({
         : [{ text: "", link: "" }];
       setDynamicAnswers((prev) => ({ ...prev, [q.id]: initialAnswers }));
     }
-    if (!q.is_open_ended && q.text_input_option) {
+    if (
+      !q.is_open_ended &&
+      q.text_input_option &&
+      formData.answers[q.id - 1]?.some(
+        (ans) =>
+          (typeof ans === "string" && ans === q.text_input_option.option) ||
+          (typeof ans === "object" && ans.option === q.text_input_option.option)
+      )
+    ) {
       const currentAnswers = dynamicAnswers[q.id] || [];
       const requiredAnswers = q.text_input_max_answers || 1;
       if (currentAnswers.length < requiredAnswers) {
@@ -72,11 +80,10 @@ export default function QuestionCard({
             text: currentAnswers[idx]?.text || "",
           })
         );
-
         setDynamicAnswers((prev) => ({ ...prev, [q.id]: initialAnswers }));
       }
     }
-  }, [q, dynamicAnswers, setDynamicAnswers]);
+  }, [q, dynamicAnswers, setDynamicAnswers, formData.answers]);
 
   const countWords = (text) => {
     return text.trim() === "" ? 0 : text.trim().split(/\s+/).length;
@@ -207,10 +214,6 @@ export default function QuestionCard({
     const selectedValues = selectedOptions
       ? selectedOptions.map((opt) => opt.value)
       : [];
-    console.log(
-      `handleCountrySelectChange: qId=${qId}, selectedValues=`,
-      selectedValues
-    );
     if (selectedValues.length === 0) {
       toast.error("Please select at least one country.");
       handleOptionToggle(qId - 1, null, []);
@@ -249,8 +252,13 @@ export default function QuestionCard({
       const wasPreviouslySelected = currentAnswers.some(
         (ans) => ans.option === option || ans === option
       );
+      const isTextInputOption =
+        q.text_input_option?.option === option ||
+        q.text_input_option?.option === "Any";
       updatedAnswers = [
-        customText !== undefined && typeof customText === "string"
+        isTextInputOption &&
+        customText !== undefined &&
+        typeof customText === "string"
           ? { option, customText }
           : { option },
       ];
@@ -260,24 +268,6 @@ export default function QuestionCard({
           id: `select-${q.id}-${option}`,
         });
       }
-    }
-
-    if (!q.is_open_ended && q.text_input_option) {
-      setDynamicAnswers((prev) => {
-        const currentAnswers = prev[q.id] || [];
-        const requiredAnswers = q.text_input_max_answers || 1;
-        if (currentAnswers.length < requiredAnswers) {
-          const initialAnswers = Array.from(
-            { length: requiredAnswers },
-            (_, idx) => ({
-              text: currentAnswers[idx]?.text || "",
-            })
-          );
-
-          return { ...prev, [q.id]: initialAnswers };
-        }
-        return prev;
-      });
     }
 
     handleOptionToggle(qIndex, option, updatedAnswers, q.is_multi_select);
@@ -374,21 +364,13 @@ export default function QuestionCard({
     }),
   };
 
-  // Debug formData.answers and selectedCountries
-  console.log(
-    `Question ID: ${q.id}, formData.answers[${q.id - 1}]:`,
-    formData.answers[q.id - 1]
-  );
-
   // Get selected country labels for display
   const selectedCountries = formData.answers[q.id - 1]?.length
     ? formData.answers[q.id - 1].map((value) => {
         const country = countryOptions.find((opt) => opt.value === value);
-        console.log(`Mapping value: ${value}, found country:`, country);
         return country ? country.label : value;
       })
     : [];
-  console.log(`Selected Countries for Q${q.id}:`, selectedCountries);
 
   return (
     <div
@@ -662,13 +644,13 @@ export default function QuestionCard({
                 <div key={opt} className="space-y-2">
                   <button
                     onClick={(e) => {
-                      e.stopPropagation(); // Prevent event bubbling
+                      e.stopPropagation();
                       handleOptionToggleWrapper(
                         q.id - 1,
                         opt,
                         isTextInputOption && !isOther
                           ? dynamicAnswers[q.id]?.[0]?.text
-                          : otherInputs[q.id]
+                          : undefined
                       );
                     }}
                     className={`w-full p-3 rounded-lg border-2 text-left text-sm font-medium transition ${

@@ -5,7 +5,7 @@ import QuestionCard from "./QuestionCard";
 export default function Step2Questions({
   formData,
   setFormData,
-  handleOptionToggle, // Use prop from InterviewPage.jsx
+  handleOptionToggle,
   questions,
   categories = [],
   isLoading = false,
@@ -135,10 +135,13 @@ export default function Step2Questions({
         return false;
       }
 
-      if (q.skippable && !formData.answers[qId - 1]?.length) return true;
-
       const answers = formData.answers[qId - 1] || [];
       const dynamic = dynamicAnswers[qId] || [];
+      
+
+      if (q.skippable && !answers.length) {
+        return true;
+      }
 
       if (!answers.length && !q.skippable) {
         return false;
@@ -157,6 +160,7 @@ export default function Step2Questions({
           const isComplete = q.skippable
             ? answerCount === 0 || answerCount >= (q.max_answers || 1)
             : answerCount >= (q.max_answers || 1);
+          
           return isComplete;
         }
         const answerCount = dynamic.filter(
@@ -165,30 +169,45 @@ export default function Step2Questions({
         const isComplete = q.skippable
           ? answerCount === 0 || answerCount >= (q.max_answers || 1)
           : answerCount >= (q.max_answers || 1);
+        
         return isComplete;
       }
 
       if (q.text_input_option) {
         const requiredAnswers = q.text_input_max_answers || 1;
-        const answerCount = dynamic.filter(
-          (ans) => typeof ans.text === "string" && ans.text.trim() !== ""
-        ).length;
-        const isValid = answers.every((ans) => {
-          if (typeof ans === "string") return ans.trim() !== "";
-          const customText =
-            typeof ans.customText === "string" ? ans.customText : "";
-          if (
-            q.text_input_option?.option &&
-            q.text_input_option.option !== "Any"
-          ) {
-            return (
-              ans.option === q.text_input_option.option &&
-              customText.trim() !== ""
-            );
-          }
-          return ans.option && customText.trim() !== "";
-        });
-        const isComplete = isValid && answerCount >= requiredAnswers;
+        const hasTextOption = answers.some((ans) =>
+          typeof ans === "string"
+            ? ans === q.text_input_option.option
+            : ans.option === q.text_input_option.option
+        );
+        if (hasTextOption) {
+          const answerCount = dynamic.filter(
+            (ans) => typeof ans.text === "string" && ans.text.trim() !== ""
+          ).length;
+          const isValid = answers.every((ans) => {
+            const isTextOption =
+              (typeof ans === "string" && ans === q.text_input_option.option) ||
+              (typeof ans === "object" &&
+                ans.option === q.text_input_option.option);
+            if (isTextOption) {
+              const customText =
+                typeof ans === "object" && typeof ans.customText === "string"
+                  ? ans.customText
+                  : dynamic[0]?.text || "";
+              return customText.trim() !== "";
+            }
+            return true;
+          });
+          const isComplete = isValid && answerCount >= requiredAnswers;
+          
+          return isComplete;
+        }
+        const isComplete = answers.every((ans) =>
+          typeof ans === "string"
+            ? ans !== q.text_input_option.option
+            : (ans.option || null) !== q.text_input_option.option
+        );
+        
         return isComplete;
       }
 
@@ -197,6 +216,7 @@ export default function Step2Questions({
           ? ans.trim() !== ""
           : ans.option || ans.customText?.trim()
       );
+      
       return isComplete;
     },
     [questions, formData.answers, dynamicAnswers]

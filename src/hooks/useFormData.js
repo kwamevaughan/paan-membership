@@ -32,11 +32,11 @@ export const useFormData = (questionCount = 0) => {
     customText = null,
     isMultiSelect = false
   ) => {
-    console.log(
-      `useFormData handleOptionToggle: questionIndex=${questionIndex}, option=${option}, customText=`,
-      customText,
-      `isMultiSelect=${isMultiSelect}`
-    );
+    // console.log(
+    //   `useFormData handleOptionToggle: questionIndex=${questionIndex}, option=${option}, customText=`,
+    //   customText,
+    //   `isMultiSelect=${isMultiSelect}`
+    // );
     setFormData((prev) => {
       const newAnswers = [...prev.answers];
       newAnswers[questionIndex] = newAnswers[questionIndex] || [];
@@ -146,10 +146,10 @@ export const useFormData = (questionCount = 0) => {
                     )))))
       );
 
-      console.log(
-        `Updated formData.answers[${questionIndex}]:`,
-        newAnswers[questionIndex]
-      );
+      // console.log(
+      //   `Updated formData.answers[${questionIndex}]:`,
+      //   newAnswers[questionIndex]
+      // );
       return { ...prev, answers: newAnswers };
     });
   };

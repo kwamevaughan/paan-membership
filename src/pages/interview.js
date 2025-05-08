@@ -18,20 +18,10 @@ import { useCategories } from "@/hooks/useCategories";
 export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
   const router = useRouter();
   const [step, setStep] = useState(1);
-  const [currentPage, setCurrentPage] = useState(0);
-  const [uploadProgress, setUploadProgress] = useState({
-    companyRegistration: 0,
-    portfolioWork: 0,
-    agencyProfile: 0,
-    taxRegistration: 0,
-  });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isClient, setIsClient] = useState(false);
   const [questions] = useState(initialQuestions);
-  const { categories, isLoading, addCategory, editCategory, deleteCategory } =
-    useCategories();
+  const { categories, isLoading } = useCategories();
 
-  // Pass initialQuestions.length to useFormData
   const {
     formData,
     setFormData,
@@ -43,20 +33,12 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
   } = useFormData(initialQuestions.length);
 
   const { errors, validateForm } = useFormValidation();
-
   const fileUploadProps = useFileUpload(formData, setFormData);
 
-  const questionsPerPage = 5;
-  const totalPages = Math.ceil(questions.length / questionsPerPage);
   const totalQuestions = questions.length;
-  const currentQuestions = questions.slice(
-    currentPage * questionsPerPage,
-    (currentPage + 1) * questionsPerPage
-  );
 
   useEffect(() => {
-    console.log("initialQuestions.length:", initialQuestions.length);
-    setIsClient(true);
+    
     const opening = router.query.opening;
     if (opening && !formData.opening) {
       setFormData((prev) => ({
@@ -64,7 +46,13 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
         opening: decodeURIComponent(opening),
       }));
     }
-  }, [router.query.opening, formData.opening, setFormData]);
+  }, [
+    router.query.opening,
+    formData.opening,
+    formData.answers,
+    setFormData,
+    questions,
+  ]);
 
   const handleNext = async () => {
     if (step === 1) {
@@ -78,35 +66,9 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
       setStep(2);
       toast.success("Great! Let’s move to the questions.", { icon: "🎉" });
     } else if (step === 2) {
-      const pageComplete = isPageComplete();
-      if (!pageComplete) {
-        const missingOtherInput = currentQuestions.find((q) => {
-          const answers = formData.answers[q.id - 1] || [];
-          return answers.some(
-            (ans) =>
-              ans.option === "Other" &&
-              (!ans.customText || ans.customText.trim() === "")
-          );
-        });
-        if (missingOtherInput) {
-          toast.error("Please provide input for all 'Other' selections.", {
-            icon: "⚠️",
-          });
-        } else {
-          toast.error("Please answer all questions on this page.", {
-            icon: "⚠️",
-          });
-        }
-        return;
-      }
-      if (currentPage < totalPages - 1) {
-        handleNextPage();
-      } else {
-        setStep(3);
-        toast.success("All questions completed! Upload your documents next.", {
-          icon: "📝",
-        });
-      }
+      // Defer to Step2Questions.jsx validation
+      toast.success("Proceeding to document upload.", { icon: "📝" });
+      setStep(3);
     } else if (step === 3) {
       setIsSubmitting(true);
       const maxFileSize = 5 * 1024 * 1024;
@@ -161,28 +123,6 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
       };
 
       const submitToast = toast.loading("Submitting your application...");
-
-      const simulateProgress = () => {
-        let progress = 0;
-        const interval = setInterval(() => {
-          progress += 10;
-          setUploadProgress({
-            companyRegistration: formData.companyRegistration
-              ? Math.min(progress, 100)
-              : 0,
-            portfolioWork: formData.portfolioWork ? Math.min(progress, 100) : 0,
-            agencyProfile: formData.agencyProfile ? Math.min(progress, 100) : 0,
-            taxRegistration: formData.taxRegistration
-              ? Math.min(progress, 100)
-              : 0,
-          });
-          if (progress >= 100) clearInterval(interval);
-        }, 200);
-        return interval;
-      };
-
-      const progressInterval = simulateProgress();
-
       try {
         const response = await fetch("/api/submit", {
           method: "POST",
@@ -193,13 +133,6 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
         });
         const result = await response.json();
         if (response.ok) {
-          clearInterval(progressInterval);
-          setUploadProgress({
-            companyRegistration: 100,
-            portfolioWork: 100,
-            agencyProfile: 100,
-            taxRegistration: 100,
-          });
           toast.success("Submission successful!", {
             id: submitToast,
             icon: "✅",
@@ -210,7 +143,6 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
           throw new Error(result.error || "Unknown error");
         }
       } catch (error) {
-        clearInterval(progressInterval);
         toast.error(`Submission failed: ${error.message}`, {
           id: submitToast,
           icon: "❌",
@@ -223,100 +155,10 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
   };
 
   const handleBack = () => {
-    if (step === 2 && currentPage > 0) {
-      setCurrentPage(currentPage - 1);
-      toast("Going back to the previous set...", { icon: "⬅️" });
-    } else if (step > 1) {
+    if (step > 1) {
       setStep(step - 1);
-      setUploadProgress({
-        companyRegistration: 0,
-        portfolioWork: 0,
-        agencyProfile: 0,
-        taxRegistration: 0,
-      });
       toast("Returning to the previous step...", { icon: "⬅️" });
     }
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages - 1) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const handleQuestionsComplete = () => {
-    setStep(3);
-    setUploadProgress({
-      companyRegistration: 0,
-      portfolioWork: 0,
-      agencyProfile: 0,
-      taxRegistration: 0,
-    });
-    toast.success("All questions completed! Upload your documents next.", {
-      icon: "📝",
-    });
-  };
-
-  const isPageComplete = () => {
-    return currentQuestions.every((q) => {
-      const answers = formData.answers[q.id - 1] || [];
-
-      if (q.depends_on_question_id) {
-        const parentAnswers =
-          formData.answers[q.depends_on_question_id - 1] || [];
-        if (
-          !parentAnswers.some((ans) =>
-            typeof ans === "object"
-              ? ans.option === q.depends_on_answer
-              : ans === q.depends_on_answer
-          )
-        ) {
-          return true;
-        }
-      }
-
-      if (q.skippable && answers.length === 0) return true;
-
-      if (answers.length === 0) {
-        return false;
-      }
-
-      if (q.is_open_ended) {
-        if (q.structured_answers) {
-          return answers.every((ans) => {
-            try {
-              const parsed = JSON.parse(ans.customText || "{}");
-              return q.structured_answers.fields.every(
-                (field) =>
-                  typeof parsed[field.name.toLowerCase()] === "string" &&
-                  parsed[field.name.toLowerCase()].trim() !== ""
-              );
-            } catch {
-              return false;
-            }
-          });
-        }
-        return answers.some(
-          (ans) =>
-            typeof ans.customText === "string" && ans.customText.trim() !== ""
-        );
-      }
-
-      const hasOther = answers.some((ans) => ans.option === "Other");
-      if (hasOther) {
-        return answers.every(
-          (ans) =>
-            ans.option !== "Other" ||
-            (typeof ans.customText === "string" && ans.customText.trim() !== "")
-        );
-      }
-
-      if (q.is_multi_select) {
-        return answers.length >= 1;
-      }
-
-      return true;
-    });
   };
 
   const isStep1Complete = formData.fullName && formData.email;
@@ -363,9 +205,8 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
         mode={mode}
         toggleMode={toggleMode}
         step={step}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        uploadProgress={uploadProgress}
+        currentPage={0}
+        totalPages={1}
         answeredQuestions={answeredQuestions}
         totalQuestions={totalQuestions}
         isStep1Complete={isStep1Complete}
@@ -393,7 +234,7 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
               questions={questions}
               categories={categories || []}
               isLoading={isLoading}
-              onComplete={handleQuestionsComplete}
+              onComplete={() => setStep(3)}
               mode={mode}
             />
           )}
@@ -402,8 +243,6 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
               formData={formData}
               setFormData={setFormData}
               isSubmitting={isSubmitting}
-              uploadProgress={uploadProgress}
-              setUploadProgress={setUploadProgress}
               mode={mode}
               handleNext={handleNext}
               {...fileUploadProps}
@@ -432,14 +271,11 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
               </button>
               <button
                 onClick={handleNext}
-                disabled={(step === 2 && !isPageComplete()) || isSubmitting}
+                disabled={isSubmitting}
                 className={`flex items-center justify-center px-4 py-2 bg-[#f05d23] text-white rounded-lg hover:bg-[#d94f1e] disabled:bg-gray-300 disabled:text-gray-600 transition-all duration-200 shadow-md`}
               >
                 {step === 3 ? (
-                  <>
-                    {/* Submit
-                    <Icon icon="mdi:send" className="ml-2 w-5 h-5" /> */}
-                  </>
+                  <>Submit</>
                 ) : (
                   <>
                     Next

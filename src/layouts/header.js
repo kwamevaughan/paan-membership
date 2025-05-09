@@ -34,7 +34,6 @@ const Header = ({
     progressText = `${Math.round(progressPercentage)}%`;
   }
 
-
   const steps = [
     {
       label: "Agency Details",
@@ -77,7 +76,7 @@ const Header = ({
               className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 rounded-lg"
               aria-label="Go to homepage"
             >
-              <div className="block md:hidden relative h-12 w-12 overflow-hidden rounded-xl">
+              <div className="block md:hidden relative h-16 w-16 overflow-hidden rounded-xl">
                 <Image
                   src={
                     mode === "dark"
@@ -89,7 +88,7 @@ const Header = ({
                   className="object-contain p-1"
                 />
               </div>
-              <div className="hidden md:block relative h-14 w-48">
+              <div className="hidden md:block relative h-20 w-64">
                 <Image
                   src={
                     mode === "dark"
@@ -104,10 +103,11 @@ const Header = ({
             </Link>
           </div>
 
-          {/* Step Navigation in center */}
+          {/* Step Navigation & Progress Bar */}
           {step >= 1 && step <= 4 && (
-            <div className="hidden md:flex flex-1 justify-center">
+            <div className="hidden md:flex flex-1 justify-center items-center">
               <div className="relative w-full max-w-3xl">
+                {/* Step Progress Bar */}
                 <div className="absolute top-6 left-0 w-full h-1 bg-gray-200/60 dark:bg-gray-800/60 -z-10"></div>
                 <div
                   className="absolute top-6 left-0 h-1 bg-gradient-to-r from-[#f25849] to-[#84c1d9] -z-10 transition-all duration-1000 ease-in-out"
@@ -116,6 +116,7 @@ const Header = ({
                   }}
                 ></div>
 
+                {/* Steps */}
                 <div className="flex justify-between">
                   {steps.map((item, i) => {
                     const isCompleted = step > i + 1;
@@ -128,7 +129,6 @@ const Header = ({
                         onMouseEnter={() => setHoverStep(i)}
                         onMouseLeave={() => setHoverStep(null)}
                       >
-                        {/* Step Button */}
                         <div className="flex flex-col items-center z-10">
                           <button
                             className={`flex items-center justify-center h-12 w-12 rounded-full border-2 transition-all duration-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f05d23]
@@ -191,7 +191,7 @@ const Header = ({
                           </span>
                         </div>
 
-                        {/* Tooltip OUTSIDE of the button wrapper */}
+                        {/* Tooltip */}
                         <div
                           className={`absolute top-16 left-1/2 transform -translate-x-1/2 z-[999] opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none
                           ${
@@ -209,11 +209,32 @@ const Header = ({
                     );
                   })}
                 </div>
+
+                {/* Progress Bar Below Steps */}
+                <div className="mt-6 w-full h-3 bg-gray-100 rounded-full overflow-hidden dark:bg-gray-800/70 backdrop-blur-md shadow-inner relative">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#f25849] via-[#f05d23] to-[#84c1d9] bg-[length:200%_auto] animate-gradient transition-all duration-1000 ease-in-out"
+                    style={{ width: `${progressPercentage}%` }}
+                  >
+                    <div className="absolute inset-0 bg-white/40 rounded-full animate-pulse"></div>
+                    <div className="absolute inset-0 shadow-[0_0_10px_2px_rgba(240,93,35,0.5)] rounded-full"></div>
+                  </div>
+                </div>
+                <p
+                  className={`mt-2 text-sm font-semibold text-center ${
+                    mode === "dark" ? "text-slate-200" : "text-slate-600"
+                  }`}
+                >
+                  <span className="font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#f25849] to-[#84c1d9]">
+                    {progressText}
+                  </span>{" "}
+                  Complete
+                </p>
               </div>
             </div>
           )}
 
-          {/* Right Controls (Dark Mode Toggle) */}
+          {/* Dark Mode Toggle */}
           <div className="flex items-center space-x-4">
             <button
               onClick={() => toggleMode()}
@@ -235,35 +256,9 @@ const Header = ({
             </button>
           </div>
         </div>
-
-        {/* Progress Bar (Below Nav Steps) */}
-        {step >= 1 && step <= 4 && (
-          <div className="mt-6">
-            <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden dark:bg-gray-800/70 backdrop-blur-md shadow-inner relative">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-[#f25849] via-[#f05d23] to-[#84c1d9] bg-[length:200%_auto] animate-gradient transition-all duration-1000 ease-in-out"
-                style={{ width: `${progressPercentage}%` }}
-              >
-                <div className="absolute inset-0 bg-white/40 rounded-full animate-pulse"></div>
-                <div className="absolute inset-0 shadow-[0_0_10px_2px_rgba(240,93,35,0.5)] rounded-full"></div>
-              </div>
-            </div>
-            <p
-              className={`mt-2 text-sm font-semibold text-center ${
-                mode === "dark" ? "text-slate-200" : "text-slate-600"
-              }`}
-            >
-              <span className="font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#f25849] to-[#84c1d9]">
-                {progressText}
-              </span>{" "}
-              Complete
-            </p>
-          </div>
-        )}
       </div>
     </header>
   );
-
 };
 
 export default Header;

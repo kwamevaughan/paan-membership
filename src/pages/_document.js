@@ -51,7 +51,7 @@ class MyDocument extends Document {
             href="/favicon-16x16.png"
           />
         </Head>
-        <body style={{ fontFamily: "Questrial, sans-serif" }}>
+        <body>
           <Main />
           <NextScript />
         </body>

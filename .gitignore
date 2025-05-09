@@ -36,3 +36,6 @@ Thumbs.db
 # Package distribution
 dist/
 build/
+
+# Editor history
+.history/

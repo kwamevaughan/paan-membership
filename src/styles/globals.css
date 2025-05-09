@@ -4,15 +4,14 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-    transition: background-color 0.3s ease, color 0.3s ease;
-    font-family: 'Questrial', sans-serif;
-    background-color: #fafafa;
-    font-size: 15px;
+:root {
+  --font-questrial: "Questrial", sans-serif;
 }
 
-html {
-    font-family: 'Questrial', sans-serif;
+body {
+    transition: background-color 0.3s ease, color 0.3s ease;
+    background-color: #fafafa;
+    font-size: 15px;
 }
 
 .font-orange{

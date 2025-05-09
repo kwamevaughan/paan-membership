@@ -3,7 +3,13 @@ import { useRouter } from "next/router";
 import toast, { Toaster } from "react-hot-toast";
 import "leaflet/dist/leaflet.css";
 import "../styles/globals.css";
+import { Questrial } from "next/font/google";
 import { sidebarNav } from "@/data/nav";
+
+const questrial = Questrial({
+    weight: "400",
+    subsets: ["latin"],
+});
 
 function MyApp({ Component, pageProps }) {
     const [mode, setMode] = useState("light");
@@ -71,10 +77,10 @@ function MyApp({ Component, pageProps }) {
     }, [router]);
 
     return (
-        <div className={mode === "dark" ? "dark" : ""}>
-            <Toaster position="top-center" reverseOrder={false} />
-            <Component {...pageProps} mode={mode} toggleMode={toggleMode} />
-        </div>
+      <div className={`${mode === "dark" ? "dark" : ""} ${questrial.className}`}>
+        <Toaster position="top-center" reverseOrder={false} />
+        <Component {...pageProps} mode={mode} toggleMode={toggleMode} />
+      </div>
     );
 }
 

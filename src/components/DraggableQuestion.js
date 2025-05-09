@@ -54,7 +54,7 @@ const DraggableQuestion = ({
                 Delete Question?
               </p>
               <p className="mt-2 text-base text-gray-500">
-                Are you sure you want to delete the question "{cleanText}"?
+                Are you sure you want to delete the question &quot;{cleanText}&quot;?
               </p>
             </div>
           </div>

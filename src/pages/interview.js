@@ -9,7 +9,7 @@ import Step2Questions from "@/components/Step2Questions";
 import Step3Documents from "@/components/Step3Documents";
 import Step4Confirmation from "@/components/Step4Confirmation";
 import ConnectingDotsBackground from "@/components/ConnectingDotsBackground";
-import MovingDotBorder from "@/components/MovingDotBorder"; // Import the new component
+import MovingDotBorder from "@/components/MovingDotBorder";
 import { Icon } from "@iconify/react";
 import Footer from "@/layouts/footer";
 import { useRouter } from "next/router";
@@ -213,12 +213,10 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
       />
 
       <div
-        className={`flex flex-col justify-center items-center relative min-h-screen bg-cover bg-center ${
-          mode === "dark" ? "bg-gray-00" : "bg-gray-200"
+        className={`flex flex-col justify-center items-center relative min-h-screen ${
+          mode === "dark" ? "bg-[#0f172a]" : "bg-gray-200"
         }`}
-        
       >
-
         {/* Connecting dots background (z-10) */}
         <div className="absolute inset-0 z-10 pointer-events-none">
           <ConnectingDotsBackground

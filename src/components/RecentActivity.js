@@ -14,7 +14,7 @@ export default function RecentActivity({ candidates, setSelectedCandidate, setIs
 
     return (
       <div
-        className={`border-t-4 border-[#f05d23] p-6 rounded-xl shadow-lg hover:shadow-xl animate-fade-in transition-shadow duration-500 mb-6 ${
+        className={`border-t-4 border-[#84c1d9] p-6 rounded-xl shadow-lg hover:shadow-xl animate-fade-in transition-shadow duration-500 mb-6 ${
           mode === "dark" ? "bg-gray-800" : "bg-white"
         }`}
       >
@@ -35,7 +35,7 @@ export default function RecentActivity({ candidates, setSelectedCandidate, setIs
                   : "bg-gradient-to-r from-gray-50 to-gray-100 text-[#231812]"
               }`}
               style={{
-                borderLeft: "4px solid #f05d23", // Consistent highlight
+                borderLeft: "4px solid #84c1d9", // Consistent highlight
               }}
             >
               <div className="flex justify-between items-center">
@@ -60,7 +60,7 @@ export default function RecentActivity({ candidates, setSelectedCandidate, setIs
                 </div>
                 <button
                   onClick={() => handleViewClick(candidate)}
-                  className="group flex items-center gap-1 px-3 py-1 bg-[#f05d23] text-white rounded-full hover:bg-[#d94f1e] transition-all duration-300 shadow-md hover:shadow-lg"
+                  className="group flex items-center gap-1 px-3 py-1 bg-[#84c1d9] text-white rounded-full hover:bg-[#84c1d9] transition-all duration-300 shadow-md hover:shadow-lg"
                 >
                   <Icon
                     icon="mdi:eye"

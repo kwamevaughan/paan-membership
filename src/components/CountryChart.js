@@ -186,73 +186,103 @@ export default function CountryChart({ candidates, mode, onFilter }) {
     }
 
     return (
-        <div
-            className={`border-t-4 border-[#f05d23] mt-10 p-6 rounded-xl shadow-md hover:shadow-none animate-fade-in transition-shadow duration-500 animate-scale-up ${
-                mode === "dark" ? "bg-gray-800" : "bg-white"
-            }`}
+      <div
+        className={`border-t-4 border-[#84c1d9] mt-10 p-6 rounded-xl shadow-md hover:shadow-none animate-fade-in transition-shadow duration-500 animate-scale-up ${
+          mode === "dark" ? "bg-gray-800" : "bg-white"
+        }`}
+      >
+        <h3
+          className={`text-lg font-semibold mb-4 ${
+            mode === "dark" ? "text-white" : "text-[#231812]"
+          }`}
         >
-            <h3
-                className={`text-lg font-semibold mb-4 ${
-                    mode === "dark" ? "text-white" : "text-[#231812]"
-                }`}
+          Applicants by Country
+        </h3>
+
+        {mapError && (
+          <div className="mb-4 p-2 bg-red-100 text-red-800 rounded">
+            {mapError}
+          </div>
+        )}
+
+        <div className="relative h-[400px] w-full">
+          <MapContainer
+            center={[20, 0]}
+            zoom={2}
+            style={{ height: "100%", width: "100%", borderRadius: "8px" }}
+            scrollWheelZoom={false}
+            className={mode === "dark" ? "dark-map" : ""}
+          >
+            <TileLayer
+              url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+              attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> & <a href="https://carto.com/attributions">CARTO</a>'
+            />
+            <GeoJSON
+              key={JSON.stringify(candidates)}
+              data={countriesGeoJson}
+              style={getStyle}
+              onEachFeature={onEachFeature}
+            />
+          </MapContainer>
+          {hoveredCountry && (
+            <div
+              className={`absolute top-4 left-4 p-4 rounded-lg shadow-lg z-[1000] max-h-[300px] overflow-y-auto ${
+                mode === "dark"
+                  ? "bg-gray-900 text-white"
+                  : "bg-white text-[#231812]"
+              }`}
             >
-                Applicants by Country
-            </h3>
-
-            {mapError && (
-                <div className="mb-4 p-2 bg-red-100 text-red-800 rounded">{mapError}</div>
-            )}
-
-            <div className="relative h-[400px] w-full">
-                <MapContainer
-                    center={[20, 0]}
-                    zoom={2}
-                    style={{ height: "100%", width: "100%", borderRadius: "8px" }}
-                    scrollWheelZoom={false}
-                    className={mode === "dark" ? "dark-map" : ""}
-                >
-                    <TileLayer
-                        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-                        attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> & <a href="https://carto.com/attributions">CARTO</a>'
-                    />
-                    <GeoJSON
-                        key={JSON.stringify(candidates)}
-                        data={countriesGeoJson}
-                        style={getStyle}
-                        onEachFeature={onEachFeature}
-                    />
-                </MapContainer>
-                {hoveredCountry && (
-                    <div
-                        className={`absolute top-4 left-4 p-4 rounded-lg shadow-lg z-[1000] max-h-[300px] overflow-y-auto ${
-                            mode === "dark" ? "bg-gray-900 text-white" : "bg-white text-[#231812]"
-                        }`}
-                    >
-                        <h4 className="font-semibold">{hoveredCountry.name || "Unknown"}</h4>
-                        <p>Applicants: {countryCounts[hoveredCountry.code] || 0}</p>
-                        {countryCounts[hoveredCountry.code] > 0 && (
-                            <div dangerouslySetInnerHTML={{ __html: getApplicants(hoveredCountry.code) }} />
-                        )}
-                    </div>
-                )}
+              <h4 className="font-semibold">
+                {hoveredCountry.name || "Unknown"}
+              </h4>
+              <p>Applicants: {countryCounts[hoveredCountry.code] || 0}</p>
+              {countryCounts[hoveredCountry.code] > 0 && (
+                <div
+                  dangerouslySetInnerHTML={{
+                    __html: getApplicants(hoveredCountry.code),
+                  }}
+                />
+              )}
             </div>
-            <div className="mt-4 flex justify-center gap-4 flex-wrap">
-                <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 rounded-full" style={{ backgroundColor: "#f8c3a2" }}></span> 1-3
-                </span>
-                <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 rounded-full" style={{ backgroundColor: "#f5a77d" }}></span> 4-5
-                </span>
-                <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 rounded-full" style={{ backgroundColor: "#f28c5e" }}></span> 6-10
-                </span>
-                <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 rounded-full" style={{ backgroundColor: "#f05d23" }}></span> 11-20
-                </span>
-                <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 rounded-full" style={{ backgroundColor: "#b91c1c" }}></span> 20+
-                </span>
-            </div>
+          )}
         </div>
+        <div className="mt-4 flex justify-center gap-4 flex-wrap">
+          <span className="flex items-center gap-2">
+            <span
+              className="w-4 h-4 rounded-full"
+              style={{ backgroundColor: "#f8c3a2" }}
+            ></span>{" "}
+            1-3
+          </span>
+          <span className="flex items-center gap-2">
+            <span
+              className="w-4 h-4 rounded-full"
+              style={{ backgroundColor: "#f5a77d" }}
+            ></span>{" "}
+            4-5
+          </span>
+          <span className="flex items-center gap-2">
+            <span
+              className="w-4 h-4 rounded-full"
+              style={{ backgroundColor: "#f28c5e" }}
+            ></span>{" "}
+            6-10
+          </span>
+          <span className="flex items-center gap-2">
+            <span
+              className="w-4 h-4 rounded-full"
+              style={{ backgroundColor: "#f05d23" }}
+            ></span>{" "}
+            11-20
+          </span>
+          <span className="flex items-center gap-2">
+            <span
+              className="w-4 h-4 rounded-full"
+              style={{ backgroundColor: "#b91c1c" }}
+            ></span>{" "}
+            20+
+          </span>
+        </div>
+      </div>
     );
 }

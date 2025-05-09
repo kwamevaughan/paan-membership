@@ -122,21 +122,21 @@ export default function StatusChart({ candidates, mode, onFilter }) {
     };
 
     return (
-        <div
-            className={`border-t-4 border-[#f05d23] p-6 rounded-xl shadow-md hover:shadow-none animate-fade-in transition-shadow duration-500 animate-scale-up ${
-                mode === "dark" ? "bg-gray-800" : "bg-white"
-            }`}
+      <div
+        className={`border-t-4 border-[#84c1d9] p-6 rounded-xl shadow-md hover:shadow-none animate-fade-in transition-shadow duration-500 animate-scale-up ${
+          mode === "dark" ? "bg-gray-800" : "bg-white"
+        }`}
+      >
+        <h3
+          className={`text-lg font-semibold mb-4 ${
+            mode === "dark" ? "text-white" : "text-[#231812]"
+          }`}
         >
-            <h3
-                className={`text-lg font-semibold mb-4 ${
-                    mode === "dark" ? "text-white" : "text-[#231812]"
-                }`}
-            >
-                Applicant Status
-            </h3>
-            <div className="h-64">
-                <Doughnut data={data} options={options} />
-            </div>
+          Applicant Status
+        </h3>
+        <div className="h-64">
+          <Doughnut data={data} options={options} />
         </div>
+      </div>
     );
 }

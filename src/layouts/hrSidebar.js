@@ -47,13 +47,13 @@ const HRSidebar = ({ isOpen, mode, onLogout, toggleSidebar }) => {
     const fullName = "PAAN Member"; // Static for now
 
     const isActive = (pathname) =>
-        router.pathname === pathname
-            ? mode === "dark"
-                ? "bg-[#f05d23] text-white shadow-md"
-                : "bg-[#f05d23] text-white shadow-md"
-            : mode === "dark"
-                ? "text-gray-200 hover:bg-gray-700 hover:text-white"
-                : "text-[#231812] hover:bg-gray-200 hover:text-[#f05d23]";
+      router.pathname === pathname
+        ? mode === "dark"
+          ? "bg-[#84c1d9] text-white shadow-md"
+          : "bg-[#84c1d9] text-white shadow-md"
+        : mode === "dark"
+        ? "text-gray-200 hover:bg-gray-700 hover:text-white"
+        : "text-[#231812] hover:bg-gray-200 hover:text-[#84c1d9]";
 
     return (
         <div

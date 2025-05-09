@@ -1,35 +1,41 @@
+// src/hooks/useSidebar.js
 import { useState, useEffect } from "react";
 
 const useSidebar = () => {
-    // Initialize state synchronously from localStorage
-    const getInitialSidebarState = () => {
-        if (typeof window === "undefined") return false; // SSR default
-        const savedState = localStorage.getItem("sidebarOpen");
-        return savedState !== null ? JSON.parse(savedState) : window.innerWidth > 768;
-    };
+  // Use null as initial state to indicate "not initialized yet"
+  const [isSidebarOpen, setSidebarOpen] = useState(null);
 
-    const [isSidebarOpen, setSidebarOpen] = useState(getInitialSidebarState);
+  // Initialize sidebar state on client-side only
+  useEffect(() => {
+    const savedState = localStorage.getItem("sidebarOpen");
+    // Initialize with saved state or default to open on larger screens
+    const initialState =
+      savedState !== null ? JSON.parse(savedState) : window.innerWidth > 768;
 
-    // Sync state with localStorage and apply body class
-    useEffect(() => {
-        localStorage.setItem("sidebarOpen", JSON.stringify(isSidebarOpen));
-        if (typeof window !== "undefined") {
-            document.body.classList.toggle("sidebar-open", isSidebarOpen);
-            document.body.classList.toggle("sidebar-closed", !isSidebarOpen);
-        }
-    }, [isSidebarOpen]);
+    setSidebarOpen(initialState);
 
-    // Apply initial body class on mount
-    useEffect(() => {
-        if (typeof window !== "undefined") {
-            document.body.classList.toggle("sidebar-open", isSidebarOpen);
-            document.body.classList.toggle("sidebar-closed", !isSidebarOpen);
-        }
-    }, []); // Run once on mount
+    // Apply body classes immediately
+    document.body.classList.toggle("sidebar-open", initialState);
+    document.body.classList.toggle("sidebar-closed", !initialState);
+  }, []);
 
-    const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+  // Update localStorage and body classes when state changes
+  useEffect(() => {
+    if (isSidebarOpen !== null) {
+      // Only run if initialized
+      localStorage.setItem("sidebarOpen", JSON.stringify(isSidebarOpen));
+      document.body.classList.toggle("sidebar-open", isSidebarOpen);
+      document.body.classList.toggle("sidebar-closed", !isSidebarOpen);
+    }
+  }, [isSidebarOpen]);
 
-    return { isSidebarOpen, toggleSidebar };
+  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+
+  return {
+    isSidebarOpen: isSidebarOpen === null ? false : isSidebarOpen,
+    toggleSidebar,
+    isInitialized: isSidebarOpen !== null,
+  };
 };
 
 export default useSidebar;

@@ -136,31 +136,34 @@ export default function DeviceChart({ candidates, mode, onFilter }) {
     };
 
     return (
-        <div
-            className={`border-t-4 border-[#f05d23] p-6 rounded-xl shadow-lg hover:shadow-xl animate-fade-in transition-shadow duration-500 ${
-                mode === "dark" ? "bg-gray-800" : "bg-white"
+      <div
+        className={`border-t-4 border-[#84c1d9] p-6 rounded-xl shadow-lg hover:shadow-xl animate-fade-in transition-shadow duration-500 ${
+          mode === "dark" ? "bg-gray-800" : "bg-white"
+        }`}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3
+            className={`text-lg font-semibold ${
+              mode === "dark" ? "text-white" : "text-[#231812]"
             }`}
-        >
-            <h3
-                className={`text-lg font-semibold mb-4 ${
-                    mode === "dark" ? "text-white" : "text-[#231812]"
-                }`}
-            >
-                Device Usage
-            </h3>
-            <button
-                onClick={() => setShowDetails(!showDetails)}
-                className={`mb-4 px-4 py-2 rounded-lg transition-colors duration-300 ${
-                    mode === "dark"
-                        ? "bg-[#f05d23] text-white hover:bg-[#ff9f1c]"
-                        : "bg-[#f05d23] text-white hover:bg-[#ff9f1c]"
-                }`}
-            >
-                {showDetails ? "Show Grouped View" : "Show Detailed View"}
-            </button>
-            <div className="h-72">
-                <PolarArea data={data} options={options} />
-            </div>
+          >
+            Device Usage
+          </h3>
+          <button
+            onClick={() => setShowDetails(!showDetails)}
+            className={`px-4 py-2 rounded-lg transition-colors duration-300 ${
+              mode === "dark"
+                ? "bg-[#84c1d9] text-white hover:bg-[#6ba8c1]" // Dark mode button with hover
+                : "bg-[#84c1d9] text-white hover:bg-[#6ba8c1]" // Light mode button with hover
+            }`}
+          >
+            {showDetails ? "Show Grouped View" : "Show Detailed View"}
+          </button>
         </div>
+        <div className="h-72">
+          <PolarArea data={data} options={options} />
+        </div>
+      </div>
     );
+
 }

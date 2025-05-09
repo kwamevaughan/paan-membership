@@ -131,7 +131,7 @@ const Header = ({
                       >
                         <div className="flex flex-col items-center z-10">
                           <button
-                            className={`flex items-center justify-center h-12 w-12 rounded-full border-2 transition-all duration-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f05d23]
+                            className={`flex items-center justify-center h-10 w-10 rounded-full border-2 transition-all duration-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f05d23]
                 ${
                   isCompleted
                     ? "bg-[#0a3a63] border-transparent text-white shadow-lg"
@@ -156,11 +156,11 @@ const Header = ({
                             aria-current={isCurrent ? "step" : undefined}
                           >
                             {isCompleted ? (
-                              <Icon icon="ph:check-bold" className="h-6 w-6" />
+                              <Icon icon="ph:check-bold" className="h-5 w-5" />
                             ) : (
                               <Icon
                                 icon={item.icon}
-                                className={`h-6 w-6 ${
+                                className={`h-5 w-5 ${
                                   isCurrent ? "animate-pulse" : ""
                                 }`}
                               />
@@ -216,6 +216,13 @@ const Header = ({
                     className="h-full rounded-full bg-gradient-to-r from-[#f25849] via-[#f05d23] to-[#84c1d9] bg-[length:200%_auto] animate-gradient transition-all duration-1000 ease-in-out"
                     style={{ width: `${progressPercentage}%` }}
                   >
+                    {/* Centered Percentage Text */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-sm font-semibold text-white">
+                        {progressText}
+                      </span>
+                    </div>
+
                     <div className="absolute inset-0 bg-white/40 rounded-full animate-pulse"></div>
                     <div className="absolute inset-0 shadow-[0_0_10px_2px_rgba(240,93,35,0.5)] rounded-full"></div>
                   </div>

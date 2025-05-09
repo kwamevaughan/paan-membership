@@ -94,7 +94,7 @@ export default function LandingPage({ initialOpenings }) {
             Welcome to the <br></br>Pan-African Agency Network (PAAN)
           </h1>
           <p className="text-[#231812] mb-4 text-base">
-            We are an alliance of agencies shaping the future of Africa's
+            We are an alliance of agencies shaping the future of Africa&apos;s
             communication, marketing, PR, tech, research, digital, and creative
             industries.
           </p>

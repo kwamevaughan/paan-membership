@@ -234,7 +234,7 @@ export async function sendEmails({
     const margin = doc.page.margins.top;
 
     // Header
-    doc.rect(0, 0, pageWidth, 80).fill("#f05d23");
+    doc.rect(0, 0, pageWidth, 80).fill("#e2e1e1");
     doc.fillColor("#ffffff");
     doc.font("Helvetica-Bold").fontSize(14);
     if (logoBuffer) {
@@ -267,7 +267,7 @@ export async function sendEmails({
 
       if (doc.y + totalHeight > pageHeight - margin - 50) {
         doc.addPage();
-        doc.rect(0, 0, pageWidth, 80).fill("#f05d23");
+        doc.rect(0, 0, pageWidth, 80).fill("#e2e1e1");
         doc.fillColor("#ffffff");
         doc.font("Helvetica-Bold").fontSize(14);
         if (logoBuffer) {

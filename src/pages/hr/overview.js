@@ -12,7 +12,6 @@ import WelcomeCard from "@/components/WelcomeCard";
 import StatusChart from "@/components/StatusChart";
 import RecentActivity from "@/components/RecentActivity";
 import JobOpenings from "@/components/JobOpenings";
-import TopPerformers from "@/components/TopPerformers";
 import DeviceChart from "@/components/DeviceChart";
 import EmailModal from "@/components/EmailModal";
 import CandidateModal from "@/components/CandidateModal";
@@ -151,94 +150,111 @@ export default function HROverview({ mode = "light", toggleMode, initialCandidat
     };
 
     return (
-        <div
-            className={`min-h-screen flex flex-col ${
-                mode === "dark" ? "bg-gradient-to-b from-gray-900 to-gray-800" : "bg-gradient-to-b from-gray-50 to-gray-100"
-            }`}
-        >
-            <HRHeader
-                toggleSidebar={toggleSidebar}
-                isSidebarOpen={isSidebarOpen}
+      <div
+        className={`min-h-screen flex flex-col ${
+          mode === "dark"
+            ? "bg-gradient-to-b from-gray-900 to-gray-800"
+            : "bg-gradient-to-b from-gray-50 to-gray-100"
+        }`}
+      >
+        <HRHeader
+          toggleSidebar={toggleSidebar}
+          isSidebarOpen={isSidebarOpen}
+          mode={mode}
+          toggleMode={toggleMode}
+          onLogout={handleLogout}
+          pageName="HR Overview"
+          pageDescription="View and manage candidate applications."
+        />
+        <div className="flex flex-1">
+          <HRSidebar
+            isOpen={isSidebarOpen}
+            mode={mode}
+            onLogout={handleLogout}
+            toggleSidebar={toggleSidebar}
+          />
+          <div
+            className={`content-container flex-1 p-6 transition-all duration-300 overflow-hidden md:ml-[80px] sidebar-open:md:ml-[300px] sidebar-closed:md:ml-[80px]`}
+          >
+            <div className="max-w-7xl mx-auto">
+              <WelcomeCard
+                totalApplicants={candidates.length}
+                openPositions={jobOpenings.length}
+                pendingReviews={
+                  candidates.filter((c) => c.status === "Pending").length
+                }
                 mode={mode}
-                toggleMode={toggleMode}
-                onLogout={handleLogout}
-                pageName="HR Overview"
-                pageDescription="View and manage candidate applications."
-            />
-            <div className="flex flex-1">
-                <HRSidebar
-                    isOpen={isSidebarOpen}
-                    mode={mode}
-                    onLogout={handleLogout}
-                    toggleSidebar={toggleSidebar}
+              />
+              <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <StatusChart
+                  candidates={candidates}
+                  mode={mode}
+                  onFilter={handleChartFilter}
                 />
-                <div
-                    className={`content-container flex-1 p-6 transition-all duration-300 overflow-hidden md:ml-[80px] sidebar-open:md:ml-[300px] sidebar-closed:md:ml-[80px]`}
-                >
-                    <div className="max-w-7xl mx-auto">
-                        <WelcomeCard
-                            totalApplicants={candidates.length}
-                            openPositions={jobOpenings.length}
-                            pendingReviews={candidates.filter((c) => c.status === "Pending").length}
-                            mode={mode}
-                        />
-                        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <StatusChart candidates={candidates} mode={mode} onFilter={handleChartFilter} />
-                            <DeviceChart candidates={candidates} mode={mode} onFilter={handleChartFilter} />
-                        </div>
-                        <div className="mb-6">
-                            <CountryChart candidates={candidates} mode={mode} onFilter={handleChartFilter} />
-                        </div>
-                        
-                        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                            <TopPerformers
-                                candidates={candidates}
-                                setEmailData={setEmailData}
-                                setIsEmailModalOpen={setIsEmailModalOpen}
-                                mode={mode}
-                            />
-                            <RecentActivity
-                                candidates={candidates}
-                                setSelectedCandidate={setSelectedCandidate}
-                                setIsModalOpen={setIsCandidateModalOpen}
-                                mode={mode}
-                            />
-                        </div>
-                        <JobOpenings candidates={candidates} jobOpenings={jobOpenings} router={router} mode={mode} />
-                    </div>
-                </div>
+                <DeviceChart
+                  candidates={candidates}
+                  mode={mode}
+                  onFilter={handleChartFilter}
+                />
+              </div>
+              <div className="mb-6">
+                <CountryChart
+                  candidates={candidates}
+                  mode={mode}
+                  onFilter={handleChartFilter}
+                />
+              </div>
+
+              <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                
+                <RecentActivity
+                  candidates={candidates}
+                  setSelectedCandidate={setSelectedCandidate}
+                  setIsModalOpen={setIsCandidateModalOpen}
+                  mode={mode}
+                />
+                <JobOpenings
+                  candidates={candidates}
+                  jobOpenings={jobOpenings}
+                  router={router}
+                  mode={mode}
+                />
+              </div>
+              
             </div>
-
-            <EmailModal
-                candidate={emailData}
-                isOpen={isEmailModalOpen}
-                onClose={() => setIsEmailModalOpen(false)}
-                emailData={emailData}
-                setEmailData={setEmailData}
-                onSend={handleSendEmail}
-                mode={mode}
-            />
-            <CandidateModal
-                candidate={selectedCandidate}
-                isOpen={isCandidateModalOpen}
-                onClose={handleCloseCandidateModal}
-                onStatusChange={handleStatusChange}
-                mode={mode}
-            />
-            {isFilterModalOpen && (
-                <ChartFilterModal
-                    candidates={filteredCandidates}
-                    type={filterType}
-                    value={filterValue}
-                    onClose={handleCloseFilterModal}
-                    setSelectedCandidate={setSelectedCandidate}
-                    setIsCandidateModalOpen={setIsCandidateModalOpen}
-                    mode={mode}
-                />
-            )}
-
-            <SimpleFooter mode={mode} isSidebarOpen={isSidebarOpen} />
+          </div>
         </div>
+
+        <EmailModal
+          candidate={emailData}
+          isOpen={isEmailModalOpen}
+          onClose={() => setIsEmailModalOpen(false)}
+          emailData={emailData}
+          setEmailData={setEmailData}
+          onSend={handleSendEmail}
+          mode={mode}
+        />
+        <CandidateModal
+          candidate={selectedCandidate}
+          isOpen={isCandidateModalOpen}
+          onClose={handleCloseCandidateModal}
+          onStatusChange={handleStatusChange}
+          mode={mode}
+        />
+        {isFilterModalOpen && (
+          <ChartFilterModal
+            candidates={filteredCandidates}
+            type={filterType}
+            value={filterValue}
+            onClose={handleCloseFilterModal}
+            setSelectedCandidate={setSelectedCandidate}
+            setIsCandidateModalOpen={setIsCandidateModalOpen}
+            mode={mode}
+          />
+        )}
+
+        <SimpleFooter mode={mode} isSidebarOpen={isSidebarOpen} />
+      </div>
     );
 }
 

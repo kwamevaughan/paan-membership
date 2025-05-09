@@ -39,3 +39,5 @@ build/
 
 # Editor history
 .history/
+.history
+generateHash.js

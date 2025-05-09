@@ -214,20 +214,10 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
 
       <div
         className={`flex flex-col justify-center items-center relative min-h-screen bg-cover bg-center ${
-          mode === "dark" ? "bg-gray-900" : "bg-gray-0"
+          mode === "dark" ? "bg-gray-00" : "bg-gray-200"
         }`}
-        style={{
-          ...(mode !== "dark" && {
-            backgroundImage: "url('/assets/images/new-pattern-bg.jpg')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundRepeat: "no-repeat",
-            backgroundAttachment: "fixed",
-          }),
-        }}
+        
       >
-        {/* Dark overlay (z-0) */}
-        <div className="absolute inset-0 bg-black opacity-20 z-0" />
 
         {/* Connecting dots background (z-10) */}
         <div className="absolute inset-0 z-10 pointer-events-none">

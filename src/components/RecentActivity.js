@@ -41,7 +41,7 @@ export default function RecentActivity({ candidates, setSelectedCandidate, setIs
               <div className="flex justify-between items-center">
                 <div className="flex-1">
                   <p className="font-medium text-base">
-                    {candidate.primaryContactName} - {candidate.opening}
+                    {candidate.primaryContactName} - {candidate.agencyName}
                   </p>
                   <p
                     className={`text-sm ${

@@ -14,6 +14,7 @@ export async function upsertCandidate({
   opening,
   reference_number,
   opening_id,
+  selected_tier, // Added parameter
 }) {
   try {
     console.log(
@@ -59,6 +60,7 @@ export async function upsertCandidate({
             opening,
             reference_number,
             opening_id,
+            selected_tier, // Added
             updated_at: new Date().toISOString(),
           })
           .eq("primaryContactEmail", primaryContactEmail)
@@ -81,6 +83,7 @@ export async function upsertCandidate({
         opening,
         reference_number,
         opening_id,
+        selected_tier,
       });
       const { data: newCandidate, error: insertError } = await supabaseServer
         .from("candidates")
@@ -99,6 +102,7 @@ export async function upsertCandidate({
             opening,
             reference_number,
             opening_id,
+            selected_tier, // Added
             updated_at: new Date().toISOString(),
           },
         ])
@@ -134,6 +138,7 @@ export async function upsertResponse({
   country,
   device,
   submittedAt,
+  status, // Added status parameter
 }) {
   try {
     console.log("Attempting to upsert response with data:", {
@@ -150,6 +155,7 @@ export async function upsertResponse({
       country,
       device,
       submitted_at: submittedAt,
+      status,
     });
     const { error } = await supabaseServer.from("responses").upsert(
       [
@@ -167,6 +173,7 @@ export async function upsertResponse({
           country,
           device,
           submitted_at: submittedAt,
+          status, // Include status
         },
       ],
       {
@@ -184,6 +191,7 @@ export async function upsertResponse({
           "country",
           "device",
           "submitted_at",
+          "status", // Update status
         ],
       }
     );

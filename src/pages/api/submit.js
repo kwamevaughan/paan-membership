@@ -99,6 +99,51 @@ export default async function handler(req, res) {
     const submittedAt = new Date().toISOString();
     const referenceNumber = generateReferenceNumber();
 
+    // Fetch questions for tier extraction and background process
+    const { data: questions, error: questionsError } = await supabaseServer
+      .from("interview_questions")
+      .select("*")
+      .order("order", { ascending: true });
+    if (questionsError) {
+      console.error("Error fetching questions:", questionsError);
+      return res.status(500).json({
+        error: "Error fetching questions",
+        details: questionsError.message,
+      });
+    }
+
+    // Extract selected tier from answers
+    let selectedTier = "Not specified";
+    try {
+      let tierQuestion = questions.find((q) =>
+        q?.text?.toLowerCase().includes("tier")
+      );
+      if (!tierQuestion) {
+        tierQuestion = questions.find((q) =>
+          q?.options?.some((opt) => opt?.toLowerCase().includes("tier"))
+        );
+      }
+      if (tierQuestion && tierQuestion.id) {
+        const answer = answers[tierQuestion.id - 1];
+        if (Array.isArray(answer) && answer.length > 0) {
+          selectedTier =
+            answer[0].replace(/ - Requirement:.*$/, "").trim() ||
+            "Not specified";
+        } else if (typeof answer === "string" && answer.trim()) {
+          selectedTier =
+            answer.replace(/ - Requirement:.*$/, "").trim() || "Not specified";
+        }
+        console.log(
+          `Tier question found: QID=${tierQuestion.id}, Text="${tierQuestion.text}", Answer=`,
+          answer
+        );
+      } else {
+        console.log("No tier question found in questions array");
+      }
+    } catch (error) {
+      console.error("Failed to extract selected tier:", error.message);
+    }
+
     // Match opening to job_openings.title to get opening_id
     let opening_id = null;
     if (opening) {
@@ -130,6 +175,7 @@ export default async function handler(req, res) {
       opening,
       opening_id,
       answers,
+      selectedTier,
       companyRegistration: companyRegistration ? "present" : "none",
       portfolioWork: portfolioWork ? "present" : "none",
       agencyProfile: agencyProfile ? "present" : "none",
@@ -153,18 +199,6 @@ export default async function handler(req, res) {
       });
     }
 
-    const { data: questions, error: questionsError } = await supabaseServer
-      .from("interview_questions")
-      .select("*")
-      .order("order", { ascending: true });
-    if (questionsError) {
-      console.error("Error fetching questions:", questionsError);
-      return res.status(500).json({
-        error: "Error fetching questions",
-        details: questionsError.message,
-      });
-    }
-
     const { userId, error: candidateError } = await upsertCandidate({
       agencyName,
       yearEstablished,
@@ -179,6 +213,7 @@ export default async function handler(req, res) {
       opening,
       reference_number: referenceNumber,
       opening_id,
+      selected_tier: selectedTier,
     });
 
     if (candidateError) {
@@ -213,7 +248,7 @@ export default async function handler(req, res) {
 
     const isLocal = process.env.NODE_ENV === "development";
     const baseUrl = isLocal
-      ? process.env.BASE_URL || "http://localhost:3001"
+      ? process.env.BASE_URL || "http://localhost:3000"
       : process.env.PRODUCTION_URL || "https://membership.paan.africa";
     const processUrl = `${baseUrl}/api/process-submission`;
     console.log("Triggering background process at URL:", processUrl);
@@ -241,7 +276,7 @@ export default async function handler(req, res) {
         portfolioWork,
         agencyProfile,
         taxRegistration,
-        questions,
+        questions, // Added
         country,
         device,
         submittedAt,

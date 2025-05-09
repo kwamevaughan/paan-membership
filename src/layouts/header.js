@@ -105,7 +105,7 @@ const Header = ({
 
           {/* Step Navigation & Progress Bar */}
           {step >= 1 && step <= 4 && (
-            <div className="hidden md:flex flex-1 justify-center items-center">
+            <div className="hidden md:flex flex-1 justify-start items-center">
               <div className="relative w-full max-w-3xl">
                 {/* Step Progress Bar */}
                 <div className="absolute top-6 left-0 w-full h-1 bg-gray-200/60 dark:bg-gray-800/60 -z-10"></div>

@@ -32,7 +32,7 @@ export default function WelcomeCard({ totalApplicants, openPositions, pendingRev
                 <Link href="/hr/applicants">
                     <div className="text-center transform transition-transform duration-300 hover:translate-y-[-5px]">
                         <CountUp end={openPositions} duration={2} className="text-3xl font-bold text-[#f05d23]"/>
-                        <p className="text-base">Open Positions</p>
+                        <p className="text-base">Open Application</p>
                     </div>
                 </Link>
                 <Link href="/hr/applicants">

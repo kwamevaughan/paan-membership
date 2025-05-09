@@ -21,7 +21,7 @@ export default function JobOpenings({ candidates, jobOpenings, router, mode }) {
                     mode === "dark" ? "text-white" : "text-[#231812]"
                 }`}
             >
-                Job Openings
+                Expression of Interest (EOIs)
             </h3>
             <div className="relative max-w-full overflow-hidden">
                 <Swiper

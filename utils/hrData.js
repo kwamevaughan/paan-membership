@@ -8,7 +8,7 @@ export async function fetchHRData({ fetchCandidates = true, fetchQuestions = tru
               supabaseServer
                 .from("candidates")
                 .select(
-                  "id, primaryContactName, primaryContactEmail, primaryContactPhone, primaryContactLinkedin, opening"
+                  "id, primaryContactName, primaryContactEmail, primaryContactPhone, primaryContactLinkedin, opening, agencyName"
                 ),
               supabaseServer
                 .from("responses")

@@ -310,68 +310,77 @@ function ChartFilterModal({
     };
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50">
-            <div
-                className={`rounded-xl shadow-2xl w-full max-w-4xl mx-4 flex flex-col max-h-[90vh] ${
-                    mode === "dark" ? "bg-gray-800 text-white" : "bg-white text-[#231812]"
-                }`}
+      <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50">
+        <div
+          className={`rounded-xl shadow-2xl w-full max-w-4xl mx-4 flex flex-col max-h-[90vh] ${
+            mode === "dark"
+              ? "bg-gray-800 text-white"
+              : "bg-white text-[#231812]"
+          }`}
+        >
+          <div className="bg-gradient-to-r from-[#f05d23] to-[#d94f1e] rounded-t-xl p-4 flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-white">
+              {type === "status" && `Status: ${value}`}
+              {type === "country" && `Country: ${value}`}
+              {type === "score" && `Score Range: ${value}`}
+              {type === "device" &&
+                `Device: ${Array.isArray(value) ? "Multiple Devices" : value}`}
+              {type === "date" &&
+                `Date: ${new Date(value).toLocaleDateString()}`}
+            </h2>
+            <button
+              onClick={onClose}
+              className="text-white hover:text-gray-200 transition duration-200"
             >
-                <div className="bg-gradient-to-r from-[#f05d23] to-[#d94f1e] rounded-t-xl p-4 flex items-center justify-between">
-                    <h2 className="text-2xl font-bold text-white">
-                        {type === "status" && `Status: ${value}`}
-                        {type === "country" && `Country: ${value}`}
-                        {type === "score" && `Score Range: ${value}`}
-                        {type === "device" && `Device: ${Array.isArray(value) ? "Multiple Devices" : value}`}
-                        {type === "date" && `Date: ${new Date(value).toLocaleDateString()}`}
-                    </h2>
-                    <button onClick={onClose} className="text-white hover:text-gray-200 transition duration-200">
-                        <Icon icon="mdi:close" width={24} height={24} />
+              <Icon icon="mdi:close" width={24} height={24} />
+            </button>
+          </div>
+          <div className="flex-1 p-6 overflow-y-auto">
+            {candidates.length > 0 ? (
+              <ul className="space-y-4">
+                {candidates.map((candidate) => (
+                  <li
+                    key={candidate.id}
+                    className="flex justify-between items-center animate-fade-in"
+                  >
+                    <span
+                      className={`${
+                        mode === "dark" ? "text-gray-300" : "text-gray-600"
+                      }`}
+                    >
+                      {candidate.primaryContactName} - {candidate.agencyName} {" "}
+                    </span>
+                    <button
+                      onClick={() => handleViewClick(candidate)}
+                      className="text-[#f05d23] hover:text-[#d94f1e] flex items-center gap-1"
+                    >
+                      <Icon icon="mdi:eye" className="w-4 h-4" /> View
                     </button>
-                </div>
-                <div className="flex-1 p-6 overflow-y-auto">
-                    {candidates.length > 0 ? (
-                        <ul className="space-y-4">
-                            {candidates.map((candidate) => (
-                                <li
-                                    key={candidate.id}
-                                    className="flex justify-between items-center animate-fade-in"
-                                >
-                                    <span
-                                        className={`${mode === "dark" ? "text-gray-300" : "text-gray-600"}`}
-                                    >
-                                        {candidate.full_name} - {candidate.opening} (Score: {candidate.score})
-                                    </span>
-                                    <button
-                                        onClick={() => handleViewClick(candidate)}
-                                        className="text-[#f05d23] hover:text-[#d94f1e] flex items-center gap-1"
-                                    >
-                                        <Icon icon="mdi:eye" className="w-4 h-4" /> View
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
-                    ) : (
-                        <p className="text-gray-500 dark:text-gray-400 italic">
-                            No candidates match this filter.
-                        </p>
-                    )}
-                </div>
-                <div
-                    className={`p-4 border-t border-gray-200 dark:border-gray-700 rounded-b-xl shadow-md ${
-                        mode === "dark" ? "bg-gray-800" : "bg-white"
-                    }`}
-                >
-                    <div className="flex justify-end gap-4">
-                        <button
-                            onClick={onClose}
-                            className="px-6 py-2 bg-gray-200 dark:bg-gray-600 text-[#231812] dark:text-white rounded-full hover:bg-gray-300 dark:hover:bg-gray-500 transition duration-200 flex items-center gap-2 shadow-md"
-                        >
-                            <Icon icon="mdi:close" width={20} height={20} />
-                            Close
-                        </button>
-                    </div>
-                </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-gray-500 dark:text-gray-400 italic">
+                No candidates match this filter.
+              </p>
+            )}
+          </div>
+          <div
+            className={`p-4 border-t border-gray-200 dark:border-gray-700 rounded-b-xl shadow-md ${
+              mode === "dark" ? "bg-gray-800" : "bg-white"
+            }`}
+          >
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={onClose}
+                className="px-6 py-2 bg-gray-200 dark:bg-gray-600 text-[#231812] dark:text-white rounded-full hover:bg-gray-300 dark:hover:bg-gray-500 transition duration-200 flex items-center gap-2 shadow-md"
+              >
+                <Icon icon="mdi:close" width={20} height={20} />
+                Close
+              </button>
             </div>
+          </div>
         </div>
+      </div>
     );
 }

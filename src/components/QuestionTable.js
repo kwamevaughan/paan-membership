@@ -26,7 +26,6 @@ export default function QuestionTable({
     return category ? category.name : "—";
   };
 
-
   const isQuestionComplete = (question) => {
     if (!question.text?.trim()) return false;
     if (
@@ -38,12 +37,21 @@ export default function QuestionTable({
     return true;
   };
 
+  const formatOptions = (options) => {
+    if (!Array.isArray(options) || options.length === 0) {
+      return "—";
+    }
+    if (options.length <= 3) {
+      return options.join(", ");
+    }
+    return `${options.slice(0, 3).join(", ")}, ...`;
+  };
+
   const handleMobileDelete = (question) => {
     const cleanText = stripHtmlTags(question.text);
     console.log(
       `Delete Question? Are you sure you want to delete "${cleanText}"?`
     );
-    // Simulate confirmation (replace with UI if needed)
     const confirmed = window.confirm(
       `Are you sure you want to delete "${cleanText}"?`
     );
@@ -190,9 +198,7 @@ export default function QuestionTable({
               </div>
               <div className="text-xs mb-1">
                 <span className="font-medium">Options:</span>{" "}
-                {Array.isArray(question.options)
-                  ? question.options.join("; ")
-                  : "—"}
+                {formatOptions(question.options)}
               </div>
               <div className="text-xs mb-1">
                 <span className="font-medium">Category:</span>{" "}

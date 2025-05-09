@@ -171,33 +171,45 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
       <Toaster />
       <Head>
         <title>
-          Expression of Interest | Pan-African Agency Network (PAAN)
+          Join PAAN | Expression of Interest - Pan-African Agency Network
         </title>
-        <meta name="description" content="" />
-        <meta name="keywords" content="" />
+        <meta
+          name="description"
+          content="Join the Pan-African Agency Network (PAAN) to collaborate with independent agencies across Africa and the diaspora. Submit your expression of interest to be part of a network driving creativity, innovation, and global influence."
+        />
+        <meta
+          name="keywords"
+          content="PAAN, Pan-African Agency Network, African agencies, collaboration, creativity, innovation, global influence, expression of interest, join PAAN"
+        />
         <meta name="robots" content="index, follow" />
         <meta name="author" content="Pan-African Agency Network (PAAN)" />
         <meta
           property="og:title"
-          content="Expression of Interest | Pan-African Agency Network (PAAN)"
+          content="Join PAAN | Expression of Interest - Pan-African Agency Network"
         />
-        <meta property="og:description" content="" />
+        <meta
+          property="og:description"
+          content="Become a part of PAAN, a collaborative network of African agencies transforming fragmentation into unity. Submit your expression of interest to join our mission for global impact."
+        />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://membership.paan.africa" />
         <meta
           property="og:image"
-          content="https://careers.growthpad.co.ke/assets/images/logo.svg"
+          content="https://paan.africa/assets/images/logo.svg"
         />
-        <meta property="og:site_name" content="Growthpad Careers" />
+        <meta property="og:site_name" content="PAAN Expression of Interest" />
         <meta name="twitter:card" content="summary_large_image" />
         <meta
           name="twitter:title"
-          content="Expression of Interest | Pan-African Agency Network (PAAN)"
+          content="Join PAAN | Expression of Interest - Pan-African Agency Network"
         />
-        <meta name="twitter:description" content="" />
+        <meta
+          name="twitter:description"
+          content="Express your interest to join PAAN and collaborate with African agencies to shape global narratives through creativity and technology."
+        />
         <meta
           name="twitter:image"
-          content="https://careers.growthpad.co.ke/assets/images/logo.svg"
+          content="https://paan.africa/assets/images/logo.svg"
         />
       </Head>
 

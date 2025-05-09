@@ -17,7 +17,7 @@ export default async function handler(req, res) {
         .map(
             (job) => `
     <url>
-        <loc>https://careers.growthpad.co.ke/jobs/${job.slug}</loc>
+        <loc>https://membership.paan.africa/jobs/${job.slug}</loc>
         <lastmod>${new Date(job.updated_at).toISOString()}</lastmod>
         <changefreq>daily</changefreq>
         <priority>0.7</priority>

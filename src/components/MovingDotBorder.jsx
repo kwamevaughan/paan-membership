@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-export default function MovingDotBorder({ children, className = "" }) {
+export default function MovingDotBorder({ children, mode, className = "" }) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [angle, setAngle] = useState(0);
   const dotColor = "#f05d23"; // The requested color
@@ -93,7 +93,11 @@ export default function MovingDotBorder({ children, className = "" }) {
   return (
     <div
       id="gradient-container"
-      className={`relative p-[4px] rounded-2xl bg-gradient-to-r from-[#1e3a8a] via-[#f05d23] to-[#6b21a8] bg-[length:400%_400%] animate-circularGradient ${className}`}
+      className={`relative p-[4px] rounded-2xl ${
+        mode !== "dark"
+          ? "bg-gradient-to-r from-[#1e3a8a] via-[#f05d23] to-[#6b21a8] bg-[length:400%_400%] animate-circularGradient"
+          : "bg-transparent"
+      } ${className}`}
     >
       {/* Dot element positioned absolutely */}
       <div

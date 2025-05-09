@@ -217,11 +217,13 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
           mode === "dark" ? "bg-gray-900" : "bg-gray-0"
         }`}
         style={{
-          backgroundImage: "url('/assets/images/new-pattern-bg.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-          backgroundAttachment: "fixed",
+          ...(mode !== "dark" && {
+            backgroundImage: "url('/assets/images/new-pattern-bg.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+            backgroundAttachment: "fixed",
+          }),
         }}
       >
         {/* Dark overlay (z-0) */}
@@ -242,8 +244,13 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
 
         {/* Main form content (z-20) */}
         <div className="max-w-3xl w-full mx-auto p-6 pb-24 relative z-20">
-          <MovingDotBorder>
-            <div className="rounded-[calc(1rem-4px)] bg-white dark:bg-gray-900 p-6">
+          <MovingDotBorder mode={mode}>
+            <div
+              className={`rounded-[calc(1rem-4px)] p-6 ${
+                mode !== "dark" ? "bg-white" : ""
+              }`}
+            >
+              {/* Form content based on the current step */}
               {step === 1 && (
                 <Step1Form
                   formData={formData}
@@ -282,7 +289,11 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
               )}
 
               {step !== 4 && step !== 2 && (
-                <div className="mt-8 flex justify-between items-center gap-4 bg-white">
+                <div
+                  className={`mt-8 flex justify-between items-center gap-4 ${
+                    mode !== "dark" ? "bg-white" : ""
+                  }`}
+                >
                   <button
                     onClick={handleBack}
                     disabled={step === 1 || isSubmitting}

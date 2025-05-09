@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+const config = {
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -12,7 +12,19 @@ export default {
         background: "var(--background)",
         foreground: "var(--foreground)",
       },
+      animation: {
+        circularGradient: "circularGradient 6s linear infinite",
+      },
+      keyframes: {
+        circularGradient: {
+          "0%": { backgroundPosition: "0% 50%" },
+          "50%": { backgroundPosition: "50% 50%" },
+          "100%": { backgroundPosition: "100% 50%" },
+        },
+      },
     },
   },
   plugins: [],
 };
+
+export default config;

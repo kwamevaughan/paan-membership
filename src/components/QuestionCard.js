@@ -374,7 +374,7 @@ export default function QuestionCard({
 
   return (
     <div
-      className={`shadow-lg rounded-lg p-6 border-t-4 border-[#f05d23] ${
+      className={` rounded-lg p-6 border-t-4 border-[#f05d23] ${
         mode === "dark" ? "bg-gray-800" : "bg-white"
       } ${!isComplete ? "border-red-500" : ""}`}
     >

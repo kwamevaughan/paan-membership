@@ -438,7 +438,7 @@ export default function Step2Questions({
       ref={containerRef}
       className="h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
     >
-      <div className="space-y-6 p-4">
+      <div className="space-y-6  ">
         {isLoading ? (
           <div>Loading...</div>
         ) : (

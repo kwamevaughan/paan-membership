@@ -108,7 +108,7 @@ export default function Step1Form({ formData, handleChange, mode }) {
   return (
     <div className="animate-fade-in max-w-2xl mx-auto">
       <div
-        className={`shadow-lg rounded-lg p-6 border-t-4 border-[#f05d23] ${
+        className={`rounded-lg px-2 py-2 ${
           mode === "dark" ? "bg-gray-800 text-white" : "bg-white text-[#231812]"
         }`}
       >

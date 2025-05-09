@@ -8,6 +8,8 @@ import Step1Form from "@/components/Step1Form";
 import Step2Questions from "@/components/Step2Questions";
 import Step3Documents from "@/components/Step3Documents";
 import Step4Confirmation from "@/components/Step4Confirmation";
+import ConnectingDotsBackground from "@/components/ConnectingDotsBackground";
+import MovingDotBorder from "@/components/MovingDotBorder"; // Import the new component
 import { Icon } from "@iconify/react";
 import Footer from "@/layouts/footer";
 import { useRouter } from "next/router";
@@ -38,7 +40,6 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
   const totalQuestions = questions.length;
 
   useEffect(() => {
-    
     const opening = router.query.opening;
     if (opening && !formData.opening) {
       setFormData((prev) => ({
@@ -64,9 +65,8 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
         return;
       }
       setStep(2);
-      toast.success("Great! Let’s move to the questions.", { icon: "🎉" });
+      toast.success("Great! Let's move to the questions.", { icon: "🎉" });
     } else if (step === 2) {
-      // Defer to Step2Questions.jsx validation
       toast.success("Proceeding to document upload.", { icon: "📝" });
       setStep(3);
     } else if (step === 3) {
@@ -211,80 +211,108 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
         totalQuestions={totalQuestions}
         isStep1Complete={isStep1Complete}
       />
+
       <div
-        className={`flex flex-col justify-center items-center ${
-          mode === "dark"
-            ? "bg-gradient-to-b from-gray-900 to-gray-800"
-            : "bg-gradient-to-b from-gray-100 to-gray-200"
+        className={`flex flex-col justify-center items-center relative min-h-screen bg-cover bg-center ${
+          mode === "dark" ? "bg-gray-900" : "bg-gray-0"
         }`}
+        style={{
+          backgroundImage: "url('/assets/images/new-pattern-bg.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+          backgroundAttachment: "fixed",
+        }}
       >
-        <div className="max-w-3xl w-full mx-auto p-6 pb-24">
-          {step === 1 && (
-            <Step1Form
-              formData={formData}
-              handleChange={handleChange}
-              mode={mode}
-            />
-          )}
-          {step === 2 && (
-            <Step2Questions
-              formData={formData}
-              setFormData={setFormData}
-              handleOptionToggle={handleOptionToggle}
-              questions={questions}
-              categories={categories || []}
-              isLoading={isLoading}
-              onComplete={() => setStep(3)}
-              mode={mode}
-            />
-          )}
-          {step === 3 && (
-            <Step3Documents
-              formData={formData}
-              setFormData={setFormData}
-              isSubmitting={isSubmitting}
-              mode={mode}
-              handleNext={handleNext}
-              {...fileUploadProps}
-            />
-          )}
-          {step === 4 && (
-            <Step4Confirmation
-              formData={formData}
-              submissionStatus={submissionStatus}
-              mode={mode}
-            />
-          )}
-          {step !== 4 && step !== 2 && (
-            <div className="mt-8 flex justify-between items-center gap-4">
-              <button
-                onClick={handleBack}
-                disabled={step === 1 || isSubmitting}
-                className={`flex items-center justify-center px-4 py-2 rounded-lg hover:bg-gray-600 disabled:bg-gray-500 disabled:text-gray-300 transition-all duration-200 shadow-md ${
-                  mode === "dark"
-                    ? "bg-gray-700 text-white"
-                    : "bg-gray-400 text-white"
-                }`}
-              >
-                <Icon icon="mdi:arrow-left" className="mr-2 w-5 h-5" />
-                Back
-              </button>
-              <button
-                onClick={handleNext}
-                disabled={isSubmitting}
-                className={`flex items-center justify-center px-4 py-2 bg-[#f05d23] text-white rounded-lg hover:bg-[#d94f1e] disabled:bg-gray-300 disabled:text-gray-600 transition-all duration-200 shadow-md`}
-              >
-                {step === 3 ? (
-                  <>Submit</>
-                ) : (
-                  <>
-                    Next
-                    <Icon icon="mdi:arrow-right" className="ml-2 w-5 h-5" />
-                  </>
-                )}
-              </button>
+        {/* Dark overlay (z-0) */}
+        <div className="absolute inset-0 bg-black opacity-20 z-0" />
+
+        {/* Connecting dots background (z-10) */}
+        <div className="absolute inset-0 z-10 pointer-events-none">
+          <ConnectingDotsBackground
+            color="#f05d23"
+            secondaryColor={mode === "dark" ? "#f05d23" : "#505050"}
+            dotCount={50}
+            dotSize={2.2}
+            lineDistance={180}
+            speed={0.6}
+            mode={mode}
+          />
+        </div>
+
+        {/* Main form content (z-20) */}
+        <div className="max-w-3xl w-full mx-auto p-6 pb-24 relative z-20">
+          <MovingDotBorder>
+            <div className="rounded-[calc(1rem-4px)] bg-white dark:bg-gray-900 p-6">
+              {step === 1 && (
+                <Step1Form
+                  formData={formData}
+                  handleChange={handleChange}
+                  mode={mode}
+                />
+              )}
+              {step === 2 && (
+                <Step2Questions
+                  formData={formData}
+                  setFormData={setFormData}
+                  handleOptionToggle={handleOptionToggle}
+                  questions={questions}
+                  categories={categories || []}
+                  isLoading={isLoading}
+                  onComplete={() => setStep(3)}
+                  mode={mode}
+                />
+              )}
+              {step === 3 && (
+                <Step3Documents
+                  formData={formData}
+                  setFormData={setFormData}
+                  isSubmitting={isSubmitting}
+                  mode={mode}
+                  handleNext={handleNext}
+                  {...fileUploadProps}
+                />
+              )}
+              {step === 4 && (
+                <Step4Confirmation
+                  formData={formData}
+                  submissionStatus={submissionStatus}
+                  mode={mode}
+                />
+              )}
+
+              {step !== 4 && step !== 2 && (
+                <div className="mt-8 flex justify-between items-center gap-4 bg-white">
+                  <button
+                    onClick={handleBack}
+                    disabled={step === 1 || isSubmitting}
+                    className={`flex items-center justify-center px-4 py-2 rounded-lg hover:bg-gray-600 disabled:bg-gray-500 disabled:text-gray-300 transition-all duration-200 shadow-md ${
+                      mode === "dark"
+                        ? "bg-gray-700 text-white"
+                        : "bg-gray-400 text-white"
+                    }`}
+                  >
+                    <Icon icon="mdi:arrow-left" className="mr-2 w-5 h-5" />
+                    Back
+                  </button>
+                  <button
+                    onClick={handleNext}
+                    disabled={isSubmitting}
+                    className="flex items-center justify-center px-4 py-2 bg-[#f05d23] text-white rounded-lg hover:bg-[#d94f1e] disabled:bg-gray-300 disabled:text-gray-600 transition-all duration-200 shadow-md"
+                  >
+                    {step === 3 ? (
+                      <>Submit</>
+                    ) : (
+                      <>
+                        Next
+                        <Icon icon="mdi:arrow-right" className="ml-2 w-5 h-5" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
-          )}
+          </MovingDotBorder>
         </div>
       </div>
       <Footer mode={mode} />

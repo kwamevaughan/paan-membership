@@ -1,126 +1,269 @@
 import Image from "next/image";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
+import { useState, useEffect } from "react";
 
-const Header = ({ mode, toggleMode, step, currentPage, totalPages, uploadProgress, answeredQuestions, totalQuestions, isStep1Complete }) => {
-    let progressPercentage = 0;
-    let progressText = "";
+const Header = ({
+  mode,
+  toggleMode,
+  step,
+  currentPage,
+  totalPages,
+  answeredQuestions,
+  totalQuestions,
+  isStep1Complete,
+}) => {
+  const [scrolled, setScrolled] = useState(false);
+  const [hoverStep, setHoverStep] = useState(null);
 
-    if (step === 1) {
-        progressPercentage = isStep1Complete ? 5 : 0;
-        progressText = `${progressPercentage}% Done`;
-    } else if (step === 2 && totalPages > 0) {
-        progressPercentage = 5 + Math.round((answeredQuestions / totalQuestions) * 90);
-        progressText = `${progressPercentage}% Done`;
-    } else if (step === 3) {
-        const resumeProgress = uploadProgress?.resume || 0;
-        const coverLetterProgress = uploadProgress?.coverLetter || 0;
-        const resumeContribution = (resumeProgress / 100) * 2.5;
-        const coverLetterContribution = (coverLetterProgress / 100) * 2.5;
-        progressPercentage = 95 + resumeContribution + coverLetterContribution;
-        progressText = `${Math.round(progressPercentage)}% Done`;
-    }
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 10);
+    };
 
-    return (
-      <header
-        className={`${
-          mode === "dark"
-            ? "bg-gray-800 border-gray-700"
-            : "bg-[#fff8f7] border-[#231812]"
-        } border-b shadow-lg py-4 md:py-6 px-4 md:px-24 flex items-center sticky top-0 z-50`}
-      >
-        <div className="flex justify-between items-center w-full">
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Calculate progress
+  let progressPercentage = 0;
+  let progressText = "";
+
+  if (step >= 1 && step <= 4) {
+    progressPercentage = (step / 4) * 100;
+    progressText = `${Math.round(progressPercentage)}%`;
+  }
+
+
+  const steps = [
+    {
+      label: "Agency Details",
+      icon: "fluent:person-info-20-regular",
+      tooltip: "Provide your agency’s contact and registration details",
+    },
+    {
+      label: "Form Details",
+      icon: "fluent:form-20-regular",
+      tooltip: "Complete details on services, expertise, and qualifications",
+    },
+    {
+      label: "Documents",
+      icon: "fluent:document-text-20-regular",
+      tooltip: "Upload required documents like registration and portfolio",
+    },
+    {
+      label: "Confirmation",
+      icon: "fluent:checkmark-starburst-20-regular",
+      tooltip: "Review and confirm your submission",
+    },
+  ];
+
+  return (
+    <header
+      className={`${mode === "dark" ? "bg-slate-900" : "bg-white"} 
+      ${scrolled ? "shadow-2xl backdrop-blur-xl bg-opacity-95" : ""} 
+      transition-all duration-500 sticky top-0 z-50 border-b 
+      ${mode === "dark" ? "border-slate-800/70" : "border-slate-200/70"}`}
+    >
+      {/* Animated gradient bar */}
+      <div className="h-1 w-full bg-gradient-to-r from-[#f25849] via-[#f05d23] to-[#84c1d9] bg-[length:200%_auto] animate-gradient"></div>
+
+      <div className="container mx-auto px-4 sm:px-6 py-4 md:py-5">
+        <div className="flex justify-between items-center">
+          {/* Logo */}
           <div className="flex-shrink-0">
-            <Link href="/">
-              {/* Mobile logo - Change based on mode, only visible on mobile */}
-              <Image
-                src={
-                  mode === "dark"
-                    ? "/assets/images/favicon-white.png"
-                    : "/assets/images/logo.svg"
-                }
-                alt="PAAN Logo"
-                width={240}
-                height={40}
-                className="w-14 md:hidden" // Hidden on desktop
-              />
-              {/* Desktop logo - Always visible on desktop */}
-              <Image
-                src={
-                  mode === "dark"
-                    ? "/assets/images/paan-logo-white.svg"
-                    : "/assets/images/logo.svg"
-                }
-                alt="PAAN Logo"
-                width={240}
-                height={40}
-                className="hidden md:block w-[150px]" // Hidden on mobile
-              />
+            <Link
+              href="/"
+              className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 rounded-lg"
+              aria-label="Go to homepage"
+            >
+              <div className="block md:hidden relative h-12 w-12 overflow-hidden rounded-xl">
+                <Image
+                  src={
+                    mode === "dark"
+                      ? "/assets/images/favicon-white.png"
+                      : "/assets/images/logo.svg"
+                  }
+                  alt="PAAN Logo"
+                  fill
+                  className="object-contain p-1"
+                />
+              </div>
+              <div className="hidden md:block relative h-14 w-48">
+                <Image
+                  src={
+                    mode === "dark"
+                      ? "/assets/images/paan-logo-white.svg"
+                      : "/assets/images/logo.svg"
+                  }
+                  alt="PAAN Logo"
+                  fill
+                  className="object-contain object-left"
+                />
+              </div>
             </Link>
           </div>
 
-          {(step === 1 || step === 2 || step === 3) && (
-            <div className="w-1/2 relative">
-              <div
-                className={`w-full ${
-                  mode === "dark" ? "bg-gray-700" : "bg-gray-200"
-                } rounded-lg h-10`}
-              >
+          {/* Step Navigation in center */}
+          {step >= 1 && step <= 4 && (
+            <div className="hidden md:flex flex-1 justify-center">
+              <div className="relative w-full max-w-3xl">
+                <div className="absolute top-6 left-0 w-full h-1 bg-gray-200/60 dark:bg-gray-800/60 -z-10"></div>
                 <div
-                  className="bg-[#f05d23] h-10 px-8 rounded-lg transition-all duration-300 flex items-center justify-center text-white text-base font-semibold"
-                  style={{ width: `${progressPercentage}%` }}
-                >
-                  {progressText}
+                  className="absolute top-6 left-0 h-1 bg-gradient-to-r from-[#f25849] to-[#84c1d9] -z-10 transition-all duration-1000 ease-in-out"
+                  style={{
+                    width: `${((step - 1) / (steps.length - 1)) * 100}%`,
+                  }}
+                ></div>
+
+                <div className="flex justify-between">
+                  {steps.map((item, i) => {
+                    const isCompleted = step > i + 1;
+                    const isCurrent = step === i + 1;
+
+                    return (
+                      <div
+                        key={i}
+                        className="flex items-center flex-1 group relative"
+                        onMouseEnter={() => setHoverStep(i)}
+                        onMouseLeave={() => setHoverStep(null)}
+                      >
+                        {/* Step Button */}
+                        <div className="flex flex-col items-center z-10">
+                          <button
+                            className={`flex items-center justify-center h-12 w-12 rounded-full border-2 transition-all duration-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f05d23]
+                ${
+                  isCompleted
+                    ? "bg-[#0a3a63] border-transparent text-white shadow-lg"
+                    : isCurrent
+                    ? mode === "dark"
+                      ? "bg-slate-800/90 border-[#f05d23] text-white shadow-md"
+                      : "bg-white/90 border-[#f05d23] text-slate-700 shadow-md"
+                    : mode === "dark"
+                    ? "bg-slate-800/90 border-slate-700/60 text-slate-500"
+                    : "bg-white/90 border-slate-200/60 text-slate-400"
+                }
+                ${hoverStep === i || isCurrent ? "scale-110" : ""}
+                backdrop-blur-md
+              `}
+                            aria-label={`${item.label} ${
+                              isCompleted
+                                ? "completed"
+                                : isCurrent
+                                ? "current"
+                                : "upcoming"
+                            }`}
+                            aria-current={isCurrent ? "step" : undefined}
+                          >
+                            {isCompleted ? (
+                              <Icon icon="ph:check-bold" className="h-6 w-6" />
+                            ) : (
+                              <Icon
+                                icon={item.icon}
+                                className={`h-6 w-6 ${
+                                  isCurrent ? "animate-pulse" : ""
+                                }`}
+                              />
+                            )}
+                          </button>
+
+                          <span
+                            className={`mt-3 text-sm font-medium transition-all duration-300
+                ${
+                  isCurrent
+                    ? mode === "dark"
+                      ? "text-white"
+                      : "text-slate-800"
+                    : mode === "dark"
+                    ? "text-slate-400"
+                    : "text-slate-500"
+                }
+                ${isCurrent ? "font-bold" : ""}
+                ${
+                  hoverStep === i
+                    ? "scale-105 bg-clip-text text-transparent bg-gradient-to-r from-[#f25849] to-[#84c1d9]"
+                    : ""
+                }
+                hidden sm:block
+              `}
+                          >
+                            {item.label}
+                          </span>
+                        </div>
+
+                        {/* Tooltip OUTSIDE of the button wrapper */}
+                        <div
+                          className={`absolute top-16 left-1/2 transform -translate-x-1/2 z-[999] opacity-0 group-hover:opacity-100 transition-all duration-300 pointer-events-none
+                          ${
+                            mode === "dark"
+                              ? "bg-slate-800 text-slate-200 border-slate-700/50"
+                              : "bg-white text-slate-700 border-slate-200/50"
+                          }
+                          px-3 py-2 rounded-lg shadow-lg border text-sm flex items-center space-x-2 whitespace-nowrap
+                        `}
+                        >
+                          <Icon icon={item.icon} className="h-5 w-5" />
+                          <span>{item.tooltip}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
           )}
 
-          <div className="flex items-center space-x-2">
-            {/* Mobile toggle */}
+          {/* Right Controls (Dark Mode Toggle) */}
+          <div className="flex items-center space-x-4">
             <button
-              onClick={toggleMode}
-              className="p-2 focus:outline-none md:hidden"
-              aria-label="Toggle dark mode"
+              onClick={() => toggleMode()}
+              className={`relative p-3 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f05d23]
+    ${
+      mode === "dark"
+        ? "bg-slate-800/90 text-slate-200 hover:bg-slate-700/90"
+        : "bg-slate-100/90 text-slate-700 hover:bg-slate-200/90"
+    }
+    transform hover:scale-110 transition-all duration-300 backdrop-blur-md shadow-md flex items-center justify-center group`}
+              aria-label={`Switch to ${
+                mode === "dark" ? "light" : "dark"
+              } mode`}
             >
-              {mode === "dark" ? (
-                <Icon icon="bi:sun" className="h-6 w-6 text-yellow-400" />
-              ) : (
-                <Icon icon="bi:moon" className="h-6 w-6 text-gray-600" />
-              )}
-            </button>
-            {/* Desktop toggle */}
-            <label className="hidden md:inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={mode === "dark"}
-                onChange={toggleMode}
-                className="hidden"
+              <Icon
+                icon={mode === "dark" ? "ph:sun-bold" : "ph:moon-bold"}
+                className="h-6 w-6 transition-transform duration-300 group-hover:rotate-180"
               />
-              <div
-                className={`relative w-14 h-8 rounded-full border-2 flex items-center ${
-                  mode === "dark"
-                    ? "border-blue-600 bg-blue-600"
-                    : "border-gray-300 bg-gray-300"
-                } transition`}
-              >
-                <div
-                  className={`absolute w-6 h-6 rounded-full bg-white flex items-center justify-center transition-transform ${
-                    mode === "dark" ? "translate-x-6" : ""
-                  }`}
-                >
-                  {mode === "dark" ? (
-                    <Icon icon="bi:moon" className="h-4 w-4 text-gray-700" />
-                  ) : (
-                    <Icon icon="bi:sun" className="h-4 w-4 text-yellow-500" />
-                  )}
-                </div>
-              </div>
-            </label>
+            </button>
           </div>
         </div>
-      </header>
-    );
+
+        {/* Progress Bar (Below Nav Steps) */}
+        {step >= 1 && step <= 4 && (
+          <div className="mt-6">
+            <div className="w-full h-3 bg-gray-100 rounded-full overflow-hidden dark:bg-gray-800/70 backdrop-blur-md shadow-inner relative">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-[#f25849] via-[#f05d23] to-[#84c1d9] bg-[length:200%_auto] animate-gradient transition-all duration-1000 ease-in-out"
+                style={{ width: `${progressPercentage}%` }}
+              >
+                <div className="absolute inset-0 bg-white/40 rounded-full animate-pulse"></div>
+                <div className="absolute inset-0 shadow-[0_0_10px_2px_rgba(240,93,35,0.5)] rounded-full"></div>
+              </div>
+            </div>
+            <p
+              className={`mt-2 text-sm font-semibold text-center ${
+                mode === "dark" ? "text-slate-200" : "text-slate-600"
+              }`}
+            >
+              <span className="font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#f25849] to-[#84c1d9]">
+                {progressText}
+              </span>{" "}
+              Complete
+            </p>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+
 };
 
 export default Header;

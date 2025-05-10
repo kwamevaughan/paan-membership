@@ -65,20 +65,15 @@ export default function CountryChart({ candidates, mode, onFilter }) {
         }
     };
 
-    const getApplicants = (countryCode) => {
+    const getApplicants = (feature) => {
         try {
-            if (!countryCode) return "No applicants";
-            const filteredCandidates = candidates.filter(
-                (c) => c && c.country && c.country.toUpperCase() === countryCode
-            );
-            if (!filteredCandidates.length) return "No applicants";
-            return filteredCandidates
-                .map((c) => `${c.full_name || "Unknown"} (Score: ${c.score || "N/A"})`)
-                .join("<br />");
+            const countryCode = getStandardizedCountryCode(feature);
+            return countryCounts[countryCode] || 0;
         } catch (error) {
-            return "Error listing applicants";
+            return 0;
         }
     };
+
 
     const getStyle = (feature) => {
         try {
@@ -120,51 +115,61 @@ export default function CountryChart({ candidates, mode, onFilter }) {
     };
 
     const onEachFeature = (feature, layer) => {
-        try {
-            const countryCode = getStandardizedCountryCode(feature);
-            const countryName = feature.properties?.sovereignt || feature.properties?.name || "Unknown";
+      try {
+        const countryCode = getStandardizedCountryCode(feature);
+        const countryName =
+          feature.properties?.sovereignt ||
+          feature.properties?.name ||
+          "Unknown";
 
-            layer.on({
-                mouseover: (e) => {
-                    try {
-                        e.target.setStyle({ fillOpacity: 0.9, weight: 2 });
-                        const hoverInfo = {
-                            code: countryCode,
-                            count: countryCounts[countryCode] || 0,
-                            name: countryName,
-                        };
-                        setHoveredCountry(hoverInfo);
-                        e.target.bindTooltip(`${countryName}: ${countryCounts[countryCode] || 0}`, {
-                            permanent: false,
-                            direction: "auto",
-                            className: "country-tooltip",
-                        });
-                    } catch (error) {
-                        // No logging
-                    }
-                },
-                mouseout: (e) => {
-                    try {
-                        e.target.setStyle(getStyle(feature));
-                        setHoveredCountry(null);
-                    } catch (error) {
-                        // No logging
-                    }
-                },
-                click: () => {
-                    try {
-                        if (countryCounts[countryCode] > 0 && onFilter) {
-                            onFilter("country", countryCodeToName[countryCode] || countryCode);
-                        }
-                    } catch (error) {
-                        // No logging
-                    }
-                },
-            });
-        } catch (error) {
-            // No logging
-        }
+        layer.on({
+          mouseover: (e) => {
+            try {
+              e.target.setStyle({ fillOpacity: 0.9, weight: 2 });
+              const hoverInfo = {
+                code: countryCode,
+                count: countryCounts[countryCode] || 0,
+                name: countryName,
+              };
+              setHoveredCountry(hoverInfo);
+              e.target.bindTooltip(
+                `${countryName}: ${countryCounts[countryCode] || 0}`,
+                {
+                  permanent: false,
+                  direction: "auto",
+                  className: "country-tooltip",
+                }
+              );
+            } catch (error) {
+              // No logging
+            }
+          },
+          mouseout: (e) => {
+            try {
+              e.target.setStyle(getStyle(feature));
+              setHoveredCountry(null);
+            } catch (error) {
+              // No logging
+            }
+          },
+          click: () => {
+            try {
+              if (countryCounts[countryCode] > 0 && onFilter) {
+                onFilter(
+                  "country",
+                  countryCodeToName[countryCode] || countryCode
+                );
+              }
+            } catch (error) {
+              // No logging
+            }
+          },
+        });
+      } catch (error) {
+        // No logging
+      }
     };
+
 
     const canRenderMap =
         countriesGeoJson &&
@@ -236,13 +241,7 @@ export default function CountryChart({ candidates, mode, onFilter }) {
                 {hoveredCountry.name || "Unknown"}
               </h4>
               <p>Applicants: {countryCounts[hoveredCountry.code] || 0}</p>
-              {countryCounts[hoveredCountry.code] > 0 && (
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: getApplicants(hoveredCountry.code),
-                  }}
-                />
-              )}
+              
             </div>
           )}
         </div>

@@ -154,7 +154,7 @@ export default function HROverview({ mode = "light", toggleMode, initialCandidat
         className={`min-h-screen flex flex-col ${
           mode === "dark"
             ? "bg-gradient-to-b from-gray-900 to-gray-800"
-            : "bg-gradient-to-b from-gray-50 to-gray-100"
+            : ""
         }`}
       >
         <HRHeader
@@ -168,15 +168,17 @@ export default function HROverview({ mode = "light", toggleMode, initialCandidat
         />
         <div className="flex flex-1">
           <HRSidebar
-            isOpen={isSidebarOpen}
-            mode={mode}
+                    isOpen={isSidebarOpen}
+                    isSidebarOpen={isSidebarOpen}
+                    mode={mode}
+                    toggleMode={toggleMode}
             onLogout={handleLogout}
             toggleSidebar={toggleSidebar}
           />
           <div
-            className={`content-container flex-1 p-6 transition-all duration-300 overflow-hidden md:ml-[80px] sidebar-open:md:ml-[300px] sidebar-closed:md:ml-[80px]`}
+            className={`content-container flex-1 p-10 transition-all duration-300 overflow-hidden md:ml-[80px] sidebar-open:md:ml-[200px] sidebar-closed:md:ml-[80px]`}
           >
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-8xl mx-auto">
               <WelcomeCard
                 totalApplicants={candidates.length}
                 openPositions={jobOpenings.length}

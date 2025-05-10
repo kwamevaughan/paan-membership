@@ -5,186 +5,265 @@ import { useRouter } from "next/router";
 import { Icon } from "@iconify/react";
 import { sidebarNav } from "@/data/nav";
 
-const HRSidebar = ({ isOpen, mode, onLogout, toggleSidebar }) => {
-    
-    const [windowWidth, setWindowWidth] = useState(null);
-    const router = useRouter();
-    const sidebarRef = useRef(null);
+const HRSidebar = ({
+  isOpen,
+  mode,
+  toggleMode,
+  isSidebarOpen,
+  onLogout,
+  toggleSidebar,
+}) => {
+  const [windowWidth, setWindowWidth] = useState(null);
+  const [isHovering, setIsHovering] = useState(false);
+  const router = useRouter();
+  const sidebarRef = useRef(null);
+  const [showLogout, setShowLogout] = useState(false);
 
-    // Handle window resize
-    useEffect(() => {
-        const handleResize = () => setWindowWidth(window.innerWidth);
-        handleResize();
-        window.addEventListener("resize", handleResize);
-        return () => window.addEventListener("resize", handleResize);
-    }, []);
+  // Handle hover states
+  const handleMouseEnter = () => {
+    if (!isOpen && windowWidth >= 640) {
+      setIsHovering(true);
+    }
+  };
 
-    // Handle outside click/tap to close sidebar on mobile
-    useEffect(() => {
-        const handleOutsideClick = (e) => {
-            if (
-                isOpen &&
-                windowWidth < 640 && // Mobile only
-                sidebarRef.current &&
-                !sidebarRef.current.contains(e.target)
-            ) {
-                toggleSidebar(); // Close sidebar
-            }
-        };
+  const handleMouseLeave = () => {
+    setIsHovering(false);
+  };
 
-        // Listen for both mouse and touch events
-        document.addEventListener("mousedown", handleOutsideClick);
-        document.addEventListener("touchstart", handleOutsideClick);
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
-        return () => {
-            document.removeEventListener("mousedown", handleOutsideClick);
-            document.removeEventListener("touchstart", handleOutsideClick);
-        };
-    }, [isOpen, windowWidth, toggleSidebar]);
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (
+        isOpen &&
+        windowWidth < 640 &&
+        sidebarRef.current &&
+        !sidebarRef.current.contains(e.target)
+      ) {
+        toggleSidebar();
+      }
+    };
+    document.addEventListener("mousedown", handleOutsideClick);
+    document.addEventListener("touchstart", handleOutsideClick);
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+      document.removeEventListener("touchstart", handleOutsideClick);
+    };
+  }, [isOpen, windowWidth, toggleSidebar]);
 
-    if (windowWidth === null) return null;
+  if (windowWidth === null) return null;
 
-    const fullName = "PAAN Member"; // Static for now
+  const fullName = "PAAN Member";
 
-    const isActive = (pathname) =>
-      router.pathname === pathname
-        ? mode === "dark"
-          ? "bg-[#84c1d9] text-white shadow-md"
-          : "bg-[#84c1d9] text-white shadow-md"
-        : mode === "dark"
-        ? "text-gray-200 hover:bg-gray-700 hover:text-white"
-        : "text-[#231812] hover:bg-gray-200 hover:text-[#84c1d9]";
+  const isActive = (pathname) =>
+    router.pathname === pathname
+      ? mode === "dark"
+        ? "bg-[#19191e] text-white shadow-md"
+        : "bg-[#19191e] text-[#E7EEF8] shadow-md"
+      : mode === "dark"
+      ? "text-gray-200 hover:bg-gray-700 hover:text-white"
+      : "text-[#231812] hover:bg-[#19191e]";
 
-    return (
-        <div
-            ref={sidebarRef}
-            className={`fixed left-0 top-0 z-50 h-full transition-all duration-300 ${
-                mode === "dark" ? "bg-gray-900" : "bg-gray-50"
-            }`}
-            style={{
-                width: isOpen ? "300px" : windowWidth < 640 ? "0" : "80px",
-            }}
-        >
-            <div className="flex flex-col h-full">
-                {/* Logo */}
-                <div className={`flex justify-center py-8 ${isOpen ? "px-6" : "px-0"}`}>
-                    {isOpen ? (
-                        <Image
-                            src={mode === "dark" ? "/assets/images/paan-logo-white.svg" : "/assets/images/logo.svg"}
-                            alt="PAAN Logo"
-                            width={180}
-                            height={75}
-                            className="object-contain"
-                        />
-                    ) : (
-                        <Image
-                            src={mode === "dark" ? "/assets/images/paan-icon-logo-white.svg" : "/assets/images/paan-logo-icon.svg"}
-                            alt="PAAN Logo"
-                            width={48}
-                            height={48}
-                            className="object-contain"
-                        />
-                    )}
-                </div>
+  // Determine if sidebar should appear expanded
+  const shouldAppearExpanded = isOpen || isHovering;
 
-                {/* Navigation */}
-                <ul className="flex-grow px-2">
-                    {sidebarNav.map(({ href, icon, label }) => (
-                        <li key={href} className="py-2">
-                            <button
-                                onClick={() => {
-                                    router.push(href);
-                                    if (windowWidth < 640) toggleSidebar(); // Close sidebar on mobile nav click
-                                }}
-                                className={`flex items-center font-semibold text-sm w-full ${
-                                    isOpen ? "justify-start px-6" : "justify-center px-0"
-                                } py-3 rounded-lg hover:shadow-md transition-all duration-200 group relative ${isActive(
-                                    href
-                                )}`}
-                            >
-                                <Icon
-                                    icon={icon}
-                                    className={`${
-                                        isOpen ? "h-7 w-7 mr-3" : "h-6 w-6"
-                                    } group-hover:scale-110 transition-transform`}
-                                />
-                                {isOpen && <span className="text-base">{label}</span>}
-                                {!isOpen && (
-                                    <span
-                                        className={`absolute left-full ml-2 text-xs ${
-                                            mode === "dark"
-                                                ? "bg-gray-800 text-gray-200"
-                                                : "bg-gray-700 text-white"
-                                        } rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50`}
-                                    >
-                                        {label}
-                                    </span>
-                                )}
-                            </button>
-                        </li>
-                    ))}
-                </ul>
+  return (
+    <div className="relative">
+      <div
+        ref={sidebarRef}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        className={`fixed left-4 top-0 z-50 h-[calc(100vh-2rem)] my-4 rounded-xl transition-all duration-300
+        ${
+          isHovering && !isOpen
+            ? "backdrop-blur-sm backdrop-filter border border-gray-700"
+            : mode === "dark"
+            ? "bg-[#05050a]"
+            : "bg-[#05050a]"
+        } 
+        group`}
+        style={{
+          width: shouldAppearExpanded
+            ? "200px"
+            : windowWidth < 640
+            ? "0"
+            : "80px",
+          backgroundColor: isHovering && !isOpen ? "rgba(5, 5, 11, 0.7)" : "",
+          boxShadow:
+            isHovering && !isOpen ? "0 8px 32px 0 rgba(31, 38, 135, 0.37)" : "",
+        }}
+      >
+        <div className="flex flex-col h-full">
+          {/* Logo + Toggle Button */}
+          <div
+            className={`flex items-center justify-${
+              shouldAppearExpanded ? "between" : "center"
+            } py-8 ${shouldAppearExpanded ? "px-4" : "px-0"}`}
+          >
+            {shouldAppearExpanded ? (
+              <>
+                <Image
+                  src={"/assets/images/paan-logo-white.svg"}
+                  alt="PAAN Logo"
+                  width={120}
+                  height={75}
+                  className="object-contain"
+                />
+                <button
+                  onClick={toggleSidebar}
+                  className="text-white hover:scale-110 transition-transform hover:bg-[#19191e] rounded-full p-2"
+                  title="Collapse sidebar"
+                >
+                  <Icon icon="ri:skip-left-line" className="w-6 h-6" />
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={toggleSidebar}
+                className="text-white hover:scale-110 transition-transform"
+                title="Expand sidebar"
+              >
+                <Icon icon="ri:skip-right-line" className="w-6 h-6" />
+              </button>
+            )}
+          </div>
 
-                {/* Profile/Logout */}
-                {(!isOpen && windowWidth < 640) ? null : (
-                    <div
-                        className={`flex items-center justify-between px-4 py-6 mt-auto ${
-                            mode === "dark"
-                                ? "bg-gradient-to-r from-gray-800 to-gray-700"
-                                : "bg-gradient-to-r from-gray-200 to-gray-100"
-                        } shadow-inner`}
-                    >
-                        {isOpen ? (
-                            <div className="flex items-center justify-between w-full">
-                                <div className="flex items-center space-x-4">
-                                    <div className="w-12 h-12 overflow-hidden">
-                                        <Image
-                                            src={mode === "dark" ? "/assets/images/paan-logo-icon-white.svg" : "/assets/images/paan-logo-icon.svg"}
-                                            alt="Profile"
-                                            width={48}
-                                            height={48}
-                                            className="object-cover"
-                                        />
-                                    </div>
-                                    <span
-                                        className={`text-base font-medium ${
-                                            mode === "dark" ? "text-gray-200" : "text-[#231812]"
-                                        }`}
-                                    >
-                                        {fullName}
-                                    </span>
-                                </div>
-                                <button
-                                    onClick={onLogout}
-                                    className="flex items-center justify-center text-red-500 hover:text-red-600 transition-colors"
-                                    aria-label="Logout"
-                                >
-                                    <ArrowRightStartOnRectangleIcon className="h-7 w-7" />
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="flex items-center justify-center w-full relative group">
-                                <button
-                                    onClick={onLogout}
-                                    className="flex items-center justify-center text-red-500 hover:text-red-600 transition-colors"
-                                    aria-label="Logout"
-                                >
-                                    <ArrowRightStartOnRectangleIcon className="h-6 w-6 group-hover:scale-110 transition-transform" />
-                                </button>
-                                <span
-                                    className={`absolute left-full ml-2 text-xs ${
-                                        mode === "dark" ? "bg-gray-800 text-gray-200" : "bg-gray-700 text-white"
-                                    } rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50`}
-                                >
-                                    Sign Out
-                                </span>
-                            </div>
-                        )}
-                    </div>
+          {/* Navigation */}
+          <ul
+            className={`flex-grow px-2 space-y-2 overflow-hidden flex ${
+              shouldAppearExpanded
+                ? "items-start"
+                : "items-center"
+            } flex-col`}
+          >
+            {sidebarNav.map(({ category, items }, index) => (
+              <div key={category}>
+                {index !== 0 && (
+                  <hr className="border-t border-gray-600 my-2" />
                 )}
+                {shouldAppearExpanded && (
+                  <div className="text-xs tracking-wide font-semibold text-gray-400 px-2 pt-4 pb-1">
+                    {category}
+                  </div>
+                )}
+                <ul>
+                  {items.map(({ href, icon, label }) => (
+                    <li
+                      key={href}
+                      onClick={() => {
+                        router.push(href);
+                        if (windowWidth < 640) toggleSidebar();
+                      }}
+                      className={`relative py-4 px-2 flex items-center font-normal text-sm w-full text-white cursor-pointer
+                        rounded-lg hover:shadow-md transition-all duration-200 group ${isActive(
+                          href
+                        )}`}
+                    >
+                      <Icon
+                        icon={icon}
+                        className={`${
+                          shouldAppearExpanded ? "h-5 w-5 mr-3" : "h-6 w-6"
+                        } group-hover:scale-110 transition-transform`}
+                      />
+                      {shouldAppearExpanded && (
+                        <span className="text-sm">{label}</span>
+                      )}
+                      {!shouldAppearExpanded && (
+                        <span className="absolute left-[100%] top-1/2 -translate-y-1/2 ml-3 bg-gray-800 text-white px-3 py-1 text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50">
+                          {label}
+                        </span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </ul>
+
+          {/* Profile/Logout */}
+          {!shouldAppearExpanded && windowWidth < 640 ? null : (
+            <div
+              className={`px-4 py-2 mt-auto${
+                mode === "dark"
+                  ? "bg-gradient-to-r from-gray-800 to-gray-700"
+                  : ""
+              } shadow-inner`}
+            >
+              <div
+                className="flex items-center space-x-4 cursor-pointer bg-[#19191e] rounded-2xl p-2"
+                onClick={() => setShowLogout((prev) => !prev)}
+              >
+                <div className="w-10 h-10 overflow-hidden rounded-full">
+                  <Image
+                    src="/assets/images/paan-logo-icon-white.svg"
+                    alt="Profile"
+                    width={38}
+                    height={38}
+                    className="object-cover"
+                  />
+                </div>
+                {shouldAppearExpanded && (
+                  <span className="text-xs font-medium text-white">
+                    {fullName}
+                  </span>
+                )}
+              </div>
+              <div
+                className={`transition-[max-height,opacity] duration-500 ease-in-out overflow-hidden ${
+                  showLogout && shouldAppearExpanded
+                    ? "max-h-40 opacity-100"
+                    : "max-h-0 opacity-0"
+                }`}
+              >
+                <div className="flex flex-col gap-2 text-white text-sm pt-2 ">
+                  <div className="flex items-center gap-2 hover:bg-[#19191e] rounded-2xl p-2">
+                    <Icon
+                      icon="mdi:business-card-outline"
+                      className="h-5 w-5"
+                    />
+                    <span>Profile</span>
+                  </div>
+                  <div className="py-2 hover:bg-[#19191e] rounded-2xl p-2">
+                    <button
+                      onClick={toggleMode}
+                      className="flex items-center gap-2 hover:opacity-80 transition-colors duration-300"
+                    >
+                      <Icon
+                        icon={
+                          mode === "dark"
+                            ? "mdi:weather-sunny"
+                            : "mdi:weather-night"
+                        }
+                        className={`h-5 w-5 ${
+                          mode === "dark" ? "text-yellow-400" : "text-blue-400"
+                        }`}
+                      />
+                      <span>
+                        {mode === "dark" ? "Light Mode" : "Dark Mode"}
+                      </span>
+                    </button>
+                  </div>
+                  <hr className="border-t border-gray-600" />
+                  <button
+                    onClick={onLogout}
+                    className="flex items-center gap-2 text-red-500 hover:text-red-600 transition-colors hover:bg-[#19191e] rounded-2xl p-2"
+                  >
+                    <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
+                    <span>Sign Out</span>
+                  </button>
+                </div>
+              </div>
             </div>
+          )}
         </div>
-    );
+      </div>
+    </div>
+  );
 };
 
 export default HRSidebar;

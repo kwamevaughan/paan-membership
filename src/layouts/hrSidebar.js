@@ -1,9 +1,10 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { Icon } from "@iconify/react";
 import { sidebarNav } from "@/data/nav";
+import DraggableToggle from "@/components/DraggableToggle";
 
 const HRSidebar = ({
   isOpen,
@@ -12,12 +13,33 @@ const HRSidebar = ({
   isSidebarOpen,
   onLogout,
   toggleSidebar,
+  setDragOffset: setParentDragOffset,
 }) => {
   const [windowWidth, setWindowWidth] = useState(null);
   const [isHovering, setIsHovering] = useState(false);
+  const [sidebarHidden, setSidebarHidden] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [isDragging, setIsDragging] = useState(false);
   const router = useRouter();
   const sidebarRef = useRef(null);
   const [showLogout, setShowLogout] = useState(false);
+
+  // Debounce setParentDragOffset to reduce update frequency
+  const debouncedSetParentDragOffset = useCallback(
+    (offset) => {
+      let timeout;
+      clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        setParentDragOffset?.(offset);
+      }, 50);
+    },
+    [setParentDragOffset]
+  );
+
+  // Sync dragOffset with parent
+  useEffect(() => {
+    debouncedSetParentDragOffset(dragOffset);
+  }, [dragOffset, debouncedSetParentDragOffset]);
 
   // Handle hover states
   const handleMouseEnter = () => {
@@ -30,12 +52,15 @@ const HRSidebar = ({
     setIsHovering(false);
   };
 
+  const handleResize = useCallback(() => {
+    setWindowWidth(window.innerWidth);
+  }, []);
+
   useEffect(() => {
-    const handleResize = () => setWindowWidth(window.innerWidth);
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [handleResize]);
 
   useEffect(() => {
     const handleOutsideClick = (e) => {
@@ -56,29 +81,67 @@ const HRSidebar = ({
     };
   }, [isOpen, windowWidth, toggleSidebar]);
 
-  if (windowWidth === null) return null;
+  // Update document body and content-container class for layout
+  useEffect(() => {
+    const contentContainer = document.querySelector(".content-container");
+    if (sidebarHidden) {
+      document.body.classList.add("sidebar-hidden");
+      contentContainer?.classList.add("sidebar-hidden");
+    } else {
+      document.body.classList.remove("sidebar-hidden");
+      contentContainer?.classList.remove("sidebar-hidden");
+    }
+    return () => {
+      document.body.classList.remove("sidebar-hidden");
+      contentContainer?.classList.remove("sidebar-hidden");
+    };
+  }, [sidebarHidden]);
 
   const fullName = "PAAN Member";
 
-  const isActive = (pathname) =>
-    router.pathname === pathname
-      ? mode === "dark"
-        ? "bg-[#19191e] text-white shadow-md"
-        : "bg-[#19191e] text-[#E7EEF8] shadow-md"
-      : mode === "dark"
-      ? "text-gray-200 hover:bg-gray-700 hover:text-white"
-      : "text-[#231812] hover:bg-[#19191e]";
-
-  // Determine if sidebar should appear expanded
   const shouldAppearExpanded = isOpen || isHovering;
 
+  const isActive = useMemo(() => {
+    return (pathname) =>
+      router.pathname === pathname
+        ? mode === "dark"
+          ? "bg-[#19191e] text-white shadow-md"
+          : "bg-[#19191e] text-[#E7EEF8] shadow-md"
+        : mode === "dark"
+        ? "text-gray-200 hover:bg-gray-700 hover:text-white"
+        : "text-[#231812] hover:bg-[#19191e]";
+  }, [router.pathname, mode]);
+
+  const toggleSidebarVisibility = () => {
+    setSidebarHidden((prev) => {
+      const newHidden = !prev;
+      const event = new CustomEvent("sidebarVisibilityChange", {
+        detail: { hidden: newHidden },
+      });
+      document.dispatchEvent(event);
+      return newHidden;
+    });
+    setDragOffset(0);
+  };
+
+  if (windowWidth === null) return null;
+
+  const sidebarWidth = shouldAppearExpanded
+    ? "200px"
+    : windowWidth < 640
+    ? "0"
+    : "80px";
+
   return (
-    <div className="relative">
+    <div className="relative z-50">
+      {/* Main sidebar */}
       <div
         ref={sidebarRef}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className={`fixed left-4 top-0 z-50 h-[calc(100vh-2rem)] my-4 rounded-xl transition-all duration-300
+        className={`fixed left-4 top-0 z-50 h-[calc(100vh-2rem)] my-4 rounded-xl select-none touch-action-none overflow-visible ${
+          isDragging ? "transition-none" : "transition-all duration-300"
+        }
         ${
           isHovering && !isOpen
             ? "backdrop-blur-sm backdrop-filter border border-gray-700"
@@ -88,17 +151,26 @@ const HRSidebar = ({
         } 
         group`}
         style={{
-          width: shouldAppearExpanded
-            ? "200px"
-            : windowWidth < 640
-            ? "0"
-            : "80px",
+          width: sidebarWidth,
           backgroundColor: isHovering && !isOpen ? "rgba(5, 5, 11, 0.7)" : "",
           boxShadow:
             isHovering && !isOpen ? "0 8px 32px 0 rgba(31, 38, 135, 0.37)" : "",
+          transform: `translateX(${
+            sidebarHidden ? -parseInt(sidebarWidth) + dragOffset : dragOffset
+          }px)`,
         }}
       >
-        <div className="flex flex-col h-full">
+        <div className="flex flex-col h-full relative">
+          {/* Draggable Toggle */}
+          <DraggableToggle
+            sidebarHidden={sidebarHidden}
+            toggleSidebarVisibility={toggleSidebarVisibility}
+            sidebarWidth={sidebarWidth}
+            setDragOffset={setDragOffset}
+            isDragging={isDragging}
+            setIsDragging={setIsDragging}
+          />
+
           {/* Logo + Toggle Button */}
           <div
             className={`flex items-center justify-${
@@ -113,6 +185,7 @@ const HRSidebar = ({
                   width={120}
                   height={75}
                   className="object-contain"
+                  priority
                 />
                 <button
                   onClick={toggleSidebar}
@@ -136,9 +209,7 @@ const HRSidebar = ({
           {/* Navigation */}
           <ul
             className={`flex-grow px-2 space-y-2 overflow-hidden flex ${
-              shouldAppearExpanded
-                ? "items-start"
-                : "items-center"
+              shouldAppearExpanded ? "items-start" : "items-center"
             } flex-col`}
           >
             {sidebarNav.map(({ category, items }, index) => (
@@ -205,6 +276,7 @@ const HRSidebar = ({
                     width={38}
                     height={38}
                     className="object-cover"
+                    priority
                   />
                 </div>
                 {shouldAppearExpanded && (
@@ -220,7 +292,7 @@ const HRSidebar = ({
                     : "max-h-0 opacity-0"
                 }`}
               >
-                <div className="flex flex-col gap-2 text-white text-sm pt-2 ">
+                <div className="flex flex-col gap-2 text-white text-sm pt-2">
                   <div className="flex items-center gap-2 hover:bg-[#19191e] rounded-2xl p-2">
                     <Icon
                       icon="mdi:business-card-outline"

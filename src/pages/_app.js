@@ -85,10 +85,38 @@ function MyApp({ Component, pageProps }) {
     };
   }, [router]);
 
+  // Compute breadcrumbs
+  const breadcrumbs = (() => {
+    const path = router.asPath.split("?")[0]; // Remove query params
+    const segments = path.split("/").filter((s) => s); // Split and remove empty
+    const crumbs = [{ href: "/", label: "Home" }]; // Start with Home
+
+    let currentPath = "";
+    const navItems = sidebarNav.flatMap((category) => category.items);
+
+    segments.forEach((segment, index) => {
+      currentPath += `/${segment}`;
+      const navItem = navItems.find(
+        (item) => item.href === currentPath || item.href.endsWith(`/${segment}`)
+      );
+      const label = navItem
+        ? navItem.label
+        : segment.charAt(0).toUpperCase() + segment.slice(1);
+      crumbs.push({ href: currentPath, label });
+    });
+
+    return crumbs;
+  })();
+
   return (
     <div className={`${mode === "dark" ? "dark" : ""} ${questrial.className}`}>
       <Toaster position="top-center" reverseOrder={false} />
-      <Component {...pageProps} mode={mode} toggleMode={toggleMode} />
+      <Component
+        {...pageProps}
+        mode={mode}
+        toggleMode={toggleMode}
+        breadcrumbs={breadcrumbs}
+      />
     </div>
   );
 }

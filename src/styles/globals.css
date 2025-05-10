@@ -125,8 +125,6 @@ body {
     color: #fff;
 }
 
-/* src/styles/globals.css */
-/* src/styles/globals.css */
 @keyframes fade-in {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -185,39 +183,31 @@ body {
     background: inherit;
 }
 
+
+/* Add these styles to your global CSS file */
+
+/* Default content positioning with sidebar visible */
+.content-container {
+  transition: margin-left 0.3s ease;
+  margin-left: 84px; /* Default margin with collapsed sidebar (80px + 4px) */
+}
+
+/* When sidebar is expanded */
 .sidebar-open .content-container {
-    margin-left: 200px;
-    transition: margin-left 0.3s ease;
+  margin-left: 204px; /* 200px + 4px */
 }
 
-.sidebar-closed .content-container {
-    margin-left: 80px;
-    transition: margin-left 0.3s ease;
+/* When sidebar is completely hidden */
+body.sidebar-hidden .content-container {
+  margin-left: 0 !important;
 }
 
-/* Footer positioning */
-.sidebar-open footer {
-    width: calc(100% - 200px);
-    margin-left: 200px;
-    transition: margin-left 0.3s ease, width 0.3s ease;
-}
-
-.sidebar-closed footer {
-    width: calc(100% - 80px);
-    margin-left: 80px;
-    transition: margin-left 0.3s ease, width 0.3s ease;
-}
-
-/* Mobile adjustments */
-@media (max-width: 768px) {
-    .sidebar-open .content-container,
-    .sidebar-closed .content-container {
-        margin-left: 0;
-    }
-    
-    .sidebar-open footer,
-    .sidebar-closed footer {
-        width: 100%;
-        margin-left: 0;
-    }
+/* Responsive adjustments */
+@media (max-width: 639px) {
+  .content-container {
+    margin-left: 0; /* No margin on mobile when sidebar is hidden */
+  }
+  .sidebar-open .content-container {
+    margin-left: 0; /* Sidebar is hidden on mobile when expanded */
+  }
 }

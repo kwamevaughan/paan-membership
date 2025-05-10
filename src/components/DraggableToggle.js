@@ -34,6 +34,7 @@ const DraggableToggle = ({
     e.dataTransfer.setData("text/plain", "");
     setIsDragging(true);
     startX.current = e.clientX;
+    console.log("Drag started", { clientX: e.clientX, sidebarHidden });
   };
 
   const handleDrag = (e) => {
@@ -41,15 +42,17 @@ const DraggableToggle = ({
     const deltaX = e.clientX - startX.current;
     const baseOffset = sidebarHidden ? -maxDrag : 0;
     const newOffset = Math.max(-maxDrag, Math.min(0, baseOffset + deltaX));
+    console.log("Dragging", { deltaX, baseOffset, newOffset, maxDrag });
     throttledSetDragOffset(newOffset);
   };
 
   const handleDragEnd = (e) => {
     setIsDragging(false);
     const deltaX = e.clientX - startX.current;
-    const threshold = maxDrag / 5; // ~40px for 200px sidebar
+    const threshold = maxDrag / 6; // ~33px for 200px sidebar
     const shouldHide =
       deltaX > (sidebarHidden ? maxDrag - threshold : -threshold);
+    console.log("Drag ended", { deltaX, threshold, shouldHide, sidebarHidden });
     if (shouldHide !== sidebarHidden) {
       toggleSidebarVisibility();
     }
@@ -61,6 +64,10 @@ const DraggableToggle = ({
     e.preventDefault(); // Prevent scrolling
     setIsDragging(true);
     startX.current = e.touches[0].clientX;
+    console.log("Touch started", {
+      clientX: e.touches[0].clientX,
+      sidebarHidden,
+    });
   };
 
   const handleTouchMove = (e) => {
@@ -70,6 +77,7 @@ const DraggableToggle = ({
     const deltaX = touchX - startX.current;
     const baseOffset = sidebarHidden ? -maxDrag : 0;
     const newOffset = Math.max(-maxDrag, Math.min(0, baseOffset + deltaX));
+    console.log("Touch moving", { deltaX, baseOffset, newOffset, maxDrag });
     throttledSetDragOffset(newOffset);
   };
 
@@ -77,9 +85,15 @@ const DraggableToggle = ({
     setIsDragging(false);
     const touchX = e.changedTouches[0].clientX;
     const deltaX = touchX - startX.current;
-    const threshold = maxDrag / 5;
+    const threshold = maxDrag / 6;
     const shouldHide =
       deltaX > (sidebarHidden ? maxDrag - threshold : -threshold);
+    console.log("Touch ended", {
+      deltaX,
+      threshold,
+      shouldHide,
+      sidebarHidden,
+    });
     if (shouldHide !== sidebarHidden) {
       toggleSidebarVisibility();
     }
@@ -109,11 +123,11 @@ const DraggableToggle = ({
       role="button"
       tabIndex={0}
       aria-label={sidebarHidden ? "Show Sidebar" : "Hide Sidebar"}
-      className={`absolute top-1/2 -translate-y-1/2 right-[-10px] z-50 ${
+      className={`absolute top-1/2 -translate-y-1/2 right-[-12px] z-60 ${
         isDragging ? "transition-none" : "transition-all duration-300"
       }
-        h-24 w-4 bg-gray-500 hover:bg-gray-300 cursor-pointer
-        rounded-r-md hover:w-5 select-none focus:outline-none focus:ring-2 focus:ring-gray-300 pointer-events-auto`}
+        h-40 w-2 bg-gray-500 hover:bg-gray-300 cursor-pointer
+        rounded-r-md hover:w-6 select-none focus:outline-none focus:ring-2 focus:ring-gray-300 pointer-events-auto touch-action-none`}
     >
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-1 h-4 bg-white rounded-full opacity-70"></div>
     </div>

@@ -32,7 +32,7 @@ const Header = ({
       label: "Details",
       icon: "fluent:person-info-20-regular",
       tooltip:
-        job_type === "freelancers"
+        job_type === "freelancer"
           ? "Provide your contact and personal details"
           : "Provide your agency’s contact and registration details",
     },
@@ -55,7 +55,7 @@ const Header = ({
 
   // Filter steps based on job_type
   const steps =
-    job_type === "freelancers"
+    job_type === "freelancer"
       ? allSteps.filter((step) => step.label !== "Documents")
       : allSteps;
 

@@ -3,7 +3,7 @@ import Image from "next/image";
 import { useState } from "react";
 import { useCountry } from "@/hooks/useCountry";
 
-export default function RecentActivity({
+export default function CandidateList({
   candidates,
   setSelectedCandidate,
   setIsModalOpen,

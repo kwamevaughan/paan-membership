@@ -235,115 +235,155 @@ export default function StatusChart({ candidates, mode, onFilter }) {
       custom: ({ series, seriesIndex, dataPointIndex, w }) => {
         const month = months[dataPointIndex] || "N/A";
 
-        // Create a glassy tooltip effect
+        // Create an ultra-transparent glassy tooltip with animated effect
         return `
-          <div class="custom-tooltip" style="
-            padding: 16px;
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
+      <div class="custom-tooltip" style="
+        padding: 16px;
+        border-radius: 12px;
+        backdrop-filter: blur(12px);
+        background: ${
+          mode === "dark"
+            ? "linear-gradient(135deg, rgba(30, 41, 59, 0.03) 0%, rgba(30, 41, 59, 0.01) 100%)"
+            : "linear-gradient(135deg, rgba(255, 255, 255, 0.01) 0%, rgba(255, 255, 255, 0.005) 100%)"
+        };
+        box-shadow: 0 8px 32px rgba(31, 38, 135, 0.05), inset 0 0 6px rgba(255, 255, 255, 0.05);
+        border: 1px solid ${
+          mode === "dark"
+            ? "rgba(255, 255, 255, 0.01)"
+            : "rgba(255, 255, 255, 0.1)"
+        };
+        color: ${mode === "dark" ? "#ffffff" : "#231812"};
+        min-width: 200px;
+        position: relative;
+        overflow: hidden;
+        animation: pulseGlow 4s ease-in-out infinite;
+      ">
+        <div style="
+          content: '';
+          position: absolute;
+          top: -50%;
+          left: -50%;
+          width: 200%;
+          height: 200%;
+          background: linear-gradient(
+            45deg, 
+            transparent, 
+            rgba(255, 255, 255, 0.05), 
+            transparent
+          );
+          transform: rotate(45deg);
+          animation: shimmer 5s linear infinite;
+          pointer-events: none;
+        "></div>
+        <div style="
+          margin-bottom: 10px;
+          padding-bottom: 8px;
+          border-bottom: 1px solid ${
+            mode === "dark"
+              ? "rgba(255, 255, 255, 0.01)"
+              : "rgba(0, 0, 0, 0.01)"
+          };
+          font-weight: 600;
+          font-size: 14px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          position: relative;
+          z-index: 2;
+          text-shadow: none;
+        ">
+          <span>${
+            selectedTab ? selectedTab + " - " : ""
+          }${month} ${selectedYear}</span>
+          <span style="
             background: ${
               mode === "dark"
-                ? "rgba(30, 41, 59, 0.8)"
-                : "rgba(255, 255, 255, 0.7)"
+                ? "rgba(255, 255, 255, 0.01)"
+                : "rgba(255, 255, 255, 0.05)"
             };
-            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            border-radius: 6px;
+            padding: 3px 8px;
+            font-size: 12px;
             border: 1px solid ${
               mode === "dark"
-                ? "rgba(255, 255, 255, 0.1)"
-                : "rgba(255, 255, 255, 0.4)"
+                ? "rgba(255, 255, 255, 0.01)"
+                : "rgba(255, 255, 255, 0.1)"
             };
-            color: ${mode === "dark" ? "#ffffff" : "#231812"};
-            min-width: 200px;
-          ">
-            <div style="
-              margin-bottom: 10px;
-              padding-bottom: 8px;
-              border-bottom: 1px solid ${
-                mode === "dark"
-                  ? "rgba(255, 255, 255, 0.1)"
-                  : "rgba(0, 0, 0, 0.05)"
-              };
-              font-weight: 600;
-              font-size: 14px;
-              display: flex;
-              justify-content: space-between;
-              align-items: center;
-            ">
-              <span>${
-                selectedTab ? selectedTab + " - " : ""
-              }${month} ${selectedYear}</span>
-              <span style="
+            box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.05);
+          ">Total: ${totalsByMonth[dataPointIndex]}</span>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 2;">
+          ${series
+            .slice(0, 4)
+            .map((s, index) => {
+              const value = s[dataPointIndex];
+              if (value === undefined || value === null || value === 0)
+                return "";
+              const seriesName = w.globals.seriesNames[index];
+              const color = w.globals.colors[index];
+              const percentage =
+                totalsByMonth[dataPointIndex] > 0
+                  ? Math.round((value / totalsByMonth[dataPointIndex]) * 100)
+                  : 0;
+
+              return `
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="
+                    width: 12px; 
+                    height: 12px; 
+                    border-radius: 50%; 
+                    background-color: ${color};
+                    display: inline-block;
+                    box-shadow: 0 0 3px rgba(0,0,0,0.1), inset 0 0 1px rgba(255, 255, 255, 0.1);
+                  "></span>
+                  <span style="font-size: 13px;">${seriesName}</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="font-weight: 600; font-size: 13px;">${value}</span>
+                  <span style="
+                    font-size: 11px; 
+                    opacity: 0.9;
+                  ">(${percentage}%)</span>
+                </div>
+              </div>
+              <div style="
+                height: 4px;
+                width: 100%;
                 background: ${
                   mode === "dark"
-                    ? "rgba(255, 255, 255, 0.1)"
-                    : "rgba(75, 85, 99, 0.1)"
+                    ? "rgba(255, 255, 255, 0.005)"
+                    : "rgba(0, 0, 0, 0.005)"
                 };
-                border-radius: 6px;
-                padding: 3px 8px;
-                font-size: 12px;
-              ">Total: ${totalsByMonth[dataPointIndex]}</span>
-            </div>
-            <div style="display: flex; flex-direction: column; gap: 6px;">
-              ${series
-                .slice(0, 4)
-                .map((s, index) => {
-                  const value = s[dataPointIndex];
-                  if (value === undefined || value === null || value === 0)
-                    return "";
-                  const seriesName = w.globals.seriesNames[index];
-                  const color = w.globals.colors[index];
-                  const percentage =
-                    totalsByMonth[dataPointIndex] > 0
-                      ? Math.round(
-                          (value / totalsByMonth[dataPointIndex]) * 100
-                        )
-                      : 0;
-
-                  return `
-                  <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                      <span style="
-                        width: 12px; 
-                        height: 12px; 
-                        border-radius: 50%; 
-                        background-color: ${color};
-                        display: inline-block;
-                      "></span>
-                      <span style="font-size: 13px;">${seriesName}</span>
-                    </div>
-                    <div style="display: flex; align-items: center; gap: 6px;">
-                      <span style="font-weight: 600; font-size: 13px;">${value}</span>
-                      <span style="
-                        font-size: 11px; 
-                        opacity: 0.7;
-                      ">(${percentage}%)</span>
-                    </div>
-                  </div>
+                border-radius: 2px;
+                overflow: hidden;
+                margin-bottom: 4px;
+                position: relative;
+              ">
+                <div style="
+                  height: 100%;
+                  width: ${percentage}%;
+                  background: linear-gradient(90deg, ${color}60, ${color}90);
+                  border-radius: 2px;
+                  position: relative;
+                  overflow: hidden;
+                ">
                   <div style="
-                    height: 4px;
-                    width: 100%;
-                    background: ${
-                      mode === "dark"
-                        ? "rgba(255, 255, 255, 0.1)"
-                        : "rgba(0, 0, 0, 0.05)"
-                    };
-                    border-radius: 2px;
-                    overflow: hidden;
-                    margin-bottom: 4px;
-                  ">
-                    <div style="
-                      height: 100%;
-                      width: ${percentage}%;
-                      background-color: ${color};
-                      border-radius: 2px;
-                    "></div>
-                  </div>
-                `;
-                })
-                .join("")}
-            </div>
-          </div>
-        `;
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    height: 50%;
+                    background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent);
+                  "></div>
+                </div>
+              </div>
+            `;
+            })
+            .join("")}
+        </div>
+      </div>
+    `;
       },
     },
     legend: {
@@ -361,18 +401,41 @@ export default function StatusChart({ candidates, mode, onFilter }) {
     },
   };
 
-  // Handle dynamic rendering and resizing
+  const chartContainerId = "glassy-chart-" + Math.random().toString(36).substring(2, 11);
+
+  // Function to create glassy overlay for the tooltip
   useEffect(() => {
-    const handleResize = () => {
-      window.dispatchEvent(new Event("resize"));
-    };
-    const timeout = setTimeout(handleResize, 100);
-    window.addEventListener("resize", handleResize);
-    return () => {
-      clearTimeout(timeout);
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+    if (typeof window !== "undefined") {
+      // Add CSS for glassy tooltip
+      const styleElement = document.createElement("style");
+      styleElement.textContent = `
+        .apexcharts-tooltip {
+          background: ${mode === "dark" ? "rgba(30, 41, 59, 0.7)" : "rgba(255, 255, 255, 0.6)"} !important;
+          backdrop-filter: blur(8px) !important;
+          -webkit-backdrop-filter: blur(8px) !important;
+          border: 1px solid ${mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.8)"} !important;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
+          border-radius: 10px !important;
+          overflow: hidden !important;
+        }
+        
+        .apexcharts-tooltip-title {
+          background: ${mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(240, 248, 255, 0.6)"} !important;
+          border-bottom: 1px solid ${mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.05)"} !important;
+          font-weight: 600 !important;
+        }
+        
+        .apexcharts-tooltip-series-group {
+          background: transparent !important;
+        }
+      `;
+      document.head.appendChild(styleElement);
+      
+      return () => {
+        document.head.removeChild(styleElement);
+      };
+    }
+  }, [mode]);
 
   return (
     <div
@@ -390,44 +453,59 @@ export default function StatusChart({ candidates, mode, onFilter }) {
             icon="icon-park-outline:document-folder"
             width={28}
             height={28}
-            className="text-indigo-900"
+            className={`${mode === "dark" ? "text-white" : "text-indigo-900"}`}
           />
           Candidate Status by Tier
         </h3>
-        <div className="flex items-center space-x-2 bg-sky-50 p-1 rounded-full">
+        <div
+          className={`flex items-center space-x-2 p-1 rounded-full ${
+            mode === "dark" ? "bg-gray-800" : "bg-sky-50"
+          }`}
+        >
           <button
-            className={`p-2 rounded-full ${
+            className={`p-2 rounded-full flex items-center justify-center ${
               mode === "dark"
-                ? "bg-gray-700 text-white"
-                : "bg-sky-100 text-[#231812]"
+                ? "bg-gray-700 text-white hover:bg-gray-600"
+                : "bg-sky-100 text-[#231812] hover:bg-sky-200"
             }`}
             onClick={() =>
               setSelectedYear((prev) => (parseInt(prev) - 1).toString())
             }
           >
-            <Icon icon="lsicon:left-filled" width={20} height={20} />
+            <Icon
+              icon="lsicon:left-filled"
+              width={20}
+              height={20}
+              className={`${mode === "dark" ? "text-white" : "text-[#231812]"}`}
+            />
           </button>
           <span
             className={`text-md font-bold ${
-              mode === "dark" ? "text-white" : "text-[#231812]"
+              mode === "dark" ? "text-gray-300" : "text-[#231812]"
             }`}
           >
             {selectedYear}
           </span>
           <button
-            className={`p-2 rounded-full ${
+            className={`p-2 rounded-full flex items-center justify-center ${
               mode === "dark"
-                ? "bg-gray-700 text-white"
-                : "bg-sky-100 text-[#231812]"
+                ? "bg-gray-700 text-white hover:bg-gray-600"
+                : "bg-sky-100 text-[#231812] hover:bg-sky-200"
             }`}
             onClick={() =>
               setSelectedYear((prev) => (parseInt(prev) + 1).toString())
             }
           >
-            <Icon icon="lsicon:right-filled" width={20} height={20} />
+            <Icon
+              icon="lsicon:right-filled"
+              width={20}
+              height={20}
+              className={`${mode === "dark" ? "text-white" : "text-[#231812]"}`}
+            />
           </button>
         </div>
       </div>
+
       <div className="flex">
         <div className="w-1/5 p-4">
           {tiers.map((tab, index) => {
@@ -452,13 +530,15 @@ export default function StatusChart({ candidates, mode, onFilter }) {
         </div>
         <div className="w-4/5 p-4 overflow-hidden">
           {ReactApexChart ? (
-            <ReactApexChart
-              options={options}
-              series={series}
-              type="line"
-              height={400}
-              width="100%"
-            />
+            <div id={chartContainerId}>
+              <ReactApexChart
+                options={options}
+                series={series}
+                type="line"
+                height={400}
+                width="100%"
+              />
+            </div>
           ) : null}
         </div>
       </div>

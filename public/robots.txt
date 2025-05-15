@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+Disallow: /hr/jobs
+Disallow: /hr/analytics
+Disallow: /hr/applicants
+Disallow: /hr/automations
+Disallow: /hr/email-templates
+Disallow: /hr/interview-questions
+Disallow: /hr/overview
+Disallow: /hr/recruiters
+Disallow: /hr/settings
+Disallow: /hr/verify
+Disallow: /hr/login
+Sitemap: https://membership.paan.africa/sitemap.xml

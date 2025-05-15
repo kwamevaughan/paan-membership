@@ -10,6 +10,7 @@ import SimpleFooter from "@/layouts/simpleFooter";
 import WelcomeCard from "@/components/WelcomeCard";
 import StatusChart from "@/components/StatusChart";
 import CandidateList from "@/components/CandidateList";
+import ResourceOverview from "@/components/ResourceOverview";
 import JobOpenings from "@/components/JobOpenings";
 import DeviceChart from "@/components/DeviceChart";
 import EmailModal from "@/components/EmailModal";
@@ -24,6 +25,7 @@ const CountryChart = dynamic(() => import("@/components/CountryChart"), {
 
 import countriesGeoJson from "../../data/countries.js";
 import OverviewBoxes from "@/components/OverviewBoxes";
+import RecentActivities from "@/components/RecentActivities";
 
 const countryCodeToName = countriesGeoJson.features.reduce((acc, feature) => {
   acc[feature.properties.iso_a2.toUpperCase()] = feature.properties.sovereignt;
@@ -259,6 +261,14 @@ export default function HROverview({
               router={router}
               mode={mode}
             />
+
+            <ResourceOverview
+              candidates={candidates}
+              setSelectedCandidate={setSelectedCandidate}
+              setIsModalOpen={setIsCandidateModalOpen}
+              mode={mode}
+            />
+
             <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="md:col-span-2 max-w-full">
                 <StatusChart
@@ -275,7 +285,9 @@ export default function HROverview({
                   mode={mode}
                 />
               </div>
+            </div>
 
+            <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="md:col-span-1">
                 <DeviceChart
                   candidates={candidates}
@@ -283,20 +295,23 @@ export default function HROverview({
                   onFilter={handleChartFilter}
                 />
               </div>
+              <div className="md:col-span-2">
+                <RecentActivities
+                  candidates={candidates}
+                  setSelectedCandidate={setSelectedCandidate}
+                  setIsModalOpen={setIsCandidateModalOpen}
+                  mode={mode}
+                />
+              </div>
+              
             </div>
+
+            <div className="md:col-span-1"></div>
             <div className="mb-6">
               <CountryChart
                 candidates={candidates}
                 mode={mode}
                 onFilter={handleChartFilter}
-              />
-            </div>
-            <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <JobOpenings
-                candidates={candidates}
-                jobOpenings={jobOpenings}
-                router={router}
-                mode={mode}
               />
             </div>
           </div>

@@ -57,10 +57,10 @@ export default function CandidateList({
 
   return (
     <div
-      className={`rounded-2xl transition-all duration-300 p-6 ${
+      className={`rounded-2xl cursor-pointer transition-all duration-300 p-6 ${
         mode === "dark"
-          ? "bg-gradient-to-br from-gray-800 to-gray-900 border border-gray-700 shadow-lg"
-          : "bg-white border border-gray-100 shadow-xl"
+          ? "bg-gradient-to-br from-gray-800 to-gray-700 border-gray-600 shadow-md hover:shadow-xl text-white"
+          : "bg-gradient-to-br from-white to-gray-50 border-blue-100 shadow-lg hover:shadow-xl text-gray-800"
       }`}
     >
       <div className="mb-6">

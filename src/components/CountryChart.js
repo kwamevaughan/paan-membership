@@ -52,6 +52,9 @@ try {
 export default function CountryChart({ candidates, mode, onFilter }) {
   const [hoveredCountry, setHoveredCountry] = useState(null);
   const [mapError, setMapError] = useState(null);
+  const [showLegend, setShowLegend] = useState(true);
+
+  const isDarkMode = mode === "dark";
 
   useEffect(() => {}, [candidates, mode]);
 
@@ -86,6 +89,9 @@ export default function CountryChart({ candidates, mode, onFilter }) {
   };
 
   let countryCounts = {};
+  let totalApplicants = 0;
+  let topCountries = [];
+
   try {
     if (candidates && Array.isArray(candidates)) {
       countryCounts = candidates.reduce((acc, c) => {
@@ -96,6 +102,21 @@ export default function CountryChart({ candidates, mode, onFilter }) {
         }
         return acc;
       }, {});
+
+      // Calculate total and find top countries
+      totalApplicants = Object.values(countryCounts).reduce(
+        (sum, count) => sum + count,
+        0
+      );
+
+      topCountries = Object.entries(countryCounts)
+        .map(([code, count]) => ({
+          code,
+          count,
+          name: countryCodeToName[code] || code,
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 5);
     } else {
       setMapError("Invalid candidates data");
     }
@@ -132,44 +153,45 @@ export default function CountryChart({ candidates, mode, onFilter }) {
     }
   };
 
+  // Updated color scale with modern gradient
+  const getColor = (count) => {
+    return count > 20
+      ? "#1d4ed8" // Deep blue
+      : count > 10
+      ? "#3b82f6" // Medium blue
+      : count > 5
+      ? "#60a5fa" // Lighter blue
+      : count > 3
+      ? "#93c5fd" // Very light blue
+      : count > 0
+      ? "#bfdbfe" // Pale blue
+      : isDarkMode
+      ? "#1f2937"
+      : "#f1f5f9"; // Background in dark/light mode
+  };
+
   const getStyle = (feature) => {
     try {
       const countryCode = getStandardizedCountryCode(feature);
       const count = countryCounts[countryCode] || 0;
       return {
-        fillColor:
-          count > 0 ? getColor(count) : mode === "dark" ? "#231812" : "#e5e5e5",
-        weight: 1.5,
-        opacity: 1,
-        color: mode === "dark" ? "#fff" : "#231812",
-        fillOpacity: count > 0 ? 0.8 : 0.3,
-        dashArray: count > 0 ? "" : "3",
+        fillColor: getColor(count),
+        weight: 1,
+        opacity: 0.8,
+        color: isDarkMode ? "#374151" : "#e2e8f0",
+        fillOpacity: count > 0 ? 0.85 : 0.4,
+        dashArray: count > 0 ? "" : "2",
       };
     } catch (error) {
       return {
-        fillColor: "#e5e5e5",
+        fillColor: isDarkMode ? "#1f2937" : "#f1f5f9",
         weight: 1,
-        opacity: 1,
-        color: "#231812",
+        opacity: 0.7,
+        color: isDarkMode ? "#374151" : "#e2e8f0",
         fillOpacity: 0.3,
-        dashArray: "3",
+        dashArray: "2",
       };
     }
-  };
-
-  // Updated color scale with brand colors
-  const getColor = (count) => {
-    return count > 20
-      ? "#b91c1c" // Darker shade of #f05d23 for 20+
-      : count > 10
-      ? "#f05d23" // Main brand color for 11-20
-      : count > 5
-      ? "#f28c5e" // Lighter shade of #f05d23 for 6-10
-      : count > 3
-      ? "#f5a77d" // Even lighter shade for 4-5
-      : count > 1
-      ? "#f8c3a2" // Very light shade for 1-3
-      : "#231812"; // Secondary color fallback (unlikely to hit)
   };
 
   const onEachFeature = (feature, layer) => {
@@ -177,25 +199,23 @@ export default function CountryChart({ candidates, mode, onFilter }) {
       const countryCode = getStandardizedCountryCode(feature);
       const countryName =
         feature.properties?.sovereignt || feature.properties?.name || "Unknown";
+      const count = countryCounts[countryCode] || 0;
 
       layer.on({
         mouseover: (e) => {
           try {
-            e.target.setStyle({ fillOpacity: 0.9, weight: 2 });
+            e.target.setStyle({
+              fillOpacity: 0.95,
+              weight: 2,
+              color: isDarkMode ? "#f3f4f6" : "#4b5563",
+            });
+
             const hoverInfo = {
               code: countryCode,
-              count: countryCounts[countryCode] || 0,
+              count: count,
               name: countryName,
             };
             setHoveredCountry(hoverInfo);
-            e.target.bindTooltip(
-              `${countryName}: ${countryCounts[countryCode] || 0}`,
-              {
-                permanent: false,
-                direction: "auto",
-                className: "country-tooltip",
-              }
-            );
           } catch (error) {
             // No logging
           }
@@ -210,7 +230,7 @@ export default function CountryChart({ candidates, mode, onFilter }) {
         },
         click: () => {
           try {
-            if (countryCounts[countryCode] > 0 && onFilter) {
+            if (count > 0 && onFilter) {
               onFilter(
                 "country",
                 countryCodeToName[countryCode] || countryCode
@@ -235,106 +255,284 @@ export default function CountryChart({ candidates, mode, onFilter }) {
   if (!canRenderMap) {
     return (
       <div
-        className={`p-6 rounded-xl shadow-lg ${
-          mode === "dark" ? "bg-gray-800 text-white" : "bg-white text-[#231812]"
+        className={`rounded-2xl cursor-pointer transition-all duration-300 p-6 ${
+          mode === "dark"
+            ? "bg-gradient-to-br from-gray-800 to-gray-700 border-gray-600 shadow-md hover:shadow-xl text-white"
+            : "bg-gradient-to-br from-white to-gray-50 border-blue-100 shadow-lg hover:shadow-xl text-gray-800"
         }`}
       >
-        <h3 className="text-lg font-semibold mb-4">Applicants by Country</h3>
-        <p className="text-red-500">Error loading map data.</p>
+        <h3 className="text-xl font-semibold mb-4">Applicants by Country</h3>
+        <div className="flex items-center justify-center p-8">
+          <div className="text-red-500 flex flex-col items-center">
+            <svg
+              className="w-12 h-12 mb-3"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+              ></path>
+            </svg>
+            <p className="text-lg font-medium">Error loading map data</p>
+            <p className="text-sm opacity-75 mt-1">
+              Please check your connection or try again later
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
     <div
-      className={`border-t-4 border-[#84c1d9] mt-10 p-6 rounded-xl shadow-md hover:shadow-none animate-fade-in transition-shadow duration-500 animate-scale-up ${
-        mode === "dark" ? "bg-gray-800" : "bg-white"
-      }`}
+      className={`mt-10 rounded-xl ${
+        isDarkMode ? "bg-gray-800 text-gray-100" : "bg-white text-gray-800"
+      } shadow-xl transition-all duration-300 ease-in-out hover:shadow-lg`}
     >
-      <h3
-        className={`text-lg font-semibold mb-4 ${
-          mode === "dark" ? "text-white" : "text-[#231812]"
-        }`}
-      >
-        Applicants by Country
-      </h3>
+      <div className="p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h3 className="text-2xl font-bold">Applicants by Country</h3>
+            <p
+              className={`text-sm mt-1 ${
+                isDarkMode ? "text-gray-400" : "text-gray-500"
+              }`}
+            >
+              {totalApplicants} total applicants from{" "}
+              {Object.keys(countryCounts).length} countries
+            </p>
+          </div>
 
-      {mapError && (
-        <div className="mb-4 p-2 bg-red-100 text-red-800 rounded">
-          {mapError}
-        </div>
-      )}
-
-      <div className="relative h-[400px] w-full">
-        <MapContainer
-          center={[20, 0]}
-          zoom={2}
-          style={{ height: "100%", width: "100%", borderRadius: "8px" }}
-          scrollWheelZoom={false}
-          className={mode === "dark" ? "dark-map" : ""}
-        >
-          <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-            attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> & <a href="https://carto.com/attributions">CARTO</a>'
-          />
-          <GeoJSON
-            key={JSON.stringify(candidates)}
-            data={countriesGeoJson}
-            style={getStyle}
-            onEachFeature={onEachFeature}
-          />
-        </MapContainer>
-        {hoveredCountry && (
-          <div
-            className={`absolute top-4 left-4 p-4 rounded-lg shadow-lg z-[1000] max-h-[300px] overflow-y-auto ${
-              mode === "dark"
-                ? "bg-gray-900 text-white"
-                : "bg-white text-[#231812]"
-            }`}
+          <button
+            onClick={() => setShowLegend(!showLegend)}
+            className={`p-2 rounded-full ${
+              isDarkMode
+                ? "bg-gray-700 hover:bg-gray-600"
+                : "bg-gray-100 hover:bg-gray-200"
+            } transition-colors duration-200`}
           >
-            <h4 className="font-semibold">
-              {hoveredCountry.name || "Unknown"}
-            </h4>
-            <p>Applicants: {countryCounts[hoveredCountry.code] || 0}</p>
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+          </button>
+        </div>
+
+        {mapError && (
+          <div className="mb-6 p-3 bg-red-100 text-red-800 rounded-lg flex items-center">
+            <svg
+              className="w-5 h-5 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            {mapError}
           </div>
         )}
-      </div>
-      <div className="mt-4 flex justify-center gap-4 flex-wrap">
-        <span className="flex items-center gap-2">
-          <span
-            className="w-4 h-4 rounded-full"
-            style={{ backgroundColor: "#f8c3a2" }}
-          ></span>{" "}
-          1-3
-        </span>
-        <span className="flex items-center gap-2">
-          <span
-            className="w-4 h-4 rounded-full"
-            style={{ backgroundColor: "#f5a77d" }}
-          ></span>{" "}
-          4-5
-        </span>
-        <span className="flex items-center gap-2">
-          <span
-            className="w-4 h-4 rounded-full"
-            style={{ backgroundColor: "#f28c5e" }}
-          ></span>{" "}
-          6-10
-        </span>
-        <span className="flex items-center gap-2">
-          <span
-            className="w-4 h-4 rounded-full"
-            style={{ backgroundColor: "#f05d23" }}
-          ></span>{" "}
-          11-20
-        </span>
-        <span className="flex items-center gap-2">
-          <span
-            className="w-4 h-4 rounded-full"
-            style={{ backgroundColor: "#b91c1c" }}
-          ></span>{" "}
-          20+
-        </span>
+
+        <div className="grid md:grid-cols-4 gap-6">
+          <div className="md:col-span-3">
+            <div className="relative h-[450px] w-full rounded-lg overflow-hidden shadow-md">
+              <MapContainer
+                center={[20, 0]}
+                zoom={2}
+                style={{ height: "100%", width: "100%", borderRadius: "8px" }}
+                scrollWheelZoom={true}
+                zoomControl={false}
+                className={isDarkMode ? "dark-map" : ""}
+              >
+                <TileLayer
+                  url={
+                    isDarkMode
+                      ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                      : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+                  }
+                  attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> & <a href="https://carto.com/attributions">CARTO</a>'
+                />
+                <GeoJSON
+                  key={JSON.stringify(candidates)}
+                  data={countriesGeoJson}
+                  style={getStyle}
+                  onEachFeature={onEachFeature}
+                />
+              </MapContainer>
+
+              {showLegend && (
+                <div
+                  className={`absolute bottom-4 left-4 p-3 rounded-lg shadow-lg z-[1000] ${
+                    isDarkMode
+                      ? "bg-gray-900 bg-opacity-90"
+                      : "bg-white bg-opacity-90"
+                  } flex flex-col gap-2`}
+                >
+                  <span className="text-xs font-medium mb-1">Applicants</span>
+                  <div className="flex flex-col gap-1.5">
+                    <span className="flex items-center gap-2 text-xs">
+                      <span
+                        className="w-3 h-3 rounded-sm"
+                        style={{ backgroundColor: "#bfdbfe" }}
+                      ></span>
+                      <span>1-3</span>
+                    </span>
+                    <span className="flex items-center gap-2 text-xs">
+                      <span
+                        className="w-3 h-3 rounded-sm"
+                        style={{ backgroundColor: "#93c5fd" }}
+                      ></span>
+                      <span>4-5</span>
+                    </span>
+                    <span className="flex items-center gap-2 text-xs">
+                      <span
+                        className="w-3 h-3 rounded-sm"
+                        style={{ backgroundColor: "#60a5fa" }}
+                      ></span>
+                      <span>6-10</span>
+                    </span>
+                    <span className="flex items-center gap-2 text-xs">
+                      <span
+                        className="w-3 h-3 rounded-sm"
+                        style={{ backgroundColor: "#3b82f6" }}
+                      ></span>
+                      <span>11-20</span>
+                    </span>
+                    <span className="flex items-center gap-2 text-xs">
+                      <span
+                        className="w-3 h-3 rounded-sm"
+                        style={{ backgroundColor: "#1d4ed8" }}
+                      ></span>
+                      <span>20+</span>
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {hoveredCountry && (
+                <div
+                  className={`absolute top-4 left-4 p-4 rounded-lg shadow-lg z-[1000] ${
+                    isDarkMode
+                      ? "bg-gray-900 bg-opacity-95"
+                      : "bg-white bg-opacity-95"
+                  } max-w-[220px]`}
+                >
+                  <h4 className="font-medium text-base">
+                    {hoveredCountry.name || "Unknown"}
+                  </h4>
+                  <div className="mt-1 flex items-center gap-2">
+                    <div
+                      className={`inline-flex items-center justify-center ${
+                        hoveredCountry.count > 0
+                          ? "bg-blue-500 text-white"
+                          : isDarkMode
+                          ? "bg-gray-700 text-gray-300"
+                          : "bg-gray-200 text-gray-600"
+                      } px-2.5 py-1 text-xs font-medium rounded-full`}
+                    >
+                      {hoveredCountry.count}
+                    </div>
+                    <span className="text-sm">
+                      {hoveredCountry.count === 1 ? "Applicant" : "Applicants"}
+                    </span>
+                  </div>
+                  {hoveredCountry.count > 0 && (
+                    <p
+                      className={`text-xs mt-2 ${
+                        isDarkMode ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
+                      Click to filter by this country
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div
+            className={`rounded-lg ${
+              isDarkMode ? "bg-gray-900" : "bg-gray-50"
+            } p-4`}
+          >
+            <h4 className="font-medium text-sm mb-3">Top Countries</h4>
+            <div className="space-y-3">
+              {topCountries.length > 0 ? (
+                topCountries.map((country, index) => (
+                  <button
+                    key={index}
+                    onClick={() =>
+                      onFilter && onFilter("country", country.name)
+                    }
+                    className={`w-full flex items-center justify-between p-2 rounded ${
+                      isDarkMode ? "hover:bg-gray-800" : "hover:bg-gray-100"
+                    } transition-colors duration-150 cursor-pointer text-left`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="w-2 h-4 rounded-sm"
+                        style={{ backgroundColor: getColor(country.count) }}
+                      ></div>
+                      <span className="truncate">{country.name}</span>
+                    </div>
+                    <span
+                      className={`font-medium ${
+                        isDarkMode ? "text-blue-400" : "text-blue-600"
+                      }`}
+                    >
+                      {country.count}
+                    </span>
+                  </button>
+                ))
+              ) : (
+                <div
+                  className={`text-sm italic ${
+                    isDarkMode ? "text-gray-400" : "text-gray-500"
+                  }`}
+                >
+                  No applicant data available
+                </div>
+              )}
+            </div>
+
+            {topCountries.length > 0 && (
+              <div className="mt-6 pt-4 border-t border-gray-700">
+                <div className="text-xs mb-2">Distribution</div>
+                <div className="h-2 flex rounded-full overflow-hidden">
+                  {topCountries.map((country, index) => (
+                    <div
+                      key={index}
+                      style={{
+                        backgroundColor: getColor(country.count),
+                        width: `${(country.count / totalApplicants) * 100}%`,
+                      }}
+                    ></div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

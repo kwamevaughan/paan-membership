@@ -622,7 +622,7 @@ export default function Step2Questions({
               </button>
               {isNextDisabled && (
                 <div className="absolute hidden group-hover:block top-[-40px] left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-sm rounded p-2 whitespace-nowrap z-10">
-                  Answer all questions to proceed
+                  Answer all questions to proceed.
                 </div>
               )}
             </div>

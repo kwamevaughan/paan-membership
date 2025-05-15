@@ -258,7 +258,7 @@ const Header = ({
               } mode`}
             >
               <Icon
-                icon={mode === "dark" ? "ph:sun-bold" : "ph:moon-bold"}
+                icon={mode === "dark" ? "ph:moon-bold" : "ph:sun-bold"}
                 className="h-6 w-6 transition-transform duration-300 group-hover:rotate-180"
               />
             </button>

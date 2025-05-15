@@ -7,7 +7,7 @@ export default function WelcomeCard({
 }) {
   return (
     // Alert Section with Enhanced Multi-Layered Bottom Effect
-    <div className="relative mb-8 hover:translate-y-[-10px] transition-transform duration-300 ease-in-out">
+    <div className="relative mt-4 mb-8 hover:translate-y-[-10px] transition-transform duration-300 ease-in-out">
       {/* Main Alert Content */}
       <div
         className={`relative p-2 rounded-2xl flex items-center justify-between z-10 ${

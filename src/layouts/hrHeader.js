@@ -80,7 +80,7 @@ const HRHeader = ({
               className="bg-white/50"
             >
               <Icon
-                icon={mode === "dark" ? "bi:sun" : "bi:moon"}
+                icon={mode === "dark" ? "bi:moon" : "bi:sun"}
                 className="h-5 w-5"
               />
             </TooltipIconButton>

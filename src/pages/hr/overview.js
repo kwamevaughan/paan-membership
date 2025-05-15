@@ -9,7 +9,7 @@ import useSidebar from "@/hooks/useSidebar";
 import SimpleFooter from "@/layouts/simpleFooter";
 import WelcomeCard from "@/components/WelcomeCard";
 import StatusChart from "@/components/StatusChart";
-import RecentActivity from "@/components/RecentActivity";
+import CandidateList from "@/components/CandidateList";
 import JobOpenings from "@/components/JobOpenings";
 import DeviceChart from "@/components/DeviceChart";
 import EmailModal from "@/components/EmailModal";
@@ -23,6 +23,7 @@ const CountryChart = dynamic(() => import("@/components/CountryChart"), {
 });
 
 import countriesGeoJson from "../../data/countries.js";
+import OverviewBoxes from "@/components/OverviewBoxes";
 
 const countryCodeToName = countriesGeoJson.features.reduce((acc, feature) => {
   acc[feature.properties.iso_a2.toUpperCase()] = feature.properties.sovereignt;
@@ -251,6 +252,13 @@ export default function HROverview({
               }
               mode={mode}
             />
+
+            <OverviewBoxes
+              candidates={candidates}
+              jobOpenings={jobOpenings}
+              router={router}
+              mode={mode}
+            />
             <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="md:col-span-2 max-w-full">
                 <StatusChart
@@ -259,6 +267,15 @@ export default function HROverview({
                   onFilter={handleChartFilter}
                 />
               </div>
+              <div className="md:col-span-1">
+                <CandidateList
+                  candidates={candidates}
+                  setSelectedCandidate={setSelectedCandidate}
+                  setIsModalOpen={setIsCandidateModalOpen}
+                  mode={mode}
+                />
+              </div>
+
               <div className="md:col-span-1">
                 <DeviceChart
                   candidates={candidates}
@@ -275,12 +292,6 @@ export default function HROverview({
               />
             </div>
             <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <RecentActivity
-                candidates={candidates}
-                setSelectedCandidate={setSelectedCandidate}
-                setIsModalOpen={setIsCandidateModalOpen}
-                mode={mode}
-              />
               <JobOpenings
                 candidates={candidates}
                 jobOpenings={jobOpenings}

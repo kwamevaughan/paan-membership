@@ -165,13 +165,13 @@ export default function StatusChart({ candidates, mode, onFilter }) {
       width: [1, 1, 1, 1, 4],
       curve: "smooth",
     },
-    title: {
-      text: "Candidate Status by Tier",
-      align: "left",
-      style: {
-        color: mode === "dark" ? "#fff" : "#231812",
-      },
-    },
+    // title: {
+    //   text: "Candidate Status by Tier",
+    //   align: "left",
+    //   style: {
+    //     color: mode === "dark" ? "#fff" : "#231812",
+    //   },
+    // },
     xaxis: {
       categories: months,
       min: firstIndexWithData !== -1 ? firstIndexWithData : undefined,
@@ -437,13 +437,17 @@ export default function StatusChart({ candidates, mode, onFilter }) {
     }
   }, [mode]);
 
+
+
   return (
     <div
-      className={`rounded-xl shadow-md ${
-        mode === "dark" ? "bg-gray-800" : "bg-white"
+      className={`rounded-2xl cursor-pointer transition-all duration-300  ${
+        mode === "dark"
+          ? "bg-gradient-to-br from-gray-800 to-gray-700 border-gray-600 shadow-md hover:shadow-xl text-white"
+          : "bg-gradient-to-br from-white to-gray-50 border-blue-100 shadow-lg hover:shadow-xl text-gray-800"
       }`}
     >
-      <div className="flex justify-between items-center p-4">
+      <div className="flex justify-between items-center p-4 pb-0">
         <h3
           className={`text-lg font-bold flex items-center gap-2 ${
             mode === "dark" ? "text-white" : "text-[#231812]"

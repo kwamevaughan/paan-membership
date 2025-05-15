@@ -308,15 +308,15 @@ const HRSidebar = ({
                       <Icon
                         icon={
                           mode === "dark"
-                            ? "mdi:weather-sunny"
-                            : "mdi:weather-night"
+                            ? "mdi:weather-night"
+                            : "mdi:weather-sunny"
                         }
                         className={`h-5 w-5 ${
-                          mode === "dark" ? "text-yellow-400" : "text-blue-400"
+                          mode === "dark" ? "text-blue-400" : "text-yellow-400"
                         }`}
                       />
                       <span>
-                        {mode === "dark" ? "Light Mode" : "Dark Mode"}
+                        {mode === "dark" ? "Dark Mode" : "Light Mode"}
                       </span>
                     </button>
                   </div>

@@ -165,13 +165,6 @@ export default function StatusChart({ candidates, mode, onFilter }) {
       width: [1, 1, 1, 1, 4],
       curve: "smooth",
     },
-    // title: {
-    //   text: "Candidate Status by Tier",
-    //   align: "left",
-    //   style: {
-    //     color: mode === "dark" ? "#fff" : "#231812",
-    //   },
-    // },
     xaxis: {
       categories: months,
       min: firstIndexWithData !== -1 ? firstIndexWithData : undefined,
@@ -235,7 +228,6 @@ export default function StatusChart({ candidates, mode, onFilter }) {
       custom: ({ series, seriesIndex, dataPointIndex, w }) => {
         const month = months[dataPointIndex] || "N/A";
 
-        // Create an ultra-transparent glassy tooltip with animated effect
         return `
       <div class="custom-tooltip" style="
         padding: 16px;
@@ -316,7 +308,7 @@ export default function StatusChart({ candidates, mode, onFilter }) {
           ${series
             .slice(0, 4)
             .map((s, index) => {
-              const value = s[dataPointIndex];
+              const value = s.data[dataPointIndex];
               if (value === undefined || value === null || value === 0)
                 return "";
               const seriesName = w.globals.seriesNames[index];
@@ -401,7 +393,8 @@ export default function StatusChart({ candidates, mode, onFilter }) {
     },
   };
 
-  const chartContainerId = "glassy-chart-" + Math.random().toString(36).substring(2, 11);
+  const chartContainerId =
+    "glassy-chart-" + Math.random().toString(36).substring(2, 11);
 
   // Function to create glassy overlay for the tooltip
   useEffect(() => {
@@ -410,18 +403,32 @@ export default function StatusChart({ candidates, mode, onFilter }) {
       const styleElement = document.createElement("style");
       styleElement.textContent = `
         .apexcharts-tooltip {
-          background: ${mode === "dark" ? "rgba(30, 41, 59, 0.7)" : "rgba(255, 255, 255, 0.6)"} !important;
-          backdrop-filter: blur(8px) !important;
+          background: ${
+            mode === "dark"
+              ? "rgba(30, 41, 59, 0.7)"
+              : "rgba(255, 255, 255, 0.6)"
+          } !important;
+          backdrop-filter: blur(8px)?â€Šimportant;
           -webkit-backdrop-filter: blur(8px) !important;
-          border: 1px solid ${mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.8)"} !important;
+          border: 1px solid ${
+            mode === "dark"
+              ? "rgba(255, 255, 255, 0.1)"
+              : "rgba(255, 255, 255, 0.8)"
+          } !important;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
           border-radius: 10px !important;
           overflow: hidden !important;
         }
         
         .apexcharts-tooltip-title {
-          background: ${mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(240, 248, 255, 0.6)"} !important;
-          border-bottom: 1px solid ${mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.05)"} !important;
+          background: ${
+            mode === "dark"
+              ? "rgba(255, 255, 255, 0.1)"
+              : "rgba(240, 248, 255, 0.6)"
+          } !important;
+          border-bottom: 1px solid ${
+            mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.05)"
+          } !important;
           font-weight: 600 !important;
         }
         
@@ -430,18 +437,16 @@ export default function StatusChart({ candidates, mode, onFilter }) {
         }
       `;
       document.head.appendChild(styleElement);
-      
+
       return () => {
         document.head.removeChild(styleElement);
       };
     }
   }, [mode]);
 
-
-
   return (
     <div
-      className={`rounded-2xl cursor-pointer transition-all duration-300  ${
+      className={`rounded-2xl cursor-pointer transition-all duration-300 ${
         mode === "dark"
           ? "bg-gradient-to-br from-gray-800 to-gray-700 border-gray-600 shadow-md hover:shadow-xl text-white"
           : "bg-gradient-to-br from-white to-gray-50 border-blue-100 shadow-lg hover:shadow-xl text-gray-800"
@@ -520,14 +525,18 @@ export default function StatusChart({ candidates, mode, onFilter }) {
                 key={index}
                 className={`flex items-center w-full p-2 mb-2 rounded-lg shadow-md font-extrabold text-left transition-colors duration-200 ${
                   isSelected
-                    ? "bg-sky-50"
+                    ? mode === "dark"
+                      ? "bg-gray-600 text-white"
+                      : "bg-sky-50 text-gray-800"
                     : mode === "dark"
-                    ? "hover:bg-gray-700"
-                    : "hover:bg-gray-100"
+                    ? "bg-gray-800 text-gray-200 hover:bg-gray-700"
+                    : "bg-white text-gray-800 hover:bg-gray-100"
                 }`}
                 onClick={() => setSelectedTab(tab.name)}
               >
-                <span style={{ color: textColor }}>{tab.name}</span>
+                <span style={{ color: isSelected ? undefined : textColor }}>
+                  {tab.name}
+                </span>
               </button>
             );
           })}

@@ -193,7 +193,7 @@ export default function ResourcesOverview({ mode = "light" }) {
           mode={mode}
         />
         <StatsCard
-          title="Active Subscribers"
+          title="Total Users"
           value="1,024"
           icon="mdi:account-group"
           iconColor={

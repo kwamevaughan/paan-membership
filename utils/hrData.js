@@ -7,9 +7,8 @@ export async function fetchHRData({
 } = {}) {
   try {
     const queries = [];
-    let subscribersQueryIndex = -1; // Track subscribers query index
+    let subscribersQueryIndex = -1;
 
-    // Add candidate-related queries
     if (fetchCandidates) {
       queries.push(supabaseServer.from("candidates").select("*"));
       queries.push(supabaseServer.from("responses").select("*"));
@@ -21,7 +20,6 @@ export async function fetchHRData({
       );
     }
 
-    // Add questions query if needed
     if (fetchQuestions && !fetchCandidates) {
       queries.push(
         supabaseServer
@@ -31,21 +29,17 @@ export async function fetchHRData({
       );
     }
 
-    // Add subscribers query
     if (fetchSubscribers) {
-      subscribersQueryIndex = queries.length; // Store index of subscribers query
+      subscribersQueryIndex = queries.length;
       queries.push(supabaseServer.from("newsletter_subscriptions").select("*"));
     }
 
-    // Execute all queries
     const results = await Promise.all(queries);
 
-    // Extract subscribers data
     const subscribersData = fetchSubscribers
       ? results[subscribersQueryIndex]?.data || []
       : [];
 
-    // Check for subscribers query error
     if (fetchSubscribers && results[subscribersQueryIndex]?.error) {
       console.error(
         "Subscribers query error:",
@@ -54,7 +48,6 @@ export async function fetchHRData({
       throw results[subscribersQueryIndex].error;
     }
 
-    // Extract candidate-related data
     const candidatesData = fetchCandidates ? results[0]?.data || [] : [];
     const responsesData = fetchCandidates ? results[1]?.data || [] : [];
     const questionsData = fetchQuestions
@@ -63,7 +56,6 @@ export async function fetchHRData({
         : results[0]?.data || []
       : [];
 
-    // Check for candidate-related query errors
     if (fetchCandidates && results[0]?.error) throw results[0].error;
     if (fetchCandidates && results[1]?.error) throw results[1].error;
     if (
@@ -73,7 +65,6 @@ export async function fetchHRData({
       throw fetchCandidates ? results[2].error : results[0].error;
     }
 
-    // Process candidates data
     let combinedData = [];
     if (fetchCandidates) {
       combinedData = candidatesData.map((candidate) => {
@@ -96,10 +87,31 @@ export async function fetchHRData({
             parsedAnswers = response.answers;
           }
 
-          parsedAnswers = parsedAnswers.map((answer) => {
-            if (!answer || answer === null || answer === "") return null;
+          parsedAnswers = parsedAnswers.map((answer, index) => {
+            if (!answer || answer === null || answer === "") {
+              return null;
+            }
+
+            let processedAnswer = answer;
             if (Array.isArray(answer)) {
-              return answer
+              if (answer.length === 0) {
+                return null;
+              }
+              if (
+                answer.length === 1 &&
+                answer[0] &&
+                typeof answer[0] === "object"
+              ) {
+                processedAnswer = answer[0].customText || answer[0];
+              } else if (answer.length === 1) {
+                processedAnswer = answer[0];
+              } else {
+                processedAnswer = answer;
+              }
+            }
+
+            if (Array.isArray(processedAnswer)) {
+              const formatted = processedAnswer
                 .map((item) =>
                   item && typeof item === "object"
                     ? item.customText ||
@@ -110,16 +122,20 @@ export async function fetchHRData({
                 )
                 .filter((item) => item)
                 .join("; ");
+              return formatted || null;
             }
-            if (typeof answer === "object") {
-              return (
-                answer.customText ||
-                Object.entries(answer)
+            if (
+              typeof processedAnswer === "object" &&
+              processedAnswer !== null
+            ) {
+              const formatted =
+                processedAnswer.customText ||
+                Object.entries(processedAnswer)
                   .map(([key, value]) => `${key}: ${value}`)
-                  .join(", ")
-              );
+                  .join(", ");
+              return formatted || null;
             }
-            return answer;
+            return processedAnswer;
           });
         }
 
@@ -141,47 +157,40 @@ export async function fetchHRData({
         let filteredAnswers = parsedAnswers;
 
         if (isAgency) {
-          filteredQuestions = questionsData.filter(
-            (q) => q.job_type === "agencies"
+          const allAgencyQuestions = questionsData.filter(
+            (q) => q.job_type === "agency"
           );
-          if (parsedAnswers.length < filteredQuestions.length) {
-            parsedAnswers.splice(6, 0, null);
-            filteredAnswers = parsedAnswers.concat(
-              Array(filteredQuestions.length - parsedAnswers.length).fill(null)
-            );
-          }
+          filteredAnswers = parsedAnswers.filter(
+            (answer) => answer !== null && answer !== ""
+          );
+          filteredQuestions = allAgencyQuestions.slice(
+            0,
+            filteredAnswers.length
+          );
         } else if (isFreelancer) {
           filteredQuestions = questionsData.filter(
             (q) => q.job_type === "freelancer"
           );
-          const expectedQuestionCount = filteredQuestions.length;
-          const nonNullAnswers = parsedAnswers
-            .filter((a) => a !== null && a !== "")
-            .slice(-expectedQuestionCount);
-          filteredAnswers = nonNullAnswers.concat(
-            Array(expectedQuestionCount - nonNullAnswers.length).fill(null)
+          filteredAnswers = parsedAnswers.filter(
+            (answer) => answer !== null && answer !== ""
+          );
+          filteredQuestions = filteredQuestions.slice(
+            0,
+            filteredAnswers.length
           );
         }
 
-        if (
-          isFreelancer &&
-          filteredAnswers.length !== filteredQuestions.length
-        ) {
+        if (filteredAnswers.length !== filteredQuestions.length) {
           console.warn(
             `Answer count mismatch for ${candidate.primaryContactName}. Expected ${filteredQuestions.length}, got ${filteredAnswers.length}`
           );
         }
 
-        if (filteredAnswers.length < filteredQuestions.length) {
-          filteredAnswers = filteredAnswers.concat(
-            Array(filteredQuestions.length - filteredAnswers.length).fill(null)
-          );
-        } else if (filteredAnswers.length > filteredQuestions.length) {
-          filteredAnswers = filteredAnswers.slice(0, filteredQuestions.length);
-        }
-
         return {
           ...candidate,
+          email: candidate.primaryContactEmail || "", // Map primaryContactEmail to email
+          primaryContactName: candidate.primaryContactName || "Unknown",
+          opening: candidate.opening || "Unknown Position",
           answers: filteredAnswers,
           companyRegistrationUrl: response.company_registration_url || null,
           portfolioWorkUrl: response.portfolio_work_url || null,
@@ -202,7 +211,7 @@ export async function fetchHRData({
       ? [...new Set(combinedData.map((c) => c.opening))]
       : [];
 
-   
+
     return {
       initialCandidates: combinedData,
       initialJobOpenings: jobOpenings,

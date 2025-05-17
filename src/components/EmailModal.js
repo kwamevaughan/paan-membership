@@ -15,7 +15,6 @@ export default function EmailModal({ isOpen, onClose, emailData, onSend, mode })
     // Sync initial email data when modal opens
     useEffect(() => {
         if (isOpen && emailData) {
-            console.log("Initializing email modal with data:", emailData);
             setSubject(emailData.subject || "");
             setBody(emailData.body || "");
         } else {

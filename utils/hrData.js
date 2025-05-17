@@ -39,13 +39,11 @@ export async function fetchHRData({
 
     // Execute all queries
     const results = await Promise.all(queries);
-    console.log("Query results:", results); // Debug: Log all query results
 
     // Extract subscribers data
     const subscribersData = fetchSubscribers
       ? results[subscribersQueryIndex]?.data || []
       : [];
-    console.log("Subscribers data:", subscribersData); // Debug: Log subscribers data
 
     // Check for subscribers query error
     if (fetchSubscribers && results[subscribersQueryIndex]?.error) {
@@ -204,14 +202,7 @@ export async function fetchHRData({
       ? [...new Set(combinedData.map((c) => c.opening))]
       : [];
 
-    // Debug: Log final return data
-    console.log("Returning data:", {
-      initialCandidates: combinedData,
-      initialJobOpenings: jobOpenings,
-      initialQuestions: questionsData,
-      subscribers: subscribersData,
-    });
-
+   
     return {
       initialCandidates: combinedData,
       initialJobOpenings: jobOpenings,

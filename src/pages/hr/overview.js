@@ -42,8 +42,6 @@ export default function HROverview({
   initialSubscribers,
   breadcrumbs,
 }) {
-  // Debug: Log initialSubscribers
-  console.log("HROverview initialSubscribers:", initialSubscribers);
 
   const [candidates, setCandidates] = useState(initialCandidates || []);
   const [jobOpenings, setJobOpenings] = useState(initialJobOpenings || []);
@@ -57,8 +55,6 @@ export default function HROverview({
   const [filterType, setFilterType] = useState("");
   const [filterValue, setFilterValue] = useState("");
 
-  // Debug: Log subscribers state
-  console.log("HROverview subscribers state:", subscribers);
 
   const [emailData, setEmailData] = useState({
     subject: "",
@@ -383,7 +379,6 @@ export async function getServerSideProps(context) {
     console.time("fetchHRData");
     const data = await fetchHRData();
     console.timeEnd("fetchHRData");
-    console.log("getServerSideProps data:", data);
     return { props: { ...data, initialSubscribers: data.subscribers } };
   } catch (error) {
     console.error("Error in getServerSideProps:", error);

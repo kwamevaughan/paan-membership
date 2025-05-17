@@ -10,10 +10,9 @@ export default function CandidateList({
   mode,
 }) {
   const [hoveredItem, setHoveredItem] = useState(null);
-  const [selectedJobType, setSelectedJobType] = useState("all"); // "all", "agency", or "freelancer"
-  const { countries } = useCountry(); // Use the hook to get countries data
+  const [selectedJobType, setSelectedJobType] = useState("all");
+  const { countries, loading } = useCountry(); // Add loading
 
-  // Function to determine job type from opening
   const getJobType = (opening) => {
     const openingLower = opening?.toLowerCase() || "";
     if (openingLower.includes("agency") || openingLower.includes("agencies")) {
@@ -27,9 +26,7 @@ export default function CandidateList({
     return "other";
   };
 
-  // Filter candidates based on selected job type and Pending status
   const filteredCandidates = candidates.filter((candidate) => {
-    // Only include candidates with Pending status
     if (candidate.status !== "Pending") return false;
     if (selectedJobType === "all") return true;
     return getJobType(candidate.opening) === selectedJobType;
@@ -38,9 +35,9 @@ export default function CandidateList({
   const recent = filteredCandidates
     .slice()
     .sort((a, b) => new Date(b.submitted_at) - new Date(a.submitted_at))
-    .slice(0, 5); // Sort by date descending and take latest 5
+    .slice(0, 5);
 
-  const pendingCount = filteredCandidates.length; // Since all filtered candidates are Pending
+  const pendingCount = filteredCandidates.length;
 
   const handleViewClick = (candidate, e) => {
     e.stopPropagation();
@@ -48,10 +45,36 @@ export default function CandidateList({
     setIsModalOpen(true);
   };
 
-  // Debug log for development (remove in production)
-  if (process.env.NODE_ENV === "development" && countries.length === 0) {
+  // Debug log for empty countries
+  if (
+    process.env.NODE_ENV === "development" &&
+    !loading &&
+    countries.length === 0
+  ) {
     console.warn(
       "Countries data is empty. Check useCountry hook or countries.json path."
+    );
+  }
+
+  // Render loading state
+  if (loading) {
+    return (
+      <div
+        className={`rounded-2xl p-6 ${
+          mode === "dark"
+            ? "bg-gradient-to-br from-gray-800 to-gray-700 border-gray-600 text-white"
+            : "bg-gradient-to-br from-white to-gray-50 border-blue-100 text-gray-800"
+        }`}
+      >
+        <h3 className="text-lg font-semibold flex items-center">
+          <Icon icon="mdi:clock-outline" className="mr-2 text-2xl" />
+          Pending Approval
+        </h3>
+        <div className="p-8 text-center">
+          <Icon icon="mdi:loading" className="mx-auto text-4xl animate-spin" />
+          <p>Loading countries...</p>
+        </div>
+      </div>
     );
   }
 
@@ -84,7 +107,6 @@ export default function CandidateList({
           </h3>
         </div>
 
-        {/* Job Type Switch */}
         <div
           className={`inline-flex p-1 rounded-lg ${
             mode === "dark" ? "bg-gray-700" : "bg-gray-100"
@@ -140,13 +162,11 @@ export default function CandidateList({
       <div className="space-y-4 max-h-[350px] overflow-y-auto pr-1 custom-scrollbar">
         {recent.map((candidate) => {
           const isHovered = hoveredItem === candidate.id;
-          // Find the country flag from countries data (case-insensitive)
           const countryData = countries.find(
             (c) => c.name.toLowerCase() === candidate.country?.toLowerCase()
           );
-          const countryFlag = countryData ? countryData.flag : "🌐"; // Fallback to globe emoji
+          const countryFlag = countryData ? countryData.flag : "🌐";
 
-          // Debug log for development (remove in production)
           if (
             process.env.NODE_ENV === "development" &&
             !countryData &&
@@ -260,7 +280,6 @@ export default function CandidateList({
                 </div>
               </div>
 
-              {/* Animated hover effect */}
               <div
                 className={`absolute inset-0 bg-gradient-to-r opacity-0 ${
                   isHovered ? "opacity-10" : ""

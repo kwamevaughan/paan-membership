@@ -10,6 +10,16 @@ export async function sendStatusEmail({
   subject,
   template,
 }) {
+
+  if (!primaryContactEmail) {
+    throw new Error("Primary contact email is required");
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(primaryContactEmail)) {
+    throw new Error("Invalid email address");
+  }
+  
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
     port: parseInt(process.env.EMAIL_PORT),

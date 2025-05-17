@@ -1,5 +1,4 @@
-import { useEffect, useState, useRef, useCallback, useMemo } from "react";
-import { ArrowRightStartOnRectangleIcon } from "@heroicons/react/24/outline";
+import { useEffect, useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { Icon } from "@iconify/react";
@@ -24,6 +23,32 @@ const HRSidebar = ({
   const sidebarRef = useRef(null);
   const [showLogout, setShowLogout] = useState(false);
 
+  // State to track which categories are expanded
+  const [expandedCategories, setExpandedCategories] = useState({});
+
+  // Initialize with all categories expanded
+  useEffect(() => {
+    if (
+      sidebarNav &&
+      sidebarNav.length > 0 &&
+      Object.keys(expandedCategories).length === 0
+    ) {
+      const allExpanded = {};
+      sidebarNav.forEach(({ category }) => {
+        allExpanded[category] = true;
+      });
+      setExpandedCategories(allExpanded);
+    }
+  }, []);
+
+  // Toggle category expansion
+  const toggleCategory = (category) => {
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [category]: !prev[category],
+    }));
+  };
+
   // Debounce setParentDragOffset to reduce update frequency
   const debouncedSetParentDragOffset = useCallback(
     (offset) => {
@@ -35,6 +60,32 @@ const HRSidebar = ({
     },
     [setParentDragOffset]
   );
+
+  /* Custom scrollbar styling */
+  useEffect(() => {
+    const style = document.createElement("style");
+    style.textContent = `
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 4px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 10px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(255, 255, 255, 0.3);
+      }
+    `;
+    document.head.appendChild(style);
+
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
 
   // Sync dragOffset with parent
   useEffect(() => {
@@ -99,18 +150,15 @@ const HRSidebar = ({
 
   const fullName = "PAAN Member";
 
-  const shouldAppearExpanded = isOpen || isHovering;
-
-  const isActive = useMemo(() => {
-    return (pathname) =>
-      router.pathname === pathname
-        ? mode === "dark"
-          ? "bg-[#19191e] text-white shadow-md"
-          : "bg-[#19191e] text-[#E7EEF8] shadow-md"
-        : mode === "dark"
-        ? "text-gray-200 hover:bg-gray-700 hover:text-white"
-        : "text-[#231812] hover:bg-[#19191e]";
-  }, [router.pathname, mode]);
+  // Define isActive function
+  const isActive = (pathname) =>
+    router.pathname === pathname
+      ? mode === "dark"
+        ? "bg-[#19191e] text-white shadow-md"
+        : "bg-[#19191e] text-[#E7EEF8] shadow-md"
+      : mode === "dark"
+      ? "text-gray-200 hover:bg-gray-700 hover:text-white"
+      : "text-[#231812] hover:bg-[#19191e]";
 
   const toggleSidebarVisibility = () => {
     setSidebarHidden((prev) => {
@@ -126,6 +174,7 @@ const HRSidebar = ({
 
   if (windowWidth === null) return null;
 
+  const shouldAppearExpanded = isOpen || isHovering;
   const sidebarWidth = shouldAppearExpanded
     ? "200px"
     : windowWidth < 640
@@ -149,7 +198,7 @@ const HRSidebar = ({
             ? "bg-[#05050a]"
             : "bg-[#05050a]"
         } 
-        group`}
+        group shadow-lg shadow-black/20`}
         style={{
           width: sidebarWidth,
           backgroundColor: isHovering && !isOpen ? "rgba(5, 5, 11, 0.7)" : "",
@@ -206,55 +255,80 @@ const HRSidebar = ({
             )}
           </div>
 
-          {/* Navigation */}
-          <ul
-            className={`flex-grow px-2 space-y-2 overflow-hidden flex ${
-              shouldAppearExpanded ? "items-start" : "items-center"
-            } flex-col`}
-          >
+          {/* Navigation with collapsible categories */}
+          <div className="flex-grow px-2 overflow-y-auto flex flex-col custom-scrollbar">
             {sidebarNav.map(({ category, items }, index) => (
-              <div key={category}>
+              <div key={category} className="w-full mb-1">
                 {index !== 0 && (
                   <hr className="border-t border-gray-600 my-2" />
                 )}
-                {shouldAppearExpanded && (
-                  <div className="text-xs tracking-wide font-semibold text-gray-400 px-2 pt-4 pb-1">
-                    {category}
+
+                {shouldAppearExpanded ? (
+                  <div
+                    className="flex items-center justify-between text-xs tracking-wide font-semibold text-gray-300 px-2 pt-4 pb-1 cursor-pointer hover:text-white"
+                    onClick={() => toggleCategory(category)}
+                  >
+                    <span className="uppercase">{category}</span>
+                    <Icon
+                      icon={
+                        expandedCategories[category]
+                          ? "mdi:chevron-down"
+                          : "mdi:chevron-right"
+                      }
+                      className="w-4 h-4 transition-transform duration-200"
+                    />
+                  </div>
+                ) : (
+                  <div className="text-center py-2">
+                    <div className="inline-flex justify-center items-center w-6 h-6 rounded-full bg-gray-800 text-xs text-white">
+                      {category.charAt(0)}
+                    </div>
                   </div>
                 )}
-                <ul>
-                  {items.map(({ href, icon, label }) => (
-                    <li
-                      key={href}
-                      onClick={() => {
-                        router.push(href);
-                        if (windowWidth < 640) toggleSidebar();
-                      }}
-                      className={`relative py-4 px-2 flex items-center font-normal text-sm w-full text-white cursor-pointer
-                        rounded-lg hover:shadow-md transition-all duration-200 group ${isActive(
-                          href
-                        )}`}
-                    >
-                      <Icon
-                        icon={icon}
-                        className={`${
-                          shouldAppearExpanded ? "h-5 w-5 mr-3" : "h-6 w-6"
-                        } group-hover:scale-110 transition-transform`}
-                      />
-                      {shouldAppearExpanded && (
-                        <span className="text-sm">{label}</span>
-                      )}
-                      {!shouldAppearExpanded && (
-                        <span className="absolute left-[100%] top-1/2 -translate-y-1/2 ml-3 bg-gray-800 text-white px-3 py-1 text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50">
-                          {label}
-                        </span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
+
+                <div
+                  className={`overflow-hidden transition-all duration-300 ${
+                    !shouldAppearExpanded || expandedCategories[category]
+                      ? "max-h-96 opacity-100"
+                      : "max-h-0 opacity-0"
+                  }`}
+                >
+                  <ul>
+                    {items.map(({ href, icon, label }) => (
+                      <li
+                        key={href}
+                        onClick={() => {
+                          router.push(href);
+                          if (windowWidth < 640) toggleSidebar();
+                        }}
+                        className={`relative py-3 px-2 flex items-center font-normal text-sm w-full text-white cursor-pointer
+                          rounded-lg hover:shadow-md transition-all duration-200 group mb-1 ${isActive(
+                            href
+                          )}`}
+                      >
+                        <Icon
+                          icon={icon}
+                          className={`${
+                            shouldAppearExpanded
+                              ? "h-5 w-5 mr-3 text-gray-300"
+                              : "h-6 w-6"
+                          } group-hover:scale-110 group-hover:text-white transition-all`}
+                        />
+                        {shouldAppearExpanded && (
+                          <span className="text-sm">{label}</span>
+                        )}
+                        {!shouldAppearExpanded && (
+                          <span className="absolute left-[100%] top-1/2 -translate-y-1/2 ml-3 bg-gray-800 text-white px-3 py-1 text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-200 whitespace-nowrap z-50">
+                            {label}
+                          </span>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
             ))}
-          </ul>
+          </div>
 
           {/* Profile/Logout */}
           {!shouldAppearExpanded && windowWidth < 640 ? null : (
@@ -325,7 +399,7 @@ const HRSidebar = ({
                     onClick={onLogout}
                     className="flex items-center gap-2 text-red-500 hover:text-red-600 transition-colors hover:bg-[#19191e] rounded-2xl p-2"
                   >
-                    <ArrowRightStartOnRectangleIcon className="h-5 w-5" />
+                    <Icon icon="mdi:logout" className="h-5 w-5" />
                     <span>Sign Out</span>
                   </button>
                 </div>

@@ -196,7 +196,8 @@ const useStatusChange = ({
 
         body = body
           .replace("{{fullName}}", candidate.primaryContactName || "Candidate")
-          .replace("{{opening}}", candidate.opening || "Unknown Position");
+          .replace("{{opening}}", candidate.opening || "Unknown Position")
+          .replace("{{email}}", candidate.email || "your email address");
 
         // Replace password placeholder for Accepted status
         if (newStatus === "Accepted") {
@@ -238,7 +239,7 @@ const useStatusChange = ({
                       {newStatus === "Accepted" && plainPassword && (
                         <span className="font-medium">
                           {" "}
-                          Their temporary password will be
+                          Their temporary password ({plainPassword}) will be
                           included.
                         </span>
                       )}

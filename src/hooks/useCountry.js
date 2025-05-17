@@ -8,7 +8,6 @@ export const useCountry = () => {
   useEffect(() => {
     fetch("/assets/misc/countries.json", { cache: "no-store" })
       .then((res) => {
-        console.log("Fetch response status:", res.status);
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }

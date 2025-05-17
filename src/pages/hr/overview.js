@@ -26,6 +26,7 @@ const CountryChart = dynamic(() => import("@/components/CountryChart"), {
 import countriesGeoJson from "../../data/countries.js";
 import OverviewBoxes from "@/components/OverviewBoxes";
 import RecentActivities from "@/components/RecentActivities";
+import SubscribersLog from "@/components/SubscribersLog";
 
 const countryCodeToName = countriesGeoJson.features.reduce((acc, feature) => {
   acc[feature.properties.iso_a2.toUpperCase()] = feature.properties.sovereignt;
@@ -38,11 +39,16 @@ export default function HROverview({
   initialCandidates,
   initialJobOpenings,
   initialQuestions,
+  initialSubscribers,
   breadcrumbs,
 }) {
+  // Debug: Log initialSubscribers
+  console.log("HROverview initialSubscribers:", initialSubscribers);
+
   const [candidates, setCandidates] = useState(initialCandidates || []);
   const [jobOpenings, setJobOpenings] = useState(initialJobOpenings || []);
   const [questions, setQuestions] = useState(initialQuestions || []);
+  const [subscribers, setSubscribers] = useState(initialSubscribers || []);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [isCandidateModalOpen, setIsCandidateModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -50,6 +56,10 @@ export default function HROverview({
   const [filteredCandidates, setFilteredCandidates] = useState([]);
   const [filterType, setFilterType] = useState("");
   const [filterValue, setFilterValue] = useState("");
+
+  // Debug: Log subscribers state
+  console.log("HROverview subscribers state:", subscribers);
+
   const [emailData, setEmailData] = useState({
     subject: "",
     body: "",
@@ -61,10 +71,6 @@ export default function HROverview({
     offset: 0,
   });
   const router = useRouter();
-
-  // Debug: Log candidates state
-  useEffect(() => {
-  }, [candidates]);
 
   const { handleStatusChange } = useStatusChange({
     candidates,
@@ -143,12 +149,12 @@ export default function HROverview({
   };
 
   const handleChartFilter = (type, value) => {
-    console.log(`Filtering ${type}:`, value);
-    let filtered;
+    let filtered = [];
+    let toastMessage = "";
     switch (type) {
       case "status":
         filtered = candidates.filter((c) => c.status === value);
-        toast.success(`Showing ${value} candidates`, { duration: 2000 });
+        toastMessage = `Showing ${value} candidates`;
         break;
       case "country":
         filtered = candidates.filter((c) => {
@@ -159,17 +165,24 @@ export default function HROverview({
             countryCode === value.toUpperCase()
           );
         });
-        toast.success(`Showing ${value} applicants`, { duration: 2000 });
+        toastMessage = `Showing ${value} applicants`;
         break;
       case "device":
         if (Array.isArray(value)) {
-          filtered = candidates.filter((c) => value.includes(c.device));
-          toast.success(`Showing ${value.length} device types`, {
-            duration: 2000,
+          filtered = candidates.filter((c) => {
+            const device = c.device ? c.device.trim().toUpperCase() : "UNKNOWN";
+            return value.includes(device);
           });
+          toastMessage = `Showing ${
+            value.length === 1 ? value[0] : "multiple device"
+          } candidates`;
         } else {
-          filtered = candidates.filter((c) => c.device === value);
-          toast.success(`Showing ${value} devices`, { duration: 2000 });
+          const normalizedValue = value.trim().toUpperCase();
+          filtered = candidates.filter((c) => {
+            const device = c.device ? c.device.trim().toUpperCase() : "UNKNOWN";
+            return device === normalizedValue;
+          });
+          toastMessage = `Showing ${value} candidates`;
         }
         break;
       case "date":
@@ -177,20 +190,24 @@ export default function HROverview({
         filtered = candidates.filter(
           (c) => new Date(c.submitted_at).toDateString() === date
         );
-        toast.success(`Showing applicants from ${date}`, { duration: 2000 });
+        toastMessage = `Showing applicants from ${date}`;
         break;
       case "tier":
         filtered = candidates.filter((c) => c.selected_tier === value);
-        toast.success(`Showing ${value} tier candidates`, { duration: 2000 });
+        toastMessage = `Showing ${value} tier candidates`;
         break;
       default:
         filtered = candidates;
-        toast.success("Showing all candidates", { duration: 2000 });
+        toastMessage = "Showing all candidates";
     }
     setFilteredCandidates(filtered);
     setFilterType(type);
     setFilterValue(value);
     setIsFilterModalOpen(true);
+    toast.success(toastMessage, { duration: 2000 });
+    if (filtered.length === 0) {
+      toast.info("No candidates match this filter", { duration: 3000 });
+    }
   };
 
   const handleCloseCandidateModal = () => {
@@ -204,8 +221,6 @@ export default function HROverview({
     setFilterType("");
     setFilterValue("");
   };
-
-  
 
   return (
     <div
@@ -289,10 +304,10 @@ export default function HROverview({
 
             <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="md:col-span-1">
-                <DeviceChart
-                  candidates={candidates}
+                <SubscribersLog
+                  key={subscribers.length}
+                  initialSubscribers={subscribers}
                   mode={mode}
-                  onFilter={handleChartFilter}
                 />
               </div>
               <div className="md:col-span-2">
@@ -303,7 +318,6 @@ export default function HROverview({
                   mode={mode}
                 />
               </div>
-              
             </div>
 
             <div className="md:col-span-1"></div>
@@ -336,6 +350,7 @@ export default function HROverview({
       />
       {isFilterModalOpen && (
         <ChartFilterModal
+          key={`filter-modal-${filterType}-${JSON.stringify(filterValue)}`}
           candidates={filteredCandidates}
           type={filterType}
           value={filterValue}
@@ -368,17 +383,8 @@ export async function getServerSideProps(context) {
     console.time("fetchHRData");
     const data = await fetchHRData();
     console.timeEnd("fetchHRData");
-    
-    if (!data.initialCandidates || data.initialCandidates.length === 0) {
-      console.error("No data returned from fetchHRData, redirecting to login");
-      return {
-        redirect: {
-          destination: "/hr/login",
-          permanent: false,
-        },
-      };
-    }
-    return { props: data };
+    console.log("getServerSideProps data:", data);
+    return { props: { ...data, initialSubscribers: data.subscribers } };
   } catch (error) {
     console.error("Error in getServerSideProps:", error);
     return {
@@ -389,6 +395,3 @@ export async function getServerSideProps(context) {
     };
   }
 }
-
-
-

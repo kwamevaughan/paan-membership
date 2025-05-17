@@ -2,6 +2,11 @@ import { useState, useEffect } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import countriesGeoJson from "../data/countries.js";
+import { memo } from "react";
+import ModernDeviceChart from "./DeviceChart.js";
+import { Icon } from "@iconify/react";
+
+const MemoizedDeviceChart = memo(ModernDeviceChart);
 
 const DEBUG_MODE = false;
 
@@ -60,7 +65,7 @@ export default function CountryChart({ candidates, mode, onFilter }) {
 
   // Function to normalize country input to a standard country code
   const normalizeCountryInput = (countryInput) => {
-    if (!countryInput) return "UNKNOWN";
+    if (!countryInput) return "Unknown";
 
     const input = String(countryInput).trim().toUpperCase();
 
@@ -79,18 +84,18 @@ export default function CountryChart({ candidates, mode, onFilter }) {
       const matchingCountry = Object.keys(countryNameToCode).find(
         (name) => name.includes(input) || input.includes(name)
       );
-
       if (matchingCountry) {
         return countryNameToCode[matchingCountry];
       }
     }
 
-    return "UNKNOWN";
+    // Log unknown inputs for debugging
+    console.warn(`Unknown country input: ${countryInput}`);
+    return "Unknown";
   };
 
   let countryCounts = {};
   let totalApplicants = 0;
-  let topCountries = [];
 
   try {
     if (candidates && Array.isArray(candidates)) {
@@ -103,20 +108,11 @@ export default function CountryChart({ candidates, mode, onFilter }) {
         return acc;
       }, {});
 
-      // Calculate total and find top countries
+      // Calculate total
       totalApplicants = Object.values(countryCounts).reduce(
         (sum, count) => sum + count,
         0
       );
-
-      topCountries = Object.entries(countryCounts)
-        .map(([code, count]) => ({
-          code,
-          count,
-          name: countryCodeToName[code] || code,
-        }))
-        .sort((a, b) => b.count - a.count)
-        .slice(0, 5);
     } else {
       setMapError("Invalid candidates data");
     }
@@ -127,7 +123,7 @@ export default function CountryChart({ candidates, mode, onFilter }) {
   const getStandardizedCountryCode = (feature) => {
     try {
       if (!feature || !feature.properties) {
-        return "UNKNOWN";
+        return "Unknown";
       }
       const possibleCodes = [
         feature.properties.iso_a2,
@@ -137,10 +133,10 @@ export default function CountryChart({ candidates, mode, onFilter }) {
       ];
       const code =
         possibleCodes.find((c) => c !== null && c !== undefined && c !== "") ||
-        "UNKNOWN";
+        "Unknown";
       return code.toUpperCase();
     } catch (error) {
-      return "UNKNOWN";
+      return "Unknown";
     }
   };
 
@@ -264,20 +260,7 @@ export default function CountryChart({ candidates, mode, onFilter }) {
         <h3 className="text-xl font-semibold mb-4">Applicants by Country</h3>
         <div className="flex items-center justify-center p-8">
           <div className="text-red-500 flex flex-col items-center">
-            <svg
-              className="w-12 h-12 mb-3"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              ></path>
-            </svg>
+            <Icon icon="mdi:alert-circle-outline" className="w-12 h-12 mb-3" />
             <p className="text-lg font-medium">Error loading map data</p>
             <p className="text-sm opacity-75 mt-1">
               Please check your connection or try again later
@@ -316,45 +299,19 @@ export default function CountryChart({ candidates, mode, onFilter }) {
                 : "bg-gray-100 hover:bg-gray-200"
             } transition-colors duration-200`}
           >
-            <svg
-              className="w-5 h-5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              ></path>
-            </svg>
+            <Icon icon="mdi:information-outline" className="w-5 h-5" />
           </button>
         </div>
 
         {mapError && (
           <div className="mb-6 p-3 bg-red-100 text-red-800 rounded-lg flex items-center">
-            <svg
-              className="w-5 h-5 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              ></path>
-            </svg>
+            <Icon icon="mdi:alert-circle-outline" className="w-5 h-5 mr-2" />
             {mapError}
           </div>
         )}
 
-        <div className="grid md:grid-cols-4 gap-6">
-          <div className="md:col-span-3">
+        <div className="grid md:grid-cols-10 gap-6">
+          <div className="md:col-span-7">
             <div className="relative h-[450px] w-full rounded-lg overflow-hidden shadow-md">
               <MapContainer
                 center={[20, 0]}
@@ -470,67 +427,12 @@ export default function CountryChart({ candidates, mode, onFilter }) {
             </div>
           </div>
 
-          <div
-            className={`rounded-lg ${
-              isDarkMode ? "bg-gray-900" : "bg-gray-50"
-            } p-4`}
-          >
-            <h4 className="font-medium text-sm mb-3">Top Countries</h4>
-            <div className="space-y-3">
-              {topCountries.length > 0 ? (
-                topCountries.map((country, index) => (
-                  <button
-                    key={index}
-                    onClick={() =>
-                      onFilter && onFilter("country", country.name)
-                    }
-                    className={`w-full flex items-center justify-between p-2 rounded ${
-                      isDarkMode ? "hover:bg-gray-800" : "hover:bg-gray-100"
-                    } transition-colors duration-150 cursor-pointer text-left`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-2 h-4 rounded-sm"
-                        style={{ backgroundColor: getColor(country.count) }}
-                      ></div>
-                      <span className="truncate">{country.name}</span>
-                    </div>
-                    <span
-                      className={`font-medium ${
-                        isDarkMode ? "text-blue-400" : "text-blue-600"
-                      }`}
-                    >
-                      {country.count}
-                    </span>
-                  </button>
-                ))
-              ) : (
-                <div
-                  className={`text-sm italic ${
-                    isDarkMode ? "text-gray-400" : "text-gray-500"
-                  }`}
-                >
-                  No applicant data available
-                </div>
-              )}
-            </div>
-
-            {topCountries.length > 0 && (
-              <div className="mt-6 pt-4 border-t border-gray-700">
-                <div className="text-xs mb-2">Distribution</div>
-                <div className="h-2 flex rounded-full overflow-hidden">
-                  {topCountries.map((country, index) => (
-                    <div
-                      key={index}
-                      style={{
-                        backgroundColor: getColor(country.count),
-                        width: `${(country.count / totalApplicants) * 100}%`,
-                      }}
-                    ></div>
-                  ))}
-                </div>
-              </div>
-            )}
+          <div className="md:col-span-3">
+            <MemoizedDeviceChart
+              candidates={candidates}
+              mode={mode}
+              onFilter={onFilter}
+            />
           </div>
         </div>
       </div>

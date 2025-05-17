@@ -1,4 +1,3 @@
-// src/components/DeviceChart.js
 import { useState } from "react";
 import dynamic from "next/dynamic";
 
@@ -8,16 +7,32 @@ const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
 export default function ModernDeviceChart({ candidates, mode, onFilter }) {
   const [showDetails, setShowDetails] = useState(false);
 
+  // Normalize device names to handle edge cases and ensure consistency
+  const normalizeDevice = (device) => {
+    if (!device || typeof device !== "string" || device.trim() === "") {
+      return "UNKNOWN";
+    }
+    return device.trim().toUpperCase();
+  };
+
   // Function to group devices into high-level categories
   const groupDevice = (device) => {
-    if (!device || device === "Unknown") return "Other";
-    if (device.toLowerCase().includes("mobile")) return "Mobile";
+    const normalized = normalizeDevice(device);
+    if (normalized === "UNKNOWN") return "Other";
+    if (
+      normalized.includes("MOBILE") ||
+      normalized.includes("PHONE") ||
+      normalized.includes("ANDROID") ||
+      normalized.includes("IOS")
+    ) {
+      return "Mobile";
+    }
     return "Desktop"; // Windows, Ubuntu, Linux, Macintosh, etc.
   };
 
   // Detailed device count
   const deviceCount = candidates.reduce((acc, c) => {
-    const device = c.device || "Unknown";
+    const device = normalizeDevice(c.device);
     acc[device] = (acc[device] || 0) + 1;
     return acc;
   }, {});
@@ -49,13 +64,17 @@ export default function ModernDeviceChart({ candidates, mode, onFilter }) {
   // Handle filter clicks
   const handleFilter = (label) => {
     if (showDetails) {
-      // Detailed view: filter by exact device name
+      // Detailed view: filter by exact device name (normalized)
       onFilter("device", label);
     } else {
-      // Grouped view: filter by all devices in the group
-      const deviceList = candidates
-        .map((c) => c.device)
-        .filter((d) => groupDevice(d) === label);
+      // Grouped view: filter by unique devices in the group
+      const deviceList = [
+        ...new Set(
+          candidates
+            .map((c) => normalizeDevice(c.device))
+            .filter((d) => groupDevice(d) === label)
+        ),
+      ];
       onFilter("device", deviceList);
     }
   };
@@ -71,8 +90,19 @@ export default function ModernDeviceChart({ candidates, mode, onFilter }) {
       foreColor: mode === "dark" ? "#fff" : "#1F2937",
       events: {
         dataPointSelection: (event, chartContext, config) => {
-          const label = labels[config.dataPointIndex];
-          handleFilter(label);
+          if (
+            config.dataPointIndex >= 0 &&
+            config.dataPointIndex < labels.length
+          ) {
+            const label = labels[config.dataPointIndex];
+            handleFilter(label);
+          }
+        },
+        legendClick: (chartContext, seriesIndex, config) => {
+          if (seriesIndex >= 0 && seriesIndex < labels.length) {
+            const label = labels[seriesIndex];
+            handleFilter(label);
+          }
         },
       },
     },
@@ -201,7 +231,7 @@ export default function ModernDeviceChart({ candidates, mode, onFilter }) {
       </div>
 
       <div className="mt-4 text-center text-sm text-gray-500">
-        Click on a segment or legend item to filter data
+        Click chart segments to filter candidates
       </div>
     </div>
   );

@@ -14,6 +14,7 @@ export default function ChartFilterModal({
   const [filteredCandidates, setFilteredCandidates] = useState(candidates);
   const modalRef = useRef(null);
   const searchInputRef = useRef(null);
+  const isInitialMount = useRef(true);
 
   // Track if a candidate modal is open to prevent closing this modal
   const [isViewingCandidate, setIsViewingCandidate] = useState(false);
@@ -27,11 +28,15 @@ export default function ChartFilterModal({
 
     const filtered = candidates.filter(
       (candidate) =>
-        candidate.primaryContactName
-          ?.toLowerCase()
+        (candidate.primaryContactName || "")
+          .toLowerCase()
           .includes(searchTerm.toLowerCase()) ||
-        candidate.opening?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        candidate.job_type?.toLowerCase().includes(searchTerm.toLowerCase())
+        (candidate.opening || "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        (candidate.job_type || "")
+          .toLowerCase()
+          .includes(searchTerm.toLowerCase())
     );
 
     setFilteredCandidates(filtered);
@@ -47,6 +52,17 @@ export default function ChartFilterModal({
   // Close modal when clicking outside, but only if not viewing a candidate
   useEffect(() => {
     const handleClickOutside = (event) => {
+      // Ignore clicks on ApexCharts elements
+      if (event.target.closest(".apexcharts-canvas")) {
+        return;
+      }
+
+      // Delay closing to avoid immediate closure on mount
+      if (isInitialMount.current) {
+        isInitialMount.current = false;
+        return;
+      }
+
       if (
         modalRef.current &&
         !modalRef.current.contains(event.target) &&
@@ -103,7 +119,7 @@ export default function ChartFilterModal({
     if (type === "status") return `Status: ${value}`;
     if (type === "country") return `Country: ${value}`;
     if (type === "device")
-      return `Device: ${Array.isArray(value) ? "Multiple Devices" : value}`;
+      return `Device: ${Array.isArray(value) ? value.join(", ") : value}`;
     if (type === "date") {
       const date = new Date(value);
       return `Date: ${date.toLocaleDateString(undefined, {
@@ -119,7 +135,7 @@ export default function ChartFilterModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4 backdrop-blur-sm transition-all duration-300"
+      className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-[1000] p-4 backdrop-blur-sm transition-all duration-300"
       aria-modal="true"
       role="dialog"
       aria-labelledby="modal-title"
@@ -203,7 +219,7 @@ export default function ChartFilterModal({
             <ul className="space-y-3">
               {filteredCandidates.map((candidate) => (
                 <li
-                  key={candidate.id}
+                  key={candidate.id || Math.random()} // Fallback key if id is missing
                   className={`p-3 rounded-lg flex justify-between items-center transform transition-all duration-200 animate-fade-in hover:translate-x-1 ${
                     isDark
                       ? "bg-gray-700 hover:bg-gray-600"
@@ -216,21 +232,25 @@ export default function ChartFilterModal({
                         isDark ? "text-white" : "text-gray-800"
                       }`}
                     >
-                      {candidate.primaryContactName}
+                      {candidate.primaryContactName || "Unknown Name"}
                     </span>
                     <span
                       className={`text-sm ${
                         isDark ? "text-gray-300" : "text-gray-600"
                       }`}
                     >
-                      {candidate.opening} •{" "}
-                      <span className="capitalize">{candidate.job_type}</span>
+                      {candidate.opening || "Unknown Position"} •{" "}
+                      <span className="capitalize">
+                        {candidate.job_type || "Unknown Type"}
+                      </span>
                     </span>
                   </div>
                   <button
                     onClick={() => handleViewClick(candidate)}
                     className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#f05d23] text-white hover:bg-[#d94f1e] transition duration-200 shadow-md"
-                    aria-label={`View details for ${candidate.primaryContactName}`}
+                    aria-label={`View details for ${
+                      candidate.primaryContactName || "candidate"
+                    }`}
                   >
                     <Icon icon="mdi:eye" className="w-4 h-4" />
                     View

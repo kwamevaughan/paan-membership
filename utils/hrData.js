@@ -3,10 +3,13 @@ import { supabaseServer } from "@/lib/supabaseServer";
 export async function fetchHRData({
   fetchCandidates = true,
   fetchQuestions = true,
+  fetchSubscribers = true,
 } = {}) {
   try {
     const queries = [];
+    let subscribersQueryIndex = -1; // Track subscribers query index
 
+    // Add candidate-related queries
     if (fetchCandidates) {
       queries.push(supabaseServer.from("candidates").select("*"));
       queries.push(supabaseServer.from("responses").select("*"));
@@ -18,7 +21,8 @@ export async function fetchHRData({
       );
     }
 
-    if (fetchQuestions) {
+    // Add questions query if needed
+    if (fetchQuestions && !fetchCandidates) {
       queries.push(
         supabaseServer
           .from("interview_questions")
@@ -27,40 +31,57 @@ export async function fetchHRData({
       );
     }
 
-    const results = await Promise.all(queries);
+    // Add subscribers query
+    if (fetchSubscribers) {
+      subscribersQueryIndex = queries.length; // Store index of subscribers query
+      queries.push(supabaseServer.from("newsletter_subscriptions").select("*"));
+    }
 
-    const candidatesData = fetchCandidates ? results[0].data : [];
-    const responsesData = fetchCandidates ? results[1].data : [];
+    // Execute all queries
+    const results = await Promise.all(queries);
+    console.log("Query results:", results); // Debug: Log all query results
+
+    // Extract subscribers data
+    const subscribersData = fetchSubscribers
+      ? results[subscribersQueryIndex]?.data || []
+      : [];
+    console.log("Subscribers data:", subscribersData); // Debug: Log subscribers data
+
+    // Check for subscribers query error
+    if (fetchSubscribers && results[subscribersQueryIndex]?.error) {
+      console.error(
+        "Subscribers query error:",
+        results[subscribersQueryIndex].error
+      );
+      throw results[subscribersQueryIndex].error;
+    }
+
+    // Extract candidate-related data
+    const candidatesData = fetchCandidates ? results[0]?.data || [] : [];
+    const responsesData = fetchCandidates ? results[1]?.data || [] : [];
     const questionsData = fetchQuestions
       ? fetchCandidates
-        ? results[2].data
-        : results[0].data
+        ? results[2]?.data || []
+        : results[0]?.data || []
       : [];
 
-    if (fetchCandidates && results[0].error) throw results[0].error;
-    if (fetchCandidates && results[1].error) throw results[1].error;
+    // Check for candidate-related query errors
+    if (fetchCandidates && results[0]?.error) throw results[0].error;
+    if (fetchCandidates && results[1]?.error) throw results[1].error;
     if (
       fetchQuestions &&
-      (fetchCandidates ? results[2].error : results[0].error)
-    )
+      (fetchCandidates ? results[2]?.error : results[0]?.error)
+    ) {
       throw fetchCandidates ? results[2].error : results[0].error;
+    }
 
-    const agencyQuestions = questionsData.filter(
-      (q) => q.job_type === "agency"
-    );
-    const freelancerQuestions = questionsData.filter(
-      (q) => q.job_type === "freelancer"
-    );
-  
-
+    // Process candidates data
     let combinedData = [];
     if (fetchCandidates) {
       combinedData = candidatesData.map((candidate) => {
         const response =
           responsesData.find((r) => r.user_id === candidate.id) || {};
         let parsedAnswers = [];
-
-        
 
         if (response.answers) {
           if (typeof response.answers === "string") {
@@ -77,7 +98,6 @@ export async function fetchHRData({
             parsedAnswers = response.answers;
           }
 
-          // Flatten answers to strings
           parsedAnswers = parsedAnswers.map((answer) => {
             if (!answer || answer === null || answer === "") return null;
             if (Array.isArray(answer)) {
@@ -103,7 +123,7 @@ export async function fetchHRData({
             }
             return answer;
           });
-        }        
+        }
 
         const statusMap = {
           completed: "Accepted",
@@ -126,9 +146,8 @@ export async function fetchHRData({
           filteredQuestions = questionsData.filter(
             (q) => q.job_type === "agencies"
           );
-          // Insert null for missing answers (e.g., index 6)
           if (parsedAnswers.length < filteredQuestions.length) {
-            parsedAnswers.splice(6, 0, null); // Insert null for "How can your agency contribute..."
+            parsedAnswers.splice(6, 0, null);
             filteredAnswers = parsedAnswers.concat(
               Array(filteredQuestions.length - parsedAnswers.length).fill(null)
             );
@@ -138,7 +157,6 @@ export async function fetchHRData({
             (q) => q.job_type === "freelancer"
           );
           const expectedQuestionCount = filteredQuestions.length;
-          // Take the last non-null answers matching expectedQuestionCount
           const nonNullAnswers = parsedAnswers
             .filter((a) => a !== null && a !== "")
             .slice(-expectedQuestionCount);
@@ -146,7 +164,7 @@ export async function fetchHRData({
             Array(expectedQuestionCount - nonNullAnswers.length).fill(null)
           );
         }
-        
+
         if (
           isFreelancer &&
           filteredAnswers.length !== filteredQuestions.length
@@ -156,7 +174,6 @@ export async function fetchHRData({
           );
         }
 
-        // Ensure filteredAnswers matches filteredQuestions length
         if (filteredAnswers.length < filteredQuestions.length) {
           filteredAnswers = filteredAnswers.concat(
             Array(filteredQuestions.length - filteredAnswers.length).fill(null)
@@ -187,22 +204,19 @@ export async function fetchHRData({
       ? [...new Set(combinedData.map((c) => c.opening))]
       : [];
 
-    combinedData.forEach((candidate) => {
-      const jobType =
-        (candidate.opening?.toLowerCase() || "").includes("agency") ||
-        (candidate.opening?.toLowerCase() || "").includes("agencies")
-          ? "Agency"
-          : (candidate.opening?.toLowerCase() || "").includes("freelancer") ||
-            (candidate.opening?.toLowerCase() || "").includes("freelancers")
-          ? "Freelancer"
-          : "Other";
-      
+    // Debug: Log final return data
+    console.log("Returning data:", {
+      initialCandidates: combinedData,
+      initialJobOpenings: jobOpenings,
+      initialQuestions: questionsData,
+      subscribers: subscribersData,
     });
 
     return {
       initialCandidates: combinedData,
       initialJobOpenings: jobOpenings,
       initialQuestions: questionsData,
+      subscribers: subscribersData,
     };
   } catch (error) {
     console.error("Error fetching HR data:", error);
@@ -210,6 +224,7 @@ export async function fetchHRData({
       initialCandidates: [],
       initialJobOpenings: [],
       initialQuestions: [],
+      subscribers: [],
     };
   }
 }

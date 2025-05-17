@@ -5,9 +5,17 @@ export const useCountry = () => {
   const [countryOptions, setCountryOptions] = useState([]);
 
   useEffect(() => {
-    fetch("/assets/misc/countries.json")
-      .then((res) => res.json())
+    fetch("/assets/misc/countries.json", { cache: "no-store" })
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        return res.json();
+      })
       .then((data) => {
+        if (!data || !Array.isArray(data)) {
+          throw new Error("Invalid countries data");
+        }
         setCountries(data);
         const options = data.map((country) => ({
           label: country.name,
@@ -24,14 +32,18 @@ export const useCountry = () => {
       })
       .catch((err) => {
         console.error("Error fetching countries:", err);
+        // Fallback data with Kenya and Ghana
         setCountries([
           { name: "Kenya", iso: "KE", flag: "🇰🇪", dialCode: "+254" },
+          { name: "Ghana", iso: "GH", flag: "🇬🇭", dialCode: "+233" },
         ]);
-        setCountryOptions([{ label: "Kenya", value: "Kenya" }]);
+        setCountryOptions([
+          { label: "Kenya", value: "Kenya" },
+          { label: "Ghana", value: "Ghana" },
+        ]);
       });
   }, []);
 
-  // Function to get the dialing code for a country
   const getDialCode = (countryName) => {
     const country = countries.find((c) => c.name === countryName);
     return country ? country.dialCode : "";

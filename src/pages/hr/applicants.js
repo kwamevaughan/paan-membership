@@ -104,6 +104,7 @@ export default function HRApplicants({
   };
 
   const handleViewCandidate = (candidate) => {
+    console.log(`Selected candidate:`, candidate);
     setSelectedCandidate(candidate);
     setIsModalOpen(true);
   };

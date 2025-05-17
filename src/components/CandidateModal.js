@@ -15,35 +15,18 @@ export default function CandidateModal({
   const [activeTab, setActiveTab] = useState("profile");
 
   useEffect(() => {
-    if (candidate && candidate.questions) {
-      let filteredQuestions = candidate.questions;
+    if (candidate && candidate.questions && candidate.answers) {
 
-      const openingLower = candidate.opening?.toLowerCase() || "";
-      const isAgency =
-        openingLower.includes("agency") || openingLower.includes("agencies");
-      const isFreelancer =
-        openingLower.includes("freelancer") ||
-        openingLower.includes("freelancers");
-
-      if (isAgency) {
-        filteredQuestions = candidate.questions.filter(
-          (q) => q.job_type === "agencies"
-        );
-      } else if (isFreelancer) {
-        filteredQuestions = candidate.questions.filter(
-          (q) => q.job_type === "freelancers"
-        );
-      }
-
-      const pairs = filteredQuestions.map((question, index) => {
-        const answer = candidate.answers && candidate.answers[index];
-        return {
-          questionId: question.id,
-          questionText: question.text,
-          answer: answer,
-        };
-      });
+      const pairs = candidate.questions.map((question, index) => ({
+        questionId: question.id,
+        questionText: question.text,
+        answer: candidate.answers[index] ?? null,
+      }));
+      
       setQuestionAnswerPairs(pairs);
+    } else {
+      console.warn(`Missing data for candidate:`, candidate);
+      setQuestionAnswerPairs([]);
     }
   }, [candidate]);
 
@@ -82,9 +65,46 @@ export default function CandidateModal({
   };
 
   const renderAnswer = (answer) => {
-    if ((!answer && answer !== 0) || answer === "") return "No answer provided";
+    if (answer === undefined || answer === null || answer === "") {
+      return "No answer provided";
+    }
+
+    if (typeof answer === "string" && answer.includes(";")) {
+      try {
+        const items = answer
+          .split(";")
+          .map((item) => {
+            item = item.trim();
+            if (!item) return null;
+            if (item.startsWith("{") && item.endsWith("}")) {
+              try {
+                const parsed = JSON.parse(item);
+                return (
+                  parsed.customText ||
+                  Object.entries(parsed)
+                    .map(([key, value]) => `${key}: ${value}`)
+                    .join(", ")
+                );
+              } catch (e) {
+                console.warn(
+                  `Failed to parse structured answer item: ${item}`,
+                  e
+                );
+                return item;
+              }
+            }
+            return item;
+          })
+          .filter(Boolean);
+        return items.join("; ") || "No answer provided";
+      } catch (e) {
+        console.warn(`Error processing structured answer: ${answer}`, e);
+        return answer;
+      }
+    }
+
     if (Array.isArray(answer)) {
-      return answer
+      const formatted = answer
         .map((item) => {
           if (item && typeof item === "object") {
             return (
@@ -96,18 +116,22 @@ export default function CandidateModal({
           }
           return item;
         })
-        .filter((item) => item)
+        .filter((item) => item !== null && item !== undefined && item !== "")
         .join("; ");
+      return formatted || "No answer provided";
     }
+
     if (typeof answer === "object" && answer !== null) {
       return (
         answer.customText ||
         Object.entries(answer)
           .map(([key, value]) => `${key}: ${value}`)
-          .join(", ")
+          .join(", ") ||
+        "No answer provided"
       );
     }
-    return answer.toString();
+
+    return answer.toString() || "No answer provided";
   };
 
   const openingLower = candidate.opening?.toLowerCase() || "";
@@ -129,16 +153,6 @@ export default function CandidateModal({
     : "bg-purple-500/80";
 
   const documentList = [
-    {
-      type: "Resume",
-      url: candidate.resumeUrl,
-      icon: "mdi:file-document-outline",
-    },
-    {
-      type: "Cover Letter",
-      url: candidate.coverLetterUrl,
-      icon: "mdi:file-document",
-    },
     ...(isAgencyCandidate
       ? [
           {
@@ -185,7 +199,6 @@ export default function CandidateModal({
       <div
         className={`rounded-xl shadow-2xl transform transition-all duration-300 animate-fade-in w-full max-w-4xl mx-4 flex flex-col max-h-[90vh] overflow-hidden ${modalBg} ${textColor}`}
       >
-        {/* Header */}
         <div className="bg-gradient-to-r from-[#f05d23] to-[#f28c5e] p-5 flex items-center justify-between">
           <div className="flex items-center space-x-4">
             <div className="bg-white/20 p-3 rounded-full shadow-md">
@@ -214,7 +227,6 @@ export default function CandidateModal({
           </button>
         </div>
 
-        {/* Tabs */}
         <div
           className={`px-4 pt-4 border-b ${borderColor} ${secondaryBg} backdrop-blur-sm`}
         >
@@ -266,7 +278,6 @@ export default function CandidateModal({
           </div>
         </div>
 
-        {/* Content */}
         <div className="flex-1 p-6 overflow-y-auto scrollbar-thin scrollbar-thumb-[#f05d23]/80 scrollbar-track-gray-200/50">
           {activeTab === "profile" && (
             <div className="space-y-6 animate-fade-in">
@@ -384,7 +395,7 @@ export default function CandidateModal({
                     No documents available
                   </h3>
                   <p className="text-gray-400 dark:text-gray-500 mt-2 text-sm">
-                    This candidate hasn't uploaded any documents yet
+                    This candidate hasn&apos;t uploaded any documents yet
                   </p>
                 </div>
               )}
@@ -451,7 +462,7 @@ export default function CandidateModal({
                     No answers available
                   </h3>
                   <p className="text-gray-400 dark:text-gray-500 mt-2 text-sm">
-                    This candidate hasn't completed the interview questions yet
+                    This candidate hasn&apos;t completed the interview questions yet
                   </p>
                 </div>
               )}
@@ -549,7 +560,6 @@ export default function CandidateModal({
           )}
         </div>
 
-        {/* Footer */}
         <div
           className={`p-4 flex justify-end gap-3 border-t ${borderColor} ${secondaryBg} backdrop-blur-sm`}
         >
@@ -572,7 +582,6 @@ export default function CandidateModal({
         </div>
       </div>
 
-      {/* Document Preview Modal */}
       {isPreviewModalOpen && (
         <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-70 backdrop-blur-sm">
           <div

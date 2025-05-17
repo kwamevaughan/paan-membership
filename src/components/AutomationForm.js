@@ -13,7 +13,7 @@ export default function AutomationForm({ onSave, onCancel, mode, emailTemplates,
     const [previewCandidates, setPreviewCandidates] = useState([]);
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
-    const statusOptions = ["Pending", "Reviewed", "Shortlisted", "Rejected"];
+    const statusOptions = ["Accepted", "Pending", "Reviewed", "Shortlisted", "Rejected"];
     const operatorOptions = [
         { value: ">", icon: "mdi:greater-than" },
         { value: "<", icon: "mdi:less-than" },

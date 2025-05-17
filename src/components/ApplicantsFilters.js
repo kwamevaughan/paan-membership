@@ -15,7 +15,7 @@ export default function ApplicantsFilters({
 
   // Extract unique openings and add 'all' option
   const uniqueOpenings = ["all", ...new Set(candidates.map((c) => c.opening))];
-  const statuses = ["all", "Pending", "Reviewed", "Shortlisted", "Rejected"];
+  const statuses = ["all", "Accepted", "Pending", "Reviewed", "Shortlisted", "Rejected"];
 
   // Apply initial filter when component loads
   useEffect(() => {
@@ -241,6 +241,8 @@ export default function ApplicantsFilters({
                   // Define status-specific styling
                   const getStatusStyle = (status) => {
                     switch (status) {
+                      case "Accepted":
+                        return "bg-green-100 text-green-800 border-green-200";
                       case "Pending":
                         return "bg-amber-100 text-amber-800 border-amber-200";
                       case "Reviewed":
@@ -274,7 +276,11 @@ export default function ApplicantsFilters({
                             ? "bg-blue-500"
                             : status === "Shortlisted"
                             ? "bg-green-500"
-                            : "bg-red-500"
+                              : "bg-red-500"
+                                ? "bg-red-500"
+                                : status === "Accepted"
+                                ? "bg-green-500"
+                                : "bg-gray-500"
                         }`}
                       ></span>
                       {status}

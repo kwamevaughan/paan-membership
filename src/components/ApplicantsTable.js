@@ -90,6 +90,15 @@ const handleColumnResize = (e, columnKey) => {
     const baseStyle =
       "inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:scale-105";
     switch (status) {
+      case "Accepted":
+        return (
+          <span
+            className={`${baseStyle} bg-green-100/80 text-green-900 backdrop-blur-md hover:bg-green-200/90`}
+          >
+            <span className="mr-1.5 h-2.5 w-2.5 rounded-full bg-green-500"></span>
+            {status}
+          </span>
+        );
       case "Pending":
         return (
           <span

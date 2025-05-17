@@ -20,6 +20,7 @@ export default function EditorComponent({
   placeholder = "Enter text here",
   holderId,
   className = "",
+  height = "200",
 }) {
   const [content, setContent] = useState(initialValue);
   const [viewMode, setViewMode] = useState(defaultView);
@@ -48,7 +49,7 @@ export default function EditorComponent({
   const config = {
     readonly: false,
     theme: mode === "dark" ? "dark" : "default",
-    height: 200,
+    height: height,
     placeholder,
     enableDragAndDropFileToEditor: false,
     toolbarSticky: false,

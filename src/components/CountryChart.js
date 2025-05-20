@@ -280,7 +280,7 @@ export default function CountryChart({ candidates, mode, onFilter }) {
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h3 className="text-2xl font-bold">Applicants by Country</h3>
+            <h3 className="text-xl font-bold">Applicants by Country</h3>
             <p
               className={`text-sm mt-1 ${
                 isDarkMode ? "text-gray-400" : "text-gray-500"

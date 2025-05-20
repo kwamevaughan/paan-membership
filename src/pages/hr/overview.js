@@ -273,13 +273,6 @@ export default function HROverview({
               mode={mode}
             />
 
-            <ResourceOverview
-              candidates={candidates}
-              setSelectedCandidate={setSelectedCandidate}
-              setIsModalOpen={setIsCandidateModalOpen}
-              mode={mode}
-            />
-
             <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="md:col-span-2 max-w-full">
                 <StatusChart
@@ -297,6 +290,13 @@ export default function HROverview({
                 />
               </div>
             </div>
+
+            <ResourceOverview
+              candidates={candidates}
+              setSelectedCandidate={setSelectedCandidate}
+              setIsModalOpen={setIsCandidateModalOpen}
+              mode={mode}
+            />
 
             <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="md:col-span-1">

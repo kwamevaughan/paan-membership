@@ -3,7 +3,11 @@ import { Icon } from "@iconify/react";
 
 export default function SubscribersLog({ initialSubscribers = [], mode }) {
   const isDark = mode === "dark";
-  const [subscribers, setSubscribers] = useState(initialSubscribers);
+  const [subscribers, setSubscribers] = useState(() =>
+    [...initialSubscribers].sort(
+      (a, b) => new Date(b.created_at) - new Date(a.created_at)
+    )
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState({
     key: "created_at",
@@ -30,6 +34,17 @@ export default function SubscribersLog({ initialSubscribers = [], mode }) {
     );
   };
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10; 
+
+  const totalPages = Math.ceil(filteredSubscribers.length / itemsPerPage);
+
+  const paginatedSubscribers = filteredSubscribers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat("en-US", {
@@ -48,8 +63,10 @@ export default function SubscribersLog({ initialSubscribers = [], mode }) {
 
   return (
     <div
-      className={`rounded-2xl shadow-md overflow-hidden transition-all duration-300 ${
-        isDark ? "bg-slate-900 text-gray-200" : "bg-white text-gray-800"
+      className={`rounded-2xl cursor-pointer transition-all duration-300  ${
+        mode === "dark"
+          ? "bg-gradient-to-br from-gray-800 to-gray-700 border-gray-600 shadow-md hover:shadow-xl text-white"
+          : "bg-gradient-to-br from-white to-gray-50 border-blue-100 shadow-lg hover:shadow-xl text-gray-800"
       }`}
     >
       {/* Header */}
@@ -74,7 +91,7 @@ export default function SubscribersLog({ initialSubscribers = [], mode }) {
             </div>
           </div>
           <div className="w-full sm:w-auto">
-            <div className="relative w-full sm:min-w-[240px]">
+            <div className="relative w-full sm:min-w-[150px]">
               <Icon
                 icon="mdi:magnify"
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 opacity-50"
@@ -96,154 +113,161 @@ export default function SubscribersLog({ initialSubscribers = [], mode }) {
       </div>
 
       {/* Table */}
-      <div className="overflow-x-auto">
-        <table className="min-w-full text-sm">
-          <thead>
-            <tr
-              className={`text-xs uppercase tracking-wider ${
-                isDark ? "text-gray-400" : "text-gray-500"
-              } bg-transparent sticky top-0 z-10`}
+      <div className="flex flex-col rounded-xl overflow-hidden border border-gray-200 dark:border-slate-800">
+        {/* Table Container */}
+        <div className="max-h-[430px] overflow-y-auto">
+          <table className="min-w-full text-sm">
+            <thead
+              className={`sticky top-0 z-10 ${
+                isDark ? "bg-slate-900" : "bg-white"
+              }`}
             >
-              {["name", "email", "created_at"].map((col) => (
-                <th
-                  key={col}
-                  onClick={() => handleSort(col)}
-                  className="px-6 py-3 text-left cursor-pointer hover:text-indigo-500 transition"
-                >
-                  <div className="flex items-center gap-1">
-                    {col === "name"
-                      ? "Name"
-                      : col === "email"
-                      ? "Email"
-                      : "Subscribed"}
-                    <Icon icon={getSortIcon(col)} className="w-3 h-3" />
-                  </div>
+              <tr>
+                <th className="text-left px-6 py-4 font-semibold text-gray-500 dark:text-gray-400">
+                  Subscriber Info
                 </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filteredSubscribers.length > 0 ? (
-              filteredSubscribers.map((subscriber) => (
-                <tr
-                  key={subscriber.id}
-                  className={`group transition ${
-                    isDark
-                      ? "hover:bg-slate-800 border-b border-slate-800"
-                      : "hover:bg-gray-50 border-b border-gray-100"
-                  }`}
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                          isDark ? "bg-indigo-500/20" : "bg-indigo-100"
-                        } ${subscriber.name ? "" : "opacity-50"}`}
-                      >
-                        {subscriber.name ? (
-                          <span
-                            className={`font-medium ${
-                              isDark ? "text-indigo-300" : "text-indigo-600"
-                            }`}
+              </tr>
+            </thead>
+
+            <tbody>
+              {paginatedSubscribers.length > 0 ? (
+                paginatedSubscribers.map((subscriber) => (
+                  <tr
+                    key={subscriber.id}
+                    className={`group transition ${
+                      isDark
+                        ? "hover:bg-slate-800 border-b border-slate-800"
+                        : "hover:bg-gray-50 border-b border-gray-100"
+                    }`}
+                  >
+                    <td className="px-6 py-4 whitespace-normal">
+                      <div className="flex flex-col gap-2">
+                        {/* Name */}
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                              isDark ? "bg-indigo-500/20" : "bg-indigo-100"
+                            } ${subscriber.name ? "" : "opacity-50"}`}
                           >
-                            {subscriber.name.charAt(0).toUpperCase()}
+                            {subscriber.name ? (
+                              <span
+                                className={`font-medium ${
+                                  isDark ? "text-indigo-300" : "text-indigo-600"
+                                }`}
+                              >
+                                {subscriber.name.charAt(0).toUpperCase()}
+                              </span>
+                            ) : (
+                              <Icon
+                                icon="mdi:account-circle"
+                                className={`w-4 h-4 ${
+                                  isDark ? "text-indigo-300" : "text-indigo-600"
+                                }`}
+                              />
+                            )}
+                          </div>
+                          <span className="font-medium">
+                            {subscriber.name || "—"}
                           </span>
-                        ) : (
+                        </div>
+
+                        {/* Email */}
+                        <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                           <Icon
-                            icon="mdi:account-circle"
-                            className={`w-4 h-4 ${
-                              isDark ? "text-indigo-300" : "text-indigo-600"
-                            }`}
+                            icon="mdi:email-outline"
+                            className="w-4 h-4 opacity-50"
                           />
-                        )}
+                          <span>{subscriber.email}</span>
+                        </div>
+
+                        {/* Subscribed Date */}
+                        <div className="flex items-center gap-2 text-sm text-gray-400">
+                          <Icon
+                            icon="mdi:calendar"
+                            className="w-4 h-4 opacity-50"
+                          />
+                          <span>{formatDate(subscriber.created_at)}</span>
+                        </div>
                       </div>
-                      <span className="font-medium">
-                        {subscriber.name || "—"}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <Icon
-                        icon="mdi:email-outline"
-                        className="w-4 h-4 opacity-50"
-                      />
-                      {subscriber.email}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                      <Icon
-                        icon="mdi:calendar"
-                        className="w-8 h-8 opacity-50"
-                      />
-                      {formatDate(subscriber.created_at)}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="1" className="px-6 py-10 text-center">
+                    <div className="flex flex-col items-center gap-2 text-sm">
+                      <div
+                        className={`p-3 rounded-full ${
+                          isDark ? "bg-slate-800" : "bg-gray-100"
+                        }`}
+                      >
+                        <Icon
+                          icon="mdi:email-outline"
+                          className={`w-6 h-6 ${
+                            isDark ? "text-gray-400" : "text-gray-500"
+                          }`}
+                        />
+                      </div>
+                      <p className="font-medium">No subscribers found</p>
+                      <p className="text-xs text-gray-400">
+                        {searchTerm
+                          ? "Try adjusting your search"
+                          : "Subscribers will appear here once they sign up"}
+                      </p>
                     </div>
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="3" className="px-6 py-10 text-center">
-                  <div className="flex flex-col items-center gap-2 text-sm">
-                    <div
-                      className={`p-3 rounded-full ${
-                        isDark ? "bg-slate-800" : "bg-gray-100"
-                      }`}
-                    >
-                      <Icon
-                        icon="mdi:email-outline"
-                        className={`w-6 h-6 ${
-                          isDark ? "text-gray-400" : "text-gray-500"
-                        }`}
-                      />
-                    </div>
-                    <p className="font-medium">No subscribers found</p>
-                    <p className="text-xs text-gray-400">
-                      {searchTerm
-                        ? "Try adjusting your search"
-                        : "Subscribers will appear here once they sign up"}
-                    </p>
-                  </div>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Footer */}
+        {filteredSubscribers.length > 0 && (
+          <div
+            className={`px-6 py-4 border-t ${
+              isDark ? "border-slate-800" : "border-gray-100"
+            } flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0`}
+          >
+            <span className="text-sm text-gray-500">
+              Showing {paginatedSubscribers.length} of {subscribers.length}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                disabled={currentPage === 1}
+                className={`px-3 py-1 text-sm rounded-md transition ${
+                  isDark
+                    ? "bg-slate-800 text-gray-300 hover:bg-slate-700"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                }`}
+              >
+                Previous
+              </button>
+
+              <span className="text-sm text-gray-500">
+                Page {currentPage} of {totalPages}
+              </span>
+
+              <button
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(p + 1, totalPages))
+                }
+                disabled={currentPage === totalPages}
+                className={`px-3 py-1 text-sm rounded-md transition ${
+                  isDark
+                    ? "bg-indigo-600 text-white hover:bg-indigo-700"
+                    : "bg-indigo-500 text-white hover:bg-indigo-600"
+                }`}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Footer */}
-      {filteredSubscribers.length > 0 && (
-        <div
-          className={`px-6 py-4 border-t ${
-            isDark ? "border-slate-800" : "border-gray-100"
-          } flex justify-between items-center`}
-        >
-          <span className="text-sm text-gray-500">
-            Showing {filteredSubscribers.length} of {subscribers.length}
-          </span>
-          <div className="flex gap-2">
-            <button
-              className={`px-3 py-1 text-sm rounded-md transition ${
-                isDark
-                  ? "bg-slate-800 text-gray-300 hover:bg-slate-700"
-                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-            >
-              Previous
-            </button>
-            <button
-              className={`px-3 py-1 text-sm rounded-md transition ${
-                isDark
-                  ? "bg-indigo-600 text-white hover:bg-indigo-700"
-                  : "bg-indigo-500 text-white hover:bg-indigo-600"
-              }`}
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

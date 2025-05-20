@@ -256,7 +256,7 @@ export default function ModernTimeline({
       </div>
 
       {/* Timeline Section */}
-      <div className="flex-1 overflow-y-auto scrollbar-thin max-h-[300px]">
+      <div className="flex-1 overflow-y-auto scrollbar-thin max-h-[400px]">
         {isLoading ? (
           <div className="py-16 px-6 text-center">
             <motion.div

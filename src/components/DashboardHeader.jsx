@@ -4,7 +4,7 @@ export default function DashboardHeader({ mode }) {
   return (
     <div className="flex justify-between items-center mb-6">
       <h2
-        className={`text-2xl font-bold flex items-center ${
+        className={`text-xl font-bold flex items-center ${
           mode === "dark" ? "text-white" : "text-gray-800"
         }`}
       >

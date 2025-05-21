@@ -12,9 +12,6 @@ import { fetchHRData } from "../../../utils/hrData";
 import OpportunityForm from "@/components/OpportunityForm";
 import OpportunityFilters from "@/components/OpportunityFilters";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
-import { getTierBadgeColor, getStatusBadgeColor } from "@/../utils/badgeUtils";
-import { getDaysRemaining } from "@/../utils/dateUtils";
-
 
 export default function AdminBusinessOpportunities({
   mode = "light",
@@ -100,6 +97,57 @@ export default function AdminBusinessOpportunities({
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
 
+  const getDaysRemaining = (deadlineDate) => {
+    const today = new Date();
+    const deadline = new Date(deadlineDate);
+    const diffTime = deadline - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const getTierBadgeColor = (tier) => {
+    if (tier.includes("Founding")) {
+      return {
+        bg: mode === "dark" ? "bg-blue-900/30" : "bg-blue-50",
+        text: mode === "dark" ? "text-blue-200" : "text-blue-800",
+        border: mode === "dark" ? "border-blue-800" : "border-blue-200",
+      };
+    } else if (tier.includes("Full")) {
+      return {
+        bg: mode === "dark" ? "bg-emerald-900/30" : "bg-emerald-50",
+        text: mode === "dark" ? "text-emerald-200" : "text-emerald-800",
+        border: mode === "dark" ? "border-emerald-800" : "border-emerald-200",
+      };
+    } else {
+      return {
+        bg: mode === "dark" ? "bg-amber-900/30" : "bg-amber-50",
+        text: mode === "dark" ? "text-amber-200" : "text-amber-800",
+        border: mode === "dark" ? "border-amber-800" : "border-amber-200",
+      };
+    }
+  };
+
+  const getStatusBadgeColor = (days) => {
+    if (days < 7) {
+      return {
+        bg: mode === "dark" ? "bg-red-900/30" : "bg-red-50",
+        text: mode === "dark" ? "text-red-200" : "text-red-800",
+        icon: "text-red-400",
+      };
+    } else if (days < 14) {
+      return {
+        bg: mode === "dark" ? "bg-amber-900/30" : "bg-amber-50",
+        text: mode === "dark" ? "text-amber-200" : "text-amber-800",
+        icon: "text-amber-400",
+      };
+    } else {
+      return {
+        bg: mode === "dark" ? "bg-emerald-900/30" : "bg-emerald-50",
+        text: mode === "dark" ? "text-emerald-200" : "text-emerald-800",
+        icon: "text-emerald-400",
+      };
+    }
+  };
 
   return (
     <div
@@ -435,10 +483,7 @@ export async function getServerSideProps({ req, res }) {
     });
 
     if (hrUserError || !hrUser) {
-      console.error(
-        "[AdminBusinessOpportunities] HR User Error:",
-        hrUserError?.message || "User not in hr_users"
-      );
+      
       await supabaseServer.auth.signOut();
       return {
         redirect: {
@@ -455,20 +500,18 @@ export async function getServerSideProps({ req, res }) {
     });
     console.timeEnd("fetchHRData");
 
-    
-
     return {
       props: {
         initialOpportunities: opportunities,
         tiers,
         breadcrumbs: [
           { label: "Dashboard", href: "/admin" },
-          { label: "Business Opportunities" },
+          { label: "" },
         ],
       },
     };
   } catch (error) {
-    console.error("[AdminBusinessOpportunities] Error:", error.message);
+    console.error("[AdminResources] Error:", error.message);
     return {
       redirect: {
         destination: "/hr/login",

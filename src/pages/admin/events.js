@@ -12,8 +12,10 @@ import EventForm from "@/components/EventForm";
 import EventFilters from "@/components/EventFilters";
 import PendingRegistrations from "@/components/PendingRegistrations";
 import SimpleFooter from "@/layouts/simpleFooter";
-import { fetchHRData } from "../../../utils/hrData";
+import { fetchHRData } from "@/../utils/hrData";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
+import { getTierBadgeColor, getStatusBadgeColor } from "@/../utils/badgeUtils";
+import { getDaysRemaining } from "@/../utils/dateUtils";
 
 export default function AdminEvents({
   mode = "light",
@@ -30,7 +32,8 @@ export default function AdminEvents({
 
   useAuthSession();
 
-  const { isSidebarOpen, toggleSidebar, sidebarState, updateDragOffset } = useSidebar();
+  const { isSidebarOpen, toggleSidebar, sidebarState, updateDragOffset } =
+    useSidebar();
   const handleLogout = useLogout();
   const {
     events,
@@ -95,75 +98,6 @@ export default function AdminEvents({
     }
     return 0;
   });
-
-  const formatDate = (dateString) => {
-    const options = {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    };
-    return new Date(dateString).toLocaleString("en-US", options);
-  };
-
-  const getDaysRemaining = (date) => {
-    const today = new Date();
-    const eventDate = new Date(date);
-    const diffTime = eventDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
-  const getTierBadgeColor = (tier) => {
-    if (tier.includes("Founding")) {
-      return {
-        bg: mode === "dark" ? "bg-blue-900/30" : "bg-blue-50",
-        text: mode === "dark" ? "text-blue-200" : "text-blue-800",
-        border: mode === "dark" ? "border-blue-800" : "border-blue-200",
-      };
-    } else if (tier.includes("Full")) {
-      return {
-        bg: mode === "dark" ? "bg-emerald-900/30" : "bg-emerald-50",
-        text: mode === "dark" ? "text-emerald-200" : "text-emerald-800",
-        border: mode === "dark" ? "border-emerald-800" : "border-emerald-200",
-      };
-    } else if (tier.includes("Associate")) {
-      return {
-        bg: mode === "dark" ? "bg-amber-900/30" : "bg-amber-50",
-        text: mode === "dark" ? "text-amber-200" : "text-amber-800",
-        border: mode === "dark" ? "border-amber-800" : "border-amber-200",
-      };
-    } else {
-      return {
-        bg: mode === "dark" ? "bg-gray-700/30" : "bg-gray-100",
-        text: mode === "dark" ? "text-gray-200" : "text-gray-800",
-        border: mode === "dark" ? "border-gray-600" : "border-gray-200",
-      };
-    }
-  };
-
-  const getStatusBadgeColor = (days) => {
-    if (days < 7) {
-      return {
-        bg: mode === "dark" ? "bg-red-900/30" : "bg-red-50",
-        text: mode === "dark" ? "text-red-200" : "text-red-800",
-        icon: "text-red-400",
-      };
-    } else if (days < 14) {
-      return {
-        bg: mode === "dark" ? "bg-amber-900/30" : "bg-amber-50",
-        text: mode === "dark" ? "text-amber-200" : "text-amber-800",
-        icon: "text-amber-400",
-      };
-    } else {
-      return {
-        bg: mode === "dark" ? "bg-emerald-900/30" : "bg-emerald-50",
-        text: mode === "dark" ? "text-emerald-200" : "text-emerald-800",
-        icon: "text-emerald-400",
-      };
-    }
-  };
 
   return (
     <div
@@ -287,10 +221,14 @@ export default function AdminEvents({
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {sortedEvents.map((event) => {
                           const tierColors = getTierBadgeColor(
-                            event.tier_restriction
+                            event.tier_restriction,
+                            mode
                           );
                           const daysLeft = getDaysRemaining(event.date);
-                          const statusColors = getStatusBadgeColor(daysLeft);
+                          const statusColors = getStatusBadgeColor(
+                            daysLeft,
+                            mode
+                          );
 
                           return (
                             <div
@@ -473,7 +411,6 @@ export default function AdminEvents({
                 registrations={pendingRegistrations}
                 onAction={handleRegistrationAction}
                 mode={mode}
-                formatDate={formatDate}
               />
             ) : (
               <EventForm

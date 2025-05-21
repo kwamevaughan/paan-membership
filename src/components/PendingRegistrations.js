@@ -1,13 +1,9 @@
 import React, { useState } from "react";
 import { Icon } from "@iconify/react";
 import toast from "react-hot-toast";
+import { formatDate } from "@/../utils/dateUtils";
 
-const PendingRegistrations = ({
-  registrations,
-  onAction,
-  mode,
-  formatDate,
-}) => {
+const PendingRegistrations = ({ registrations, onAction, mode }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRegistration, setSelectedRegistration] = useState(null);
   const [actionType, setActionType] = useState("");

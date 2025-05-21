@@ -6,6 +6,7 @@ export async function fetchHRData({
   fetchOpportunities = false,
   fetchEvents = false,
   fetchResources = false,
+  fetchOffers = false,
   fetchEmailTemplates = false,
 } = {}) {
   try {
@@ -14,8 +15,13 @@ export async function fetchHRData({
     let opportunitiesQueryIndex = -1;
     let eventsQueryIndex = -1;
     let resourcesQueryIndex = -1;
+    let offersQueryIndex = -1;
+    let offerFeedbackQueryIndex = -1;
     let tiersQueryIndex = -1;
     let emailTemplatesQueryIndex = -1;
+    let questionQueryIndex = -1;
+
+    let queryIndex = 0;
 
     if (fetchCandidates) {
       queries.push(supabaseClient.from("candidates").select("*"));
@@ -26,58 +32,84 @@ export async function fetchHRData({
           .select("*")
           .order("order", { ascending: true })
       );
+      queryIndex += 3;
     }
 
     if (fetchQuestions && !fetchCandidates) {
+      questionQueryIndex = queryIndex;
       queries.push(
         supabaseClient
           .from("interview_questions")
           .select("*")
           .order("order", { ascending: true })
       );
+      queryIndex += 1;
     }
 
     if (fetchSubscribers) {
-      subscribersQueryIndex = queries.length;
+      subscribersQueryIndex = queryIndex;
       queries.push(supabaseClient.from("newsletter_subscriptions").select("*"));
+      queryIndex += 1;
     }
 
     if (fetchOpportunities) {
-      opportunitiesQueryIndex = queries.length;
+      opportunitiesQueryIndex = queryIndex;
       queries.push(supabaseClient.from("business_opportunities").select("*"));
+      queryIndex += 1;
     }
 
     if (fetchEvents) {
-      eventsQueryIndex = queries.length;
+      eventsQueryIndex = queryIndex;
       queries.push(
         supabaseClient
           .from("events")
           .select("*")
           .order("date", { ascending: true })
       );
+      queryIndex += 1;
     }
 
     if (fetchResources) {
-      resourcesQueryIndex = queries.length;
+      resourcesQueryIndex = queryIndex;
       queries.push(
         supabaseClient
           .from("resources")
           .select("*")
           .order("created_at", { ascending: true })
       );
+      queryIndex += 1;
+    }
+
+    if (fetchOffers) {
+      offersQueryIndex = queryIndex;
+      queries.push(
+        supabaseClient
+          .from("offers")
+          .select(
+            "id, title, description, tier_restriction, url, icon_url, created_at, updated_at"
+          )
+      );
+      offerFeedbackQueryIndex = queryIndex + 1;
+      queries.push(
+        supabaseClient
+          .from("offer_feedback")
+          .select("id, offer_id, user_id, rating, comment, created_at")
+      );
+      queryIndex += 2;
     }
 
     if (fetchEmailTemplates) {
-      emailTemplatesQueryIndex = queries.length;
+      emailTemplatesQueryIndex = queryIndex;
       queries.push(
         supabaseClient
           .from("email_templates")
           .select("id, name, subject, body, updated_at")
           .order("updated_at", { ascending: false, nullsLast: true })
       );
+      queryIndex += 1;
     }
 
-    tiersQueryIndex = queries.length;
+    tiersQueryIndex = queryIndex;
     queries.push(
       supabaseClient
         .from("candidates")
@@ -87,24 +119,48 @@ export async function fetchHRData({
 
     const results = await Promise.all(queries);
 
+    // Log all query results for debugging
+    results.forEach((result, index) => {
+      if (result?.error) {
+        console.error(
+          `[fetchHRData] Query ${index} error:`,
+          result.error.message
+        );
+      } else {
+        console.log(`[fetchHRData] Query ${index} result:`, result?.data);
+      }
+    });
+
+    let resultIndex = 0;
+
+    const candidatesData = fetchCandidates
+      ? results[resultIndex++]?.data || []
+      : [];
+    const responsesData = fetchCandidates
+      ? results[resultIndex++]?.data || []
+      : [];
+    const questionsData = fetchCandidates
+      ? results[resultIndex++]?.data || []
+      : fetchQuestions
+      ? results[questionQueryIndex]?.data || []
+      : [];
     const subscribersData = fetchSubscribers
       ? results[subscribersQueryIndex]?.data || []
       : [];
-
     const opportunitiesData = fetchOpportunities
       ? results[opportunitiesQueryIndex]?.data || []
       : [];
-
     const eventsData = fetchEvents ? results[eventsQueryIndex]?.data || [] : [];
-
     const resourcesData = fetchResources
       ? results[resourcesQueryIndex]?.data || []
       : [];
-
+    const offersData = fetchOffers ? results[offersQueryIndex]?.data || [] : [];
+    const offerFeedbackData = fetchOffers
+      ? results[offerFeedbackQueryIndex]?.data || []
+      : [];
     const emailTemplatesData = fetchEmailTemplates
       ? results[emailTemplatesQueryIndex]?.data || []
       : [];
-
     const tiersData = results[tiersQueryIndex]?.data
       ? [
           ...new Set(
@@ -117,70 +173,75 @@ export async function fetchHRData({
         ].sort()
       : [];
 
-    results.forEach((result, index) => {
-      if (result?.error) {
-        console.error(`[fetchHRData] Query ${index} error:`, result.error);
-      }
-    });
-
-    if (fetchSubscribers && results[subscribersQueryIndex]?.error) {
-      throw new Error(
-        `Subscribers query error: ${results[subscribersQueryIndex].error.message}`
-      );
+    // Validate data
+    if (fetchCandidates && candidatesData.length === 0 && !results[0]?.error) {
+      console.warn("[fetchHRData] No candidates data returned");
+    }
+    if (
+      fetchOffers &&
+      offersData.length === 0 &&
+      !results[offersQueryIndex]?.error
+    ) {
+      console.warn("[fetchHRData] No offers data returned");
     }
 
-    if (fetchOpportunities && results[opportunitiesQueryIndex]?.error) {
-      throw new Error(
-        `Opportunities query error: ${results[opportunitiesQueryIndex].error.message}`
-      );
-    }
-
-    if (fetchEvents && results[eventsQueryIndex]?.error) {
-      throw new Error(
-        `Events query error: ${results[eventsQueryIndex].error.message}`
-      );
-    }
-
-    if (fetchResources && results[resourcesQueryIndex]?.error) {
-      throw new Error(
-        `Resources query error: ${results[resourcesQueryIndex].error.message}`
-      );
-    }
-
-    if (fetchEmailTemplates && results[emailTemplatesQueryIndex]?.error) {
-      throw new Error(
-        `Email Templates query error: ${results[emailTemplatesQueryIndex].error.message}`
-      );
-    }
-
-    if (results[tiersQueryIndex]?.error) {
-      throw new Error(
-        `Tiers query error: ${results[tiersQueryIndex].error.message}`
-      );
-    }
-
-    const candidatesData = fetchCandidates ? results[0]?.data || [] : [];
-    const responsesData = fetchCandidates ? results[1]?.data || [] : [];
-    const questionsData = fetchQuestions
-      ? fetchCandidates
-        ? results[2]?.data || []
-        : results[0]?.data || []
-      : [];
-
+    // Throw errors for failed queries
     if (fetchCandidates && results[0]?.error) {
       throw new Error(`Candidates query error: ${results[0].error.message}`);
     }
     if (fetchCandidates && results[1]?.error) {
       throw new Error(`Responses query error: ${results[1].error.message}`);
     }
+    if (fetchCandidates && results[2]?.error) {
+      throw new Error(`Questions query error: ${results[2].error.message}`);
+    }
     if (
       fetchQuestions &&
-      (fetchCandidates ? results[2]?.error : results[0]?.error)
+      !fetchCandidates &&
+      results[questionQueryIndex]?.error
     ) {
       throw new Error(
-        `Questions query error: ${
-          fetchCandidates ? results[2].error.message : results[0].error.message
-        }`
+        `Questions query error: ${results[questionQueryIndex].error.message}`
+      );
+    }
+    if (fetchSubscribers && results[subscribersQueryIndex]?.error) {
+      throw new Error(
+        `Subscribers query error: ${results[subscribersQueryIndex].error.message}`
+      );
+    }
+    if (fetchOpportunities && results[opportunitiesQueryIndex]?.error) {
+      throw new Error(
+        `Opportunities query error: ${results[opportunitiesQueryIndex].error.message}`
+      );
+    }
+    if (fetchEvents && results[eventsQueryIndex]?.error) {
+      throw new Error(
+        `Events query error: ${results[eventsQueryIndex].error.message}`
+      );
+    }
+    if (fetchResources && results[resourcesQueryIndex]?.error) {
+      throw new Error(
+        `Resources query error: ${results[resourcesQueryIndex].error.message}`
+      );
+    }
+    if (fetchOffers && results[offersQueryIndex]?.error) {
+      throw new Error(
+        `Offers query error: ${results[offersQueryIndex].error.message}`
+      );
+    }
+    if (fetchOffers && results[offerFeedbackQueryIndex]?.error) {
+      throw new Error(
+        `Offer feedback query error: ${results[offerFeedbackQueryIndex].error.message}`
+      );
+    }
+    if (fetchEmailTemplates && results[emailTemplatesQueryIndex]?.error) {
+      throw new Error(
+        `Email Templates query error: ${results[emailTemplatesQueryIndex].error.message}`
+      );
+    }
+    if (results[tiersQueryIndex]?.error) {
+      throw new Error(
+        `Tiers query error: ${results[tiersQueryIndex].error.message}`
       );
     }
 
@@ -302,7 +363,9 @@ export async function fetchHRData({
           }
 
           if (filteredAnswers.length !== filteredQuestions.length) {
-            
+            console.warn(
+              `[fetchHRData] Answer count mismatch for ${candidate.primaryContactName}. Expected ${filteredQuestions.length}, got ${filteredAnswers.length}`
+            );
           }
 
           return {
@@ -330,6 +393,9 @@ export async function fetchHRData({
       ? [...new Set(combinedData.map((c) => c.opening))]
       : [];
 
+    console.log("[fetchHRData] Returning offers:", offersData);
+    console.log("[fetchHRData] Returning offer feedback:", offerFeedbackData);
+
     return {
       initialCandidates: combinedData,
       initialJobOpenings: jobOpenings,
@@ -338,6 +404,8 @@ export async function fetchHRData({
       opportunities: opportunitiesData,
       events: eventsData,
       resources: resourcesData,
+      offers: offersData,
+      offerFeedback: offerFeedbackData,
       emailTemplates: emailTemplatesData,
       tiers: tiersData,
     };
@@ -351,6 +419,8 @@ export async function fetchHRData({
       opportunities: [],
       events: [],
       resources: [],
+      offers: [],
+      offerFeedback: [],
       emailTemplates: [],
       tiers: [],
     };

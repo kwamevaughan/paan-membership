@@ -18,7 +18,7 @@ const FeedbackModal = ({ isOpen, onClose, feedback, mode }) => {
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
       <div
         className={`relative w-full max-w-3xl rounded-2xl shadow-xl p-6 ${
           mode === "dark" ? "bg-gray-800 text-white" : "bg-white text-gray-900"

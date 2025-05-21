@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import toast, { Toaster } from "react-hot-toast";
 import { Icon } from "@iconify/react";
 import HRSidebar from "@/layouts/hrSidebar";
@@ -6,41 +7,68 @@ import HRHeader from "@/layouts/hrHeader";
 import useSidebar from "@/hooks/useSidebar";
 import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
-import { useOpportunities } from "@/hooks/useOpportunities";
+import { useResources } from "@/hooks/useResources";
+import ResourceForm from "@/components/ResourceForm";
+import ResourceFilters from "@/components/ResourceFilters";
 import SimpleFooter from "@/layouts/simpleFooter";
-import { fetchHRData } from "../../../utils/hrData";
-import OpportunityForm from "@/components/OpportunityForm";
-import OpportunityFilters from "@/components/OpportunityFilters";
+import FeedbackModal from "@/components/FeedbackModal";
+import { fetchHRData } from "@/../utils/hrData";
+import { getTierBadgeColor } from "@/../utils/badgeUtils";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
+import { supabase } from "@/lib/supabase";
 
-export default function AdminBusinessOpportunities({
+export default function AdminResources({
   mode = "light",
   toggleMode,
-  initialOpportunities,
-  tiers,
-  breadcrumbs,
+  initialResources,
+  initialFeedback,
+  initialCandidates,
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("list");
   const [filterTerm, setFilterTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
-  const [sortOrder, setSortOrder] = useState("deadline");
+  const [sortOrder, setSortOrder] = useState("created_at");
+  const [feedbackData, setFeedbackData] = useState(initialFeedback || {});
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+  const [selectedResourceId, setSelectedResourceId] = useState(null);
 
   useAuthSession();
 
   const { isSidebarOpen, toggleSidebar, sidebarState, updateDragOffset } =
     useSidebar();
   const handleLogout = useLogout();
-
   const {
-    opportunities,
+    resources,
     formData,
+    loading,
     handleInputChange,
     handleSubmit,
     handleEdit,
     handleDelete,
-  } = useOpportunities(initialOpportunities);
+  } = useResources(initialResources);
+
+  const router = useRouter();
+
+  // Debug: Log initial data and check for missing user_ids
+  useEffect(() => {
+    // Check for feedback user_ids not in candidates
+    const missingUsers = Object.values(initialFeedback)
+      .flat()
+      .filter(
+        (fb) =>
+          !initialCandidates[fb.user_id] ||
+          initialCandidates[fb.user_id] === "Unknown"
+      )
+      .map((fb) => fb.user_id);
+    if (missingUsers.length > 0) {
+      console.warn(
+        "[AdminResources] Feedback user_ids not in candidates or have Unknown names:",
+        [...new Set(missingUsers)]
+      );
+    }
+  }, [initialFeedback, initialCandidates]);
 
   useEffect(() => {
     if (isEditing) {
@@ -48,20 +76,23 @@ export default function AdminBusinessOpportunities({
     }
   }, [isEditing]);
 
+  // Debug: Confirm supabase is initialized
+  console.log("[AdminResources] Supabase initialized:", !!supabase);
+
   const submitForm = (e) => {
     e.preventDefault();
     handleSubmit(e);
     if (isEditing) {
       setIsEditing(false);
-      toast.success("Opportunity updated successfully!");
+      toast.success("Resource updated successfully!");
     } else {
-      toast.success("New opportunity created!");
+      toast.success("New resource created!");
     }
     setActiveTab("list");
   };
 
-  const startEditing = (opp) => {
-    handleEdit(opp);
+  const startEditing = (resource) => {
+    handleEdit(resource);
     setIsEditing(true);
     setActiveTab("form");
   };
@@ -71,83 +102,50 @@ export default function AdminBusinessOpportunities({
     setActiveTab("list");
   };
 
-  const filteredOpportunities = opportunities.filter((opp) => {
+  const filteredResources = resources.filter((resource) => {
     const matchesTerm =
-      opp.title.toLowerCase().includes(filterTerm.toLowerCase()) ||
-      opp.description?.toLowerCase().includes(filterTerm.toLowerCase()) ||
-      opp.location?.toLowerCase().includes(filterTerm.toLowerCase());
+      resource.title.toLowerCase().includes(filterTerm.toLowerCase()) ||
+      resource.description?.toLowerCase().includes(filterTerm.toLowerCase());
 
     if (filterType === "all") return matchesTerm;
-    return matchesTerm && opp.tier.includes(filterType);
+    return matchesTerm && resource.resource_type === filterType;
   });
 
-  const sortedOpportunities = [...filteredOpportunities].sort((a, b) => {
-    if (sortOrder === "deadline") {
-      return new Date(a.deadline) - new Date(b.deadline);
+  const sortedResources = [...filteredResources].sort((a, b) => {
+    if (sortOrder === "created_at") {
+      return new Date(b.created_at) - new Date(a.created_at);
     } else if (sortOrder === "title") {
       return a.title.localeCompare(b.title);
     } else if (sortOrder === "tier") {
-      return a.tier.localeCompare(b.tier);
+      return a.tier_restriction.localeCompare(b.tier_restriction);
     }
     return 0;
   });
 
-  const formatDate = (dateString) => {
-    const options = { year: "numeric", month: "short", day: "numeric" };
-    return new Date(dateString).toLocaleDateString("en-US", options);
-  };
-
-  const getDaysRemaining = (deadlineDate) => {
-    const today = new Date();
-    const deadline = new Date(deadlineDate);
-    const diffTime = deadline - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
-  const getTierBadgeColor = (tier) => {
-    if (tier.includes("Founding")) {
-      return {
-        bg: mode === "dark" ? "bg-blue-900/30" : "bg-blue-50",
-        text: mode === "dark" ? "text-blue-200" : "text-blue-800",
-        border: mode === "dark" ? "border-blue-800" : "border-blue-200",
-      };
-    } else if (tier.includes("Full")) {
-      return {
-        bg: mode === "dark" ? "bg-emerald-900/30" : "bg-emerald-50",
-        text: mode === "dark" ? "text-emerald-200" : "text-emerald-800",
-        border: mode === "dark" ? "border-emerald-800" : "border-emerald-200",
-      };
-    } else {
-      return {
-        bg: mode === "dark" ? "bg-amber-900/30" : "bg-amber-50",
-        text: mode === "dark" ? "text-amber-200" : "text-amber-800",
-        border: mode === "dark" ? "border-amber-800" : "border-amber-200",
-      };
+  const getVideoEmbedUrl = (videoUrl) => {
+    if (!videoUrl) return null;
+    if (videoUrl.includes("youtube.com") || videoUrl.includes("youtu.be")) {
+      const videoId =
+        videoUrl.match(/(?:v=)([^&]+)/)?.[1] ||
+        videoUrl.match(/youtu\.be\/([^?]+)/)?.[1];
+      return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
+    } else if (videoUrl.includes("vimeo.com")) {
+      const videoId = videoUrl.match(/vimeo\.com\/(\d+)/)?.[1];
+      return videoId ? `https://player.vimeo.com/video/${videoId}` : null;
     }
+    return null;
   };
 
-  const getStatusBadgeColor = (days) => {
-    if (days < 7) {
-      return {
-        bg: mode === "dark" ? "bg-red-900/30" : "bg-red-50",
-        text: mode === "dark" ? "text-red-200" : "text-red-800",
-        icon: "text-red-400",
-      };
-    } else if (days < 14) {
-      return {
-        bg: mode === "dark" ? "bg-amber-900/30" : "bg-amber-50",
-        text: mode === "dark" ? "text-amber-200" : "text-amber-800",
-        icon: "text-amber-400",
-      };
-    } else {
-      return {
-        bg: mode === "dark" ? "bg-emerald-900/30" : "bg-emerald-50",
-        text: mode === "dark" ? "text-emerald-200" : "text-emerald-800",
-        icon: "text-emerald-400",
-      };
-    }
+  // Calculate average rating for a resource
+  const getAverageRating = (resourceId) => {
+    const feedback = feedbackData[resourceId] || [];
+    if (feedback.length === 0) return 0;
+    const total = feedback.reduce((sum, fb) => sum + fb.rating, 0);
+    return (total / feedback.length).toFixed(1);
   };
+
+  // Debug: Log formData
+  console.log("[AdminResources] formData:", formData);
 
   return (
     <div
@@ -155,7 +153,6 @@ export default function AdminBusinessOpportunities({
         mode === "dark" ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
       }`}
     >
-      <Toaster />
       <HRHeader
         toggleSidebar={toggleSidebar}
         isSidebarOpen={isSidebarOpen}
@@ -163,9 +160,12 @@ export default function AdminBusinessOpportunities({
         mode={mode}
         toggleMode={toggleMode}
         onLogout={handleLogout}
-        pageName="Business Opportunities"
-        pageDescription="Create and manage business opportunities for PAAN members."
-        breadcrumbs={breadcrumbs}
+        pageName="Resources"
+        pageDescription="Manage valuable tools, templates, and learning materials for agencies."
+        breadcrumbs={[
+          { label: "Dashboard", href: "/admin" },
+          { label: "Resources" },
+        ]}
       />
       <div className="flex flex-1">
         <HRSidebar
@@ -191,11 +191,11 @@ export default function AdminBusinessOpportunities({
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  Business Opportunities
+                  Resources
                 </h1>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Manage and track available business opportunities for your
-                  network
+                  Manage valuable tools, templates, and learning materials for
+                  agencies
                 </p>
               </div>
               <div className="mt-4 md:mt-0 flex space-x-3">
@@ -208,7 +208,7 @@ export default function AdminBusinessOpportunities({
                     className="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-xl shadow-sm transition-all duration-200 hover:shadow-lg hover:from-indigo-700 hover:to-purple-700"
                   >
                     <Icon icon="heroicons:plus" className="w-5 h-5 mr-2" />
-                    Add Opportunity
+                    Add Resource
                   </button>
                 ) : (
                   <button
@@ -225,12 +225,25 @@ export default function AdminBusinessOpportunities({
               </div>
             </div>
 
+            <div className="flex space-x-2 mb-6">
+              <button
+                onClick={() => setActiveTab("list")}
+                className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                  activeTab === "list"
+                    ? "bg-indigo-600 text-white"
+                    : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200"
+                }`}
+              >
+                Resource List
+              </button>
+            </div>
+
             {activeTab === "list" ? (
               <div className="space-y-6">
                 <div
                   className={`bg-white dark:bg-gray-800 shadow-xl rounded-2xl overflow-hidden border-0`}
                 >
-                  <OpportunityFilters
+                  <ResourceFilters
                     filterTerm={filterTerm}
                     setFilterTerm={setFilterTerm}
                     filterType={filterType}
@@ -241,19 +254,33 @@ export default function AdminBusinessOpportunities({
                     setSortOrder={setSortOrder}
                     mode={mode}
                   />
-                  {sortedOpportunities.length > 0 ? (
+                  {sortedResources.length > 0 ? (
                     <div className="p-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {sortedOpportunities.map((opp) => {
-                          const tierColors = getTierBadgeColor(opp.tier);
-                          const deadlineColors = getStatusBadgeColor(
-                            getDaysRemaining(opp.deadline)
+                        {sortedResources.map((resource) => {
+                          const tierColors = getTierBadgeColor(
+                            resource.tier_restriction,
+                            mode
                           );
-                          const daysLeft = getDaysRemaining(opp.deadline);
+                          const embedUrl = getVideoEmbedUrl(resource.video_url);
+                          const feedback = feedbackData[resource.id] || [];
+                          const averageRating = getAverageRating(resource.id);
+
+                          // Debug: Log resource file_path and public URL
+                          if (resource.file_path) {
+                            console.log(
+                              "[AdminResources] Resource file_path:",
+                              resource.file_path,
+                              "Public URL:",
+                              supabase.storage
+                                .from("resources")
+                                .getPublicUrl(resource.file_path).data.publicUrl
+                            );
+                          }
 
                           return (
                             <div
-                              key={opp.id}
+                              key={resource.id}
                               className={`relative flex flex-col h-full rounded-2xl border-0 ${
                                 mode === "dark" ? "bg-gray-800/50" : "bg-white"
                               } shadow-lg overflow-hidden hover:shadow-xl transition-all duration-200 group`}
@@ -261,87 +288,154 @@ export default function AdminBusinessOpportunities({
                               <div className="px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-700">
                                 <div className="flex justify-between items-start mb-2">
                                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
-                                    {opp.title}
+                                    {resource.title}
                                   </h3>
                                   <span
                                     className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${tierColors.bg} ${tierColors.text} ${tierColors.border}`}
                                   >
-                                    {opp.tier.split("(")[0].trim()}
+                                    {resource.tier_restriction === "All"
+                                      ? "All Members"
+                                      : resource.tier_restriction}
                                   </span>
                                 </div>
                                 <div className="flex items-center mt-1.5">
                                   <Icon
-                                    icon="heroicons:map-pin"
+                                    icon={
+                                      resource.resource_type === "PDF"
+                                        ? "heroicons:document-text"
+                                        : resource.resource_type === "Video"
+                                        ? "heroicons:video-camera"
+                                        : "heroicons:academic-cap"
+                                    }
                                     className="w-4 h-4 text-gray-500 dark:text-gray-400 mr-1.5 flex-shrink-0"
                                   />
-                                  <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                                    {opp.location}
+                                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    {resource.resource_type}
                                   </p>
                                 </div>
                               </div>
                               <div className="px-6 py-4 flex-grow">
-                                {opp.description && (
+                                {resource.description && (
                                   <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 mb-4">
-                                    {opp.description}
+                                    {resource.description}
                                   </p>
                                 )}
-                                <div className="flex flex-wrap gap-2 mb-4">
-                                  <div className="flex items-center text-xs px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300">
+                                {resource.file_path ? (
+                                  <a
+                                    href={
+                                      supabase.storage
+                                        .from("resources")
+                                        .getPublicUrl(resource.file_path).data
+                                        .publicUrl
+                                    }
+                                    download
+                                    className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center"
+                                  >
                                     <Icon
-                                      icon="heroicons:briefcase"
-                                      className="w-3.5 h-3.5 mr-1.5"
+                                      icon="heroicons:download"
+                                      className="w-4 h-4 mr-1"
                                     />
-                                    <span className="font-medium">
-                                      {opp.service_type}
+                                    Download Resource
+                                  </a>
+                                ) : resource.video_url && embedUrl ? (
+                                  <div
+                                    className="relative"
+                                    style={{ paddingBottom: "56.25%" }}
+                                  >
+                                    <iframe
+                                      src={embedUrl}
+                                      className="absolute top-0 left-0 w-full h-full rounded-lg"
+                                      frameBorder="0"
+                                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                      allowFullScreen
+                                    ></iframe>
+                                  </div>
+                                ) : resource.url ? (
+                                  <a
+                                    href={resource.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+                                  >
+                                    Access Resource
+                                  </a>
+                                ) : (
+                                  <p className="text-sm text-gray-500">
+                                    No resource link available
+                                  </p>
+                                )}
+                                {resource.tier_restriction !== "All" && (
+                                  <div className="mt-4 p-3 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center">
+                                    <Icon
+                                      icon="heroicons:lock-closed"
+                                      className="w-4 h-4 text-gray-500 dark:text-gray-400 mr-2"
+                                    />
+                                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                                      Locked for {resource.tier_restriction}{" "}
+                                      members and above. Users below this tier
+                                      see: "Upgrade to{" "}
+                                      {resource.tier_restriction} Membership to
+                                      access this advanced resource."
+                                      <a
+                                        href="/membership"
+                                        className="text-indigo-600 dark:text-indigo-400 hover:underline ml-1"
+                                      >
+                                        Upgrade Now
+                                      </a>
+                                    </p>
+                                  </div>
+                                )}
+                                {/* Feedback Summary */}
+                                <div className="mt-4 flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex">
+                                      {[1, 2, 3, 4, 5].map((star) => (
+                                        <Icon
+                                          key={star}
+                                          icon="heroicons:star-solid"
+                                          className={`w-4 h-4 ${
+                                            star <= averageRating
+                                              ? "text-yellow-400"
+                                              : "text-gray-300 dark:text-gray-600"
+                                          }`}
+                                        />
+                                      ))}
+                                    </div>
+                                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                                      {averageRating} ({feedback.length}{" "}
+                                      reviews)
                                     </span>
                                   </div>
-                                  <div className="flex items-center text-xs px-2.5 py-1.5 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300">
-                                    <Icon
-                                      icon="heroicons:building-office"
-                                      className="w-3.5 h-3.5 mr-1.5"
-                                    />
-                                    <span className="font-medium">
-                                      {opp.industry}
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="flex items-center text-xs px-2.5 py-1.5 rounded-lg bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 max-w-fit">
-                                  <Icon
-                                    icon="heroicons:document-text"
-                                    className="w-3.5 h-3.5 mr-1.5"
-                                  />
-                                  <span className="font-medium">
-                                    {opp.project_type}
-                                  </span>
+                                  <button
+                                    onClick={() => {
+                                      setSelectedResourceId(resource.id);
+                                      setIsFeedbackModalOpen(true);
+                                    }}
+                                    className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
+                                  >
+                                    View Feedback
+                                  </button>
                                 </div>
                               </div>
                               <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 mt-auto bg-gray-50 dark:bg-gray-800/80">
                                 <div className="flex justify-between items-center">
                                   <div>
                                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                      Deadline
+                                      Added On
                                     </p>
-                                    <div className="flex items-center">
-                                      <div
-                                        className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg ${deadlineColors.bg}`}
-                                      >
-                                        <Icon
-                                          icon="heroicons:clock"
-                                          className={`w-3.5 h-3.5 ${deadlineColors.icon}`}
-                                        />
-                                        <span
-                                          className={`text-xs font-medium ${deadlineColors.text}`}
-                                        >
-                                          {daysLeft <= 0
-                                            ? "Expired"
-                                            : `${daysLeft} days left`}
-                                        </span>
-                                      </div>
-                                    </div>
+                                    <p className="text-xs text-gray-700 dark:text-gray-300">
+                                      {new Date(
+                                        resource.created_at
+                                      ).toLocaleDateString("en-US", {
+                                        month: "numeric",
+                                        day: "numeric",
+                                        year: "numeric",
+                                      })}
+                                    </p>
                                   </div>
                                   <div className="flex space-x-2">
                                     <button
-                                      onClick={() => startEditing(opp)}
+                                      onClick={() => startEditing(resource)}
                                       className={`inline-flex items-center justify-center p-2 border rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
                                         mode === "dark"
                                           ? "border-gray-700"
@@ -358,12 +452,12 @@ export default function AdminBusinessOpportunities({
                                       onClick={() => {
                                         if (
                                           window.confirm(
-                                            "Are you sure you want to delete this opportunity?"
+                                            "Are you sure you want to delete this resource?"
                                           )
                                         ) {
-                                          handleDelete(opp.id);
+                                          handleDelete(resource.id);
                                           toast.success(
-                                            "Opportunity deleted successfully!"
+                                            "Resource deleted successfully!"
                                           );
                                         }
                                       }}
@@ -391,17 +485,17 @@ export default function AdminBusinessOpportunities({
                     <div className="p-12 text-center">
                       <div className="w-24 h-24 mx-auto bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mb-6">
                         <Icon
-                          icon="heroicons:document-magnifying-glass"
+                          icon="heroicons:document-text"
                           className="h-12 w-12 text-indigo-500 dark:text-indigo-300"
                         />
                       </div>
                       <h3 className="mt-2 text-xl font-medium text-gray-900 dark:text-gray-200">
-                        No opportunities found
+                        No resources found
                       </h3>
                       <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
                         {filterTerm || filterType !== "all"
                           ? "Try adjusting your search or filter criteria to find what you're looking for"
-                          : "Get started by creating a new business opportunity for your network"}
+                          : "Get started by creating a new resource for your network"}
                       </p>
                       <div className="mt-8">
                         <button
@@ -415,7 +509,7 @@ export default function AdminBusinessOpportunities({
                             icon="heroicons:plus"
                             className="-ml-1 mr-2 h-5 w-5"
                           />
-                          Add new opportunity
+                          Add new resource
                         </button>
                       </div>
                     </div>
@@ -423,29 +517,32 @@ export default function AdminBusinessOpportunities({
                 </div>
               </div>
             ) : (
-              <OpportunityForm
+              <ResourceForm
                 formData={formData}
                 handleInputChange={handleInputChange}
                 submitForm={submitForm}
                 cancelForm={cancelForm}
                 isEditing={isEditing}
-                tiers={tiers}
                 mode={mode}
               />
             )}
+            {/* Feedback Modal */}
+            <FeedbackModal
+              isOpen={isFeedbackModalOpen}
+              onClose={() => setIsFeedbackModalOpen(false)}
+              feedback={feedbackData[selectedResourceId] || []}
+              mode={mode}
+            />
           </div>
           <SimpleFooter mode={mode} isSidebarOpen={isSidebarOpen} />
         </div>
       </div>
+      <Toaster />
     </div>
   );
 }
 
 export async function getServerSideProps({ req, res }) {
-  console.log(
-    "[AdminBusinessOpportunities] Starting session check at",
-    new Date().toISOString()
-  );
   try {
     const supabaseServer = createSupabaseServerClient(req, res);
 
@@ -454,15 +551,7 @@ export async function getServerSideProps({ req, res }) {
       error: sessionError,
     } = await supabaseServer.auth.getSession();
 
-    console.log("[AdminBusinessOpportunities] Session Response:", {
-      session: session ? "present" : null,
-      sessionError: sessionError ? sessionError.message : null,
-    });
-
     if (sessionError || !session) {
-      console.log(
-        "[AdminBusinessOpportunities] No valid Supabase session, redirecting to login"
-      );
       return {
         redirect: {
           destination: "/hr/login",
@@ -471,19 +560,17 @@ export async function getServerSideProps({ req, res }) {
       };
     }
 
-    // Verify user is in hr_users
     const { data: hrUser, error: hrUserError } = await supabaseServer
       .from("hr_users")
       .select("id")
       .eq("id", session.user.id)
       .single();
-    console.log("[AdminBusinessOpportunities] HR User Check:", {
-      hrUser,
-      hrUserError: hrUserError ? hrUserError.message : null,
-    });
 
     if (hrUserError || !hrUser) {
-      
+      console.error(
+        "[AdminResources] HR User Error:",
+        hrUserError?.message || "User not in hr_users"
+      );
       await supabaseServer.auth.signOut();
       return {
         redirect: {
@@ -494,20 +581,53 @@ export async function getServerSideProps({ req, res }) {
     }
 
     console.time("fetchHRData");
-    const { opportunities = [], tiers = [] } = await fetchHRData({
+    const data = await fetchHRData({
       supabaseClient: supabaseServer,
-      fetchOpportunities: true,
+      fetchResources: true,
+      fetchCandidates: true,
     });
     console.timeEnd("fetchHRData");
 
+    // Fetch resource_feedback
+    const { data: feedback, error: feedbackError } = await supabaseServer
+      .from("resource_feedback")
+      .select("id, resource_id, user_id, rating, comment, created_at");
+
+    if (feedbackError) {
+      console.error("[AdminResources] Feedback Error:", feedbackError.message);
+      throw new Error(`Failed to fetch feedback: ${feedbackError.message}`);
+    }
+
+    // Group feedback by resource_id
+    const feedbackByResource = feedback.reduce((acc, fb) => {
+      acc[fb.resource_id] = acc[fb.resource_id] || [];
+      acc[fb.resource_id].push(fb);
+      return acc;
+    }, {});
+
+    // Map candidates to auth_user_id: primaryContactName
+    const candidatesMap = data.initialCandidates.reduce((acc, candidate) => {
+      if (candidate.auth_user_id) {
+        acc[candidate.auth_user_id] = candidate.primaryContactName || "Unknown";
+      }
+      return acc;
+    }, {});
+
+    // Merge primaryContactName into feedback
+    Object.keys(feedbackByResource).forEach((resourceId) => {
+      feedbackByResource[resourceId] = feedbackByResource[resourceId].map(
+        (fb) => ({
+          ...fb,
+          primaryContactName: candidatesMap[fb.user_id] || "Unknown",
+        })
+      );
+    });
+
     return {
       props: {
-        initialOpportunities: opportunities,
-        tiers,
-        breadcrumbs: [
-          { label: "Dashboard", href: "/admin" },
-          { label: "" },
-        ],
+        initialResources: data.resources || [],
+        initialFeedback: feedbackByResource || {},
+        initialCandidates: candidatesMap || {},
       },
     };
   } catch (error) {

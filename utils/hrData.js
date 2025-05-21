@@ -5,15 +5,15 @@ export async function fetchHRData({
   fetchSubscribers = false,
   fetchOpportunities = false,
   fetchEvents = false,
+  fetchResources = false,
   fetchEmailTemplates = false,
 } = {}) {
   try {
-    
-
     const queries = [];
     let subscribersQueryIndex = -1;
     let opportunitiesQueryIndex = -1;
     let eventsQueryIndex = -1;
+    let resourcesQueryIndex = -1;
     let tiersQueryIndex = -1;
     let emailTemplatesQueryIndex = -1;
 
@@ -57,6 +57,16 @@ export async function fetchHRData({
       );
     }
 
+    if (fetchResources) {
+      resourcesQueryIndex = queries.length;
+      queries.push(
+        supabaseClient
+          .from("resources")
+          .select("*")
+          .order("created_at", { ascending: true })
+      );
+    }
+
     if (fetchEmailTemplates) {
       emailTemplatesQueryIndex = queries.length;
       queries.push(
@@ -76,7 +86,6 @@ export async function fetchHRData({
     );
 
     const results = await Promise.all(queries);
-    
 
     const subscribersData = fetchSubscribers
       ? results[subscribersQueryIndex]?.data || []
@@ -87,6 +96,10 @@ export async function fetchHRData({
       : [];
 
     const eventsData = fetchEvents ? results[eventsQueryIndex]?.data || [] : [];
+
+    const resourcesData = fetchResources
+      ? results[resourcesQueryIndex]?.data || []
+      : [];
 
     const emailTemplatesData = fetchEmailTemplates
       ? results[emailTemplatesQueryIndex]?.data || []
@@ -125,6 +138,12 @@ export async function fetchHRData({
     if (fetchEvents && results[eventsQueryIndex]?.error) {
       throw new Error(
         `Events query error: ${results[eventsQueryIndex].error.message}`
+      );
+    }
+
+    if (fetchResources && results[resourcesQueryIndex]?.error) {
+      throw new Error(
+        `Resources query error: ${results[resourcesQueryIndex].error.message}`
       );
     }
 
@@ -243,7 +262,7 @@ export async function fetchHRData({
           const statusMap = {
             completed: "Accepted",
             Reviewed: "Reviewed",
-            Pending: "Pending",
+            Hundreds: "Pending",
           };
           const status = statusMap[response.status] || "Pending";
 
@@ -283,9 +302,7 @@ export async function fetchHRData({
           }
 
           if (filteredAnswers.length !== filteredQuestions.length) {
-            console.warn(
-              `[fetchHRData] Answer count mismatch for ${candidate.primaryContactName}. Expected ${filteredQuestions.length}, got ${filteredAnswers.length}`
-            );
+            
           }
 
           return {
@@ -313,8 +330,6 @@ export async function fetchHRData({
       ? [...new Set(combinedData.map((c) => c.opening))]
       : [];
 
-    
-
     return {
       initialCandidates: combinedData,
       initialJobOpenings: jobOpenings,
@@ -322,6 +337,7 @@ export async function fetchHRData({
       subscribers: subscribersData,
       opportunities: opportunitiesData,
       events: eventsData,
+      resources: resourcesData,
       emailTemplates: emailTemplatesData,
       tiers: tiersData,
     };
@@ -334,6 +350,7 @@ export async function fetchHRData({
       subscribers: [],
       opportunities: [],
       events: [],
+      resources: [],
       emailTemplates: [],
       tiers: [],
     };

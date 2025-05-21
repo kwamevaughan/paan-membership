@@ -503,11 +503,7 @@ export async function getServerSideProps({ req, res }) {
     });
     console.timeEnd("fetchHRData");
 
-    console.log("[AdminBusinessOpportunities] Fetched Data:", {
-      opportunities: opportunities?.length || 0,
-      tiers: tiers?.length || 0,
-      sampleOpportunities: opportunities?.slice(0, 2) || [],
-    });
+    
 
     return {
       props: {

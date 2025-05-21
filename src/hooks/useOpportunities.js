@@ -20,11 +20,7 @@ export const useOpportunities = (initialOpportunities) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
 
-  console.log("[useOpportunities] Initialized:", {
-    opportunities: opportunities?.length || 0,
-    sampleOpportunities: opportunities?.slice(0, 2) || [],
-  });
-
+  
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));

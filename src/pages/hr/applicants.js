@@ -4,6 +4,8 @@ import toast, { Toaster } from "react-hot-toast";
 import HRSidebar from "@/layouts/hrSidebar";
 import HRHeader from "@/layouts/hrHeader";
 import useSidebar from "@/hooks/useSidebar";
+import useLogout from "@/hooks/useLogout";
+import useAuthSession from "@/hooks/useAuthSession";
 import SimpleFooter from "@/layouts/simpleFooter";
 import ApplicantsTable from "@/components/ApplicantsTable";
 import ApplicantsFilters from "@/components/ApplicantsFilters";
@@ -13,14 +15,14 @@ import ExportModal from "@/components/ExportModal";
 import useStatusChange from "@/hooks/useStatusChange";
 import { Icon } from "@iconify/react";
 import { fetchHRData } from "../../../utils/hrData";
-import { supabase } from "@/lib/supabase";
+import { createSupabaseServerClient } from "@/lib/supabaseServer";
 
 export default function HRApplicants({
-    mode = "light",
-    toggleMode,
-    initialCandidates,
-    initialQuestions,
-    breadcrumbs,
+  mode = "light",
+  toggleMode,
+  initialCandidates,
+  initialQuestions,
+  breadcrumbs,
 }) {
   const [candidates, setCandidates] = useState(initialCandidates || []);
   const [filteredCandidates, setFilteredCandidates] = useState(
@@ -28,11 +30,6 @@ export default function HRApplicants({
   );
   const [sortField, setSortField] = useState("full_name");
   const [sortDirection, setSortDirection] = useState("asc");
-  const { isSidebarOpen, toggleSidebar } = useSidebar();
-  const [sidebarState, setSidebarState] = useState({
-    hidden: false,
-    offset: 0,
-  });
   const router = useRouter();
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,30 +38,11 @@ export default function HRApplicants({
   const [selectedIds, setSelectedIds] = useState([]);
   const [emailData, setEmailData] = useState({ subject: "", body: "" });
 
-  // Update dragOffset from HRSidebar
-  const updateDragOffset = useCallback((offset) => {
-    setSidebarState((prev) => {
-      if (prev.offset === offset) return prev;
-      return { ...prev, offset };
-    });
-  }, []);
+  useAuthSession();
 
-  // Listen for sidebar visibility changes
-  useEffect(() => {
-    const handleSidebarChange = (e) => {
-      const newHidden = e.detail.hidden;
-      setSidebarState((prev) => {
-        if (prev.hidden === newHidden) return prev;
-        return { ...prev, hidden: newHidden };
-      });
-    };
-    document.addEventListener("sidebarVisibilityChange", handleSidebarChange);
-    return () =>
-      document.removeEventListener(
-        "sidebarVisibilityChange",
-        handleSidebarChange
-      );
-  }, []);
+  const { isSidebarOpen, toggleSidebar, sidebarState, updateDragOffset } =
+    useSidebar();
+  const handleLogout = useLogout();
 
   const { handleStatusChange } = useStatusChange({
     candidates,
@@ -76,35 +54,23 @@ export default function HRApplicants({
   });
 
   useEffect(() => {
-    if (!localStorage.getItem("hr_session")) {
-      router.push("/hr/login");
-    } else {
-      const { opening } = router.query;
-      const savedOpening = localStorage.getItem("filterOpening") || "all";
-      const savedStatus = localStorage.getItem("filterStatus") || "all";
+    const { opening } = router.query;
+    const savedOpening = localStorage.getItem("filterOpening") || "all";
+    const savedStatus = localStorage.getItem("filterStatus") || "all";
 
-      let initialFilter = [...candidates];
-      if (opening && initialFilter.some((c) => c.opening === opening)) {
-        initialFilter = initialFilter.filter((c) => c.opening === opening);
-      } else if (savedOpening !== "all") {
-        initialFilter = initialFilter.filter((c) => c.opening === savedOpening);
-      }
-      if (savedStatus !== "all") {
-        initialFilter = initialFilter.filter((c) => c.status === savedStatus);
-      }
-      setFilteredCandidates(initialFilter);
+    let initialFilter = [...candidates];
+    if (opening && initialFilter.some((c) => c.opening === opening)) {
+      initialFilter = initialFilter.filter((c) => c.opening === opening);
+    } else if (savedOpening !== "all") {
+      initialFilter = initialFilter.filter((c) => c.opening === savedOpening);
     }
+    if (savedStatus !== "all") {
+      initialFilter = initialFilter.filter((c) => c.status === savedStatus);
+    }
+    setFilteredCandidates(initialFilter);
   }, [router, candidates]);
 
-  const handleLogout = () => {
-    localStorage.removeItem("hr_session");
-    document.cookie = "hr_session=; path=/; max-age=0";
-    toast.success("Logged out successfully!");
-    setTimeout(() => router.push("/hr/login"), 1000);
-  };
-
   const handleViewCandidate = (candidate) => {
-    console.log(`Selected candidate:`, candidate);
     setSelectedCandidate(candidate);
     setIsModalOpen(true);
   };
@@ -116,12 +82,7 @@ export default function HRApplicants({
 
   const handleFilterChange = ({ searchQuery, filterOpening, filterStatus }) => {
     let result = [...candidates];
-    console.log(
-      "Filter Change - Opening:",
-      filterOpening,
-      "Status:",
-      filterStatus
-    );
+    
 
     if (searchQuery) {
       result = result.filter(
@@ -177,7 +138,7 @@ export default function HRApplicants({
   };
 
   const handleSendEmail = async (emailDataWithToast) => {
-    const { toastId, subject, body, ...restEmailData } = emailDataWithToast; // Extract toastId and email fields
+    const { toastId, subject, body, ...restEmailData } = emailDataWithToast;
     try {
       const response = await fetch("/api/send-status-email", {
         method: "POST",
@@ -194,12 +155,12 @@ export default function HRApplicants({
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Failed to send email");
 
-      toast.dismiss(toastId); // Dismiss "Please wait..."
+      toast.dismiss(toastId);
       toast.success("Email sent successfully!", { icon: "✅" });
       setIsEmailModalOpen(false);
     } catch (error) {
       console.error("Error sending email:", error);
-      toast.dismiss(toastId); // Dismiss "Please wait..." on error
+      toast.dismiss(toastId);
       toast.error("Failed to send email.");
     }
   };
@@ -259,10 +220,7 @@ export default function HRApplicants({
         .single();
       if (fetchError) throw fetchError;
 
-      console.log("File IDs for candidate", candidateId, ":", {
-        resumeFileId: responseData?.resume_file_id,
-        coverLetterFileId: responseData?.cover_letter_file_id,
-      });
+     
 
       const resumeFileId = responseData?.resume_file_id;
       const coverLetterFileId = responseData?.cover_letter_file_id;
@@ -280,7 +238,6 @@ export default function HRApplicants({
       if (responseError) throw responseError;
 
       const fileIds = [resumeFileId, coverLetterFileId].filter((id) => id);
-      console.log("Sending file IDs to delete:", fileIds);
       if (fileIds.length > 0) {
         const deleteResponse = await fetch("/api/delete-files", {
           method: "POST",
@@ -288,7 +245,6 @@ export default function HRApplicants({
           body: JSON.stringify({ fileIds }),
         });
         const deleteResult = await deleteResponse.json();
-        console.log("Delete files response:", deleteResult);
         if (!deleteResponse.ok) {
           throw new Error(
             deleteResult.error || "Failed to delete files from Google Drive"
@@ -434,6 +390,7 @@ export default function HRApplicants({
         mode === "dark" ? "bg-gray-900" : "bg-gray-50"
       }`}
     >
+      <Toaster />
       <HRHeader
         toggleSidebar={toggleSidebar}
         isSidebarOpen={isSidebarOpen}
@@ -441,8 +398,8 @@ export default function HRApplicants({
         mode={mode}
         toggleMode={toggleMode}
         onLogout={handleLogout}
-        pageName=""
-        pageDescription="."
+        pageName="Applicants"
+        pageDescription="Manage and review candidate applications."
         breadcrumbs={breadcrumbs}
       />
       <div className="flex flex-1">
@@ -457,8 +414,13 @@ export default function HRApplicants({
         />
         <div
           className={`content-container flex-1 p-6 transition-all duration-300 overflow-hidden ${
-            isSidebarOpen ? "md:ml-[300px]" : "md:ml-[80px]"
-          }`}
+            isSidebarOpen ? "sidebar-open" : ""
+          } ${sidebarState.hidden ? "sidebar-hidden" : ""}`}
+          style={{
+            marginLeft: sidebarState.hidden
+              ? "0px"
+              : `${84 + (isSidebarOpen ? 120 : 0) + sidebarState.offset}px`,
+          }}
         >
           <div className="max-w-7xl mx-auto space-y-6">
             <ApplicantsFilters
@@ -511,23 +473,87 @@ export default function HRApplicants({
   );
 }
 
-export async function getServerSideProps(context) {
-    const { req } = context;
+export async function getServerSideProps({ req, res }) {
+  console.log(
+    "[HRApplicants] Starting session check at",
+    new Date().toISOString()
+  );
+  try {
+    const supabaseServer = createSupabaseServerClient(req, res);
 
-    if (!req.cookies.hr_session) {
-        return {
-            redirect: {
-                destination: "/hr/login",
-                permanent: false,
-            },
-        };
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabaseServer.auth.getSession();
+
+    console.log("[HRApplicants] Session Response:", {
+      session: session ? "present" : null,
+      sessionError: sessionError ? sessionError.message : null,
+    });
+
+    if (sessionError || !session) {
+      console.log(
+        "[HRApplicants] No valid Supabase session, redirecting to login"
+      );
+      return {
+        redirect: {
+          destination: "/hr/login",
+          permanent: false,
+        },
+      };
     }
 
-    const { initialCandidates, initialQuestions } = await fetchHRData({ fetchCandidates: true, fetchQuestions: true });
-    return {
-        props: {
-            initialCandidates,
-            initialQuestions,
+    // Verify user is in hr_users
+    const { data: hrUser, error: hrUserError } = await supabaseServer
+      .from("hr_users")
+      .select("id")
+      .eq("id", session.user.id)
+      .single();
+    console.log("[HRApplicants] HR User Check:", {
+      hrUser,
+      hrUserError: hrUserError ? hrUserError.message : null,
+    });
+
+    if (hrUserError || !hrUser) {
+      console.error(
+        "[HRApplicants] HR User Error:",
+        hrUserError?.message || "User not in hr_users"
+      );
+      await supabaseServer.auth.signOut();
+      return {
+        redirect: {
+          destination: "/hr/login",
+          permanent: false,
         },
+      };
+    }
+
+    console.time("fetchHRData");
+    const data = await fetchHRData({
+      supabaseClient: supabaseServer,
+      fetchCandidates: true,
+      fetchQuestions: true,
+    });
+    console.timeEnd("fetchHRData");
+    
+
+    return {
+      props: {
+        initialCandidates: data.initialCandidates || [],
+        initialQuestions: data.initialQuestions || [],
+        breadcrumbs: [
+          { label: "Dashboard", href: "/admin" },
+          { label: "Applicants" },
+        ],
+      },
     };
+  } catch (error) {
+    console.error("[HRApplicants] Error:", error.message);
+    return {
+      redirect: {
+        destination: "/hr/login",
+        permanent: false,
+      },
+    };
+  }
 }

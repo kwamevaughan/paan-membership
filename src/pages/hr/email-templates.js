@@ -1,240 +1,371 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
+import { Toaster, toast } from "react-hot-toast";
 import HRSidebar from "@/layouts/hrSidebar";
 import HRHeader from "@/layouts/hrHeader";
 import useSidebar from "@/hooks/useSidebar";
-import { Icon } from "@iconify/react";
-import { DndProvider } from "react-dnd";
-import { HTML5Backend } from "react-dnd-html5-backend";
-import { useQuestions } from "@/hooks/useQuestions";
-import QuestionTable from "@/components/QuestionTable";
-import QuestionForm from "@/components/QuestionForm";
 import SimpleFooter from "@/layouts/simpleFooter";
-import { supabase } from "@/lib/supabase";
-import CategoryForm from "@/components/CategoryForm";
-import CategoryTable from "@/components/CategoryTable";
-import { useCategories } from "@/hooks/useCategories";
+import EmailTemplateList from "@/components/EmailTemplateList";
+import EmailTemplateEditor from "@/components/EmailTemplateEditor";
+import ImageGallery from "@/components/ImageGallery";
+import EmailPreviewModal from "@/components/EmailPreviewModal";
+import { useEmailTemplates } from "@/hooks/useEmailTemplates";
+import { getJoditConfig } from "@/config/getJoditConfig";
+import useAuthSession from "@/hooks/useAuthSession";
+import useLogout from "@/hooks/useLogout";
+import { createSupabaseServerClient } from "@/lib/supabaseServer";
+import { fetchHRData } from "../../../utils/hrData";
 
-export default function HRInterviewQuestions({
+export default function EmailTemplates({
   mode = "light",
   toggleMode,
-  initialQuestions,
-  initialCategories,
+  initialTemplates,
+  breadcrumbs,
 }) {
-  const { isSidebarOpen, toggleSidebar } = useSidebar();
-  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState(null);
-  const { categories, addCategory, editCategory, deleteCategory } =
-    useCategories(initialCategories);
-  const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState(null);
+  const { isSidebarOpen, toggleSidebar, sidebarState, updateDragOffset } =
+    useSidebar();
+  const handleLogout = useLogout();
+  useAuthSession();
+  const editorRef = useRef(null);
+  const [currentEditor, setCurrentEditor] = useState(null);
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
+  const [galleryImages, setGalleryImages] = useState([]);
+  const [isLoadingImages, setIsLoadingImages] = useState(false);
+  const [editorConfig, setEditorConfig] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
   const {
-    questions,
-    searchQuery,
-    setSearchQuery,
-    sortField,
-    sortDirection,
-    handleSort,
-    addQuestion,
-    editQuestion,
-    deleteQuestion,
-    moveQuestion,
-  } = useQuestions(initialQuestions);
+    templates,
+    selectedTemplate,
+    subject,
+    setSubject,
+    body,
+    setBody,
+    handleSelectTemplate,
+    handleSaveTemplate,
+  } = useEmailTemplates(initialTemplates);
 
-  const handleMoveQuestion = async (fromIndex, toIndex) => {
-    await moveQuestion(fromIndex, toIndex);
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("hr_session");
-  };
-
-  const startEditing = (question) => {
-    const normalizedQuestion = {
-      ...question,
-      category: typeof question.category === "string" ? question.category : "",
-      options: Array.isArray(question.options) ? question.options : [],
-    };
-    setEditingQuestion(normalizedQuestion);
-    setIsQuestionModalOpen(true);
-  };
-
-  const handleAddQuestion = () => {
-    setEditingQuestion(null);
-    setIsQuestionModalOpen(true);
-  };
-
-  const handleFormCancel = () => {
-    setIsQuestionModalOpen(false);
-    setEditingQuestion(null);
-  };
-
-  const totalQuestions = questions.length;
-
-  // Log incomplete questions
-  questions.forEach((q) => {
-    if (!q.text?.trim()) {
-      console.warn(`Question ID ${q.id} is incomplete: missing text`);
+  useEffect(() => {
+    if (templates.length > 0 && !selectedTemplate) {
+      handleSelectTemplate(templates[0]);
     }
-    if (!q.is_open_ended && (!Array.isArray(q.options) || !q.options.length)) {
-      console.warn(
-        `Question ID ${q.id} is incomplete: missing options for non-open-ended question`
+  }, [templates, selectedTemplate, handleSelectTemplate]);
+
+  useEffect(() => {
+    setEditorConfig(
+      getJoditConfig(
+        mode,
+        handleImageUpload,
+        (editor) => {
+          setCurrentEditor(editor);
+          fetchGalleryImages();
+          setIsGalleryOpen(true);
+        },
+        setCurrentEditor
+      )
+    );
+  }, [mode]);
+
+  const fetchGalleryImages = async () => {
+    setIsLoadingImages(true);
+    try {
+      const { data, error } = await supabase.storage
+        .from("media")
+        .list("email-templates", {
+          sortBy: { column: "created_at", order: "desc" },
+        });
+
+      if (error) throw error;
+
+      const processedImages = await Promise.all(
+        data.map(async (file) => {
+          const {
+            data: { publicUrl },
+          } = supabase.storage
+            .from("media")
+            .getPublicUrl(`email-templates/${file.name}`);
+          return {
+            id: file.id,
+            name: file.name,
+            url: publicUrl,
+            size: file.metadata?.size,
+            created_at: file.created_at,
+          };
+        })
       );
+
+      setGalleryImages(processedImages);
+    } catch (error) {
+      console.error("Error fetching gallery images:", error);
+      toast.error("Failed to load gallery images");
+    } finally {
+      setIsLoadingImages(false);
     }
-  });
+  };
+
+  const handleImageUpload = async (editor) => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+
+    input.onchange = async function () {
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+
+        setIsUploading(true);
+        toast.loading("Uploading image...", { id: "imageUpload" });
+
+        try {
+          const fileName = `email-templates/${Date.now()}-${file.name}`;
+          const { error: uploadError } = await supabase.storage
+            .from("media")
+            .upload(fileName, file, {
+              cacheControl: "3600",
+              upsert: false,
+            });
+
+          if (uploadError) throw uploadError;
+
+          const {
+            data: { publicUrl },
+          } = supabase.storage.from("media").getPublicUrl(fileName);
+
+          editor.selection.insertHTML(
+            `<img src="${publicUrl}" alt="${file.name}" />`
+          );
+          toast.success("Image uploaded successfully", { id: "imageUpload" });
+
+          if (isGalleryOpen) {
+            fetchGalleryImages();
+          }
+        } catch (error) {
+          console.error("Error uploading image:", error);
+          toast.error(`Failed to upload image: ${error.message || error}`, {
+            id: "imageUpload",
+          });
+        } finally {
+          setIsUploading(false);
+        }
+      }
+    };
+
+    input.click();
+  };
+
+  const handlePreviewTemplate = () => {
+    if (!body) {
+      toast.error("No content to preview");
+      return;
+    }
+    setIsPreviewOpen(true);
+  };
+
+  const handleInsertImage = (image) => {
+    if (currentEditor && currentEditor.selection) {
+      currentEditor.selection.insertHTML(
+        `<img src="${image.url}" alt="${image.name}" />`
+      );
+      setIsGalleryOpen(false);
+    } else {
+      console.error("Editor instance not available");
+      toast.error("Failed to insert image: Editor not ready");
+    }
+  };
+
+  const sampleData = {
+    fullName: "John Doe",
+    email: "john.doe@example.com",
+    phone: "+254 701 850 850",
+    linkedin: "linkedin.com/in/johndoe",
+    opening: "Digital Media Manager",
+    score: "85",
+    resumeUrl: "https://example.com/resume.pdf",
+    coverLetterUrl: "https://example.com/coverletter.pdf",
+    answersTable: `
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr><th style="border: 1px solid #ccc; padding: 8px;">Question</th><th style="border: 1px solid #ccc; padding: 8px;">Answer</th></tr>
+                <tr><td style="border: 1px solid #ccc; padding: 8px;">Q1</td><td style="border: 1px solid #ccc; padding: 8px;">Answer 1</td></tr>
+                <tr><td style="border: 1px solid #ccc; padding: 8px;">Q2</td><td style="border: 1px solid #ccc; padding: 8px;">Answer 2</td></tr>
+            </table>
+        `,
+    jobTitle: "Digital Media Manager",
+    expiresOn: "01/04/2025",
+    jobUrl: "https://careers.growthpad.co.ke/jobs/digital-media-manager",
+  };
 
   return (
-    <DndProvider backend={HTML5Backend}>
-      <div
-        className={`min-h-screen flex flex-col ${
-          mode === "dark"
-            ? "bg-gradient-to-b from-gray-900 to-gray-800"
-            : "bg-gradient-to-b from-gray-50 to-gray-100"
-        }`}
-      >
-        <HRHeader
-          toggleSidebar={toggleSidebar}
+    <div
+      className={`min-h-screen flex flex-col ${
+        mode === "dark" ? "bg-gray-900" : "bg-gray-50"
+      }`}
+    >
+      <Toaster />
+      <HRHeader
+        toggleSidebar={toggleSidebar}
+        isSidebarOpen={isSidebarOpen}
+        sidebarState={sidebarState}
+        mode={mode}
+        toggleMode={toggleMode}
+        onLogout={handleLogout}
+        pageName="Email Templates"
+        pageDescription="Customize email templates for recruitment workflows."
+        breadcrumbs={breadcrumbs}
+      />
+      <div className="flex flex-1">
+        <HRSidebar
+          isOpen={isSidebarOpen}
           isSidebarOpen={isSidebarOpen}
           mode={mode}
           toggleMode={toggleMode}
           onLogout={handleLogout}
-          pageName="Interview Questions"
-          pageDescription={`Manage interview questions (Total: ${totalQuestions})`}
+          toggleSidebar={toggleSidebar}
+          setDragOffset={updateDragOffset}
         />
-        <div className="flex flex-1">
-          <HRSidebar
-            isOpen={isSidebarOpen}
-            mode={mode}
-            onLogout={handleLogout}
-            toggleSidebar={toggleSidebar}
-          />
-          <div
-            className={`content-container flex-1 p-6 transition-all duration-300 ${
-              isSidebarOpen ? "md:ml-[300px]" : "md:ml-[80px]"
-            }`}
-          >
-            <div className="max-w-7xl mx-auto">
-              <div className="flex justify-end items-center mb-6 gap-4">
-                <button
-                  onClick={handleAddQuestion}
-                  className="px-4 py-2 bg-[#84c1d9] text-white rounded-lg hover:bg-[#6da7c7] flex items-center gap-2 transition duration-200 shadow-md"
-                >
-                  <Icon icon="mdi:plus" width={20} height={20} />
-                  Add Question
-                </button>
-                <button
-                  onClick={() => setIsCategoryModalOpen(!isCategoryModalOpen)}
-                  className="px-4 py-2 bg-[#84c1d9] text-white rounded-lg hover:bg-[#6da7c7] flex items-center gap-2 transition duration-200 shadow-md"
-                >
-                  <Icon icon="mdi:folder-open" width={20} height={20} />
-                  Manage Categories
-                </button>
-              </div>
-
-              <QuestionForm
-                mode={mode}
-                question={editingQuestion}
-                categories={categories}
-                onSubmit={editingQuestion ? editQuestion : addQuestion}
-                onCancel={handleFormCancel}
-                isOpen={isQuestionModalOpen}
-              />
-
-              <div className="mb-6 flex flex-col md:flex-row gap-4">
-                <div className="flex-1 relative">
-                  <Icon
-                    icon="mdi:magnify"
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#84c1d9]"
-                  />
-                  <input
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#84c1d9] transition duration-200 ${
-                      mode === "dark"
-                        ? "bg-gray-700 border-gray-600 text-white"
-                        : "bg-gray-50 border-gray-300 text-[#231812]"
-                    }`}
-                    placeholder="Search questions..."
-                  />
-                </div>
-              </div>
-
-              {isCategoryModalOpen && (
-                <CategoryTable
-                  categories={categories}
+        <main
+          className={`content-container flex-1 p-6 transition-all duration-300 overflow-hidden ${
+            isSidebarOpen ? "sidebar-open" : ""
+          } ${sidebarState.hidden ? "sidebar-hidden" : ""}`}
+          style={{
+            marginLeft: sidebarState.hidden
+              ? "0px"
+              : `${84 + (isSidebarOpen ? 120 : 0) + sidebarState.offset}px`,
+          }}
+        >
+          <div className="max-w-7xl mx-auto space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+              <div className="lg:col-span-1">
+                <EmailTemplateList
+                  templates={templates}
+                  selectedTemplate={selectedTemplate}
+                  onSelectTemplate={handleSelectTemplate}
                   mode={mode}
-                  onEdit={setEditingCategory}
-                  deleteCategory={deleteCategory}
                 />
-              )}
-
-              <QuestionTable
-                questions={questions}
-                categories={categories}
-                mode={mode}
-                onEdit={startEditing}
-                moveQuestion={handleMoveQuestion}
-                handleSort={handleSort}
-                sortField={sortField}
-                sortDirection={sortDirection}
-                deleteQuestion={deleteQuestion}
-              />
+              </div>
+              <div className="lg:col-span-3">
+                <EmailTemplateEditor
+                  selectedTemplate={selectedTemplate}
+                  subject={subject}
+                  setSubject={setSubject}
+                  body={body}
+                  setBody={setBody}
+                  editorLoaded={!!editorConfig}
+                  editorConfig={editorConfig}
+                  editorRef={editorRef}
+                  onSave={handleSaveTemplate}
+                  onPreview={handlePreviewTemplate}
+                  isUploading={isUploading}
+                  mode={mode}
+                  currentEditor={currentEditor}
+                  setCurrentEditor={setCurrentEditor}
+                />
+              </div>
             </div>
           </div>
-        </div>
-        <SimpleFooter mode={mode} isSidebarOpen={isSidebarOpen} />
+        </main>
       </div>
-    </DndProvider>
+      <ImageGallery
+        isOpen={isGalleryOpen}
+        onClose={() => setIsGalleryOpen(false)}
+        onSelectImage={handleInsertImage}
+        images={galleryImages}
+        isLoading={isLoadingImages}
+        mode={mode}
+        fetchImages={fetchGalleryImages}
+      />
+      <EmailPreviewModal
+        isOpen={isPreviewOpen}
+        onClose={() => setIsPreviewOpen(false)}
+        subject={subject}
+        body={body}
+        mode={mode}
+        sampleData={sampleData}
+      />
+      <SimpleFooter mode={mode} isSidebarOpen={isSidebarOpen} />
+    </div>
   );
 }
 
-export async function getServerSideProps(context) {
-  const { req } = context;
+export async function getServerSideProps({ req, res }) {
+  console.log(
+    "[EmailTemplates] Starting session check at",
+    new Date().toISOString()
+  );
+  try {
+    const supabaseServer = createSupabaseServerClient(req, res);
 
-  if (!req.cookies.hr_session) {
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabaseServer.auth.getSession();
+
+    console.log("[EmailTemplates] Session Response:", {
+      session: session ? "present" : null,
+      sessionError: sessionError ? sessionError.message : null,
+    });
+
+    if (sessionError || !session) {
+      console.log(
+        "[EmailTemplates] No valid Supabase session, redirecting to login"
+      );
+      return {
+        redirect: {
+          destination: "/hr/login",
+          permanent: false,
+        },
+      };
+    }
+
+    // Verify user is in hr_users
+    const { data: hrUser, error: hrUserError } = await supabaseServer
+      .from("hr_users")
+      .select("id")
+      .eq("id", session.user.id)
+      .single();
+    console.log("[EmailTemplates] HR User Check:", {
+      hrUser,
+      hrUserError: hrUserError ? hrUserError.message : null,
+    });
+
+    if (hrUserError || !hrUser) {
+      console.error(
+        "[EmailTemplates] HR User Error:",
+        hrUserError?.message || "User not in hr_users"
+      );
+      await supabaseServer.auth.signOut();
+      return {
+        redirect: {
+          destination: "/hr/login",
+          permanent: false,
+        },
+      };
+    }
+
+    console.time("fetchHRData");
+    const data = await fetchHRData({
+      supabaseClient: supabaseServer,
+      fetchEmailTemplates: true,
+    });
+    console.timeEnd("fetchHRData");
+    console.log("[EmailTemplates] Fetched Data:", {
+      emailTemplates: data.emailTemplates?.length || 0,
+      sampleTemplates: data.emailTemplates?.slice(0, 2) || [],
+    });
+
+    return {
+      props: {
+        initialTemplates: data.emailTemplates || [],
+        breadcrumbs: [
+          { label: "Dashboard", href: "/admin" },
+          { label: "Email Templates" },
+        ],
+      },
+    };
+  } catch (error) {
+    console.error("[EmailTemplates] Error:", error.message);
     return {
       redirect: {
         destination: "/hr/login",
         permanent: false,
-      },
-    };
-  }
-
-  try {
-    const { data: questions, error } = await supabase
-      .from("interview_questions")
-      .select(
-        "*, max_answers, depends_on_question_id, depends_on_answer, has_links"
-      )
-      .order("id", { ascending: true });
-
-    if (error) throw error;
-
-    const { data: categories, error: catError } = await supabase
-      .from("question_categories")
-      .select("*")
-      .order("created_at", { ascending: false });
-
-    if (catError) throw catError;
-
-    const normalizedQuestions = questions.map((question) => ({
-      ...question,
-      category: question.category?.id || question.category_id || "",
-      options: Array.isArray(question.options) ? question.options : [],
-    }));
-
-    return {
-      props: {
-        initialQuestions: normalizedQuestions,
-        initialCategories: categories || [],
-      },
-    };
-  } catch (error) {
-    console.error("Error fetching interview questions:", error);
-    return {
-      props: {
-        initialQuestions: [],
-        initialCategories: [],
       },
     };
   }

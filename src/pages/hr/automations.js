@@ -15,6 +15,8 @@ import AutomationForm from "@/components/AutomationForm";
 import { fetchHRData } from "../../../utils/hrData";
 import { useEmailTemplates } from "@/hooks/useEmailTemplates";
 import { templateNameMap } from "../../../utils/templateUtils";
+import useAuthSession from "@/hooks/useAuthSession";
+import useLogout from "@/hooks/useLogout";
 
 export default function Automations({
   mode = "light",
@@ -23,12 +25,9 @@ export default function Automations({
   initialTemplates,
   breadcrumbs,
 }) {
-  const { isSidebarOpen, toggleSidebar } = useSidebar();
-  const [sidebarState, setSidebarState] = useState({
-    hidden: false,
-    offset: 0,
-  });
   const router = useRouter();
+        useAuthSession();
+
   const [automations, setAutomations] = useState([]);
   const [isCreating, setIsCreating] = useState(false);
   const [editingAutomation, setEditingAutomation] = useState(null); // New state for editing
@@ -36,6 +35,11 @@ export default function Automations({
   const [emailData, setEmailData] = useState({ subject: "", body: "" });
 
   const { templates: emailTemplates } = useEmailTemplates(initialTemplates);
+
+    const { isSidebarOpen, toggleSidebar, sidebarState, updateDragOffset } =
+      useSidebar();
+    const handleLogout = useLogout();
+
 
   const { handleStatusChange } = useStatusChange({
     candidates: initialCandidates,
@@ -46,19 +50,7 @@ export default function Automations({
     setIsEmailModalOpen,
   });
 
-  // Update dragOffset from HRSidebar
-  const updateDragOffset = useCallback((offset) => {
-    setSidebarState((prev) => {
-      if (prev.offset === offset) return prev;
-      return { ...prev, offset };
-    });
-  }, []);
-
   useEffect(() => {
-    if (!localStorage.getItem("hr_session")) {
-      router.push("/hr/login");
-      return;
-    }
     fetchAutomations();
   }, [router]);
 
@@ -170,12 +162,6 @@ export default function Automations({
     setEditingAutomation(automation);
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("hr_session");
-    document.cookie = "hr_session=; path=/; max-age=0";
-    toast.success("Logged out successfully!");
-    setTimeout(() => router.push("/hr/login"), 1000);
-  };
 
   const handleSendEmail = async (emailDataWithToast) => {
     const { toastId, subject, body } = emailDataWithToast;
@@ -328,10 +314,7 @@ export default function Automations({
 
 export async function getServerSideProps(context) {
     const { req } = context;
-    if (!req.cookies.hr_session) {
-        return { redirect: { destination: "/hr/login", permanent: false } };
-    }
-
+    
     const { initialCandidates } = await fetchHRData({ fetchCandidates: true, fetchQuestions: false });
     const { data: initialTemplates, error } = await supabase.from("email_templates").select("id, name, subject, body, updated_at");
     if (error) {

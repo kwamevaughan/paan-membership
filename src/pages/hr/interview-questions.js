@@ -9,10 +9,13 @@ import { useQuestions } from "@/hooks/useQuestions";
 import QuestionTable from "@/components/QuestionTable";
 import QuestionForm from "@/components/QuestionForm";
 import SimpleFooter from "@/layouts/simpleFooter";
-import { supabase } from "@/lib/supabase";
 import CategoryForm from "@/components/CategoryForm";
 import CategoryTable from "@/components/CategoryTable";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
+import useAuthSession from "@/hooks/useAuthSession";
+import useLogout from "@/hooks/useLogout";
+import { createSupabaseServerClient } from "@/lib/supabaseServer";
+
 
 export default function HRInterviewQuestions({
   mode = "light",
@@ -21,17 +24,18 @@ export default function HRInterviewQuestions({
   initialCategories,
   breadcrumbs,
 }) {
-  const { isSidebarOpen, toggleSidebar } = useSidebar();
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
-  const [selectedJobType, setSelectedJobType] = useState("agencies");
+  const [selectedJobType, setSelectedJobType] = useState("agency");
 
   const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(null);
-  const [sidebarState, setSidebarState] = useState({
-    hidden: false,
-    offset: 0,
-  });
+
+  useAuthSession();
+
+  const { isSidebarOpen, toggleSidebar, sidebarState, updateDragOffset } =
+    useSidebar();
+  const handleLogout = useLogout();
 
   const {
     questions,
@@ -45,17 +49,13 @@ export default function HRInterviewQuestions({
     editQuestion,
     deleteQuestion,
     moveQuestion,
-  } = useQuestions(selectedJobType);
+  } = useQuestions(selectedJobType, initialQuestions, initialCategories);
 
   const handleMoveQuestion = async (fromIndex, toIndex) => {
     const success = await moveQuestion(fromIndex, toIndex);
     if (!success) {
       toast.error("Failed to reorder questions.");
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("hr_session");
   };
 
   const startEditing = (question) => {
@@ -87,7 +87,7 @@ export default function HRInterviewQuestions({
       "Opening form for new question, selectedJobType:",
       selectedJobType
     );
-    setEditingQuestion(null); // Ensure null for add operation
+    setEditingQuestion(null);
     setIsQuestionModalOpen(true);
   };
 
@@ -103,38 +103,14 @@ export default function HRInterviewQuestions({
     setIsCategoryModalOpen(!isCategoryModalOpen);
   };
 
-  useEffect(() => {
-    const handleSidebarChange = (e) => {
-      const newHidden = e.detail.hidden;
-      setSidebarState((prev) => {
-        if (prev.hidden === newHidden) return prev;
-        return { ...prev, hidden: newHidden };
-      });
-    };
-    document.addEventListener("sidebarVisibilityChange", handleSidebarChange);
-    return () =>
-      document.removeEventListener(
-        "sidebarVisibilityChange",
-        handleSidebarChange
-      );
-  }, []);
-
-  const updateDragOffset = useCallback((offset) => {
-    setSidebarState((prev) => {
-      if (prev.offset === offset) return prev;
-      return { ...prev, offset };
-    });
-  }, []);
-
   return (
     <DndProvider backend={HTML5Backend}>
       <div
         className={`min-h-screen flex flex-col ${
-          mode === "dark"
-            ? "bg-gradient-to-b from-gray-900 to-gray-800"
-            : "bg-gradient-to-b from-gray-50 to-gray-100"
+          mode === "dark" ? "bg-gray-900" : "bg-gray-50"
         }`}
       >
+        <Toaster />
         <HRHeader
           toggleSidebar={toggleSidebar}
           isSidebarOpen={isSidebarOpen}
@@ -142,8 +118,8 @@ export default function HRInterviewQuestions({
           mode={mode}
           toggleMode={toggleMode}
           onLogout={handleLogout}
-          pageName=""
-          pageDescription="."
+          pageName="Interview Questions"
+          pageDescription="Manage questions for candidate interviews."
           breadcrumbs={breadcrumbs}
         />
         <div className="flex flex-1">
@@ -157,7 +133,7 @@ export default function HRInterviewQuestions({
             setDragOffset={updateDragOffset}
           />
           <div
-            className={`content-container flex-1 p-10 pt-4 transition-all duration-300 overflow-hidden ${
+            className={`content-container flex-1 p-6 transition-all duration-300 overflow-hidden ${
               isSidebarOpen ? "sidebar-open" : ""
             } ${sidebarState.hidden ? "sidebar-hidden" : ""}`}
             style={{
@@ -183,8 +159,8 @@ export default function HRInterviewQuestions({
                       }`}
                     >
                       <option value="all">All</option>
-                      <option value="agencies">Agencies</option>
-                      <option value="freelancers">Freelancers</option>
+                      <option value="agency">Agency</option>
+                      <option value="freelancer">Freelancer</option>
                     </select>
                   </div>
                   <div className="flex-1 relative">
@@ -277,48 +253,101 @@ export default function HRInterviewQuestions({
   );
 }
 
-export async function getServerSideProps(context) {
-  const { req } = context;
-
-  if (!req.cookies.hr_session) {
-    return {
-      redirect: {
-        destination: "/hr/login",
-        permanent: false,
-      },
-    };
-  }
-
+export async function getServerSideProps({ req, res }) {
+  console.log(
+    "[HRInterviewQuestions] Starting session check at",
+    new Date().toISOString()
+  );
   try {
+    const supabaseServer = createSupabaseServerClient(req, res);
+
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabaseServer.auth.getSession();
+
+    console.log("[HRInterviewQuestions] Session Response:", {
+      session: session ? "present" : null,
+      sessionError: sessionError ? sessionError.message : null,
+    });
+
+    if (sessionError || !session) {
+      console.log(
+        "[HRInterviewQuestions] No valid Supabase session, redirecting to login"
+      );
+      return {
+        redirect: {
+          destination: "/hr/login",
+          permanent: false,
+        },
+      };
+    }
+
+    // Verify user is in hr_users
+    const { data: hrUser, error: hrUserError } = await supabaseServer
+      .from("hr_users")
+      .select("id")
+      .eq("id", session.user.id)
+      .single();
+    console.log("[HRInterviewQuestions] HR User Check:", {
+      hrUser,
+      hrUserError: hrUserError ? hrUserError.message : null,
+    });
+
+    if (hrUserError || !hrUser) {
+      console.error(
+        "[HRInterviewQuestions] HR User Error:",
+        hrUserError?.message || "User not in hr_users"
+      );
+      await supabaseServer.auth.signOut();
+      return {
+        redirect: {
+          destination: "/hr/login",
+          permanent: false,
+        },
+      };
+    }
+
     console.time("fetchInterviewQuestions");
-    const { data: questions, error } = await supabase
+    const { data: questions, error: questionsError } = await supabaseServer
       .from("interview_questions")
       .select(
         "id, text, description, options, is_multi_select, other_option_text, is_open_ended, is_country_select, order, category, max_answers, depends_on_question_id, depends_on_answer, max_words, skippable, text_input_option, text_input_max_answers, structured_answers, has_links, job_type, category:question_categories(name)"
       )
       .order("order", { ascending: true });
 
-    if (error) throw error;
+    if (questionsError) throw questionsError;
 
-    const { data: categories, error: catError } = await supabase
+    const { data: categories, error: catError } = await supabaseServer
       .from("question_categories")
       .select("id, name, job_type, is_mandatory")
       .order("created_at", { ascending: false });
 
     if (catError) throw catError;
 
+    console.log("[HRInterviewQuestions] Fetched Data:", {
+      questions: questions?.length || 0,
+      categories: categories?.length || 0,
+      sampleQuestions: questions?.slice(0, 2) || [],
+      sampleCategories: categories?.slice(0, 2) || [],
+    });
+
     return {
       props: {
         initialQuestions: questions || [],
         initialCategories: categories || [],
+        breadcrumbs: [
+          { label: "Dashboard", href: "/admin" },
+          { label: "Interview Questions" },
+        ],
       },
     };
   } catch (error) {
-    console.error("Error fetching interview questions:", error);
+    console.error("[HRInterviewQuestions] Error:", error.message);
     return {
-      props: {
-        initialQuestions: [],
-        initialCategories: [],
+      redirect: {
+        destination: "/hr/login",
+        permanent: false,
       },
     };
   } finally {

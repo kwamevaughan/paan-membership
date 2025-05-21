@@ -14,26 +14,37 @@ import { supabase } from "@/lib/supabase";
 import SimpleFooter from "@/layouts/simpleFooter";
 import NotifyEmailGroupModal from "@/components/NotifyEmailGroupModal";
 import ConnectingDotsBackground from "@/components/ConnectingDotsBackground";
-
+import useAuthSession from "@/hooks/useAuthSession";
+import useLogout from "@/hooks/useLogout";
 
 // Helper function to format ISO date as DD/MM/YYYY for display
 const formatDate = (isoDateString) => {
-    const date = new Date(isoDateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    return `${day}/${month}/${year}`;
+  const date = new Date(isoDateString);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
 };
 
-const JobDescriptionModal = dynamic(() => import("@/components/JobDescriptionModal"), { ssr: false });
+const JobDescriptionModal = dynamic(
+  () => import("@/components/JobDescriptionModal"),
+  { ssr: false }
+);
 
-export default function HRJobBoard({ mode = "light", toggleMode, initialJobs, breadcrumbs = [] }) {
+export default function HRJobBoard({
+  mode = "light",
+  toggleMode,
+  initialJobs,
+  breadcrumbs = [],
+}) {
   const [jobs, setJobs] = useState(initialJobs || []);
-  const { isSidebarOpen, toggleSidebar } = useSidebar();
-  const [sidebarState, setSidebarState] = useState({
-    hidden: false,
-    offset: 0,
-  });
+
+  useAuthSession();
+
+  const { isSidebarOpen, toggleSidebar, sidebarState, updateDragOffset } =
+    useSidebar();
+  const handleLogout = useLogout();
+
   const router = useRouter();
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -46,10 +57,6 @@ export default function HRJobBoard({ mode = "light", toggleMode, initialJobs, br
 
   useEffect(() => {
     console.log("Initial jobs on mount:", initialJobs);
-    if (!localStorage.getItem("hr_session")) {
-      router.push("/hr/login");
-    }
-
     const handleOpenModal = (e) => {
       setSelectedOpening(e.detail);
       setIsViewModalOpen(true);
@@ -90,12 +97,6 @@ export default function HRJobBoard({ mode = "light", toggleMode, initialJobs, br
       toast.error("Failed to load job openings.", { id: loadingToast });
       setJobs([]);
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("hr_session");
-    toast.success("Logged out successfully!");
-    setTimeout(() => router.push("/hr/login"), 1000);
   };
 
   const handleCloseViewModal = () => {
@@ -162,31 +163,6 @@ export default function HRJobBoard({ mode = "light", toggleMode, initialJobs, br
     setIsPreviewModalOpen(false);
     setPreviewUrl(null);
   };
-
-  // Update dragOffset from HRSidebar
-  const updateDragOffset = useCallback((offset) => {
-    setSidebarState((prev) => {
-      if (prev.offset === offset) return prev;
-      return { ...prev, offset };
-    });
-  }, []);
-
-  // Listen for sidebar visibility changes
-  useEffect(() => {
-    const handleSidebarChange = (e) => {
-      const newHidden = e.detail.hidden;
-      setSidebarState((prev) => {
-        if (prev.hidden === newHidden) return prev;
-        return { ...prev, hidden: newHidden };
-      });
-    };
-    document.addEventListener("sidebarVisibilityChange", handleSidebarChange);
-    return () =>
-      document.removeEventListener(
-        "sidebarVisibilityChange",
-        handleSidebarChange
-      );
-  }, []);
 
   return (
     <div
@@ -283,44 +259,35 @@ export default function HRJobBoard({ mode = "light", toggleMode, initialJobs, br
 }
 
 export async function getServerSideProps(context) {
-    const { req } = context;
+  const { req } = context;
 
-    if (!req.cookies.hr_session) {
-        return {
-            redirect: {
-                destination: "/hr/login",
-                permanent: false,
-            },
-        };
-    }
+  try {
+    console.time("fetchJobs");
+    const { data, error } = await supabase
+      .from("job_openings")
+      .select("*")
+      .order("created_at", { ascending: false });
+    console.timeEnd("fetchJobs");
 
-    try {
-        console.time("fetchJobs");
-        const { data, error } = await supabase
-            .from("job_openings")
-            .select("*")
-            .order("created_at", { ascending: false });
-        console.timeEnd("fetchJobs");
+    if (error) throw error;
 
-        if (error) throw error;
+    const initialJobs = data.map((job) => ({
+      ...job,
+      is_expired: new Date(job.expires_on) < new Date(),
+      expires_on_display: formatDate(job.expires_on), // For display only
+    }));
 
-        const initialJobs = data.map((job) => ({
-            ...job,
-            is_expired: new Date(job.expires_on) < new Date(),
-            expires_on_display: formatDate(job.expires_on), // For display only
-        }));
-
-        return {
-            props: {
-                initialJobs,
-            },
-        };
-    } catch (error) {
-        console.error("Error fetching jobs in getServerSideProps:", error);
-        return {
-            props: {
-                initialJobs: [],
-            },
-        };
-    }
+    return {
+      props: {
+        initialJobs,
+      },
+    };
+  } catch (error) {
+    console.error("Error fetching jobs in getServerSideProps:", error);
+    return {
+      props: {
+        initialJobs: [],
+      },
+    };
+  }
 }

@@ -1,14 +1,11 @@
 // lib/supabase.js
-import { createClient } from "@supabase/supabase-js";
+import { createPagesBrowserClient } from "@supabase/auth-helpers-nextjs";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabase = createPagesBrowserClient();
 
-// console.log("Supabase URL (client):", supabaseUrl);
-// console.log("Supabase Anon Key (client):", supabaseKey);
+console.log(
+  "[supabase] Client initialized with cookie name:",
+  "sb-" + process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID + "-auth-token"
+);
 
-if (!supabaseUrl || !supabaseKey) {
-    throw new Error("Supabase configuration missing: Ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set in .env.local");
-}
-
-export const supabase = createClient(supabaseUrl, supabaseKey);
+export { supabase };

@@ -1,28 +1,24 @@
 // src/hooks/useSidebar.js
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 const useSidebar = () => {
-  // Use null as initial state to indicate "not initialized yet"
   const [isSidebarOpen, setSidebarOpen] = useState(null);
+  const [sidebarState, setSidebarState] = useState({
+    hidden: false,
+    offset: 0,
+  });
 
-  // Initialize sidebar state on client-side only
   useEffect(() => {
     const savedState = localStorage.getItem("sidebarOpen");
-    // Initialize with saved state or default to open on larger screens
     const initialState =
       savedState !== null ? JSON.parse(savedState) : window.innerWidth > 768;
-
     setSidebarOpen(initialState);
-
-    // Apply body classes immediately
     document.body.classList.toggle("sidebar-open", initialState);
     document.body.classList.toggle("sidebar-closed", !initialState);
   }, []);
 
-  // Update localStorage and body classes when state changes
   useEffect(() => {
     if (isSidebarOpen !== null) {
-      // Only run if initialized
       localStorage.setItem("sidebarOpen", JSON.stringify(isSidebarOpen));
       document.body.classList.toggle("sidebar-open", isSidebarOpen);
       document.body.classList.toggle("sidebar-closed", !isSidebarOpen);
@@ -31,10 +27,33 @@ const useSidebar = () => {
 
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
+  const handleSidebarChange = (e) => {
+    const newHidden = e.detail.hidden;
+    setSidebarState((prev) =>
+      prev.hidden === newHidden ? prev : { ...prev, hidden: newHidden }
+    );
+  };
+
+  const updateDragOffset = useCallback((offset) => {
+    setSidebarState((prev) =>
+      prev.offset === offset ? prev : { ...prev, offset }
+    );
+  }, []);
+
+  useEffect(() => {
+    document.addEventListener("sidebarVisibilityChange", handleSidebarChange);
+    return () =>
+      document.removeEventListener(
+        "sidebarVisibilityChange",
+        handleSidebarChange
+      );
+  }, []);
+
   return {
     isSidebarOpen: isSidebarOpen === null ? false : isSidebarOpen,
     toggleSidebar,
-    isInitialized: isSidebarOpen !== null,
+    sidebarState,
+    updateDragOffset,
   };
 };
 

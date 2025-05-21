@@ -2,6 +2,11 @@ import { useState } from "react";
 import { Icon } from "@iconify/react";
 
 export default function SubscribersLog({ initialSubscribers = [], mode }) {
+  console.log("[SubscribersLog] Props:", {
+    initialSubscribers: initialSubscribers?.length || 0,
+    sample: initialSubscribers?.slice(0, 2) || [],
+  });
+
   const isDark = mode === "dark";
   const [subscribers, setSubscribers] = useState(() =>
     [...initialSubscribers].sort(
@@ -35,7 +40,7 @@ export default function SubscribersLog({ initialSubscribers = [], mode }) {
   };
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10; 
+  const itemsPerPage = 10;
 
   const totalPages = Math.ceil(filteredSubscribers.length / itemsPerPage);
 
@@ -43,7 +48,6 @@ export default function SubscribersLog({ initialSubscribers = [], mode }) {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
-
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -63,13 +67,12 @@ export default function SubscribersLog({ initialSubscribers = [], mode }) {
 
   return (
     <div
-      className={`rounded-2xl cursor-pointer transition-all duration-300  ${
+      className={`rounded-2xl cursor-pointer transition-all duration-300 ${
         mode === "dark"
           ? "bg-gradient-to-br from-gray-800 to-gray-700 border-gray-600 shadow-md hover:shadow-xl text-white"
           : "bg-gradient-to-br from-white to-gray-50 border-blue-100 shadow-lg hover:shadow-xl text-gray-800"
       }`}
     >
-      {/* Header */}
       <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
         <div className="flex flex-col sm:flex-row justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -112,9 +115,7 @@ export default function SubscribersLog({ initialSubscribers = [], mode }) {
         </div>
       </div>
 
-      {/* Table */}
       <div className="flex flex-col rounded-xl overflow-hidden border border-gray-200 dark:border-slate-800">
-        {/* Table Container */}
         <div className="max-h-[430px] overflow-y-auto">
           <table className="min-w-full text-sm">
             <thead
@@ -142,7 +143,6 @@ export default function SubscribersLog({ initialSubscribers = [], mode }) {
                   >
                     <td className="px-6 py-4 whitespace-normal">
                       <div className="flex flex-col gap-2">
-                        {/* Name */}
                         <div className="flex items-center gap-3">
                           <div
                             className={`w-8 h-8 rounded-full flex items-center justify-center ${
@@ -171,7 +171,6 @@ export default function SubscribersLog({ initialSubscribers = [], mode }) {
                           </span>
                         </div>
 
-                        {/* Email */}
                         <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                           <Icon
                             icon="mdi:email-outline"
@@ -180,7 +179,6 @@ export default function SubscribersLog({ initialSubscribers = [], mode }) {
                           <span>{subscriber.email}</span>
                         </div>
 
-                        {/* Subscribed Date */}
                         <div className="flex items-center gap-2 text-sm text-gray-400">
                           <Icon
                             icon="mdi:calendar"
@@ -222,7 +220,6 @@ export default function SubscribersLog({ initialSubscribers = [], mode }) {
           </table>
         </div>
 
-        {/* Pagination Footer */}
         {filteredSubscribers.length > 0 && (
           <div
             className={`px-6 py-4 border-t ${
@@ -266,8 +263,6 @@ export default function SubscribersLog({ initialSubscribers = [], mode }) {
           </div>
         )}
       </div>
-
-      {/* Footer */}
     </div>
   );
 }

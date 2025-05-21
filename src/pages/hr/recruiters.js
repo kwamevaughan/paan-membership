@@ -10,9 +10,10 @@ import SimpleFooter from "@/layouts/simpleFooter";
 import useSidebar from "@/hooks/useSidebar";
 import EditEmailGroupModal from "@/components/EditEmailGroupModal";
 import AddEmailGroupModal from "@/components/AddEmailGroupModal";
+import useLogout from "@/hooks/useLogout";
+import useAuthSession from "@/hooks/useAuthSession";
 
 export default function Recruiters({ mode = "light", toggleMode, initialEmailGroups = [] }) {
-    const { isSidebarOpen, toggleSidebar } = useSidebar();
     const router = useRouter();
     const [emailGroups, setEmailGroups] = useState(initialEmailGroups);
     const [searchQuery, setSearchQuery] = useState("");
@@ -21,12 +22,14 @@ export default function Recruiters({ mode = "light", toggleMode, initialEmailGro
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
 
+        useAuthSession();
+
+        const { isSidebarOpen, toggleSidebar, sidebarState, updateDragOffset } =
+          useSidebar();
+        const handleLogout = useLogout();
+
     useEffect(() => {
         setIsMounted(true);
-        if (!localStorage.getItem("hr_session")) {
-            router.push("/hr/login");
-            return;
-        }
         if (initialEmailGroups.length === 0) {
             fetchRecruiters();
         }
@@ -81,7 +84,7 @@ export default function Recruiters({ mode = "light", toggleMode, initialEmailGro
         toast(
             (t) => (
                 <div className="flex flex-col gap-2">
-                    <p>Are you sure you want to delete "{groupName}"?</p>
+                    <p>Are you sure you want to delete &quot;{groupName}&quot;?</p>
                     <div className="flex gap-2">
                         <button
                             onClick={async () => {
@@ -115,12 +118,7 @@ export default function Recruiters({ mode = "light", toggleMode, initialEmailGro
         );
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem("hr_session");
-        document.cookie = "hr_session=; path=/; max-age=0";
-        toast.success("Logged out successfully!");
-        setTimeout(() => router.push("/hr/login"), 1000);
-    };
+    
 
     const formatDate = (dateString) => {
         return new Date(dateString).toLocaleString("en-US", {
@@ -427,9 +425,6 @@ export default function Recruiters({ mode = "light", toggleMode, initialEmailGro
 
 export async function getServerSideProps(context) {
     const { req } = context;
-    if (!req.cookies.hr_session) {
-        return { redirect: { destination: "/hr/login", permanent: false } };
-    }
 
     const { data: initialEmailGroups, error } = await supabase
         .from("email_groups")

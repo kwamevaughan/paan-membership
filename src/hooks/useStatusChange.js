@@ -1,12 +1,10 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { supabase } from "@/lib/supabase";
-import bcrypt from "bcryptjs";
 
 // Function to generate a memorable Pan-African inspired password
 const generatePanAfricanPassword = async () => {
   try {
-    // Fetch Pan-African words from the database
     const { data: panAfricanWords, error } = await supabase
       .from("pan_african_words")
       .select("word");
@@ -16,18 +14,12 @@ const generatePanAfricanPassword = async () => {
         "Could not fetch Pan-African words, using fallback list",
         error
       );
-      // Fallback list if database fetch fails
       return generateFallbackPassword();
     }
 
-    // Numbers to add (4 digits)
     const randomNumber = Math.floor(Math.random() * 9000) + 1000;
-
-    // Pick a random word from the database results
     const randomWord =
       panAfricanWords[Math.floor(Math.random() * panAfricanWords.length)].word;
-
-    // Combine to create password (e.g., "Ubuntu2024")
     return `${randomWord}${randomNumber}`;
   } catch (err) {
     console.error("Error generating password:", err);
@@ -37,7 +29,6 @@ const generatePanAfricanPassword = async () => {
 
 // Fallback function if database fetch fails
 const generateFallbackPassword = () => {
-  // Fallback list of Pan-African inspired words
   const fallbackWords = [
     "Ubuntu",
     "Amani",
@@ -54,7 +45,6 @@ const generateFallbackPassword = () => {
   const randomNumber = Math.floor(Math.random() * 9000) + 1000;
   const randomWord =
     fallbackWords[Math.floor(Math.random() * fallbackWords.length)];
-
   return `${randomWord}${randomNumber}`;
 };
 
@@ -77,39 +67,68 @@ const useStatusChange = ({
 
       const answers = candidate.answers?.length > 0 ? candidate.answers : [];
 
-      // Generate password if status is being changed to "Accepted"
       let plainPassword = null;
-      let hashedPassword = null;
+      let authUserId = candidate.auth_user_id;
 
       if (newStatus === "Accepted") {
-        // Generate a plain text password
         plainPassword = await generatePanAfricanPassword();
         if (!plainPassword) {
           throw new Error("Failed to generate password");
         }
 
-        // Hash the password before storing
-        const salt = await bcrypt.genSalt(10);
-        hashedPassword = await bcrypt.hash(plainPassword, salt);
-
         console.log(
           `Generated password for ${candidate.primaryContactName}: ${plainPassword}`
         );
 
-        // Update the candidate table with the hashed password
-        const { error: candidateUpdateError } = await supabase
-          .from("candidates")
-          .update({ candidate_password: hashedPassword })
-          .eq("id", candidateId);
+        // Manage auth user via API
+        const response = await fetch("/api/manage-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: candidate.auth_user_id ? "update_password" : "create",
+            email: candidate.primaryContactEmail,
+            password: plainPassword,
+            full_name: candidate.primaryContactName || "Candidate",
+          }),
+        });
 
-        if (candidateUpdateError) {
-          throw new Error(
-            `Failed to update candidate password: ${candidateUpdateError.message}`
+        const result = await response.json();
+        if (!response.ok) {
+          throw new Error(`Failed to manage auth user: ${result.error}`);
+        }
+
+        authUserId = result.auth_user_id;
+        console.log(
+          result.existed
+            ? `Updated auth user password for ${candidate.primaryContactEmail}`
+            : `Created auth user for ${candidate.primaryContactEmail}`
+        );
+
+        // Update candidate with auth_user_id if valid
+        if (authUserId) {
+          const { error: candidateUpdateError } = await supabase
+            .from("candidates")
+            .update({ auth_user_id: authUserId })
+            .eq("id", candidateId);
+
+          if (candidateUpdateError) {
+            console.error(
+              `Failed to update candidate auth_user_id: ${candidateUpdateError.message}`
+            );
+            // Continue to allow status update
+          } else {
+            console.log(
+              `Updated auth_user_id for candidate ${candidate.primaryContactEmail}`
+            );
+          }
+        } else {
+          console.warn(
+            `No valid authUserId for ${candidate.primaryContactEmail}`
           );
         }
       }
 
-      // Update responses table with new status and answers
+      // Update responses table
       const { error } = await supabase
         .from("responses")
         .upsert(
@@ -130,15 +149,13 @@ const useStatusChange = ({
         .eq("user_id", candidateId);
       if (error) throw error;
 
-      // Update candidates in state
       const updatedCandidates = candidates.map((c) =>
         c.id === candidateId
           ? {
               ...c,
               status: newStatus,
-              // Do not store plaintext password in state, only an indicator for UI purposes
-              passwordGenerated:
-                newStatus === "Accepted" ? true : c.passwordGenerated,
+              auth_user_id:
+                newStatus === "Accepted" ? authUserId : c.auth_user_id,
             }
           : c
       );
@@ -156,9 +173,8 @@ const useStatusChange = ({
             ? {
                 ...prev,
                 status: newStatus,
-                // Do not store plaintext password in state, only an indicator for UI purposes
-                passwordGenerated:
-                  newStatus === "Accepted" ? true : prev.passwordGenerated,
+                auth_user_id:
+                  newStatus === "Accepted" ? authUserId : prev.auth_user_id,
               }
             : prev
         );
@@ -189,7 +205,6 @@ const useStatusChange = ({
 
         let { subject, body } = templateData;
 
-        // Replace placeholders in subject and body
         subject = subject
           .replace("{{opening}}", candidate.opening || "Unknown Position")
           .replace("{{fullName}}", candidate.primaryContactName || "Candidate");
@@ -199,19 +214,13 @@ const useStatusChange = ({
           .replace("{{opening}}", candidate.opening || "Unknown Position")
           .replace("{{email}}", candidate.email || "your email address");
 
-        // Replace password placeholder for Accepted status
         if (newStatus === "Accepted") {
           if (!plainPassword) {
-            console.warn(
-              `No password generated for candidate ${candidateId} despite Accepted status`
-            );
+            console.warn(`No password generated for candidate ${candidateId}`);
             throw new Error("Password not generated for email");
           }
           body = body.replace("{{password}}", plainPassword);
         }
-
-        // Log the processed body for debugging
-        console.log("Processed email body:", body);
 
         const emailPayload = {
           fullName: candidate.primaryContactName || "Candidate",

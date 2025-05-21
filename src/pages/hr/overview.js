@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
 import toast, { Toaster } from "react-hot-toast";
@@ -18,6 +18,9 @@ import CandidateModal from "@/components/CandidateModal";
 import ChartFilterModal from "@/components/ChartFilterModal";
 import useStatusChange from "@/hooks/useStatusChange";
 import { fetchHRData } from "../../../utils/hrData";
+import useLogout from "@/hooks/useLogout";
+import useAuthSession from "@/hooks/useAuthSession";
+import { createSupabaseServerClient } from "@/lib/supabaseServer";
 
 const CountryChart = dynamic(() => import("@/components/CountryChart"), {
   ssr: false,
@@ -42,6 +45,12 @@ export default function HROverview({
   initialSubscribers,
   breadcrumbs,
 }) {
+  console.log("HROverview Props:", {
+    initialCandidates: initialCandidates?.length || 0,
+    initialJobOpenings: initialJobOpenings?.length || 0,
+    initialQuestions: initialQuestions?.length || 0,
+    initialSubscribers: initialSubscribers?.length || 0,
+  });
 
   const [candidates, setCandidates] = useState(initialCandidates || []);
   const [jobOpenings, setJobOpenings] = useState(initialJobOpenings || []);
@@ -54,19 +63,19 @@ export default function HROverview({
   const [filteredCandidates, setFilteredCandidates] = useState([]);
   const [filterType, setFilterType] = useState("");
   const [filterValue, setFilterValue] = useState("");
+  const router = useRouter();
 
+  useAuthSession();
+
+  const { isSidebarOpen, toggleSidebar, sidebarState, updateDragOffset } =
+    useSidebar();
+  const handleLogout = useLogout();
 
   const [emailData, setEmailData] = useState({
     subject: "",
     body: "",
     email: "",
   });
-  const { isSidebarOpen, toggleSidebar } = useSidebar();
-  const [sidebarState, setSidebarState] = useState({
-    hidden: false,
-    offset: 0,
-  });
-  const router = useRouter();
 
   const { handleStatusChange } = useStatusChange({
     candidates,
@@ -77,8 +86,11 @@ export default function HROverview({
     setIsEmailModalOpen,
   });
 
-  // Listen for sidebar visibility changes
   useEffect(() => {
+    console.log(
+      "[HROverview] Component mounted, candidates:",
+      candidates.length
+    );
     const handleSidebarChange = (e) => {
       const newHidden = e.detail.hidden;
       setSidebarState((prev) => {
@@ -93,27 +105,6 @@ export default function HROverview({
         handleSidebarChange
       );
   }, []);
-
-  // Update dragOffset from HRSidebar
-  const updateDragOffset = useCallback((offset) => {
-    setSidebarState((prev) => {
-      if (prev.offset === offset) return prev;
-      return { ...prev, offset };
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!localStorage.getItem("hr_session")) {
-      router.push("/hr/login");
-    }
-  }, [router]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("hr_session");
-    document.cookie = "hr_session=; path=/; max-age=0";
-    toast.success("Logged out successfully!");
-    setTimeout(() => router.push("/hr/login"), 1000);
-  };
 
   const handleSendEmail = async () => {
     const sendingToast = toast.loading("Sending email...");
@@ -362,26 +353,91 @@ export default function HROverview({
   );
 }
 
-export async function getServerSideProps(context) {
-  const { req } = context;
+export async function getServerSideProps({ req, res }) {
+  console.log(
+    "[getServerSideProps] Starting session check at",
+    new Date().toISOString()
+  );
+  try {
+    const supabaseServer = createSupabaseServerClient(req, res);
 
-  if (!req.cookies.hr_session) {
-    console.log("No hr_session cookie, redirecting to login");
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabaseServer.auth.getSession();
+
+    console.log("[getServerSideProps] Session Response:", {
+      session: session ? "present" : null,
+      sessionError: sessionError ? sessionError.message : null,
+    });
+
+    if (sessionError || !session) {
+      console.log(
+        "[getServerSideProps] No valid Supabase session, redirecting to login"
+      );
+      return {
+        redirect: {
+          destination: "/hr/login",
+          permanent: false,
+        },
+      };
+    }
+
+    // Verify user is in hr_users
+    const { data: hrUser, error: hrUserError } = await supabaseServer
+      .from("hr_users")
+      .select("id")
+      .eq("id", session.user.id)
+      .single();
+    console.log("[getServerSideProps] HR User Check:", {
+      hrUser,
+      hrUserError: hrUserError ? hrUserError.message : null,
+    });
+
+    if (hrUserError || !hrUser) {
+      console.error(
+        "[getServerSideProps] HR User Error:",
+        hrUserError?.message || "User not in hr_users"
+      );
+      await supabaseServer.auth.signOut();
+      return {
+        redirect: {
+          destination: "/hr/login",
+          permanent: false,
+        },
+      };
+    }
+
+    console.time("fetchHRData");
+    const data = await fetchHRData({
+      supabaseClient: supabaseServer,
+      fetchCandidates: true,
+      fetchQuestions: true,
+      fetchSubscribers: true,
+    });
+    console.timeEnd("fetchHRData");
+    console.log("[getServerSideProps] Fetched Data:", {
+      candidates: data.initialCandidates?.length || 0,
+      jobOpenings: data.initialJobOpenings?.length || 0,
+      questions: data.initialQuestions?.length || 0,
+      subscribers: data.subscribers?.length || 0,
+      sampleSubscribers: data.subscribers?.slice(0, 2) || [],
+    });
+
     return {
-      redirect: {
-        destination: "/hr/login",
-        permanent: false,
+      props: {
+        initialCandidates: data.initialCandidates || [],
+        initialJobOpenings: data.initialJobOpenings || [],
+        initialQuestions: data.initialQuestions || [],
+        initialSubscribers: data.subscribers || [],
+        breadcrumbs: [
+          { label: "Dashboard", href: "/admin" },
+          { label: "Overview" },
+        ],
       },
     };
-  }
-
-  try {
-    console.time("fetchHRData");
-    const data = await fetchHRData();
-    console.timeEnd("fetchHRData");
-    return { props: { ...data, initialSubscribers: data.subscribers } };
   } catch (error) {
-    console.error("Error in getServerSideProps:", error);
+    console.error("[getServerSideProps] Error:", error.message);
     return {
       redirect: {
         destination: "/hr/login",

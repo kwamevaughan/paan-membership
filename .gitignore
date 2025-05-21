@@ -41,3 +41,5 @@ build/
 .history/
 .history
 generateHash.js
+
+scripts/align-users.js

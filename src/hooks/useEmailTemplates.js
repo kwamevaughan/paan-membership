@@ -10,12 +10,7 @@ export const useEmailTemplates = (initialTemplates) => {
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   const router = useRouter();
-
-  useEffect(() => {
-    if (!localStorage.getItem("hr_session")) {
-      router.push("/hr/login");
-    }
-  }, [router]);
+  
 
   const handleSelectTemplate = (template) => {
     setSelectedTemplate(template);

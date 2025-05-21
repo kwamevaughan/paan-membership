@@ -19,15 +19,15 @@ function MyApp({ Component, pageProps }) {
   const toggleMode = () => {
     const newMode = mode === "light" ? "dark" : "light";
     setMode(newMode);
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       window.localStorage.setItem("mode", newMode);
     }
   };
 
   useEffect(() => {
     // Only run client-side
-    if (typeof window === "undefined") return;
-
+    if (typeof window === 'undefined') return;
+    
     // Load saved mode or system preference on mount
     const savedMode = window.localStorage.getItem("mode");
     if (savedMode) {

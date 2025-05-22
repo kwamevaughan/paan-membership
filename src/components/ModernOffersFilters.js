@@ -41,7 +41,7 @@ export default function ModernOffersFilters({
       <motion.button
         whileHover={{ scale: 1.1 }}
         onClick={() => setShowFilters(!showFilters)}
-        className={`fixed right-6 top-28 z-20 px-4 py-2 rounded-full ${
+        className={`fixed right-6 top-24 z-20 px-4 py-2 rounded-full ${
           isDark ? "bg-indigo-700" : "bg-indigo-600"
         } text-white flex items-center shadow-lg`}
       >

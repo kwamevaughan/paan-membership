@@ -8,6 +8,7 @@ export async function fetchHRData({
   fetchResources = false,
   fetchOffers = false,
   fetchEmailTemplates = false,
+  fetchMarketIntel = false, // New option
 } = {}) {
   try {
     const queries = [];
@@ -20,6 +21,8 @@ export async function fetchHRData({
     let tiersQueryIndex = -1;
     let emailTemplatesQueryIndex = -1;
     let questionQueryIndex = -1;
+    let marketIntelQueryIndex = -1;
+    let marketIntelFeedbackQueryIndex = -1;
 
     let queryIndex = 0;
 
@@ -109,6 +112,25 @@ export async function fetchHRData({
       queryIndex += 1;
     }
 
+    if (fetchMarketIntel) {
+      marketIntelQueryIndex = queryIndex;
+      queries.push(
+        supabaseClient
+          .from("market_intel")
+          .select(
+            "id, title, description, tier_restriction, url, icon_url, created_at, updated_at, region, type, downloadable"
+          )
+          .order("created_at", { ascending: false })
+      );
+      marketIntelFeedbackQueryIndex = queryIndex + 1;
+      queries.push(
+        supabaseClient
+          .from("market_intel_feedback")
+          .select("id, market_intel_id, user_id, rating, comment, created_at")
+      );
+      queryIndex += 2;
+    }
+
     tiersQueryIndex = queryIndex;
     queries.push(
       supabaseClient
@@ -161,6 +183,12 @@ export async function fetchHRData({
     const emailTemplatesData = fetchEmailTemplates
       ? results[emailTemplatesQueryIndex]?.data || []
       : [];
+    const marketIntelData = fetchMarketIntel
+      ? results[marketIntelQueryIndex]?.data || []
+      : [];
+    const marketIntelFeedbackData = fetchMarketIntel
+      ? results[marketIntelFeedbackQueryIndex]?.data || []
+      : [];
     const tiersData = results[tiersQueryIndex]?.data
       ? [
           ...new Set(
@@ -183,6 +211,13 @@ export async function fetchHRData({
       !results[offersQueryIndex]?.error
     ) {
       console.warn("[fetchHRData] No offers data returned");
+    }
+    if (
+      fetchMarketIntel &&
+      marketIntelData.length === 0 &&
+      !results[marketIntelQueryIndex]?.error
+    ) {
+      console.warn("[fetchHRData] No market intel data returned");
     }
 
     // Throw errors for failed queries
@@ -237,6 +272,16 @@ export async function fetchHRData({
     if (fetchEmailTemplates && results[emailTemplatesQueryIndex]?.error) {
       throw new Error(
         `Email Templates query error: ${results[emailTemplatesQueryIndex].error.message}`
+      );
+    }
+    if (fetchMarketIntel && results[marketIntelQueryIndex]?.error) {
+      throw new Error(
+        `Market Intel query error: ${results[marketIntelQueryIndex].error.message}`
+      );
+    }
+    if (fetchMarketIntel && results[marketIntelFeedbackQueryIndex]?.error) {
+      throw new Error(
+        `Market Intel feedback query error: ${results[marketIntelFeedbackQueryIndex].error.message}`
       );
     }
     if (results[tiersQueryIndex]?.error) {
@@ -393,8 +438,11 @@ export async function fetchHRData({
       ? [...new Set(combinedData.map((c) => c.opening))]
       : [];
 
-    console.log("[fetchHRData] Returning offers:", offersData);
-    console.log("[fetchHRData] Returning offer feedback:", offerFeedbackData);
+    console.log("[fetchHRData] Returning market intel:", marketIntelData);
+    console.log(
+      "[fetchHRData] Returning market intel feedback:",
+      marketIntelFeedbackData
+    );
 
     return {
       initialCandidates: combinedData,
@@ -408,6 +456,8 @@ export async function fetchHRData({
       offerFeedback: offerFeedbackData,
       emailTemplates: emailTemplatesData,
       tiers: tiersData,
+      marketIntel: marketIntelData,
+      marketIntelFeedback: marketIntelFeedbackData,
     };
   } catch (error) {
     console.error("[fetchHRData] Error fetching HR data:", error.message);
@@ -423,6 +473,8 @@ export async function fetchHRData({
       offerFeedback: [],
       emailTemplates: [],
       tiers: [],
+      marketIntel: [],
+      marketIntelFeedback: [],
     };
   }
 }

@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react";
+import Link from "next/link";
 
 export default function WelcomeCard({
   totalApplicants = 0,
@@ -27,14 +28,14 @@ export default function WelcomeCard({
           />
 
           <div className="text-xl font-medium flex flex-col">
-            <span>Welcome Admin! Here is an overview of your dashboard.</span>
+            <span>Welcome PAAN Admin! Here is an overview of your dashboard.</span>
             <span
               className={`text-sm ${
                 mode === "dark" ? "text-gray-400" : "text-[#4b5563]"
               }`}
             >
               There are {totalApplicants} candidates. {pendingReviews} are
-              pending reviews.
+              pending reviews. <Link href={"/hr/applicants"}><span className="font-bold underline cursor-pointer">Take action</span></Link>
             </span>
           </div>
         </div>

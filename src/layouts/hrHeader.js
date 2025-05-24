@@ -69,7 +69,7 @@ const HRHeader = ({
             </div>
           </div>
 
-          <div className="flex justify-end items-center w-full gap-2 ">
+          <div className="flex justify-end items-center w-full ">
             {/* Dark Mode Toggle */}
             <TooltipIconButton
               label={

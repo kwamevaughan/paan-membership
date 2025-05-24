@@ -8,22 +8,20 @@ import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useOpportunities } from "@/hooks/useOpportunities";
 import SimpleFooter from "@/layouts/simpleFooter";
-import { fetchHRData } from "../../../utils/hrData";
 import OpportunityForm from "@/components/OpportunityForm";
 import OpportunityFilters from "@/components/OpportunityFilters";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { getTierBadgeColor, getStatusBadgeColor } from "@/../utils/badgeUtils";
 import { getDaysRemaining } from "@/../utils/dateUtils";
 
-
 export default function AdminBusinessOpportunities({
   mode = "light",
   toggleMode,
-  initialOpportunities,
   tiers,
   breadcrumbs,
 }) {
   const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [activeTab, setActiveTab] = useState("list");
   const [filterTerm, setFilterTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
@@ -39,11 +37,13 @@ export default function AdminBusinessOpportunities({
   const {
     opportunities,
     formData,
+    loading,
     handleInputChange,
     handleSubmit,
     handleEdit,
     handleDelete,
-  } = useOpportunities(initialOpportunities);
+    resetForm,
+  } = useOpportunities();
 
   useEffect(() => {
     if (isEditing) {
@@ -53,24 +53,23 @@ export default function AdminBusinessOpportunities({
 
   const submitForm = (e) => {
     e.preventDefault();
-    handleSubmit(e);
-    if (isEditing) {
-      setIsEditing(false);
-      toast.success("Opportunity updated successfully!");
-    } else {
-      toast.success("New opportunity created!");
-    }
+    handleSubmit(e, isEditing ? editingId : null);
+    setIsEditing(false);
+    setEditingId(null);
     setActiveTab("list");
   };
 
   const startEditing = (opp) => {
     handleEdit(opp);
     setIsEditing(true);
+    setEditingId(opp.id);
     setActiveTab("form");
   };
 
   const cancelForm = () => {
     setIsEditing(false);
+    setEditingId(null);
+    resetForm();
     setActiveTab("list");
   };
 
@@ -99,7 +98,6 @@ export default function AdminBusinessOpportunities({
     const options = { year: "numeric", month: "short", day: "numeric" };
     return new Date(dateString).toLocaleDateString("en-US", options);
   };
-
 
   return (
     <div
@@ -155,6 +153,8 @@ export default function AdminBusinessOpportunities({
                   <button
                     onClick={() => {
                       setIsEditing(false);
+                      setEditingId(null);
+                      resetForm();
                       setActiveTab("form");
                     }}
                     className="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-xl shadow-sm transition-all duration-200 hover:shadow-lg hover:from-indigo-700 hover:to-purple-700"
@@ -192,8 +192,21 @@ export default function AdminBusinessOpportunities({
                     sortOrder={sortOrder}
                     setSortOrder={setSortOrder}
                     mode={mode}
+                    loading={loading}
                   />
-                  {sortedOpportunities.length > 0 ? (
+                  {loading ? (
+                    <div className="p-12 text-center">
+                      <div className="w-24 h-24 mx-auto bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mb-6">
+                        <Icon
+                          icon="eos-icons:loading"
+                          className="h-12 w-12 text-indigo-500 dark:text-indigo-300 animate-spin"
+                        />
+                      </div>
+                      <h3 className="mt-2 text-xl font-medium text-gray-900 dark:text-gray-200">
+                        Loading opportunities...
+                      </h3>
+                    </div>
+                  ) : sortedOpportunities.length > 0 ? (
                     <div className="p-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {sortedOpportunities.map((opp) => {
@@ -208,7 +221,7 @@ export default function AdminBusinessOpportunities({
                               key={opp.id}
                               className={`relative flex flex-col h-full rounded-2xl border-0 ${
                                 mode === "dark" ? "bg-gray-800/50" : "bg-white"
-                              } shadow-lg overflow-hidden hover:shadow-xl transition-all duration-200 group`}
+                              } TMAshadow-lg overflow-hidden hover:shadow-xl transition-all duration-200 group`}
                             >
                               <div className="px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-700">
                                 <div className="flex justify-between items-start mb-2">
@@ -239,10 +252,6 @@ export default function AdminBusinessOpportunities({
                                 )}
                                 <div className="flex flex-wrap gap-2 mb-4">
                                   <div className="flex items-center text-xs px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300">
-                                    <Icon
-                                      icon="heroicons:briefcase"
-                                      className="w-3.5 h-3.5 mr-1.5"
-                                    />
                                     <span className="font-medium">
                                       {opp.service_type}
                                     </span>
@@ -273,22 +282,20 @@ export default function AdminBusinessOpportunities({
                                     <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
                                       Deadline
                                     </p>
-                                    <div className="flex items-center">
-                                      <div
-                                        className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg ${deadlineColors.bg}`}
+                                    <div
+                                      className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg ${deadlineColors.bg}`}
+                                    >
+                                      <Icon
+                                        icon="heroicons:clock"
+                                        className={`w-3.5 h-3.5 ${deadlineColors.icon}`}
+                                      />
+                                      <span
+                                        className={`text-xs font-medium ${deadlineColors.text}`}
                                       >
-                                        <Icon
-                                          icon="heroicons:clock"
-                                          className={`w-3.5 h-3.5 ${deadlineColors.icon}`}
-                                        />
-                                        <span
-                                          className={`text-xs font-medium ${deadlineColors.text}`}
-                                        >
-                                          {daysLeft <= 0
-                                            ? "Expired"
-                                            : `${daysLeft} days left`}
-                                        </span>
-                                      </div>
+                                        {daysLeft <= 0
+                                          ? "Expired"
+                                          : `${daysLeft} days left`}
+                                      </span>
                                     </div>
                                   </div>
                                   <div className="flex space-x-2">
@@ -314,9 +321,6 @@ export default function AdminBusinessOpportunities({
                                           )
                                         ) {
                                           handleDelete(opp.id);
-                                          toast.success(
-                                            "Opportunity deleted successfully!"
-                                          );
                                         }
                                       }}
                                       className={`inline-flex items-center justify-center p-2 border rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors ${
@@ -359,6 +363,8 @@ export default function AdminBusinessOpportunities({
                         <button
                           onClick={() => {
                             setIsEditing(false);
+                            setEditingId(null);
+                            resetForm();
                             setActiveTab("form");
                           }}
                           className="inline-flex items-center px-6 py-3 border border-transparent shadow-sm text-sm font-medium rounded-xl text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200"
@@ -448,18 +454,27 @@ export async function getServerSideProps({ req, res }) {
       };
     }
 
-    console.time("fetchHRData");
-    const { opportunities = [], tiers = [] } = await fetchHRData({
-      supabaseClient: supabaseServer,
-      fetchOpportunities: true,
-    });
-    console.timeEnd("fetchHRData");
+    // Fetch tiers
+    const { data: tiersData, error: tiersError } = await supabaseServer
+      .from("candidates")
+      .select("selected_tier")
+      .neq("selected_tier", null);
 
-    
+    if (tiersError) {
+      console.error("[AdminBusinessOpportunities] Tiers Error:", tiersError.message);
+      throw new Error(`Failed to fetch tiers: ${tiersError.message}`);
+    }
+
+    const tiers = [
+      ...new Set(
+        tiersData
+          .map((item) => item.selected_tier)
+          .filter((tier) => tier && typeof tier === "string" && tier.trim() !== "")
+      ),
+    ].sort();
 
     return {
       props: {
-        initialOpportunities: opportunities,
         tiers,
         breadcrumbs: [
           { label: "Dashboard", href: "/admin" },
@@ -473,7 +488,7 @@ export async function getServerSideProps({ req, res }) {
       redirect: {
         destination: "/hr/login",
         permanent: false,
-      },
-    };
+        },
+      };
+    }
   }
-}

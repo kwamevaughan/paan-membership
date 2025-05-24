@@ -1,27 +1,14 @@
-// fetchHRData.js
 export async function fetchHRData({
   supabaseClient,
   fetchCandidates = false,
   fetchQuestions = false,
-  fetchOpportunities = false,
-  fetchEvents = false,
-  fetchResources = false,
-  fetchOffers = false,
   fetchEmailTemplates = false,
-  fetchMarketIntel = false,
 } = {}) {
   try {
     const queries = [];
-    let opportunitiesQueryIndex = -1;
-    let eventsQueryIndex = -1;
-    let resourcesQueryIndex = -1;
-    let offersQueryIndex = -1;
-    let offerFeedbackQueryIndex = -1;
-    let tiersQueryIndex = -1;
-    let emailTemplatesQueryIndex = -1;
     let questionQueryIndex = -1;
-    let marketIntelQueryIndex = -1;
-    let marketIntelFeedbackQueryIndex = -1;
+    let emailTemplatesQueryIndex = -1;
+    let tiersQueryIndex = -1;
 
     let queryIndex = 0;
 
@@ -48,52 +35,6 @@ export async function fetchHRData({
       queryIndex += 1;
     }
 
-    if (fetchOpportunities) {
-      opportunitiesQueryIndex = queryIndex;
-      queries.push(supabaseClient.from("business_opportunities").select("*"));
-      queryIndex += 1;
-    }
-
-    if (fetchEvents) {
-      eventsQueryIndex = queryIndex;
-      queries.push(
-        supabaseClient
-          .from("events")
-          .select("*")
-          .order("date", { ascending: true })
-      );
-      queryIndex += 1;
-    }
-
-    if (fetchResources) {
-      resourcesQueryIndex = queryIndex;
-      queries.push(
-        supabaseClient
-          .from("resources")
-          .select("*")
-          .order("created_at", { ascending: true })
-      );
-      queryIndex += 1;
-    }
-
-    if (fetchOffers) {
-      offersQueryIndex = queryIndex;
-      queries.push(
-        supabaseClient
-          .from("offers")
-          .select(
-            "id, title, description, tier_restriction, url, icon_url, created_at, updated_at"
-          )
-      );
-      offerFeedbackQueryIndex = queryIndex + 1;
-      queries.push(
-        supabaseClient
-          .from("offer_feedback")
-          .select("id, offer_id, user_id, rating, comment, created_at")
-      );
-      queryIndex += 2;
-    }
-
     if (fetchEmailTemplates) {
       emailTemplatesQueryIndex = queryIndex;
       queries.push(
@@ -103,25 +44,6 @@ export async function fetchHRData({
           .order("updated_at", { ascending: false, nullsLast: true })
       );
       queryIndex += 1;
-    }
-
-    if (fetchMarketIntel) {
-      marketIntelQueryIndex = queryIndex;
-      queries.push(
-        supabaseClient
-          .from("market_intel")
-          .select(
-            "id, title, description, tier_restriction, url, icon_url, created_at, updated_at, region, type, downloadable"
-          )
-          .order("created_at", { ascending: false })
-      );
-      marketIntelFeedbackQueryIndex = queryIndex + 1;
-      queries.push(
-        supabaseClient
-          .from("market_intel_feedback")
-          .select("id, market_intel_id, user_id, rating, comment, created_at")
-      );
-      queryIndex += 2;
     }
 
     tiersQueryIndex = queryIndex;
@@ -157,25 +79,8 @@ export async function fetchHRData({
       : fetchQuestions
       ? results[questionQueryIndex]?.data || []
       : [];
-    const opportunitiesData = fetchOpportunities
-      ? results[opportunitiesQueryIndex]?.data || []
-      : [];
-    const eventsData = fetchEvents ? results[eventsQueryIndex]?.data || [] : [];
-    const resourcesData = fetchResources
-      ? results[resourcesQueryIndex]?.data || []
-      : [];
-    const offersData = fetchOffers ? results[offersQueryIndex]?.data || [] : [];
-    const offerFeedbackData = fetchOffers
-      ? results[offerFeedbackQueryIndex]?.data || []
-      : [];
     const emailTemplatesData = fetchEmailTemplates
       ? results[emailTemplatesQueryIndex]?.data || []
-      : [];
-    const marketIntelData = fetchMarketIntel
-      ? results[marketIntelQueryIndex]?.data || []
-      : [];
-    const marketIntelFeedbackData = fetchMarketIntel
-      ? results[marketIntelFeedbackQueryIndex]?.data || []
       : [];
     const tiersData = results[tiersQueryIndex]?.data
       ? [
@@ -192,20 +97,6 @@ export async function fetchHRData({
     // Validate data
     if (fetchCandidates && candidatesData.length === 0 && !results[0]?.error) {
       console.warn("[fetchHRData] No candidates data returned");
-    }
-    if (
-      fetchOffers &&
-      offersData.length === 0 &&
-      !results[offersQueryIndex]?.error
-    ) {
-      console.warn("[fetchHRData] No offers data returned");
-    }
-    if (
-      fetchMarketIntel &&
-      marketIntelData.length === 0 &&
-      !results[marketIntelQueryIndex]?.error
-    ) {
-      console.warn("[fetchHRData] No market intel data returned");
     }
 
     // Throw errors for failed queries
@@ -227,44 +118,9 @@ export async function fetchHRData({
         `Questions query error: ${results[questionQueryIndex].error.message}`
       );
     }
-    if (fetchOpportunities && results[opportunitiesQueryIndex]?.error) {
-      throw new Error(
-        `Opportunities query error: ${results[opportunitiesQueryIndex].error.message}`
-      );
-    }
-    if (fetchEvents && results[eventsQueryIndex]?.error) {
-      throw new Error(
-        `Events query error: ${results[eventsQueryIndex].error.message}`
-      );
-    }
-    if (fetchResources && results[resourcesQueryIndex]?.error) {
-      throw new Error(
-        `Resources query error: ${results[resourcesQueryIndex].error.message}`
-      );
-    }
-    if (fetchOffers && results[offersQueryIndex]?.error) {
-      throw new Error(
-        `Offers query error: ${results[offersQueryIndex].error.message}`
-      );
-    }
-    if (fetchOffers && results[offerFeedbackQueryIndex]?.error) {
-      throw new Error(
-        `Offer feedback query error: ${results[offerFeedbackQueryIndex].error.message}`
-      );
-    }
     if (fetchEmailTemplates && results[emailTemplatesQueryIndex]?.error) {
       throw new Error(
         `Email Templates query error: ${results[emailTemplatesQueryIndex].error.message}`
-      );
-    }
-    if (fetchMarketIntel && results[marketIntelQueryIndex]?.error) {
-      throw new Error(
-        `Market Intel query error: ${results[marketIntelQueryIndex].error.message}`
-      );
-    }
-    if (fetchMarketIntel && results[marketIntelFeedbackQueryIndex]?.error) {
-      throw new Error(
-        `Market Intel feedback query error: ${results[marketIntelFeedbackQueryIndex].error.message}`
       );
     }
     if (results[tiersQueryIndex]?.error) {
@@ -425,15 +281,8 @@ export async function fetchHRData({
       initialCandidates: combinedData,
       initialJobOpenings: jobOpenings,
       initialQuestions: questionsData,
-      opportunities: opportunitiesData,
-      events: eventsData,
-      resources: resourcesData,
-      offers: offersData,
-      offerFeedback: offerFeedbackData,
       emailTemplates: emailTemplatesData,
       tiers: tiersData,
-      marketIntel: marketIntelData,
-      marketIntelFeedback: marketIntelFeedbackData,
     };
   } catch (error) {
     console.error("[fetchHRData] Error fetching HR data:", error.message);
@@ -441,15 +290,8 @@ export async function fetchHRData({
       initialCandidates: [],
       initialJobOpenings: [],
       initialQuestions: [],
-      opportunities: [],
-      events: [],
-      resources: [],
-      offers: [],
-      offerFeedback: [],
       emailTemplates: [],
       tiers: [],
-      marketIntel: [],
-      marketIntelFeedback: [],
     };
   }
 }

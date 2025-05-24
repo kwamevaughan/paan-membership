@@ -15,23 +15,15 @@ import OfferCard from "@/components/OfferCard";
 import SimpleFooter from "@/layouts/simpleFooter";
 import FeedbackModal from "@/components/FeedbackModal";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
-import { supabase } from "@/lib/supabase";
-import { fetchHRData } from "../../../utils/hrData";
-
 
 export default function AdminOffers({
   mode = "light",
   toggleMode,
-  initialOffers,
-  initialFeedback,
   initialCandidates,
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("list");
-  const [filterTerm, setFilterTerm] = useState("");
-  const [filterType, setFilterType] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
-  const [sortOrder, setSortOrder] = useState("created_at");
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [selectedOfferId, setSelectedOfferId] = useState(null);
 
@@ -44,19 +36,20 @@ export default function AdminOffers({
     offers,
     formData,
     loading,
+    filterTerm,
+    setFilterTerm,
+    filterType,
+    setFilterType,
+    sortOrder,
+    sortDirection,
+    setSortOrder,
     handleInputChange,
     handleSubmit,
     handleEdit,
     handleDelete,
-  } = useOffers(initialOffers, initialFeedback);
+  } = useOffers(initialCandidates);
 
   const router = useRouter();
-
-  useEffect(() => {
-    console.log("[AdminOffers] Initial Offers:", initialOffers);
-    console.log("[AdminOffers] Initial Feedback:", initialFeedback);
-    console.log("[AdminOffers] Initial Candidates:", initialCandidates);
-  }, [initialOffers, initialFeedback, initialCandidates]);
 
   useEffect(() => {
     if (isEditing) {
@@ -81,25 +74,6 @@ export default function AdminOffers({
     setIsEditing(false);
     setActiveTab("list");
   };
-
-  const filteredOffers = offers.filter((offer) => {
-    const matchesTerm =
-      offer.title.toLowerCase().includes(filterTerm.toLowerCase()) ||
-      offer.description?.toLowerCase().includes(filterTerm.toLowerCase());
-    if (filterType === "all") return matchesTerm;
-    return matchesTerm && offer.tier_restriction === filterType;
-  });
-
-  const sortedOffers = [...filteredOffers].sort((a, b) => {
-    if (sortOrder === "created_at") {
-      return new Date(b.created_at) - new Date(a.created_at);
-    } else if (sortOrder === "title") {
-      return a.title.localeCompare(b.title);
-    } else if (sortOrder === "tier_restriction") {
-      return a.tier_restriction.localeCompare(b.tier_restriction);
-    }
-    return 0;
-  });
 
   return (
     <div
@@ -175,30 +149,24 @@ export default function AdminOffers({
                   showFilters={showFilters}
                   setShowFilters={setShowFilters}
                   sortOrder={sortOrder}
+                  sortDirection={sortDirection}
                   setSortOrder={setSortOrder}
                   mode={mode}
+                  loading={loading}
                 />
-                {sortedOffers.length > 0 ? (
+                {offers.length > 0 ? (
                   <motion.div
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ staggerChildren: 0.2 }}
                   >
-                    {sortedOffers.map((offer) => (
+                    {offers.map((offer) => (
                       <OfferCard
                         key={offer.id}
                         offer={offer}
                         onEdit={startEditing}
-                        onDelete={(id) => {
-                          if (
-                            window.confirm(
-                              "Are you sure you want to delete this offer?"
-                            )
-                          ) {
-                            handleDelete(id);
-                          }
-                        }}
+                        onDelete={handleDelete}
                         onViewFeedback={(id) => {
                           setSelectedOfferId(id);
                           setIsFeedbackModalOpen(true);
@@ -271,7 +239,9 @@ export default function AdminOffers({
             <FeedbackModal
               isOpen={isFeedbackModalOpen}
               onClose={() => setIsFeedbackModalOpen(false)}
-              feedback={initialFeedback[selectedOfferId] || []}
+              feedback={
+                offers.find((o) => o.id === selectedOfferId)?.feedback || []
+              }
               mode={mode}
             />
           </div>
@@ -321,51 +291,27 @@ export async function getServerSideProps({ req, res }) {
       };
     }
 
-    console.time("fetchHRData");
-    const data = await fetchHRData({
-      supabaseClient: supabaseServer,
-      fetchOffers: true,
-      fetchCandidates: true,
-    });
-    console.timeEnd("fetchHRData");
+    // Fetch candidates
+    const { data: candidatesData, error: candidatesError } =
+      await supabaseServer
+        .from("candidates")
+        .select("id, auth_user_id, primaryContactName");
 
-    const { data: feedback, error: feedbackError } = await supabaseServer
-      .from("offer_feedback")
-      .select("id, offer_id, user_id, rating, comment, created_at");
-
-    if (feedbackError) {
-      console.error("[AdminOffers] Feedback Error:", feedbackError.message);
-      throw new Error(`Failed to fetch feedback: ${feedbackError.message}`);
+    if (candidatesError) {
+      console.error("[AdminOffers] Candidates Error:", candidatesError.message);
+      throw new Error(`Failed to fetch candidates: ${candidatesError.message}`);
     }
 
-    const feedbackByOffer = feedback.reduce((acc, fb) => {
-      acc[fb.offer_id] = acc[fb.offer_id] || [];
-      acc[fb.offer_id].push(fb);
-      return acc;
-    }, {});
-
-    const candidatesMap = data.initialCandidates.reduce((acc, candidate) => {
+    const candidatesMap = candidatesData.reduce((acc, candidate) => {
       if (candidate.auth_user_id) {
         acc[candidate.auth_user_id] = candidate.primaryContactName || "Unknown";
       }
       return acc;
     }, {});
 
-    Object.keys(feedbackByOffer).forEach((offerId) => {
-      feedbackByOffer[offerId] = feedbackByOffer[offerId].map((fb) => ({
-        ...fb,
-        primaryContactName: candidatesMap[fb.user_id] || "Unknown",
-      }));
-    });
-
-    console.log("[AdminOffers] Initial Feedback:", feedbackByOffer);
-    console.log("[AdminOffers] Initial Candidates Map:", candidatesMap);
-
     return {
       props: {
-        initialOffers: data.offers || [],
-        initialFeedback: feedbackByOffer || {},
-        initialCandidates: candidatesMap || {},
+        initialCandidates: candidatesMap,
       },
     };
   } catch (error) {

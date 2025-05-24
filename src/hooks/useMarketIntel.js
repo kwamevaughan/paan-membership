@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { supabase } from "@/lib/supabase";
 
-export function useMarketIntel(initialMarketIntel = [], initialFeedback = {}) {
-  const [marketIntel, setMarketIntel] = useState(initialMarketIntel);
+export function useMarketIntel(candidatesMap = {}) {
+  const [marketIntel, setMarketIntel] = useState([]);
   const [formData, setFormData] = useState({
     id: null,
     title: "",
@@ -29,18 +29,6 @@ export function useMarketIntel(initialMarketIntel = [], initialFeedback = {}) {
     downloadable: "All",
     search: "",
   });
-
-  useEffect(() => {
-    console.log("[useMarketIntel] Initial market intel:", initialMarketIntel);
-    setMarketIntel(
-      initialMarketIntel.map((intel) => ({
-        ...intel,
-        averageRating: Number(intel.averageRating) || 0,
-        feedbackCount: intel.feedbackCount || 0,
-        feedback: initialFeedback[intel.id] || [],
-      }))
-    );
-  }, [initialMarketIntel, initialFeedback]);
 
   const fetchMarketIntel = async () => {
     try {
@@ -71,8 +59,6 @@ export function useMarketIntel(initialMarketIntel = [], initialFeedback = {}) {
       if (filters.type !== "All") query = query.eq("type", filters.type);
       if (filters.downloadable !== "All")
         query = query.eq("downloadable", filters.downloadable === "Yes");
-
-      // Apply search
       if (filters.search) {
         query = query.or(
           `title.ilike.%${filters.search}%,description.ilike.%${filters.search}%`
@@ -90,35 +76,27 @@ export function useMarketIntel(initialMarketIntel = [], initialFeedback = {}) {
           `Failed to fetch market intel: ${marketIntelError.message}`
         );
 
-      console.log(
-        "[useMarketIntel] Fetched market intel data:",
-        marketIntelData
-      );
-
       const { data: feedbackData, error: feedbackError } = await supabase
         .from("market_intel_feedback")
         .select("id, market_intel_id, user_id, rating, comment, created_at");
-
       if (feedbackError)
         throw new Error(`Failed to fetch feedback: ${feedbackError.message}`);
 
-      console.log("[useMarketIntel] Fetched feedback data:", feedbackData);
-
       const feedbackByIntel = feedbackData.reduce((acc, fb) => {
         acc[fb.market_intel_id] = acc[fb.market_intel_id] || [];
-        acc[fb.market_intel_id].push(fb);
+        acc[fb.market_intel_id].push({
+          ...fb,
+          primaryContactName: candidatesMap[fb.user_id] || "Unknown",
+        });
         return acc;
       }, {});
 
-      console.log("[useMarketIntel] Feedback by intel:", feedbackByIntel);
-
       const enrichedMarketIntel = marketIntelData.map((intel) => {
-        const feedback =
-          feedbackByIntel[intel.id] || initialFeedback[intel.id] || [];
+        const feedback = feedbackByIntel[intel.id] || [];
         const averageRating =
           feedback.length > 0
             ? feedback.reduce((sum, fb) => sum + (fb.rating || 0), 0) /
-            feedback.length
+              feedback.length
             : 0;
         return {
           ...intel,
@@ -128,28 +106,42 @@ export function useMarketIntel(initialMarketIntel = [], initialFeedback = {}) {
         };
       });
 
-      console.log(
-        "[useMarketIntel] Enriched market intel:",
-        enrichedMarketIntel
-      );
-
       setMarketIntel(enrichedMarketIntel);
     } catch (err) {
       console.error("[useMarketIntel] Error:", err.message);
       toast.error("Failed to load market intel");
+      setMarketIntel([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    if (initialMarketIntel.length === 0) {
-      fetchMarketIntel();
-    }
-  }, []);
-
-  useEffect(() => {
     fetchMarketIntel();
+
+    // Real-time subscriptions
+    const marketIntelSubscription = supabase
+      .channel("market_intel")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "market_intel" },
+        () => fetchMarketIntel()
+      )
+      .subscribe();
+
+    const feedbackSubscription = supabase
+      .channel("market_intel_feedback")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "market_intel_feedback" },
+        () => fetchMarketIntel()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(marketIntelSubscription);
+      supabase.removeChannel(feedbackSubscription);
+    };
   }, [sortBy, filters]);
 
   const handleInputChange = (e) => {
@@ -184,24 +176,18 @@ export function useMarketIntel(initialMarketIntel = [], initialFeedback = {}) {
 
       let filePath = formData.file_path;
 
-      // Handle file upload if a new file is selected
       if (selectedFile) {
         const fileName = `${Date.now()}_${selectedFile.name}`;
         const { error: uploadError } = await supabase.storage
           .from("market-intel")
           .upload(fileName, selectedFile);
-        
-        if (uploadError) {
+        if (uploadError)
           throw new Error(`File upload failed: ${uploadError.message}`);
-        }
-        
-        // If updating and there's an existing file, delete it
         if (formData.id && formData.file_path) {
           await supabase.storage
             .from("market-intel")
             .remove([formData.file_path]);
         }
-        
         filePath = fileName;
       }
 
@@ -219,7 +205,6 @@ export function useMarketIntel(initialMarketIntel = [], initialFeedback = {}) {
       };
 
       if (formData.id) {
-        // Update existing market intel
         const { error: updateError } = await supabase
           .from("market_intel")
           .update(intelData)
@@ -227,15 +212,12 @@ export function useMarketIntel(initialMarketIntel = [], initialFeedback = {}) {
         if (updateError)
           throw new Error(`Update failed: ${updateError.message}`);
         toast.success("Market intel updated successfully");
-        
-        // Update local state
         setMarketIntel((prev) =>
           prev.map((intel) =>
             intel.id === formData.id ? { ...intel, ...intelData } : intel
           )
         );
       } else {
-        // Create new market intel
         const { data, error: insertError } = await supabase
           .from("market_intel")
           .insert(intelData)
@@ -244,8 +226,6 @@ export function useMarketIntel(initialMarketIntel = [], initialFeedback = {}) {
         if (insertError)
           throw new Error(`Insert failed: ${insertError.message}`);
         toast.success("Market intel created successfully");
-        
-        // Add to local state
         setMarketIntel((prev) => [
           {
             ...data,
@@ -286,10 +266,7 @@ export function useMarketIntel(initialMarketIntel = [], initialFeedback = {}) {
     const confirmed = window.confirm(
       "Are you sure you want to delete this market intel entry?"
     );
-    if (!confirmed) {
-      console.log("[useMarketIntel] Delete cancelled for ID:", id);
-      return;
-    }
+    if (!confirmed) return;
 
     try {
       setLoading(true);
@@ -306,17 +283,13 @@ export function useMarketIntel(initialMarketIntel = [], initialFeedback = {}) {
         .single();
       if (hrError || !hrUser) throw new Error("User not authorized");
 
-      // Find the market intel entry to get file path
       const marketIntelItem = marketIntel.find((r) => r.id === id);
-      
-      // Delete file from storage if it exists
       if (marketIntelItem?.file_path) {
         await supabase.storage
           .from("market-intel")
           .remove([marketIntelItem.file_path]);
       }
 
-      // Delete the database record
       const { error } = await supabase
         .from("market_intel")
         .delete()
@@ -324,8 +297,6 @@ export function useMarketIntel(initialMarketIntel = [], initialFeedback = {}) {
       if (error) throw new Error(`Delete failed: ${error.message}`);
 
       toast.success("Market intel deleted successfully");
-      
-      // Remove from local state
       setMarketIntel((prev) => prev.filter((intel) => intel.id !== id));
     } catch (err) {
       console.error("[useMarketIntel] Delete error:", err.message);
@@ -363,17 +334,15 @@ export function useMarketIntel(initialMarketIntel = [], initialFeedback = {}) {
     setFilters((prev) => ({ ...prev, ...newFilters }));
   };
 
-  // Helper function to get PDF download URL
   const getPDFUrl = async (filePath) => {
     if (!filePath) return null;
-    
     try {
       const { data } = await supabase.storage
         .from("market-intel")
-        .createSignedUrl(filePath, 3600); // 1 hour expiry
+        .createSignedUrl(filePath, 3600);
       return data?.signedUrl || null;
     } catch (error) {
-      console.error("Error getting PDF URL:", error);
+      console.error("[useMarketIntel] Error getting PDF URL:", error);
       return null;
     }
   };

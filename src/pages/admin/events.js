@@ -14,6 +14,8 @@ import PendingRegistrations from "@/components/PendingRegistrations";
 import SimpleFooter from "@/layouts/simpleFooter";
 import { getTierBadgeColor, getStatusBadgeColor } from "@/../utils/badgeUtils";
 import { getDaysRemaining } from "@/../utils/dateUtils";
+import { createSupabaseServerClient } from "@/lib/supabaseServer";
+
 
 export default function AdminEvents({ mode = "light", toggleMode, tiers }) {
   const [isEditing, setIsEditing] = useState(false);

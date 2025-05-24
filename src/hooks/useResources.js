@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { supabase } from "@/lib/supabase";
 
-export function useResources(initialResources = []) {
-  const [resources, setResources] = useState(initialResources);
+export function useResources() {
+  const [resources, setResources] = useState([]);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -32,7 +32,7 @@ export function useResources(initialResources = []) {
         .single();
       if (hrError || !hrUser) throw new Error("User not authorized");
 
-      const { data: resources, error: resourcesError } = await supabase
+      const { data: resourcesData, error: resourcesError } = await supabase
         .from("resources")
         .select(
           "id, title, description, resource_type, tier_restriction, url, file_path, video_url, created_at, updated_at"
@@ -41,8 +41,8 @@ export function useResources(initialResources = []) {
 
       if (resourcesError) throw resourcesError;
 
-      console.log("[useResources] Fetched resources:", resources);
-      setResources(resources || []);
+      console.log("[useResources] Fetched resources:", resourcesData);
+      setResources(resourcesData || []);
     } catch (error) {
       console.error("[useResources] Error fetching resources:", error);
       toast.error("Failed to load resources");
@@ -219,6 +219,20 @@ export function useResources(initialResources = []) {
 
   useEffect(() => {
     fetchResources();
+
+    // Real-time subscription for resources
+    const resourcesSubscription = supabase
+      .channel("resources")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "resources" },
+        () => fetchResources()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(resourcesSubscription);
+    };
   }, []);
 
   return {
@@ -229,5 +243,6 @@ export function useResources(initialResources = []) {
     handleSubmit,
     handleEdit,
     handleDelete,
+    fetchResources,
   };
 }

@@ -9,7 +9,6 @@ import useAuthSession from "@/hooks/useAuthSession";
 import { useMarketIntel } from "@/hooks/useMarketIntel";
 import SimpleFooter from "@/layouts/simpleFooter";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
-import { fetchHRData } from "../../../utils/hrData";
 import MarketIntelHeader from "@/components/market-intel/MarketIntelHeader";
 import MarketIntelControls from "@/components/market-intel/MarketIntelControls";
 import MarketIntelForm from "@/components/market-intel/MarketIntelForm";
@@ -18,8 +17,6 @@ import MarketIntelGrid from "@/components/market-intel/MarketIntelGrid";
 export default function AdminMarketIntel({
   mode = "light",
   toggleMode,
-  initialMarketIntel,
-  initialFeedback,
   initialCandidates,
 }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -47,7 +44,7 @@ export default function AdminMarketIntel({
     resetForm,
     updateSort,
     updateFilters,
-  } = useMarketIntel(initialMarketIntel, initialFeedback);
+  } = useMarketIntel(initialCandidates);
 
   const router = useRouter();
 
@@ -75,10 +72,7 @@ export default function AdminMarketIntel({
     const confirmed = window.confirm(
       `Are you sure you want to delete ${selectedIds.length} selected market intel entries?`
     );
-    if (!confirmed) {
-      console.log("[AdminMarketIntel] Bulk delete cancelled");
-      return;
-    }
+    if (!confirmed) return;
     try {
       for (const id of selectedIds) {
         await handleDelete(id);
@@ -181,6 +175,7 @@ export default function AdminMarketIntel({
               handleBulkDelete={handleBulkDelete}
               setShowForm={setShowForm}
               showForm={showForm}
+              loading={loading}
             />
             <MarketIntelForm
               mode={mode}
@@ -210,7 +205,6 @@ export default function AdminMarketIntel({
           <SimpleFooter mode={mode} isSidebarOpen={isSidebarOpen} />
         </div>
       </div>
-      
     </div>
   );
 }
@@ -253,59 +247,30 @@ export async function getServerSideProps({ req, res }) {
       };
     }
 
-    console.time("fetchHRData");
-    const data = await fetchHRData({
-      supabaseClient: supabaseServer,
-      fetchMarketIntel: true,
-      fetchCandidates: true,
-    });
-    console.timeEnd("fetchHRData");
+    // Fetch candidates
+    const { data: candidatesData, error: candidatesError } =
+      await supabaseServer
+        .from("candidates")
+        .select("id, auth_user_id, primaryContactName");
 
-    const feedbackByIntel = data.marketIntelFeedback.reduce((acc, fb) => {
-      acc[fb.market_intel_id] = acc[fb.market_intel_id] || [];
-      acc[fb.market_intel_id].push(fb);
-      return acc;
-    }, {});
+    if (candidatesError) {
+      console.error(
+        "[AdminMarketIntel] Candidates Error:",
+        candidatesError.message
+      );
+      throw new Error(`Failed to fetch candidates: ${candidatesError.message}`);
+    }
 
-    const candidatesMap = data.initialCandidates.reduce((acc, candidate) => {
+    const candidatesMap = candidatesData.reduce((acc, candidate) => {
       if (candidate.auth_user_id) {
         acc[candidate.auth_user_id] = candidate.primaryContactName || "Unknown";
       }
       return acc;
     }, {});
 
-    const enrichedMarketIntel = (data.marketIntel || []).map((intel) => {
-      const feedback = feedbackByIntel[intel.id] || [];
-      const averageRating =
-        feedback.length > 0
-          ? feedback.reduce((sum, fb) => sum + (fb.rating || 0), 0) /
-            feedback.length
-          : 0;
-      return {
-        ...intel,
-        averageRating: Number(averageRating) || 0,
-        feedbackCount: feedback.length,
-        feedback,
-      };
-    });
-
-    console.log(
-      "[AdminMarketIntel] Enriched market intel:",
-      enrichedMarketIntel
-    );
-
-    Object.keys(feedbackByIntel).forEach((intelId) => {
-      feedbackByIntel[intelId] = feedbackByIntel[intelId].map((fb) => ({
-        ...fb,
-        primaryContactName: candidatesMap[fb.user_id] || "Unknown",
-      }));
-    });
-
     return {
       props: {
-        initialMarketIntel: enrichedMarketIntel,
-        initialFeedback: feedbackByIntel || {},
-        initialCandidates: candidatesMap || {},
+        initialCandidates: candidatesMap,
       },
     };
   } catch (error) {

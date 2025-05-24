@@ -12,7 +12,6 @@ import ResourceForm from "@/components/ResourceForm";
 import ResourceFilters from "@/components/ResourceFilters";
 import SimpleFooter from "@/layouts/simpleFooter";
 import FeedbackModal from "@/components/FeedbackModal";
-import { fetchHRData } from "@/../utils/hrData";
 import { getTierBadgeColor } from "@/../utils/badgeUtils";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { supabase } from "@/lib/supabase";
@@ -20,7 +19,6 @@ import { supabase } from "@/lib/supabase";
 export default function AdminResources({
   mode = "light",
   toggleMode,
-  initialResources,
   initialFeedback,
   initialCandidates,
 }) {
@@ -47,7 +45,7 @@ export default function AdminResources({
     handleSubmit,
     handleEdit,
     handleDelete,
-  } = useResources(initialResources);
+  } = useResources();
 
   const router = useRouter();
 
@@ -76,18 +74,13 @@ export default function AdminResources({
     }
   }, [isEditing]);
 
-  // Debug: Confirm supabase is initialized
-  console.log("[AdminResources] Supabase initialized:", !!supabase);
+  // Debug: Log formData
+  console.log("[AdminResources] formData:", formData);
 
   const submitForm = (e) => {
     e.preventDefault();
     handleSubmit(e);
-    if (isEditing) {
-      setIsEditing(false);
-      toast.success("Resource updated successfully!");
-    } else {
-      toast.success("New resource created!");
-    }
+    setIsEditing(false);
     setActiveTab("list");
   };
 
@@ -144,15 +137,13 @@ export default function AdminResources({
     return (total / feedback.length).toFixed(1);
   };
 
-  // Debug: Log formData
-  console.log("[AdminResources] formData:", formData);
-
   return (
     <div
       className={`min-h-screen flex flex-col ${
         mode === "dark" ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
       }`}
     >
+      <Toaster />
       <HRHeader
         toggleSidebar={toggleSidebar}
         isSidebarOpen={isSidebarOpen}
@@ -253,8 +244,21 @@ export default function AdminResources({
                     sortOrder={sortOrder}
                     setSortOrder={setSortOrder}
                     mode={mode}
+                    loading={loading}
                   />
-                  {sortedResources.length > 0 ? (
+                  {loading ? (
+                    <div className="p-12 text-center">
+                      <div className="w-24 h-24 mx-auto bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mb-6">
+                        <Icon
+                          icon="eos-icons:loading"
+                          className="h-12 w-12 text-indigo-500 dark:text-indigo-300 animate-spin"
+                        />
+                      </div>
+                      <h3 className="mt-2 text-xl font-medium text-gray-900 dark:text-gray-200">
+                        Loading resources...
+                      </h3>
+                    </div>
+                  ) : sortedResources.length > 0 ? (
                     <div className="p-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {sortedResources.map((resource) => {
@@ -456,9 +460,6 @@ export default function AdminResources({
                                           )
                                         ) {
                                           handleDelete(resource.id);
-                                          toast.success(
-                                            "Resource deleted successfully!"
-                                          );
                                         }
                                       }}
                                       className={`inline-flex items-center justify-center p-2 border rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors ${
@@ -537,7 +538,6 @@ export default function AdminResources({
           <SimpleFooter mode={mode} isSidebarOpen={isSidebarOpen} />
         </div>
       </div>
-      <Toaster />
     </div>
   );
 }
@@ -580,14 +580,6 @@ export async function getServerSideProps({ req, res }) {
       };
     }
 
-    console.time("fetchHRData");
-    const data = await fetchHRData({
-      supabaseClient: supabaseServer,
-      fetchResources: true,
-      fetchCandidates: true,
-    });
-    console.timeEnd("fetchHRData");
-
     // Fetch resource_feedback
     const { data: feedback, error: feedbackError } = await supabaseServer
       .from("resource_feedback")
@@ -598,6 +590,20 @@ export async function getServerSideProps({ req, res }) {
       throw new Error(`Failed to fetch feedback: ${feedbackError.message}`);
     }
 
+    // Fetch candidates for user names
+    const { data: candidatesData, error: candidatesError } =
+      await supabaseServer
+        .from("candidates")
+        .select("auth_user_id, primaryContactName");
+
+    if (candidatesError) {
+      console.error(
+        "[AdminResources] Candidates Error:",
+        candidatesError.message
+      );
+      throw new Error(`Failed to fetch candidates: ${candidatesError.message}`);
+    }
+
     // Group feedback by resource_id
     const feedbackByResource = feedback.reduce((acc, fb) => {
       acc[fb.resource_id] = acc[fb.resource_id] || [];
@@ -606,7 +612,7 @@ export async function getServerSideProps({ req, res }) {
     }, {});
 
     // Map candidates to auth_user_id: primaryContactName
-    const candidatesMap = data.initialCandidates.reduce((acc, candidate) => {
+    const candidatesMap = candidatesData.reduce((acc, candidate) => {
       if (candidate.auth_user_id) {
         acc[candidate.auth_user_id] = candidate.primaryContactName || "Unknown";
       }
@@ -625,7 +631,6 @@ export async function getServerSideProps({ req, res }) {
 
     return {
       props: {
-        initialResources: data.resources || [],
         initialFeedback: feedbackByResource || {},
         initialCandidates: candidatesMap || {},
       },

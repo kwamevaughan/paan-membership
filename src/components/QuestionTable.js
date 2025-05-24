@@ -13,12 +13,7 @@ export default function QuestionTable({
   sortDirection,
   deleteQuestion,
 }) {
-  // Debug incoming questions
-  console.log(
-    "QuestionTable questions:",
-    questions.map((q) => ({ id: q.id, job_type: q.job_type }))
-  );
-
+  
   const getCategoryName = (categoryId) => {
     if (!Array.isArray(categories) || categories.length === 0) {
       return "—";

@@ -325,13 +325,6 @@ export async function getServerSideProps({ req, res }) {
 
     if (catError) throw catError;
 
-    console.log("[HRInterviewQuestions] Fetched Data:", {
-      questions: questions?.length || 0,
-      categories: categories?.length || 0,
-      sampleQuestions: questions?.slice(0, 2) || [],
-      sampleCategories: categories?.slice(0, 2) || [],
-    });
-
     return {
       props: {
         initialQuestions: questions || [],

@@ -3,7 +3,7 @@ import { Icon } from "@iconify/react";
 import toast from "react-hot-toast";
 import { formatDate } from "@/../utils/dateUtils";
 
-const PendingRegistrations = ({ registrations, onAction, mode }) => {
+const PendingRegistrations = ({ registrations, onAction, mode, loading }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedRegistration, setSelectedRegistration] = useState(null);
   const [actionType, setActionType] = useState("");
@@ -102,7 +102,27 @@ const PendingRegistrations = ({ registrations, onAction, mode }) => {
       >
         <div className="p-6">
           <h2 className="text-2xl font-bold mb-4">Pending Registrations</h2>
-          {registrations.length > 0 ? (
+          {loading ? (
+            <div className="p-12 text-center">
+              <div
+                className={`w-24 h-24 mx-auto rounded-full flex items-center justify-center mb-6 ${
+                  mode === "dark" ? "bg-indigo-900/20" : "bg-indigo-50"
+                }`}
+              >
+                <Icon
+                  icon="eos-icons:loading"
+                  className="h-12 w-12 text-indigo-500 dark:text-indigo-300 animate-spin"
+                />
+              </div>
+              <h3
+                className={`mt-2 text-xl font-medium ${
+                  mode === "dark" ? "text-gray-200" : "text-gray-900"
+                }`}
+              >
+                Loading registrations...
+              </h3>
+            </div>
+          ) : registrations.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
@@ -153,7 +173,14 @@ const PendingRegistrations = ({ registrations, onAction, mode }) => {
                         <div className="flex space-x-2">
                           <button
                             onClick={() => handleActionClick(reg, "approve")}
-                            className="inline-flex items-center px-3 py-1 bg-emerald-600 text-white rounded-lg text-xs font-medium hover:bg-emerald-700"
+                            disabled={loading}
+                            className={`inline-flex items-center px-3 py-1 text-white rounded-lg text-xs font-medium ${
+                              mode === "dark"
+                                ? "bg-emerald-600 hover:bg-emerald-700"
+                                : "bg-emerald-500 hover:bg-emerald-600"
+                            } ${
+                              loading ? "opacity-50 cursor-not-allowed" : ""
+                            }`}
                             title="Confirm registration"
                           >
                             <Icon
@@ -163,8 +190,15 @@ const PendingRegistrations = ({ registrations, onAction, mode }) => {
                             Confirm
                           </button>
                           <button
-                            onClick={() => handleActionClick(reg, "reject")}
-                            className="inline-flex items-center px-3 py-1 bg-red-600 text-white rounded-lg text-xs font-medium hover:bg-red-700"
+                            onClick={() => handleActionClick(reg, "cancel")}
+                            disabled={loading}
+                            className={`inline-flex items-center px-3 py-1 text-white rounded-lg text-xs font-medium ${
+                              mode === "dark"
+                                ? "bg-red-600 hover:bg-red-700"
+                                : "bg-red-500 hover:bg-red-600"
+                            } ${
+                              loading ? "opacity-50 cursor-not-allowed" : ""
+                            }`}
                             title="Cancel registration"
                           >
                             <Icon

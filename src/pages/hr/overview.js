@@ -11,8 +11,6 @@ import SimpleFooter from "@/layouts/simpleFooter";
 import WelcomeCard from "@/components/WelcomeCard";
 import StatusChart from "@/components/StatusChart";
 import CandidateList from "@/components/CandidateList";
-import JobOpenings from "@/components/JobOpenings";
-import DeviceChart from "@/components/DeviceChart";
 import EmailModal from "@/components/EmailModal";
 import CandidateModal from "@/components/CandidateModal";
 import ChartFilterModal from "@/components/ChartFilterModal";

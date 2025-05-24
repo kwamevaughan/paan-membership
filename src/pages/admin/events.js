@@ -12,17 +12,10 @@ import EventForm from "@/components/EventForm";
 import EventFilters from "@/components/EventFilters";
 import PendingRegistrations from "@/components/PendingRegistrations";
 import SimpleFooter from "@/layouts/simpleFooter";
-import { fetchHRData } from "@/../utils/hrData";
-import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { getTierBadgeColor, getStatusBadgeColor } from "@/../utils/badgeUtils";
 import { getDaysRemaining } from "@/../utils/dateUtils";
 
-export default function AdminEvents({
-  mode = "light",
-  toggleMode,
-  initialEvents,
-  tiers,
-}) {
+export default function AdminEvents({ mode = "light", toggleMode, tiers }) {
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState("list");
   const [filterTerm, setFilterTerm] = useState("");
@@ -45,7 +38,7 @@ export default function AdminEvents({
     handleEdit,
     handleDelete,
     handleRegistrationAction,
-  } = useEvents(initialEvents);
+  } = useEvents();
 
   const router = useRouter();
 
@@ -58,12 +51,7 @@ export default function AdminEvents({
   const submitForm = (e) => {
     e.preventDefault();
     handleSubmit(e);
-    if (isEditing) {
-      setIsEditing(false);
-      toast.success("Event updated successfully!");
-    } else {
-      toast.success("New event created!");
-    }
+    setIsEditing(false);
     setActiveTab("list");
   };
 
@@ -105,6 +93,7 @@ export default function AdminEvents({
         mode === "dark" ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
       }`}
     >
+      <Toaster />
       <HRHeader
         toggleSidebar={toggleSidebar}
         isSidebarOpen={isSidebarOpen}
@@ -215,8 +204,21 @@ export default function AdminEvents({
                     sortOrder={sortOrder}
                     setSortOrder={setSortOrder}
                     mode={mode}
+                    loading={loading}
                   />
-                  {sortedEvents.length > 0 ? (
+                  {loading ? (
+                    <div className="p-12 text-center">
+                      <div className="w-24 h-24 mx-auto bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mb-6">
+                        <Icon
+                          icon="eos-icons:loading"
+                          className="h-12 w-12 text-indigo-500 dark:text-indigo-300 animate-spin"
+                        />
+                      </div>
+                      <h3 className="mt-2 text-xl font-medium text-gray-900 dark:text-gray-200">
+                        Loading events...
+                      </h3>
+                    </div>
+                  ) : sortedEvents.length > 0 ? (
                     <div className="p-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {sortedEvents.map((event) => {
@@ -346,9 +348,6 @@ export default function AdminEvents({
                                           )
                                         ) {
                                           handleDelete(event.id);
-                                          toast.success(
-                                            "Event deleted successfully!"
-                                          );
                                         }
                                       }}
                                       className={`inline-flex items-center justify-center p-2 border rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors ${
@@ -411,6 +410,7 @@ export default function AdminEvents({
                 registrations={pendingRegistrations}
                 onAction={handleRegistrationAction}
                 mode={mode}
+                loading={loading}
               />
             ) : (
               <EventForm
@@ -470,17 +470,30 @@ export async function getServerSideProps({ req, res }) {
       };
     }
 
-    console.time("fetchHRData");
-    const data = await fetchHRData({
-      supabaseClient: supabaseServer,
-      fetchEvents: true,
-    });
-    console.timeEnd("fetchHRData");
+    // Fetch tiers only
+    const { data: tiersData, error: tiersError } = await supabaseServer
+      .from("candidates")
+      .select("selected_tier")
+      .neq("selected_tier", null);
+
+    if (tiersError) {
+      console.error("[AdminEvents] Tiers Error:", tiersError.message);
+      throw tiersError;
+    }
+
+    const tiers = [
+      ...new Set(
+        tiersData
+          .map((item) => item.selected_tier)
+          .filter(
+            (tier) => tier && typeof tier === "string" && tier.trim() !== ""
+          )
+      ),
+    ].sort();
 
     return {
       props: {
-        initialEvents: data.events || [],
-        tiers: data.tiers || [],
+        tiers,
       },
     };
   } catch (error) {

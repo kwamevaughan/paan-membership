@@ -2,8 +2,8 @@ import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { supabase } from "@/lib/supabase";
 
-export function useEvents(initialEvents = []) {
-  const [events, setEvents] = useState(initialEvents);
+export function useEvents() {
+  const [events, setEvents] = useState([]);
   const [pendingRegistrations, setPendingRegistrations] = useState([]);
   const [formData, setFormData] = useState({
     title: "",
@@ -16,6 +16,40 @@ export function useEvents(initialEvents = []) {
     tier_restriction: "Founding",
   });
   const [loading, setLoading] = useState(false);
+
+  const fetchEvents = async () => {
+    try {
+      setLoading(true);
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error("User not authenticated");
+
+      const { data: hrUser, error: hrError } = await supabase
+        .from("hr_users")
+        .select("id")
+        .eq("id", user.id)
+        .single();
+      if (hrError || !hrUser) throw new Error("User not authorized");
+
+      const { data: eventsData, error: eventsError } = await supabase
+        .from("events")
+        .select("*")
+        .order("date", { ascending: true });
+
+      if (eventsError) throw eventsError;
+
+      console.log("[useEvents] Fetched events:", eventsData);
+      setEvents(eventsData || []);
+    } catch (error) {
+      console.error("[useEvents] Error fetching events:", error);
+      toast.error("Failed to load events");
+      setEvents([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchPendingRegistrations = async () => {
     try {
@@ -112,6 +146,7 @@ export function useEvents(initialEvents = []) {
       await fetchPendingRegistrations();
     } catch (error) {
       console.error("[useEvents] Error handling registration action:", error);
+      toast.error(`Failed to ${action} registration: ${error.message}`);
       throw error; // Let component handle the error
     }
   };
@@ -247,7 +282,32 @@ export function useEvents(initialEvents = []) {
   };
 
   useEffect(() => {
+    fetchEvents();
     fetchPendingRegistrations();
+
+    // Real-time subscriptions
+    const eventsSubscription = supabase
+      .channel("events")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "events" },
+        () => fetchEvents()
+      )
+      .subscribe();
+
+    const registrationsSubscription = supabase
+      .channel("event_registrations")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "event_registrations" },
+        () => fetchPendingRegistrations()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(eventsSubscription);
+      supabase.removeChannel(registrationsSubscription);
+    };
   }, []);
 
   return {
@@ -260,5 +320,7 @@ export function useEvents(initialEvents = []) {
     handleEdit,
     handleDelete,
     handleRegistrationAction,
+    fetchEvents,
+    fetchPendingRegistrations,
   };
 }

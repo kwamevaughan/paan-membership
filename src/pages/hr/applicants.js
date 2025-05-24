@@ -28,7 +28,7 @@ export default function HRApplicants({
   const [filteredCandidates, setFilteredCandidates] = useState(
     initialCandidates || []
   );
-  const [sortField, setSortField] = useState("full_name");
+  const [sortField, setSortField] = useState("primaryContactName");
   const [sortDirection, setSortDirection] = useState("asc");
   const router = useRouter();
   const [selectedCandidate, setSelectedCandidate] = useState(null);
@@ -81,23 +81,36 @@ export default function HRApplicants({
   };
 
   const handleFilterChange = ({ searchQuery, filterOpening, filterStatus }) => {
+    console.log("handleFilterChange:", {
+      searchQuery,
+      filterOpening,
+      filterStatus,
+    });
     let result = [...candidates];
-    
 
     if (searchQuery) {
       result = result.filter(
         (c) =>
-          c.full_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          c.email.toLowerCase().includes(searchQuery.toLowerCase())
+          (c.primaryContactName || "")
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          (c.primaryContactEmail || "")
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase())
       );
+      console.log("After search filter:", result);
     }
     if (filterOpening !== "all") {
       result = result.filter((c) => c.opening === filterOpening);
+      console.log("After opening filter:", result);
     }
     if (filterStatus !== "all") {
       result = result.filter((c) => (c.status || "Pending") === filterStatus);
+      console.log("After status filter:", result);
     }
+
     setFilteredCandidates(result);
+    console.log("Final filtered candidates:", result);
 
     const currentOpening = localStorage.getItem("filterOpening") || "all";
     const currentStatus = localStorage.getItem("filterStatus") || "all";
@@ -144,8 +157,8 @@ export default function HRApplicants({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          primaryContactName: emailData.fullName,
-          primaryContactEmail: emailData.email,
+          primaryContactName: emailData.primaryContactName,
+          primaryContactEmail: emailData.primaryContactEmail,
           opening: emailData.opening,
           status: emailData.status,
           subject,

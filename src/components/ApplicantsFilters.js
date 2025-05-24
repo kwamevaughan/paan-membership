@@ -12,14 +12,20 @@ export default function ApplicantsFilters({
   const [filterStatus, setFilterStatus] = useState("all");
   const [isExpanded, setIsExpanded] = useState(true);
   const hasAppliedInitialFilter = useRef(false);
+  const searchTimeoutRef = useRef(null);
 
   // Extract unique openings and add 'all' option
   const uniqueOpenings = ["all", ...new Set(candidates.map((c) => c.opening))];
   const statuses = ["all", "Accepted", "Pending", "Reviewed", "Shortlisted", "Rejected"];
 
+  // Validate candidates
+  const areCandidatesValid = candidates.every(
+    (c) => c && typeof c.primaryContactName === "string" && typeof c.primaryContactEmail === "string"
+  );
+
   // Apply initial filter when component loads
   useEffect(() => {
-    if (!hasAppliedInitialFilter.current && candidates.length > 0) {
+    if (!hasAppliedInitialFilter.current && candidates.length > 0 && areCandidatesValid) {
       const savedOpening =
         initialOpening !== "all"
           ? initialOpening
@@ -30,18 +36,39 @@ export default function ApplicantsFilters({
       setFilterStatus(savedStatus);
       handleFilter(savedStatus, savedOpening);
       hasAppliedInitialFilter.current = true;
+    } else if (!areCandidatesValid) {
+      console.warn("Invalid candidates detected:", candidates);
     }
-  }, [candidates, initialOpening]);
+  }, [candidates, initialOpening, areCandidatesValid]);
 
-  // Apply filter when any filter value changes
+  // Debounced filter application
   useEffect(() => {
-    handleFilter();
-  }, [searchQuery, filterOpening, filterStatus]);
+    if (!areCandidatesValid) {
+      console.warn("Skipping filter due to invalid candidates:", candidates);
+      return;
+    }
+
+    // Debounce filter updates
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    searchTimeoutRef.current = setTimeout(() => {
+      handleFilter();
+    }, 300);
+
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [searchQuery, filterOpening, filterStatus, areCandidatesValid]);
 
   const handleFilter = (
     statusOverride = filterStatus,
     openingOverride = filterOpening
   ) => {
+    console.log("Applying filter:", { searchQuery, filterOpening: openingOverride, filterStatus: statusOverride });
     onFilterChange({
       searchQuery,
       filterOpening: openingOverride,
@@ -208,25 +235,22 @@ export default function ApplicantsFilters({
                 Status
               </label>
               <div className="relative">
-                {/* Status selector with custom styling */}
-                <div className="relative">
-                  <select
-                    value={filterStatus}
-                    onChange={handleStatusChange}
-                    className={`block w-full rounded-md shadow-sm pl-3 pr-8 py-2 text-sm focus:ring-2 focus:ring-[#f05d23] focus:border-transparent ${inputBg} ${inputBorder} ${textColor} border appearance-none`}
-                  >
-                    {statuses.map((status) => (
-                      <option key={status} value={status}>
-                        {status === "all" ? "All Statuses" : status}
-                      </option>
-                    ))}
-                  </select>
-                  <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                    <Icon
-                      icon="heroicons:chevron-down"
-                      className={`w-4 h-4 ${mutedTextColor}`}
-                    />
-                  </div>
+                <select
+                  value={filterStatus}
+                  onChange={handleStatusChange}
+                  className={`block w-full rounded-md shadow-sm pl-3 pr-8 py-2 text-sm focus:ring-2 focus:ring-[#f05d23] focus:border-transparent ${inputBg} ${inputBorder} ${textColor} border appearance-none`}
+                >
+                  {statuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status === "all" ? "All Statuses" : status}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                  <Icon
+                    icon="heroicons:chevron-down"
+                    className={`w-4 h-4 ${mutedTextColor}`}
+                  />
                 </div>
               </div>
             </div>
@@ -276,11 +300,11 @@ export default function ApplicantsFilters({
                             ? "bg-blue-500"
                             : status === "Shortlisted"
                             ? "bg-green-500"
-                              : "bg-red-500"
-                                ? "bg-red-500"
-                                : status === "Accepted"
-                                ? "bg-green-500"
-                                : "bg-gray-500"
+                            : status === "Accepted"
+                            ? "bg-green-500"
+                            : status === "Rejected"
+                            ? "bg-red-500"
+                            : "bg-gray-500"
                         }`}
                       ></span>
                       {status}

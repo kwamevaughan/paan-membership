@@ -461,7 +461,10 @@ export async function getServerSideProps({ req, res }) {
       .neq("selected_tier", null);
 
     if (tiersError) {
-      console.error("[AdminBusinessOpportunities] Tiers Error:", tiersError.message);
+      console.error(
+        "[AdminBusinessOpportunities] Tiers Error:",
+        tiersError.message
+      );
       throw new Error(`Failed to fetch tiers: ${tiersError.message}`);
     }
 
@@ -469,7 +472,9 @@ export async function getServerSideProps({ req, res }) {
       ...new Set(
         tiersData
           .map((item) => item.selected_tier)
-          .filter((tier) => tier && typeof tier === "string" && tier.trim() !== "")
+          .filter(
+            (tier) => tier && typeof tier === "string" && tier.trim() !== ""
+          )
       ),
     ].sort();
 
@@ -488,7 +493,7 @@ export async function getServerSideProps({ req, res }) {
       redirect: {
         destination: "/hr/login",
         permanent: false,
-        },
-      };
-    }
+      },
+    };
   }
+}

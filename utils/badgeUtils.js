@@ -1,4 +1,12 @@
 export const getTierBadgeColor = (tier, mode) => {
+  if (!tier || typeof tier !== "string") {
+    return {
+      bg: mode === "dark" ? "bg-gray-700/30" : "bg-gray-100",
+      text: mode === "dark" ? "text-gray-200" : "text-gray-800",
+      border: mode === "dark" ? "border-gray-600" : "border-gray-200",
+    };
+  }
+
   if (tier.includes("Founding")) {
     return {
       bg: mode === "dark" ? "bg-blue-900/30" : "bg-blue-50",

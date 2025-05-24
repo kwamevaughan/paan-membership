@@ -1,50 +1,49 @@
 import { useState } from "react";
 import { Icon } from "@iconify/react";
+import toast from "react-hot-toast";
 
-export default function SubscribersLog({ initialSubscribers = [], mode }) {
-  console.log("[SubscribersLog] Props:", {
-    initialSubscribers: initialSubscribers?.length || 0,
-    sample: initialSubscribers?.slice(0, 2) || [],
-  });
-
+export default function SubscribersLog({
+  initialSubscribers = [],
+  mode,
+  loading,
+}) {
   const isDark = mode === "dark";
-  const [subscribers, setSubscribers] = useState(() =>
-    [...initialSubscribers].sort(
-      (a, b) => new Date(b.created_at) - new Date(a.created_at)
-    )
-  );
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState({
     key: "created_at",
     direction: "desc",
   });
 
-  const filteredSubscribers = subscribers.filter(
+  // Filter subscribers based on search term
+  const filteredSubscribers = initialSubscribers.filter(
     (sub) =>
       sub.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (sub.name && sub.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  // Sort subscribers based on sortConfig
+  const sortedSubscribers = [...filteredSubscribers].sort((a, b) => {
+    const key = sortConfig.key;
+    const direction = sortConfig.direction === "asc" ? 1 : -1;
+    if (key === "created_at") {
+      return direction * (new Date(b[key]) - new Date(a[key]));
+    }
+    if (a[key] < b[key]) return -direction;
+    if (a[key] > b[key]) return direction;
+    return 0;
+  });
+
   const handleSort = (key) => {
     const direction =
       sortConfig.key === key && sortConfig.direction === "asc" ? "desc" : "asc";
     setSortConfig({ key, direction });
-
-    setSubscribers(
-      [...subscribers].sort((a, b) => {
-        if (a[key] < b[key]) return direction === "asc" ? -1 : 1;
-        if (a[key] > b[key]) return direction === "asc" ? 1 : -1;
-        return 0;
-      })
-    );
   };
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
-
   const totalPages = Math.ceil(filteredSubscribers.length / itemsPerPage);
 
-  const paginatedSubscribers = filteredSubscribers.slice(
+  const paginatedSubscribers = sortedSubscribers.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
@@ -65,10 +64,59 @@ export default function SubscribersLog({ initialSubscribers = [], mode }) {
     return sortConfig.direction === "asc" ? "mdi:arrow-up" : "mdi:arrow-down";
   };
 
+  const exportToCSV = () => {
+    if (filteredSubscribers.length === 0) {
+      toast.error("No subscribers to export");
+      return;
+    }
+
+    // Define CSV headers
+    const headers = ["Name", "Email", "Joined"];
+    // Map subscribers to CSV rows
+    const rows = filteredSubscribers.map((sub) => [
+      sub.name || "—",
+      sub.email,
+      formatDate(sub.created_at),
+    ]);
+
+    // Create CSV content
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) =>
+        row
+          .map((cell) =>
+            typeof cell === "string" && cell.includes(",")
+              ? `"${cell.replace(/"/g, '""')}"`
+              : cell
+          )
+          .join(",")
+      ),
+    ].join("\n");
+
+    // Create a Blob with the CSV content
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute(
+      "download",
+      `subscribers_${new Date().toISOString()}.csv`
+    );
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    toast.success("Subscribers exported successfully!", {
+      icon: "✅",
+      duration: 2000,
+    });
+  };
+
   return (
     <div
       className={`rounded-2xl cursor-pointer transition-all duration-300 ${
-        mode === "dark"
+        isDark
           ? "bg-gradient-to-br from-gray-800 to-gray-700 border-gray-600 shadow-md hover:shadow-xl text-white"
           : "bg-gradient-to-br from-white to-gray-50 border-blue-100 shadow-lg hover:shadow-xl text-gray-800"
       }`}
@@ -93,25 +141,41 @@ export default function SubscribersLog({ initialSubscribers = [], mode }) {
               </p>
             </div>
           </div>
-          <div className="w-full sm:w-auto">
-            <div className="relative w-full sm:min-w-[150px]">
-              <Icon
-                icon="mdi:magnify"
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 opacity-50"
-              />
-              <input
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className={`pl-10 pr-4 py-2 w-full rounded-lg text-sm focus:outline-none focus:ring-2 transition ${
-                  isDark
-                    ? "bg-slate-800 border border-slate-700 focus:ring-indigo-500 text-white"
-                    : "bg-gray-50 border border-gray-200 focus:ring-indigo-300 text-gray-800"
-                }`}
-              />
-            </div>
+          <div className="flex w-full sm:w-auto gap-2">
+            <button
+              onClick={exportToCSV}
+              disabled={loading}
+              className={`px-3 py-2 text-sm rounded-lg transition flex items-center gap-1 ${
+                isDark
+                  ? `bg-indigo-600 text-white hover:bg-indigo-700 ${
+                      loading ? "opacity-50 cursor-not-allowed" : ""
+                    }`
+                  : `bg-indigo-500 text-white hover:bg-indigo-600 ${
+                      loading ? "opacity-50 cursor-not-allowed" : ""
+                    }`
+              }`}
+            >
+              <Icon icon="mdi:download" className="w-4 h-4" />
+              Export All
+            </button>
           </div>
+        </div>
+        <div className="relative w-full mt-4">
+          <Icon
+            icon="mdi:magnify"
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 opacity-50"
+          />
+          <input
+            type="text"
+            placeholder="Search..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className={`pl-10 pr-4 py-2 w-full rounded-lg text-sm focus:outline-none focus:ring-2 transition ${
+              isDark
+                ? "bg-slate-800 border border-slate-700 focus:ring-indigo-500 text-white"
+                : "bg-gray-50 border border-gray-200 focus:ring-indigo-300 text-gray-800"
+            }`}
+          />
         </div>
       </div>
 
@@ -125,13 +189,51 @@ export default function SubscribersLog({ initialSubscribers = [], mode }) {
             >
               <tr>
                 <th className="text-left px-6 py-4 font-semibold text-gray-500 dark:text-gray-400">
-                  Subscriber Info
+                  <button
+                    onClick={() => handleSort("name")}
+                    className="flex items-center gap-1"
+                  >
+                    Subscriber Info
+                    <Icon icon={getSortIcon("name")} className="w-4 h-4" />
+                  </button>
+                </th>
+                <th className="text-left px-6 py-4 font-semibold text-gray-500 dark:text-gray-400">
+                  <button
+                    onClick={() => handleSort("created_at")}
+                    className="flex items-center gap-1"
+                  >
+                    Joined
+                    <Icon
+                      icon={getSortIcon("created_at")}
+                      className="w-4 h-4"
+                    />
+                  </button>
                 </th>
               </tr>
             </thead>
 
             <tbody>
-              {paginatedSubscribers.length > 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan="2" className="px-6 py-10 text-center">
+                    <div className="flex flex-col items-center gap-2 text-sm">
+                      <div
+                        className={`p-3 rounded-full ${
+                          isDark ? "bg-slate-800" : "bg-gray-100"
+                        }`}
+                      >
+                        <Icon
+                          icon="eos-icons:loading"
+                          className={`w-6 h-6 animate-spin ${
+                            isDark ? "text-gray-400" : "text-gray-500"
+                          }`}
+                        />
+                      </div>
+                      <p className="font-medium">Loading subscribers...</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : paginatedSubscribers.length > 0 ? (
                 paginatedSubscribers.map((subscriber) => (
                   <tr
                     key={subscriber.id}
@@ -170,7 +272,6 @@ export default function SubscribersLog({ initialSubscribers = [], mode }) {
                             {subscriber.name || "—"}
                           </span>
                         </div>
-
                         <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
                           <Icon
                             icon="mdi:email-outline"
@@ -178,21 +279,16 @@ export default function SubscribersLog({ initialSubscribers = [], mode }) {
                           />
                           <span>{subscriber.email}</span>
                         </div>
-
-                        <div className="flex items-center gap-2 text-sm text-gray-400">
-                          <Icon
-                            icon="mdi:calendar"
-                            className="w-4 h-4 opacity-50"
-                          />
-                          <span>{formatDate(subscriber.created_at)}</span>
-                        </div>
                       </div>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-400">
+                      {formatDate(subscriber.created_at)}
                     </td>
                   </tr>
                 ))
               ) : (
                 <tr>
-                  <td colSpan="1" className="px-6 py-10 text-center">
+                  <td colSpan="2" className="px-6 py-10 text-center">
                     <div className="flex flex-col items-center gap-2 text-sm">
                       <div
                         className={`p-3 rounded-full ${
@@ -220,14 +316,15 @@ export default function SubscribersLog({ initialSubscribers = [], mode }) {
           </table>
         </div>
 
-        {filteredSubscribers.length > 0 && (
+        {!loading && filteredSubscribers.length > 0 && (
           <div
             className={`px-6 py-4 border-t ${
               isDark ? "border-slate-800" : "border-gray-100"
             } flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0`}
           >
             <span className="text-sm text-gray-500">
-              Showing {paginatedSubscribers.length} of {subscribers.length}
+              Showing {paginatedSubscribers.length} of{" "}
+              {filteredSubscribers.length}
             </span>
             <div className="flex items-center gap-2">
               <button
@@ -241,11 +338,9 @@ export default function SubscribersLog({ initialSubscribers = [], mode }) {
               >
                 Previous
               </button>
-
               <span className="text-sm text-gray-500">
                 Page {currentPage} of {totalPages}
               </span>
-
               <button
                 onClick={() =>
                   setCurrentPage((p) => Math.min(p + 1, totalPages))

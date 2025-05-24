@@ -1,18 +1,17 @@
+// fetchHRData.js
 export async function fetchHRData({
   supabaseClient,
   fetchCandidates = false,
   fetchQuestions = false,
-  fetchSubscribers = false,
   fetchOpportunities = false,
   fetchEvents = false,
   fetchResources = false,
   fetchOffers = false,
   fetchEmailTemplates = false,
-  fetchMarketIntel = false, // New option
+  fetchMarketIntel = false,
 } = {}) {
   try {
     const queries = [];
-    let subscribersQueryIndex = -1;
     let opportunitiesQueryIndex = -1;
     let eventsQueryIndex = -1;
     let resourcesQueryIndex = -1;
@@ -46,12 +45,6 @@ export async function fetchHRData({
           .select("*")
           .order("order", { ascending: true })
       );
-      queryIndex += 1;
-    }
-
-    if (fetchSubscribers) {
-      subscribersQueryIndex = queryIndex;
-      queries.push(supabaseClient.from("newsletter_subscriptions").select("*"));
       queryIndex += 1;
     }
 
@@ -148,8 +141,6 @@ export async function fetchHRData({
           `[fetchHRData] Query ${index} error:`,
           result.error.message
         );
-      } else {
-        console.log(`[fetchHRData] Query ${index} result:`, result?.data);
       }
     });
 
@@ -165,9 +156,6 @@ export async function fetchHRData({
       ? results[resultIndex++]?.data || []
       : fetchQuestions
       ? results[questionQueryIndex]?.data || []
-      : [];
-    const subscribersData = fetchSubscribers
-      ? results[subscribersQueryIndex]?.data || []
       : [];
     const opportunitiesData = fetchOpportunities
       ? results[opportunitiesQueryIndex]?.data || []
@@ -237,11 +225,6 @@ export async function fetchHRData({
     ) {
       throw new Error(
         `Questions query error: ${results[questionQueryIndex].error.message}`
-      );
-    }
-    if (fetchSubscribers && results[subscribersQueryIndex]?.error) {
-      throw new Error(
-        `Subscribers query error: ${results[subscribersQueryIndex].error.message}`
       );
     }
     if (fetchOpportunities && results[opportunitiesQueryIndex]?.error) {
@@ -438,17 +421,10 @@ export async function fetchHRData({
       ? [...new Set(combinedData.map((c) => c.opening))]
       : [];
 
-    console.log("[fetchHRData] Returning market intel:", marketIntelData);
-    console.log(
-      "[fetchHRData] Returning market intel feedback:",
-      marketIntelFeedbackData
-    );
-
     return {
       initialCandidates: combinedData,
       initialJobOpenings: jobOpenings,
       initialQuestions: questionsData,
-      subscribers: subscribersData,
       opportunities: opportunitiesData,
       events: eventsData,
       resources: resourcesData,
@@ -465,7 +441,6 @@ export async function fetchHRData({
       initialCandidates: [],
       initialJobOpenings: [],
       initialQuestions: [],
-      subscribers: [],
       opportunities: [],
       events: [],
       resources: [],

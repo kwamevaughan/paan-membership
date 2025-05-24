@@ -1,3 +1,4 @@
+// HROverview.jsx
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
@@ -10,7 +11,6 @@ import SimpleFooter from "@/layouts/simpleFooter";
 import WelcomeCard from "@/components/WelcomeCard";
 import StatusChart from "@/components/StatusChart";
 import CandidateList from "@/components/CandidateList";
-import ResourceOverview from "@/components/ResourceOverview";
 import JobOpenings from "@/components/JobOpenings";
 import DeviceChart from "@/components/DeviceChart";
 import EmailModal from "@/components/EmailModal";
@@ -21,15 +21,15 @@ import { fetchHRData } from "../../../utils/hrData";
 import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
-
-const CountryChart = dynamic(() => import("@/components/CountryChart"), {
-  ssr: false,
-});
-
+import { useSubscribers } from "@/hooks/useSubscribers"; // Import the new hook
 import countriesGeoJson from "../../data/countries.js";
 import OverviewBoxes from "@/components/OverviewBoxes";
 import RecentActivities from "@/components/RecentActivities";
 import SubscribersLog from "@/components/SubscribersLog";
+
+const CountryChart = dynamic(() => import("@/components/CountryChart"), {
+  ssr: false,
+});
 
 const countryCodeToName = countriesGeoJson.features.reduce((acc, feature) => {
   acc[feature.properties.iso_a2.toUpperCase()] = feature.properties.sovereignt;
@@ -42,20 +42,12 @@ export default function HROverview({
   initialCandidates,
   initialJobOpenings,
   initialQuestions,
-  initialSubscribers,
   breadcrumbs,
 }) {
-  console.log("HROverview Props:", {
-    initialCandidates: initialCandidates?.length || 0,
-    initialJobOpenings: initialJobOpenings?.length || 0,
-    initialQuestions: initialQuestions?.length || 0,
-    initialSubscribers: initialSubscribers?.length || 0,
-  });
-
+  const { subscribers, loading: subscribersLoading } = useSubscribers(); // Use the hook
   const [candidates, setCandidates] = useState(initialCandidates || []);
   const [jobOpenings, setJobOpenings] = useState(initialJobOpenings || []);
   const [questions, setQuestions] = useState(initialQuestions || []);
-  const [subscribers, setSubscribers] = useState(initialSubscribers || []);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [isCandidateModalOpen, setIsCandidateModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
@@ -87,10 +79,6 @@ export default function HROverview({
   });
 
   useEffect(() => {
-    console.log(
-      "[HROverview] Component mounted, candidates:",
-      candidates.length
-    );
     const handleSidebarChange = (e) => {
       const newHidden = e.detail.hidden;
       setSidebarState((prev) => {
@@ -282,12 +270,14 @@ export default function HROverview({
               </div>
             </div>
 
-            <ResourceOverview
-              candidates={candidates}
-              setSelectedCandidate={setSelectedCandidate}
-              setIsModalOpen={setIsCandidateModalOpen}
-              mode={mode}
-            />
+            <div className="md:col-span-1"></div>
+            <div className="mb-6">
+              <CountryChart
+                candidates={candidates}
+                mode={mode}
+                onFilter={handleChartFilter}
+              />
+            </div>
 
             <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="md:col-span-1">
@@ -295,6 +285,7 @@ export default function HROverview({
                   key={subscribers.length}
                   initialSubscribers={subscribers}
                   mode={mode}
+                  loading={subscribersLoading} // Pass loading state
                 />
               </div>
               <div className="md:col-span-2">
@@ -305,15 +296,6 @@ export default function HROverview({
                   mode={mode}
                 />
               </div>
-            </div>
-
-            <div className="md:col-span-1"></div>
-            <div className="mb-6">
-              <CountryChart
-                candidates={candidates}
-                mode={mode}
-                onFilter={handleChartFilter}
-              />
             </div>
           </div>
         </div>
@@ -413,23 +395,13 @@ export async function getServerSideProps({ req, res }) {
       supabaseClient: supabaseServer,
       fetchCandidates: true,
       fetchQuestions: true,
-      fetchSubscribers: true,
     });
     console.timeEnd("fetchHRData");
-    console.log("[getServerSideProps] Fetched Data:", {
-      candidates: data.initialCandidates?.length || 0,
-      jobOpenings: data.initialJobOpenings?.length || 0,
-      questions: data.initialQuestions?.length || 0,
-      subscribers: data.subscribers?.length || 0,
-      sampleSubscribers: data.subscribers?.slice(0, 2) || [],
-    });
-
     return {
       props: {
         initialCandidates: data.initialCandidates || [],
         initialJobOpenings: data.initialJobOpenings || [],
         initialQuestions: data.initialQuestions || [],
-        initialSubscribers: data.subscribers || [],
         breadcrumbs: [
           { label: "Dashboard", href: "/admin" },
           { label: "Overview" },

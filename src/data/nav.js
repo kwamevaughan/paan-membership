@@ -12,7 +12,7 @@ export const sidebarNav = [
   {
     category: "Recruitment Tools",
     items: [
-      { href: "/hr/jobs", icon: "mdi:briefcase", label: "Job Postings" },
+      { href: "/hr/jobs", icon: "mdi:briefcase", label: "EOI Postings" },
       {
         href: "/hr/applicants",
         icon: "mdi:account-group",

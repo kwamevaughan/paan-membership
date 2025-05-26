@@ -16,6 +16,7 @@ import useStatusChange from "@/hooks/useStatusChange";
 import { Icon } from "@iconify/react";
 import { fetchHRData } from "../../../utils/hrData";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
+import { supabase } from "@/lib/supabase";
 
 export default function HRApplicants({
   mode = "light",
@@ -226,31 +227,39 @@ export default function HRApplicants({
 
     const loadingToast = toast.loading("Please wait...");
     try {
+      // Fetch file IDs from the responses table
       const { data: responseData, error: fetchError } = await supabase
         .from("responses")
-        .select("resume_file_id, cover_letter_file_id")
+        .select(
+          "company_registration_file_id, portfolio_work_file_id, agency_profile_file_id, tax_registration_file_id"
+        )
         .eq("user_id", candidateId)
         .single();
       if (fetchError) throw fetchError;
 
-     
+      // Extract file IDs
+      const fileIds = [
+        responseData?.company_registration_file_id,
+        responseData?.portfolio_work_file_id,
+        responseData?.agency_profile_file_id,
+        responseData?.tax_registration_file_id,
+      ].filter((id) => id); // Filter out null/undefined IDs
 
-      const resumeFileId = responseData?.resume_file_id;
-      const coverLetterFileId = responseData?.cover_letter_file_id;
-
-      const { error: candidateError } = await supabase
-        .from("candidates")
-        .delete()
-        .eq("id", candidateId);
-      if (candidateError) throw candidateError;
-
+      // Delete responses first to avoid foreign key constraint violation
       const { error: responseError } = await supabase
         .from("responses")
         .delete()
         .eq("user_id", candidateId);
       if (responseError) throw responseError;
 
-      const fileIds = [resumeFileId, coverLetterFileId].filter((id) => id);
+      // Delete candidate from candidates table
+      const { error: candidateError } = await supabase
+        .from("candidates")
+        .delete()
+        .eq("id", candidateId);
+      if (candidateError) throw candidateError;
+
+      // Delete files from Google Drive if they exist
       if (fileIds.length > 0) {
         const deleteResponse = await fetch("/api/delete-files", {
           method: "POST",
@@ -267,6 +276,7 @@ export default function HRApplicants({
         console.log("No file IDs found to delete for candidate", candidateId);
       }
 
+      // Update state to remove deleted candidate
       const updatedCandidates = candidates.filter((c) => c.id !== candidateId);
       setCandidates(updatedCandidates);
       setFilteredCandidates(updatedCandidates);
@@ -333,35 +343,47 @@ export default function HRApplicants({
 
     const loadingToast = toast.loading("Please wait...");
     try {
+      // Fetch file IDs for all selected candidates
       const { data: responsesData, error: fetchError } = await supabase
         .from("responses")
-        .select("user_id, resume_file_id, cover_letter_file_id")
+        .select(
+          "user_id, company_registration_file_id, portfolio_work_file_id, agency_profile_file_id, tax_registration_file_id"
+        )
         .in("user_id", selectedIds);
       if (fetchError) throw fetchError;
 
       console.log("Responses data for bulk delete:", responsesData);
 
+      // Collect all file IDs
       const fileIdsToDelete = responsesData.reduce((acc, response) => {
-        if (response.resume_file_id) acc.push(response.resume_file_id);
-        if (response.cover_letter_file_id)
-          acc.push(response.cover_letter_file_id);
+        if (response.company_registration_file_id)
+          acc.push(response.company_registration_file_id);
+        if (response.portfolio_work_file_id)
+          acc.push(response.portfolio_work_file_id);
+        if (response.agency_profile_file_id)
+          acc.push(response.agency_profile_file_id);
+        if (response.tax_registration_file_id)
+          acc.push(response.tax_registration_file_id);
         return acc;
       }, []);
 
       console.log("File IDs to delete:", fileIdsToDelete);
 
-      const { error: candidateError } = await supabase
-        .from("candidates")
-        .delete()
-        .in("id", selectedIds);
-      if (candidateError) throw candidateError;
-
+      // Delete responses first to avoid foreign key constraint violation
       const { error: responseError } = await supabase
         .from("responses")
         .delete()
         .in("user_id", selectedIds);
       if (responseError) throw responseError;
 
+      // Delete candidates
+      const { error: candidateError } = await supabase
+        .from("candidates")
+        .delete()
+        .in("id", selectedIds);
+      if (candidateError) throw candidateError;
+
+      // Delete files from Google Drive if they exist
       if (fileIdsToDelete.length > 0) {
         const deleteResponse = await fetch("/api/delete-files", {
           method: "POST",
@@ -379,6 +401,7 @@ export default function HRApplicants({
         console.log("No file IDs found to delete for selected candidates");
       }
 
+      // Update state to remove deleted candidates
       const updatedCandidates = candidates.filter(
         (c) => !selectedIds.includes(c.id)
       );

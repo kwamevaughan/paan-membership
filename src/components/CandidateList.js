@@ -80,7 +80,7 @@ export default function CandidateList({
 
   return (
     <div
-      className={`rounded-2xl cursor-pointer transition-all duration-300 p-6 ${
+      className={`rounded-2xl transition-all duration-300 p-6 ${
         mode === "dark"
           ? "bg-gradient-to-br from-gray-800 to-gray-700 border-gray-600 shadow-md hover:shadow-xl text-white"
           : "bg-gradient-to-br from-white to-gray-50 border-blue-100 shadow-lg hover:shadow-xl text-gray-800"
@@ -88,23 +88,39 @@ export default function CandidateList({
     >
       <div className="mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h3
-            className={`text-lg font-semibold flex items-center ${
-              mode === "dark" ? "text-white" : "text-gray-800"
-            }`}
-          >
-            <Icon icon="mdi:clock-outline" className="mr-2 text-2xl" />
-            Pending Approval
-            <span
-              className={`ml-2 px-2.5 py-0.5 text-sm rounded-full ${
-                mode === "dark"
-                  ? "bg-gray-700 text-gray-300"
-                  : "bg-gray-100 text-gray-800"
-              }`}
-            >
-              {pendingCount}
-            </span>
-          </h3>
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="p-3 rounded-2xl bg-[#fef1ce] shadow-lg">
+                {" "}
+                {/* Light yellow background */}
+                <Icon
+                  icon="mdi:clock-alert"
+                  className="w-6 h-6 text-[#4086f7]"
+                />{" "}
+                {/* Blue icon */}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <h2 className={`text-xl font-bold text-[#172840]`}>
+                Pending Approval
+              </h2>
+              <span
+                className={`text-sm font-medium ${
+                  mode === "dark" ? "text-[#84c1d9]" : "text-[#172840]"
+                }`}
+              >
+                <span
+                  className={`ml-2 px-2.5 py-0.5 text-sm rounded-full ${
+                    mode === "dark"
+                      ? "bg-gray-700 text-gray-300"
+                      : "bg-gray-100 text-gray-800"
+                  }`}
+                >
+                  {pendingCount}
+                </span>
+              </span>
+            </div>
+          </div>
         </div>
 
         <div

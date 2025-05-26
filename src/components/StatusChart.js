@@ -504,19 +504,35 @@ export default function StatusChart({
       }`}
     >
       <div className="flex justify-between items-center p-4 pb-0">
-        <h3
-          className={`text-lg font-bold flex items-center gap-2 ${
-            mode === "dark" ? "text-white" : "text-[#231812]"
-          }`}
-        >
-          <Icon
-            icon="icon-park-outline:document-folder"
-            width={28}
-            height={28}
-            className={`${mode === "dark" ? "text-white" : "text-indigo-900"}`}
-          />
-          Candidate Status by Tier
-        </h3>
+        <div className="flex items-center gap-4">
+          <div className="relative">
+            <div className="p-3 rounded-2xl bg-[#fef1ce] shadow-lg">
+              {" "}
+              {/* Light yellow background */}
+              <Icon
+                icon="mdi:chart-bar"
+                className="w-6 h-6 text-[#4086f7]"
+              />{" "}
+              {/* Blue icon */}
+            </div>
+          </div>
+          <h2 className={`text-xl font-bold text-[#172840] $`}>
+            Candidate Status by Tier
+          </h2>
+          <div className="flex items-center gap-2 mt-1">
+            <span
+              className={`text-sm font-medium ${
+                mode === "dark" ? "text-[#84c1d9]" : "text-[#172840]"
+              }`}
+            >
+              <p
+                className={`text-sm mt-1 ${
+                  mode === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              ></p>
+            </span>
+          </div>
+        </div>
         <div
           className={`flex items-center space-x-2 p-1 rounded-full ${
             mode === "dark" ? "bg-gray-800" : "bg-sky-50"

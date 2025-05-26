@@ -1,5 +1,6 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
+import { Icon } from "@iconify/react";
 
 // Import ApexCharts dynamically to avoid SSR issues
 const Chart = dynamic(() => import("react-apexcharts"), { ssr: false });
@@ -200,23 +201,34 @@ export default function ModernDeviceChart({ candidates, mode, onFilter }) {
       }`}
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
-        <h3
-          className={`text-xl font-semibold mb-3 sm:mb-0 ${
-            mode === "dark" ? "text-white" : "text-gray-800"
-          }`}
-        >
-          Device Usage
-        </h3>
-        <button
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-2xl bg-[#fef1ce] shadow-lg">
+            {" "}
+            <Icon icon="mdi:desktop-mac" className="w-6 h-6 text-[#4086f7]" />
+          </div>
+
+          <h3
+            className={`text-xl font-semibold mb-3 sm:mb-0 ${
+              mode === "dark" ? "text-white" : "text-gray-800"
+            }`}
+          >
+            Device Usage
+          </h3>
+        </div>
+
+        <div
           onClick={() => setShowDetails(!showDetails)}
-          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-300 transform hover:scale-105 ${
+          className={`cursor-pointer p-2 rounded-full text-sm font-medium transition-all duration-300 transform hover:scale-105 ${
             mode === "dark"
-              ? "bg-blue-500 text-white hover:bg-blue-600"
-              : "bg-blue-500 text-white hover:bg-blue-600"
+              ? "bg-[#84c1d9] text-white hover:bg-[#65a8c7]"
+              : "bg-gray-100 hover:bg-gray-200"
           }`}
         >
-          {showDetails ? "Show Grouped View" : "Show Detailed View"}
-        </button>
+          <Icon
+            icon={"mdi:information-outline"}
+            className="w-5 h-5 transition-all duration-300"
+          />
+        </div>
       </div>
 
       <div className="h-80">

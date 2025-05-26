@@ -33,7 +33,7 @@ export const sidebarNav = [
         icon: "carbon:power-virtual-server-disaster-recovery-automation",
         label: "Automations",
       },
-      { href: "/hr/recruiters", icon: "stash:search-box", label: "Recruiters" },
+      // { href: "/hr/recruiters", icon: "stash:search-box", label: "Recruiters" },
     ],
   },
   {

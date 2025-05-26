@@ -36,7 +36,7 @@ export default function WelcomeCard({
                 } animate-pulse`}
               ></div>
               <div
-                className={`relative p-4 rounded-2xl ${
+                className={`relative p-2 rounded-2xl ${
                   mode === "dark"
                     ? "bg-gradient-to-br from-amber-400/20 to-orange-500/20 border border-amber-400/30"
                     : "bg-gradient-to-br from-amber-100 to-orange-100 border border-amber-200"
@@ -44,8 +44,8 @@ export default function WelcomeCard({
               >
                 <Icon
                   icon="mdi:bell-check"
-                  width={32}
-                  height={32}
+                  width={30}
+                  height={30}
                   className={`${
                     mode === "dark" ? "text-amber-400" : "text-amber-600"
                   } animate-bounce`}

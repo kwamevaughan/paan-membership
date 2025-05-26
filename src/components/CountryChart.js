@@ -257,6 +257,7 @@ export default function CountryChart({ candidates, mode, onFilter }) {
             : "bg-gradient-to-br from-white to-gray-50 border-blue-100 shadow-lg hover:shadow-xl text-gray-800"
         }`}
       >
+        
         <h3 className="text-xl font-semibold mb-4">Applicants by Country</h3>
         <div className="flex items-center justify-center p-8">
           <div className="text-red-500 flex flex-col items-center">
@@ -279,16 +280,39 @@ export default function CountryChart({ candidates, mode, onFilter }) {
     >
       <div className="p-6">
         <div className="flex justify-between items-center mb-6">
-          <div>
-            <h3 className="text-xl font-bold">Applicants by Country</h3>
-            <p
-              className={`text-sm mt-1 ${
-                isDarkMode ? "text-gray-400" : "text-gray-500"
-              }`}
-            >
-              {totalApplicants} total applicants from{" "}
-              {Object.keys(countryCounts).length} countries
-            </p>
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="p-3 rounded-2xl bg-[#fef1ce] shadow-lg">
+                {" "}
+                {/* Light yellow background */}
+                <Icon
+                  icon="mdi:globe"
+                  className="w-6 h-6 text-[#4086f7]"
+                />{" "}
+                {/* Blue icon */}
+              </div>
+            </div>
+            <div>
+              <h2 className={`text-xl font-bold text-[#172840] $`}>
+                Applicants by Country
+              </h2>
+              <div className="flex items-center gap-2 mt-1">
+                <span
+                  className={`text-sm font-medium ${
+                    mode === "dark" ? "text-[#84c1d9]" : "text-[#172840]"
+                  }`}
+                >
+                  <p
+                    className={`text-sm mt-1 ${
+                      isDarkMode ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    {totalApplicants} total applicants from{" "}
+                    {Object.keys(countryCounts).length} countries
+                  </p>
+                </span>
+              </div>
+            </div>
           </div>
 
           <button

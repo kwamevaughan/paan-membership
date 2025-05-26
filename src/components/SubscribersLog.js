@@ -136,13 +136,16 @@ export default function SubscribersLog({
         <div className="flex flex-col sm:flex-row justify-between gap-4">
           <div className="flex items-center gap-3">
             <div
-              className={`p-2 rounded-xl ${
+              className={`p-3 rounded-xl shadow-lg ${
                 mode === "dark"
                   ? "bg-indigo-500/20 text-indigo-300"
-                  : "bg-[#84c1d9]/20 text-[#172840]"
+                  : "bg-[#fef1ce] text-[#172840]"
               }`}
             >
-              <Icon icon="solar:user-broken" className="w-5 h-5" />
+              <Icon
+                icon="solar:user-broken"
+                className="w-6 h-6 text-[#4086f7]"
+              />
             </div>
             <div>
               <h2 className="text-xl font-semibold">Subscribers</h2>

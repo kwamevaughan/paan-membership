@@ -52,40 +52,40 @@ export default function ModernTimeline({
   // Activity styles with blue-based palette
   const activityStyles = {
     business_opportunities: {
-      bg: "bg-[#172840]", // Dark blue
-      gradient: "from-[#172840] to-[#84c1d9]", // Dark blue to light blue
+      bg: "bg-[#d97708]", // Orange for a warm, professional tone
+      gradient: "from-[#d97708] to-[#fef1ce]", // Orange to light yellow for vibrancy
       icon: "lucide:briefcase",
-      glow: "shadow-[#172840]/25",
+      glow: "shadow-[#d97708]/25",
     },
     events: {
-      bg: "bg-[#3b82f6]", // Mid-tone blue
-      gradient: "from-[#3b82f6] to-[#84c1d9]", // Mid-tone blue to light blue
+      bg: "bg-[#4086f7]", // Bright blue for event energy
+      gradient: "from-[#4086f7] to-[#84c1d9]", // Blue to light cyan for a fresh look
       icon: "lucide:calendar",
-      glow: "shadow-[#3b82f6]/25",
+      glow: "shadow-[#4086f7]/25",
     },
     updates: {
-      bg: "bg-[#84c1d9]", // Light blue
-      gradient: "from-[#84c1d9] to-[#172840]", // Light blue to dark blue
+      bg: "bg-[#84c1d9]", // Light cyan for a clean, modern feel
+      gradient: "from-[#84c1d9] to-[#eff6ff]", // Light cyan to soft white-blue
       icon: "lucide:trending-up",
       glow: "shadow-[#84c1d9]/25",
     },
     access: {
-      bg: "bg-[#f25849]", // Red
-      gradient: "from-[#f25849] to-[#3b82f6]", // Red to mid-tone blue
+      bg: "bg-[#f97315]", // Vibrant orange-red for emphasis
+      gradient: "from-[#f97315] to-[#d97708]", // Orange-red to orange for depth
       icon: "lucide:key",
-      glow: "shadow-[#f25849]/25",
+      glow: "shadow-[#f97315]/25",
     },
     resources: {
-      bg: "bg-[#84c1d9]", // Light blue
-      gradient: "from-[#84c1d9] to-[#3b82f6]", // Light blue to mid-tone blue
+      bg: "bg-[#fef1ce]", // Light yellow for a warm, approachable tone
+      gradient: "from-[#fef1ce] to-[#eff6ff]", // Light yellow to soft white-blue
       icon: "lucide:book-open",
-      glow: "shadow-[#84c1d9]/25",
+      glow: "shadow-[#fef1ce]/25",
     },
     offers: {
-      bg: "bg-[#172840]", 
-      gradient: "from-[#172840] to-[#172840]", 
+      bg: "bg-[#eff6ff]", // Soft white-blue for a neutral, clean look
+      gradient: "from-[#eff6ff] to-[#84c1d9]", // Soft white-blue to light cyan
       icon: "lucide:tag",
-      glow: "shadow-[#172840]/25",
+      glow: "shadow-[#eff6ff]/25",
     },
   };
 
@@ -114,15 +114,15 @@ export default function ModernTimeline({
         <div
           className={`absolute top-0 left-1/4 w-96 h-96 rounded-full blur-3xl opacity-10 ${
             mode === "dark"
-              ? "bg-gradient-to-r from-[#172840] to-[#3b82f6]" // Dark blue to mid-tone blue
-              : "bg-gradient-to-r from-[#84c1d9] to-[#3b82f6]" // Light blue to mid-tone blue
+              ? "bg-gradient-to-r from-[#d97708] to-[#4086f7]" // Orange to blue
+              : "bg-gradient-to-r from-[#84c1d9] to-[#fef1ce]" // Light cyan to light yellow
           }`}
         />
         <div
           className={`absolute bottom-0 right-1/4 w-96 h-96 rounded-full blur-3xl opacity-10 ${
             mode === "dark"
-              ? "bg-gradient-to-r from-[#3b82f6] to-[#172840]" // Mid-tone blue to dark blue
-              : "bg-gradient-to-r from-[#3b82f6] to-[#84c1d9]" // Mid-tone blue to light blue
+              ? "bg-gradient-to-r from-[#4086f7] to-[#d97708]" // Blue to orange
+              : "bg-gradient-to-r from-[#fef1ce] to-[#84c1d9]" // Light yellow to light cyan
           }`}
         />
       </div>
@@ -145,10 +145,17 @@ export default function ModernTimeline({
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="p-3 rounded-2xl bg-[#e6f1f8] shadow-lg">
-                  <Icon icon="lucide:clock" className="w-6 h-6 " />
+                <div className="p-3 rounded-2xl bg-[#fef1ce] shadow-lg">
+                  {" "}
+                  {/* Light yellow background */}
+                  <Icon
+                    icon="lucide:clock"
+                    className="w-6 h-6 text-[#4086f7]"
+                  />{" "}
+                  {/* Blue icon */}
                 </div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#f25849] rounded-full animate-pulse shadow-lg shadow-[#f25849]/50" />
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#f97315] rounded-full animate-pulse shadow-lg shadow-[#f97315]/50" />{" "}
+                {/* Orange-red pulse */}
               </div>
               <div>
                 <h2 className={`text-xl font-bold text-[#172840] $`}>
@@ -193,14 +200,14 @@ export default function ModernTimeline({
                 whileTap={{ scale: 0.95 }}
                 className={`px-5 py-2.5 text-sm font-semibold rounded-2xl flex items-center gap-2 transition-all focus:outline-none whitespace-nowrap ${
                   activeFilter === category.id
-                    ? `bg-gradient-to-r from-[#3b82f6] to-[#84c1d9] text-white shadow-lg ${
+                    ? `bg-[#84c1d9]/20 shadow-lg ${
                         mode === "dark"
-                          ? "shadow-[#172840]/50"
-                          : "shadow-[#3b82f6]/30"
-                      } ring-2 ring-[#3b82f6]/20`
+                          ? "shadow-[#d97708]/50"
+                          : "shadow-[#4086f7]/30"
+                      } ring-2 ring-[#4086f7]/20` // Blue ring for active state
                     : mode === "dark"
-                    ? "bg-[#172840]/60 text-[#84c1d9] hover:bg-[#172840]/80 border border-[#84c1d9]/30 hover:border-[#3b82f6]/50 shadow-md"
-                    : "bg-white/60 text-[#172840] hover:bg-[#84c1d9]/20 border border-[#84c1d9]/50 hover:border-[#3b82f6]/50 shadow-md"
+                    ? "bg-[#d97708]/20 text-[#fef1ce] hover:bg-[#d97708]/40 border border-[#d97708]/30 hover:border-[#4086f7]/50 shadow-md" // Orange and light yellow
+                    : "bg-[#eff6ff]/60 text-[#4086f7] hover:bg-[#84c1d9]/20 border border-[#84c1d9]/50 hover:border-[#4086f7]/50 shadow-md" // Soft white-blue and blue
                 } backdrop-blur-sm`}
                 aria-label={`Filter by ${category.label}`}
               >
@@ -223,8 +230,8 @@ export default function ModernTimeline({
                 <div
                   className={`w-16 h-16 rounded-full border-4 border-transparent ${
                     mode === "dark"
-                      ? "border-t-[#84c1d9] border-r-[#3b82f6]"
-                      : "border-t-[#f25849] border-r-[#3b82f6]"
+                      ? "border-t-[#fef1ce] border-r-[#4086f7]" // Light yellow and blue
+                      : "border-t-[#f97315] border-r-[#4086f7]" // Orange-red and blue
                   }`}
                 />
               </motion.div>
@@ -265,13 +272,13 @@ export default function ModernTimeline({
                         <div
                           className={`inline-flex items-center gap-3 px-6 py-3 rounded-2xl font-bold shadow-lg backdrop-blur-sm ${
                             mode === "dark"
-                              ? "bg-[#172840]/90 text-white shadow-black/30 border border-[#84c1d9]/50"
-                              : "bg-white/90 text-[#172840] shadow-[#84c1d9]/50 border border-[#84c1d9]/50"
+                              ? "bg-[#d97708]/20 text-[#fef1ce] shadow-black/30 border border-[#f97315]/50" // Orange and light yellow
+                              : "bg-[#eff6ff]/90 text-[#4086f7] shadow-[#84c1d9]/50 border border-[#84c1d9]/50" // Soft white-blue and blue
                           }`}
                         >
                           <div
                             className={`w-2 h-2 rounded-full ${
-                              mode === "dark" ? "bg-[#3b82f6]" : "bg-[#f25849]"
+                              mode === "dark" ? "bg-[#f97315]" : "bg-[#4086f7]" // Orange-red or blue
                             } animate-pulse`}
                           />
                           {date}
@@ -294,8 +301,8 @@ export default function ModernTimeline({
                               <div
                                 className={`absolute left-5 top-12 w-0.5 h-full opacity-30 ${
                                   mode === "dark"
-                                    ? "bg-gradient-to-b from-[#84c1d9] to-transparent"
-                                    : "bg-gradient-to-b from-[#172840] to-transparent"
+                                    ? "bg-gradient-to-b from-[#fef1ce] to-transparent" // Light yellow
+                                    : "bg-gradient-to-b from-[#4086f7] to-transparent" // Blue
                                 }`}
                               />
                             )}
@@ -339,8 +346,8 @@ export default function ModernTimeline({
                                 <motion.div
                                   className={`group p-5 rounded-2xl transition-all cursor-pointer backdrop-blur-sm border ${
                                     mode === "dark"
-                                      ? "bg-[#172840]/60 hover:bg-[#172840]/80 border-[#84c1d9]/30 hover:border-[#3b82f6]/50 shadow-lg hover:shadow-xl shadow-black/20"
-                                      : "bg-white/60 hover:bg-white/80 border-[#84c1d9]/50 hover:border-[#3b82f6]/70 shadow-lg hover:shadow-xl shadow-[#84c1d9]/10"
+                                      ? "bg-[#d97708]/20 hover:bg-[#f97315]/30 border-[#fef1ce]/30 hover:border-[#f97315]/50 shadow-lg hover:shadow-xl shadow-black/20"
+                                      : "bg-[#eff6ff]/60 hover:bg-[#84c1d9]/30 border-[#84c1d9]/50 hover:border-[#4086f7]/70 shadow-lg hover:shadow-xl shadow-[#84c1d9]/10"
                                   }`}
                                   whileHover={{ scale: 1.02, y: -2 }}
                                   whileTap={{ scale: 0.98 }}
@@ -422,14 +429,14 @@ export default function ModernTimeline({
                 transition={{ duration: 0.6, type: "spring" }}
                 className={`mx-auto w-24 h-24 rounded-3xl flex items-center justify-center mb-8 shadow-xl ${
                   mode === "dark"
-                    ? "bg-[#172840]/80 shadow-black/30"
-                    : "bg-[#84c1d9]/20 shadow-[#84c1d9]/50"
+                    ? "bg-[#d97708]/20 shadow-black/30" // Orange
+                    : "bg-[#84c1d9]/20 shadow-[#4086f7]/50" // Light cyan
                 } backdrop-blur-sm`}
               >
                 <Icon
                   icon="lucide:search-x"
                   className={`w-12 h-12 ${
-                    mode === "dark" ? "text-[#84c1d9]" : "text-[#172840]"
+                    mode === "dark" ? "text-[#fef1ce]" : "text-[#4086f7]" // Light yellow or blue
                   }`}
                 />
               </motion.div>

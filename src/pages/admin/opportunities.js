@@ -210,9 +210,11 @@ export default function AdminBusinessOpportunities({
                     <div className="p-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {sortedOpportunities.map((opp) => {
-                          const tierColors = getTierBadgeColor(opp.tier);
+                          // Ensure that we are getting the correct tier color
+                          const tierColors = getTierBadgeColor(opp.tier, mode);
                           const deadlineColors = getStatusBadgeColor(
-                            getDaysRemaining(opp.deadline)
+                            getDaysRemaining(opp.deadline),
+                            mode
                           );
                           const daysLeft = getDaysRemaining(opp.deadline);
 

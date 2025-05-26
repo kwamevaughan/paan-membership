@@ -43,7 +43,7 @@ export default function ModernTimeline({
     if (earliestDate.toDateString() === latestDate.toDateString()) {
       return `Updated ${format(latestDate, "MMM d")}`;
     }
-    return `From ${format(earliestDate, "MMM d")} to ${format(
+    return `${format(earliestDate, "MMM d")} to ${format(
       latestDate,
       "MMM d"
     )}`;
@@ -145,23 +145,16 @@ export default function ModernTimeline({
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="p-3 rounded-2xl bg-[#3b82f6] shadow-lg">
-                  <Icon icon="lucide:clock" className="w-6 h-6 text-white" />
+                <div className="p-3 rounded-2xl bg-[#e6f1f8] shadow-lg">
+                  <Icon icon="lucide:clock" className="w-6 h-6 " />
                 </div>
                 <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#f25849] rounded-full animate-pulse shadow-lg shadow-[#f25849]/50" />
               </div>
               <div>
-                <h2
-                  className={`text-xl font-bold bg-gradient-to-r bg-clip-text text-[#172840] $`}
-                >
+                <h2 className={`text-xl font-bold text-[#172840] $`}>
                   Activity Timeline
                 </h2>
                 <div className="flex items-center gap-2 mt-1">
-                  <div
-                    className={`w-2 h-2 rounded-full ${
-                      mode === "dark" ? "bg-[#3b82f6]" : "bg-[#f25849]"
-                    } animate-pulse`}
-                  />
                   <span
                     className={`text-sm font-medium ${
                       mode === "dark" ? "text-[#84c1d9]" : "text-[#172840]"
@@ -191,7 +184,7 @@ export default function ModernTimeline({
           </div>
 
           {/* Modern Filter Pills */}
-          <div className="flex gap-3 overflow-x-auto scrollbar-none pb-2">
+          <div className="flex gap-3 overflow-x-auto scrollbar-none pb-4">
             {filterCategories.map((category) => (
               <motion.button
                 key={category.id}
@@ -221,7 +214,7 @@ export default function ModernTimeline({
         {/* Timeline Section */}
         <div className="flex-1 overflow-y-auto scrollbar-thin max-h-[450px]">
           {loading ? (
-            <div className="py-20 px-8 text-center">
+            <div className="py-10 px-8 text-center">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
@@ -324,7 +317,7 @@ export default function ModernTimeline({
                                     icon={activityStyles[activity.type].icon}
                                     className="w-5 h-5 text-white"
                                   />
-                                  <div className="absolute inset-0 rounded-2xl bg-white/10 backdrop-blur-sm" />
+                                  <div className="absolute inset-0 rounded-2xl bg-white/10" />
                                 </motion.div>
                               </div>
 
@@ -334,7 +327,7 @@ export default function ModernTimeline({
                                   className={`px-2 py-1 rounded-lg ${
                                     mode === "dark"
                                       ? "bg-[#172840]/50 text-[#84c1d9]"
-                                      : "bg-[#84c1d9]/20 text-[#172840]"
+                                      : "bg-transparent text-[#172840]"
                                   } backdrop-blur-sm`}
                                 >
                                   {activity.time}

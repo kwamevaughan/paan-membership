@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Icon } from "@iconify/react";
 import toast from "react-hot-toast";
 import { motion } from "framer-motion";
@@ -21,6 +21,12 @@ export default function SubscribersLog({
       (sub.name && sub.name.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+  const timeoutRef = useRef(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filteredSubscribers.length / itemsPerPage);
+
   // Sort subscribers based on sortConfig
   const sortedSubscribers = [...filteredSubscribers].sort((a, b) => {
     const key = sortConfig.key;
@@ -39,15 +45,18 @@ export default function SubscribersLog({
     setSortConfig({ key, direction });
   };
 
-    const toggleDropdown = () => {
-      setDropdownVisible(!dropdownVisible);
-    };
-  const [dropdownVisible, setDropdownVisible] = useState(false);
+  // Handle mouse enter for button and dropdown
+  const handleMouseEnter = () => {
+    clearTimeout(timeoutRef.current);
+    setDropdownVisible(true);
+  };
 
-
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-  const totalPages = Math.ceil(filteredSubscribers.length / itemsPerPage);
+  // Handle mouse leave for button and dropdown
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setDropdownVisible(false);
+    }, 200);
+  };
 
   const paginatedSubscribers = sortedSubscribers.slice(
     (currentPage - 1) * itemsPerPage,
@@ -76,16 +85,13 @@ export default function SubscribersLog({
       return;
     }
 
-    // Define CSV headers
     const headers = ["Name", "Email", "Joined"];
-    // Map subscribers to CSV rows
     const rows = filteredSubscribers.map((sub) => [
       sub.name || "—",
       sub.email,
       formatDate(sub.created_at),
     ]);
 
-    // Create CSV content
     const csvContent = [
       headers.join(","),
       ...rows.map((row) =>
@@ -99,7 +105,6 @@ export default function SubscribersLog({
       ),
     ].join("\n");
 
-    // Create a Blob with the CSV content
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
@@ -121,10 +126,10 @@ export default function SubscribersLog({
 
   return (
     <div
-      className={`rounded-2xl cursor-pointer transition-all duration-300 ${
+      className={`rounded-2xl transition-all duration-300 ${
         mode === "dark"
-          ? "bg-gradient-to-br from-gray-800 to-gray-700 border-gray-600 shadow-md hover:shadow-xl text-white"
-          : "bg-gradient-to-br from-white to-gray-50 border-blue-100 shadow-lg hover:shadow-xl text-gray-800"
+          ? "bg-gradient-to-br from-gray-800 to-gray-700 border border-gray-600 shadow-md hover:shadow-xl text-white"
+          : "bg-gradient-to-br from-white to-gray-50 border border-blue-100 shadow-lg hover:shadow-xl text-gray-800"
       }`}
     >
       <div className="px-6 py-5 border-b border-gray-200 dark:border-gray-700">
@@ -134,7 +139,7 @@ export default function SubscribersLog({
               className={`p-2 rounded-xl ${
                 mode === "dark"
                   ? "bg-indigo-500/20 text-indigo-300"
-                  : "bg-indigo-100 text-indigo-600"
+                  : "bg-[#84c1d9]/20 text-[#172840]"
               }`}
             >
               <Icon icon="solar:user-broken" className="w-5 h-5" />
@@ -148,10 +153,12 @@ export default function SubscribersLog({
             </div>
           </div>
           <div className="flex w-full sm:w-auto gap-2">
-            
-            <div className="relative z-10">
+            <div
+              className="relative z-10"
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+            >
               <motion.button
-                onClick={toggleDropdown}
                 whileHover={{
                   scale: 1.1,
                   rotate: 90,
@@ -161,7 +168,7 @@ export default function SubscribersLog({
                   scale: 0.95,
                   transition: { duration: 0.3, ease: "easeInOut" },
                 }}
-                className={`group p-3 rounded-2xl transition-all duration-100 ${
+                className={`p-3 rounded-2xl transition-all duration-100 ${
                   mode === "dark"
                     ? "bg-[#172840]/80 hover:bg-[#3b82f6]/80 text-[#84c1d9] hover:text-white"
                     : "bg-[#84c1d9]/20 hover:bg-[#3b82f6]/20 text-[#172840] hover:text-[#172840]"
@@ -173,18 +180,19 @@ export default function SubscribersLog({
                   className="w-5 h-5 transition-transform"
                 />
               </motion.button>
-
               {dropdownVisible && (
                 <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
                   transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="absolute right-0 mt-2 w-40 p-2 bg-white shadow-md rounded-xl"
+                  className="absolute right-0 mt-2 w-40 p-2 bg-white shadow-md rounded-xl dark:bg-slate-800 dark:text-white"
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
                 >
                   <button
                     onClick={exportToCSV}
-                    className="w-full py-2 px-4 text-left text-sm text-gray-800 hover:bg-gray-200 rounded-lg"
+                    className="w-full py-2 px-4 text-left text-sm text-gray-800 hover:bg-gray-200 rounded-lg dark:text-gray-200 dark:hover:bg-slate-700"
                   >
                     Export All
                   </button>
@@ -196,14 +204,14 @@ export default function SubscribersLog({
         <div className="relative w-full mt-4">
           <Icon
             icon="mdi:magnify"
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 opacity-50"
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 opacity-50 text-gray-400"
           />
           <input
             type="text"
             placeholder="Search..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={`pl-10 pr-4 py-2 w-full rounded-lg text-sm focus:outline-none focus:ring-2 transition ${
+            className={`pl-10 pr-4 py-2 w-full rounded-lg text-sm focus:outline-none focus:ring-2 transition-all ${
               mode === "dark"
                 ? "bg-slate-800 border border-slate-700 focus:ring-indigo-500 text-white"
                 : "bg-gray-50 border border-gray-200 focus:ring-indigo-300 text-gray-800"
@@ -244,7 +252,6 @@ export default function SubscribersLog({
                 </th>
               </tr>
             </thead>
-
             <tbody>
               {loading ? (
                 <tr>
@@ -270,7 +277,7 @@ export default function SubscribersLog({
                 paginatedSubscribers.map((subscriber) => (
                   <tr
                     key={subscriber.id}
-                    className={`group transition ${
+                    className={`group transition-all ${
                       mode === "dark"
                         ? "hover:bg-slate-800 border-b border-slate-800"
                         : "hover:bg-gray-50 border-b border-gray-100"
@@ -283,7 +290,7 @@ export default function SubscribersLog({
                             className={`w-8 h-8 rounded-full flex items-center justify-center ${
                               mode === "dark"
                                 ? "bg-indigo-500/20"
-                                : "bg-indigo-100"
+                                : "bg-[#84c1d9]/20"
                             } ${subscriber.name ? "" : "opacity-50"}`}
                           >
                             {subscriber.name ? (
@@ -291,7 +298,7 @@ export default function SubscribersLog({
                                 className={`font-medium ${
                                   mode === "dark"
                                     ? "text-indigo-300"
-                                    : "text-indigo-600"
+                                    : "text-[#172840]"
                                 }`}
                               >
                                 {subscriber.name.charAt(0).toUpperCase()}
@@ -369,10 +376,10 @@ export default function SubscribersLog({
               <button
                 onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                 disabled={currentPage === 1}
-                className={`px-3 py-1 text-sm rounded-md transition ${
+                className={`px-3 py-1 text-sm rounded-md transition-all ${
                   mode === "dark"
-                    ? "bg-slate-800 text-gray-300 hover:bg-slate-700"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    ? "bg-slate-800 text-gray-300 hover:bg-slate-700 disabled:opacity-50"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
                 }`}
               >
                 Previous
@@ -385,10 +392,10 @@ export default function SubscribersLog({
                   setCurrentPage((p) => Math.min(p + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}
-                className={`px-3 py-1 text-sm rounded-md transition ${
+                className={`px-3 py-1 text-sm rounded-md transition-all ${
                   mode === "dark"
-                    ? "bg-indigo-600 text-white hover:bg-indigo-700"
-                    : "bg-indigo-500 text-white hover:bg-indigo-600"
+                    ? "bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+                    : "bg-[#84c1d9] text-white hover:bg-indigo-600 disabled:opacity-50"
                 }`}
               >
                 Next

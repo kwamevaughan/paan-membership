@@ -64,7 +64,7 @@ export default function WelcomeCard({
                   mode === "dark" ? "text-white" : "text-slate-900"
                 }`}
               >
-                Welcome back, PAAN Admin! 👋
+                Welcome back, Admin! 👋
               </h2>
 
               <p

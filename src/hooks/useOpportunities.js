@@ -9,7 +9,7 @@ export const useOpportunities = () => {
     description: "",
     location: "",
     deadline: "",
-    tier: "",
+    tier_restriction: "",
     service_type: "",
     industry: "",
     project_type: "",
@@ -37,7 +37,7 @@ export const useOpportunities = () => {
         await supabase
           .from("business_opportunities")
           .select(
-            "id, title, description, location, deadline, tier, service_type, industry, project_type, application_link, created_at, updated_at"
+            "id, title, description, location, deadline, tier_restriction, service_type, industry, project_type, application_link, created_at, updated_at"
           )
           .order("created_at", { ascending: false });
 
@@ -80,10 +80,10 @@ export const useOpportunities = () => {
       if (hrError || !hrUser) throw new Error("User not authorized");
 
       // Validate formData
-      const { title, deadline, tier, application_link } = formData;
-      if (!title || !deadline || !tier || !application_link) {
+      const { title, deadline, tier_restriction, application_link } = formData;
+      if (!title || !deadline || !tier_restriction || !application_link) {
         throw new Error(
-          "Title, deadline, tier, and application link are required"
+          "Title, deadline, tier_restriction, and application link are required"
         );
       }
 
@@ -134,7 +134,7 @@ export const useOpportunities = () => {
       deadline: opp.deadline
         ? new Date(opp.deadline).toISOString().split("T")[0]
         : "",
-      tier: opp.tier || "",
+      tier_restriction: opp.tier_restriction || "",
       service_type: opp.service_type || "",
       industry: opp.industry || "",
       project_type: opp.project_type || "",
@@ -177,7 +177,7 @@ export const useOpportunities = () => {
       description: "",
       location: "",
       deadline: "",
-      tier: "",
+      tier_restriction: "",
       service_type: "",
       industry: "",
       project_type: "",

@@ -80,7 +80,7 @@ export default function AdminBusinessOpportunities({
       opp.location?.toLowerCase().includes(filterTerm.toLowerCase());
 
     if (filterType === "all") return matchesTerm;
-    return matchesTerm && opp.tier.includes(filterType);
+    return matchesTerm && opp.tier_restriction.includes(filterType); // Changed from opp.tier to opp.tier_restriction
   });
 
   const sortedOpportunities = [...filteredOpportunities].sort((a, b) => {
@@ -211,7 +211,10 @@ export default function AdminBusinessOpportunities({
                       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {sortedOpportunities.map((opp) => {
                           // Ensure that we are getting the correct tier color
-                          const tierColors = getTierBadgeColor(opp.tier, mode);
+                          const tierColors = getTierBadgeColor(
+                            opp.tier_restriction,
+                            mode
+                          ); // Changed from opp.tier to opp.tier_restriction
                           const deadlineColors = getStatusBadgeColor(
                             getDaysRemaining(opp.deadline),
                             mode
@@ -233,7 +236,8 @@ export default function AdminBusinessOpportunities({
                                   <span
                                     className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${tierColors.bg} ${tierColors.text} ${tierColors.border}`}
                                   >
-                                    {opp.tier.split("(")[0].trim()}
+                                    {opp.tier_restriction.split("(")[0].trim()}{" "}
+                                    {/* Changed from opp.tier to opp.tier_restriction */}
                                   </span>
                                 </div>
                                 <div className="flex items-center mt-1.5">

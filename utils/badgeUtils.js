@@ -6,6 +6,10 @@ const statusCache = {};
 
 // Normalize tier strings to prevent case/spacing issues
 const normalizeTier = (tier) => {
+  // Return a default value or handle undefined/null cases
+  if (!tier || typeof tier !== "string") {
+    return "default";
+  }
   // Remove everything after a parenthesis (if any), then trim and convert to lowercase
   return tier.split("(")[0].trim().toLowerCase();
 };

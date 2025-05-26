@@ -7,23 +7,29 @@ export const getTierBadgeColor = (tier, mode) => {
     };
   }
 
-  if (tier.includes("Founding")) {
+  if (tier.includes("Associate Member")) {
     return {
       bg: mode === "dark" ? "bg-blue-900/30" : "bg-blue-50",
       text: mode === "dark" ? "text-blue-200" : "text-blue-800",
       border: mode === "dark" ? "border-blue-800" : "border-blue-200",
     };
-  } else if (tier.includes("Full")) {
+  } else if (tier.includes("Full Member")) {
     return {
       bg: mode === "dark" ? "bg-emerald-900/30" : "bg-emerald-50",
       text: mode === "dark" ? "text-emerald-200" : "text-emerald-800",
       border: mode === "dark" ? "border-emerald-800" : "border-emerald-200",
     };
-  } else if (tier.includes("Associate")) {
+  } else if (tier.includes("Gold Member")) {
     return {
       bg: mode === "dark" ? "bg-amber-900/30" : "bg-amber-50",
       text: mode === "dark" ? "text-amber-200" : "text-amber-800",
       border: mode === "dark" ? "border-amber-800" : "border-amber-200",
+    };
+  } else if (tier.includes("Free Member")) {
+    return {
+      bg: mode === "dark" ? "bg-red-900/30" : "bg-red-50",
+      text: mode === "dark" ? "text-red-200" : "text-red-800",
+      border: mode === "dark" ? "border-red-800" : "border-red-200",
     };
   } else {
     return {

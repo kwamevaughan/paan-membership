@@ -100,9 +100,10 @@ export default function OpportunityFilters({
                 }`}
               >
                 <option value="all">All Tiers</option>
-                <option value="Founding">Founding</option>
-                <option value="Full">Full</option>
-                <option value="Associate">Associate</option>
+                <option value="Associate Member">Associate Member</option>
+                <option value="Full Member">Full Member</option>
+                <option value="Gold Member">Gold Member</option>
+                <option value="Free Member">Free Member</option>
               </select>
               <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
                 <Icon icon="heroicons:chevron-down" className="h-4 w-4" />

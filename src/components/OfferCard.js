@@ -1,5 +1,6 @@
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
+import { getTierBadgeColor } from "@/../utils/badgeUtils";
 
 export default function OfferCard({
   offer,
@@ -8,21 +9,7 @@ export default function OfferCard({
   onViewFeedback,
   mode,
 }) {
-  const isDark = mode === "dark";
-  const tierColors = {
-    "Founding Members": isDark
-      ? "bg-yellow-900/30 text-yellow-400 border-yellow-700/50"
-      : "bg-yellow-100 text-yellow-800 border-yellow-200",
-    "Full Members": isDark
-      ? "bg-blue-900/30 text-blue-400 border-blue-700/50"
-      : "bg-blue-100 text-blue-800 border-blue-200",
-    "Associate Members": isDark
-      ? "bg-green-900/30 text-green-400 border-green-700/50"
-      : "bg-green-100 text-green-800 border-green-200",
-    All: isDark
-      ? "bg-purple-900/30 text-purple-400 border-purple-700/50"
-      : "bg-purple-100 text-purple-800 border-purple-200",
-  };
+  
 
   const cardVariants = {
     hover: { scale: 1.05, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.2)" },
@@ -33,7 +20,7 @@ export default function OfferCard({
       variants={cardVariants}
       whileHover="hover"
       className={`rounded-2xl ${
-        isDark ? "bg-gray-900/30" : "bg-white/30"
+        mode === "dark" ? "bg-gray-900/30" : "bg-white/30"
       } backdrop-blur-lg p-6 shadow-lg border border-gray-200/50 dark:border-gray-700/50 flex flex-col h-full`}
     >
       {offer.icon_url && (
@@ -45,14 +32,14 @@ export default function OfferCard({
       )}
       <h3
         className={`text-xl font-semibold ${
-          isDark ? "text-white" : "text-gray-900"
+          mode === "dark" ? "text-white" : "text-gray-900"
         } mb-2 text-center`}
       >
         {offer.title}
       </h3>
       <span
         className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${
-          tierColors[offer.tier_restriction] || tierColors["All"]
+          getTierBadgeColor[offer.tier_restriction] || getTierBadgeColor["All"]
         } mb-4 mx-auto`}
       >
         {offer.tier_restriction === "All"
@@ -61,7 +48,7 @@ export default function OfferCard({
       </span>
       <p
         className={`text-sm ${
-          isDark ? "text-gray-300" : "text-gray-700"
+          mode === "dark" ? "text-gray-300" : "text-gray-700"
         } mb-4 flex-grow text-center line-clamp-3`}
       >
         {offer.description || "No description available"}
@@ -86,7 +73,7 @@ export default function OfferCard({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           className={`mt-4 p-3 rounded-lg ${
-            isDark ? "bg-gray-800/50" : "bg-gray-100/50"
+            mode === "dark" ? "bg-gray-800/50" : "bg-gray-100/50"
           } flex items-center justify-center`}
         >
           <Icon

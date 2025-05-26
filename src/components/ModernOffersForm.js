@@ -82,9 +82,10 @@ export default function ModernOffersForm({
             required
           >
             <option value="All">All Members</option>
-            <option value="Founding Members">Founding Members</option>
-            <option value="Full Members">Full Members</option>
-            <option value="Associate Members">Associate Members</option>
+            <option value="Associate Member">Associate Member</option>
+            <option value="Full Member">Full Member</option>
+            <option value="Gold Member">Gold Member</option>
+            <option value="Free Member">Free Member</option>
           </motion.select>
         </div>
         <div>

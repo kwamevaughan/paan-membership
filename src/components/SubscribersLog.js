@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Icon } from "@iconify/react";
 import toast from "react-hot-toast";
+import { motion } from "framer-motion";
 
 export default function SubscribersLog({
   initialSubscribers = [],
@@ -37,6 +38,12 @@ export default function SubscribersLog({
       sortConfig.key === key && sortConfig.direction === "asc" ? "desc" : "asc";
     setSortConfig({ key, direction });
   };
+
+    const toggleDropdown = () => {
+      setDropdownVisible(!dropdownVisible);
+    };
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -141,22 +148,49 @@ export default function SubscribersLog({
             </div>
           </div>
           <div className="flex w-full sm:w-auto gap-2">
-            <button
-              onClick={exportToCSV}
-              disabled={loading}
-              className={`px-3 py-2 text-sm rounded-lg transition flex items-center gap-1 ${
-                mode === "dark"
-                  ? `bg-indigo-600 text-white hover:bg-indigo-700 ${
-                      loading ? "opacity-50 cursor-not-allowed" : ""
-                    }`
-                  : `bg-indigo-500 text-white hover:bg-indigo-600 ${
-                      loading ? "opacity-50 cursor-not-allowed" : ""
-                    }`
-              }`}
-            >
-              <Icon icon="mdi:download" className="w-4 h-4" />
-              Export All
-            </button>
+            
+            <div className="relative z-10">
+              <motion.button
+                onClick={toggleDropdown}
+                whileHover={{
+                  scale: 1.1,
+                  rotate: 90,
+                  transition: { duration: 0.3, ease: "easeInOut" },
+                }}
+                whileTap={{
+                  scale: 0.95,
+                  transition: { duration: 0.3, ease: "easeInOut" },
+                }}
+                className={`group p-3 rounded-2xl transition-all duration-100 ${
+                  mode === "dark"
+                    ? "bg-[#172840]/80 hover:bg-[#3b82f6]/80 text-[#84c1d9] hover:text-white"
+                    : "bg-[#84c1d9]/20 hover:bg-[#3b82f6]/20 text-[#172840] hover:text-[#172840]"
+                } backdrop-blur-sm shadow-lg`}
+                aria-label="More options"
+              >
+                <Icon
+                  icon="lucide:more-horizontal"
+                  className="w-5 h-5 transition-transform"
+                />
+              </motion.button>
+
+              {dropdownVisible && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="absolute right-0 mt-2 w-40 p-2 bg-white shadow-md rounded-xl"
+                >
+                  <button
+                    onClick={exportToCSV}
+                    className="w-full py-2 px-4 text-left text-sm text-gray-800 hover:bg-gray-200 rounded-lg"
+                  >
+                    Export All
+                  </button>
+                </motion.div>
+              )}
+            </div>
           </div>
         </div>
         <div className="relative w-full mt-4">
@@ -247,13 +281,17 @@ export default function SubscribersLog({
                         <div className="flex items-center gap-3">
                           <div
                             className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                              mode  === "dark" ? "bg-indigo-500/20" : "bg-indigo-100"
+                              mode === "dark"
+                                ? "bg-indigo-500/20"
+                                : "bg-indigo-100"
                             } ${subscriber.name ? "" : "opacity-50"}`}
                           >
                             {subscriber.name ? (
                               <span
                                 className={`font-medium ${
-                                  mode  === "dark" ? "text-indigo-300" : "text-indigo-600"
+                                  mode === "dark"
+                                    ? "text-indigo-300"
+                                    : "text-indigo-600"
                                 }`}
                               >
                                 {subscriber.name.charAt(0).toUpperCase()}
@@ -262,7 +300,9 @@ export default function SubscribersLog({
                               <Icon
                                 icon="mdi:account-circle"
                                 className={`w-4 h-4 ${
-                                  mode  === "dark" ? "text-indigo-300" : "text-indigo-600"
+                                  mode === "dark"
+                                    ? "text-indigo-300"
+                                    : "text-indigo-600"
                                 }`}
                               />
                             )}

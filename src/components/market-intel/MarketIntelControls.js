@@ -87,9 +87,10 @@ export default function MarketIntelControls({
             }`}
           >
             <option value="All">All Tiers</option>
-            <option value="Founding">Founding</option>
-            <option value="Full">Full</option>
-            <option value="Associate">Associate</option>
+            <option value="Associate Member">Associate Member</option>
+            <option value="Full Member">Full Member</option>
+            <option value="Gold Member">Gold Member</option>
+            <option value="Free Member">Free Member</option>
           </select>
           <Icon
             icon="heroicons:chevron-down"

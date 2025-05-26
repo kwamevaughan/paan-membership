@@ -33,7 +33,7 @@ export function useTimeline(categoryFilter = "all") {
       type,
       description: `New ${type.replace(/_/g, " ")} posted for ${
         record[tierField]
-      } Members: ${record.title}.`,
+      }s: ${record.title}.`,
       category,
       url: urlMap[category],
     };

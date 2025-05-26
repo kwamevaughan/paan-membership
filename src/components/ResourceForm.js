@@ -10,7 +10,7 @@ const ResourceForm = ({
   mode,
 }) => {
   const resourceTypes = ["PDF", "Video", "Workshop"];
-  const validTiers = ["Founding", "Full", "Associate", "All"];
+  const validTiers = ["Associate Member", "Full Member", "Gold Member", "Free Member", "All"];
   const [errors, setErrors] = useState({});
   const [resourceSource, setResourceSource] = useState(
     formData.video_url ? "video" : formData.file_path ? "file" : "file"

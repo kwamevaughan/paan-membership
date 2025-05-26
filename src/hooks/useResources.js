@@ -90,7 +90,7 @@ export function useResources() {
       }
 
       // Validate tier_restriction
-      const validTiers = ["Founding", "Full", "Associate", "All"];
+      const validTiers = ["Associate Member", "Full Member", "Gold Member", "Free Member", "All"];
       if (!validTiers.includes(resourceData.tier_restriction)) {
         throw new Error(
           `Invalid tier_restriction. Must be one of: ${validTiers.join(", ")}`

@@ -11,7 +11,7 @@ export default function EventForm({
   mode,
 }) {
   const eventTypes = ["Networking", "Workshop", "Conference", "Webinar"];
-  const validTiers = ["Founding", "Full", "Associate", "All"];
+  const validTiers = ["Associate Member", "Full Member", "Gold Member", "Free Member"];
   const [errors, setErrors] = useState({});
 
   const validateForm = (e) => {
@@ -121,7 +121,7 @@ export default function EventForm({
             <select
               id="tier_restriction"
               name="tier_restriction"
-              value={formData.tier_restriction || "Founding"}
+              value={formData.tier_restriction || "Free Member"}
               onChange={handleInputChange}
               className={`w-full px-4 py-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-500 focus:outline-none transition-all duration-200 ${
                 mode === "dark"
@@ -129,10 +129,10 @@ export default function EventForm({
                   : "bg-white border-gray-300 text-gray-900"
               } ${errors.tier_restriction ? "border-red-500" : ""}`}
             >
-              <option value="Founding">Founding</option>
-              <option value="Full">Full</option>
-              <option value="Associate">Associate</option>
-              <option value="All">All Members</option>
+              <option value="Associate Member">Associate Member</option>
+              <option value="Full Member">Full Member</option>
+              <option value="Gold Member">Gold Member</option>
+              <option value="Free Member">Free Member</option>
             </select>
             {errors.tier_restriction && (
               <p className="text-red-500 text-xs mt-1">

@@ -13,7 +13,7 @@ export function useEvents() {
     location: "",
     is_virtual: false,
     registration_link: "",
-    tier_restriction: "Founding",
+    tier_restriction: "Free Member",
   });
   const [loading, setLoading] = useState(false);
 
@@ -194,7 +194,7 @@ export function useEvents() {
       }
 
       // Validate tier_restriction
-      const validTiers = ["Founding", "Full", "Associate", "All"];
+      const validTiers = ["Associate Member", "Full Member", "Gold Member", "Free Member", "All"];
       if (!validTiers.includes(eventData.tier_restriction)) {
         throw new Error(
           `Invalid tier_restriction. Must be one of: ${validTiers.join(", ")}`
@@ -231,7 +231,7 @@ export function useEvents() {
         location: "",
         is_virtual: false,
         registration_link: "",
-        tier_restriction: "Founding",
+        tier_restriction: "Free Member",
       });
     } catch (error) {
       console.error("[useEvents] Error in handleSubmit:", error);
@@ -249,7 +249,7 @@ export function useEvents() {
       location: event.location || "",
       is_virtual: event.is_virtual || false,
       registration_link: event.registration_link || "",
-      tier_restriction: event.tier_restriction || "Founding",
+      tier_restriction: event.tier_restriction || "Free Member",
     });
   };
 

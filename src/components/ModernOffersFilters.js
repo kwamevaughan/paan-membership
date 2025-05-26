@@ -124,9 +124,10 @@ export default function ModernOffersFilters({
                       }`}
                     >
                       <option value="all">All Tiers</option>
-                      <option value="Founding Members">Founding</option>
-                      <option value="Full Members">Full</option>
-                      <option value="Associate Members">Associate</option>
+                      <option value="Associate Member">Associate Member</option>
+                      <option value="Full Member">Full Member</option>
+                      <option value="Gold Member">Gold Member</option>
+                      <option value="Free Member">Free Member</option>
                     </select>
                     <Icon
                       icon="heroicons:chevron-down"

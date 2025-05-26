@@ -4,6 +4,7 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import toast from "react-hot-toast";
 import Image from "next/image";
+import { getTierBadgeColor } from "@/../utils/badgeUtils";
 
 export default function MarketIntelCard({
   mode,
@@ -15,12 +16,6 @@ export default function MarketIntelCard({
   handleViewFeedback,
   candidates,
 }) {
-  const tierColors = {
-    "Founding Members": "bg-yellow-500",
-    "Full Members": "bg-blue-500",
-    "Associate Members": "bg-green-500",
-    All: "bg-purple-500",
-  };
 
   const [localIntel, setLocalIntel] = useState({
     ...intel,
@@ -437,7 +432,7 @@ export default function MarketIntelCard({
       <div className="space-y-3">
         <div
           className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-            tierColors[intel.tier_restriction]
+            getTierBadgeColor[intel.tier_restriction]
           } text-white shadow-sm`}
         >
           {intel.tier_restriction}

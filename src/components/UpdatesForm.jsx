@@ -11,7 +11,7 @@ export default function UpdatesForm({
   loading,
   categories,
 }) {
-  const validTiers = ["Founding", "Full", "Associate", "All"];
+  const validTiers = ["Associate Member", "Full Member", "Gold Member", "Free Member", "All"];
   const tagOptions = [
     "Governance",
     "Member Spotlights",

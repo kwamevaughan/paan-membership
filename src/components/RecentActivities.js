@@ -152,7 +152,7 @@ export default function ModernTimeline({
               </div>
               <div>
                 <h2
-                  className={`text-2xl font-bold bg-gradient-to-r bg-clip-text text-[#172840] $`}
+                  className={`text-xl font-bold bg-gradient-to-r bg-clip-text text-[#172840] $`}
                 >
                   Activity Timeline
                 </h2>

@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/supabase";
+import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import nodemailer from "nodemailer";
 import { v4 as uuidv4 } from "uuid";
 
@@ -6,6 +6,9 @@ export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
+
+  // Initialize Supabase client
+  const supabaseServer = createSupabaseServerClient(req, res);
 
   const { groupIds, jobTitle, jobId, jobType, expiresOn } = req.body;
 
@@ -21,7 +24,7 @@ export default async function handler(req, res) {
 
   try {
     // Fetch email groups
-    const { data: groupsData, error: groupError } = await supabase
+    const { data: groupsData, error: groupError } = await supabaseServer
       .from("email_groups")
       .select("name, emails")
       .in("id", groupIds);
@@ -35,7 +38,7 @@ export default async function handler(req, res) {
     const groupNames = groupsData.map((g) => g.name).join(", ");
 
     // Fetch job details including slug and job_type
-    const { data: jobData, error: jobFetchError } = await supabase
+    const { data: jobData, error: jobFetchError } = await supabaseServer
       .from("job_openings")
       .select("slug, job_type")
       .eq("id", jobId)
@@ -49,7 +52,7 @@ export default async function handler(req, res) {
     }
 
     // Fetch email template
-    const { data: templateData, error: templateError } = await supabase
+    const { data: templateData, error: templateError } = await supabaseServer
       .from("email_templates")
       .select("subject, body")
       .eq("name", "jobPostedNotification")
@@ -90,7 +93,7 @@ export default async function handler(req, res) {
 
     // Create a notification job
     const notificationJobId = uuidv4();
-    const { error: insertError } = await supabase
+    const { error: insertError } = await supabaseServer
       .from("notification_jobs")
       .insert({
         id: notificationJobId,
@@ -122,19 +125,19 @@ export default async function handler(req, res) {
             }. Apply here: ${interviewUrl}. View details: ${jobUrl}. Regards, HR Team`,
           });
           sentCount += batch.length;
-          await supabase
+          await supabaseServer
             .from("notification_jobs")
             .update({ sent_emails: sentCount })
             .eq("id", notificationJobId);
           await new Promise((resolve) => setTimeout(resolve, 1000)); // 1s delay
         }
-        await supabase
+        await supabaseServer
           .from("notification_jobs")
           .update({ status: "completed", sent_emails: emailList.length })
           .eq("id", notificationJobId);
       } catch (error) {
         console.error("Background email sending failed:", error);
-        await supabase
+        await supabaseServer
           .from("notification_jobs")
           .update({ status: "failed" })
           .eq("id", notificationJobId);

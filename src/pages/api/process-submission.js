@@ -1,4 +1,4 @@
-import { supabaseServer } from "@/lib/supabaseServer";
+import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { uploadFileToDrive } from "../../../utils/driveUtils";
 import { sendEmails } from "../../../utils/emailUtils";
 import { upsertCandidate, upsertResponse } from "../../../utils/dbUtils";
@@ -84,6 +84,9 @@ export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
+
+  // Initialize Supabase client
+  const supabaseServer = createSupabaseServerClient(req, res);
 
   try {
     const {
@@ -237,7 +240,6 @@ export default async function handler(req, res) {
       console.error("Error fetching questions:", questionsError);
       throw new Error("Failed to fetch questions");
     }
-
 
     if (!filteredQuestions || filteredQuestions.length === 0) {
       console.error(`No questions found for job_type: ${questionJobType}`);

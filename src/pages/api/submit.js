@@ -1,4 +1,4 @@
-import { supabaseServer } from "@/lib/supabaseServer";
+import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { upsertCandidate, upsertResponse } from "../../../utils/dbUtils";
 import fetch from "node-fetch";
 import formidable from "formidable";
@@ -43,6 +43,9 @@ export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
+
+  // Initialize Supabase client
+  const supabaseServer = createSupabaseServerClient(req, res);
 
   try {
     // Parse FormData with formidable
@@ -100,8 +103,6 @@ export default async function handler(req, res) {
     let country = req.headers["cf-ipcountry"] || "Unknown";
     const userAgent = req.headers["user-agent"] || "Unknown";
     let device = "Unknown";
-
-    console.log("Raw User-Agent Header:", userAgent);
 
     try {
       const parser = new UAParser(userAgent);
@@ -444,6 +445,8 @@ export default async function handler(req, res) {
       languagesSpoken,
       phoneNumber,
       countryOfResidence,
+      req, // Pass req
+      res, // Pass res
     };
 
     console.log("Sending to upsertCandidate:", candidateData);
@@ -468,6 +471,8 @@ export default async function handler(req, res) {
       submittedAt,
       status: "Pending",
       job_type,
+      req, // Pass req
+      res, // Pass res
     };
 
     if (job_type === "agency") {

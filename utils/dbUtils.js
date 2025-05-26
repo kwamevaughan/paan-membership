@@ -1,4 +1,4 @@
-import { supabaseServer } from "@/lib/supabaseServer";
+import { createSupabaseServerClient } from "@/lib/supabaseServer";
 
 export async function upsertCandidate({
   agencyName,
@@ -19,8 +19,13 @@ export async function upsertCandidate({
   languagesSpoken,
   phoneNumber,
   countryOfResidence,
+  req, // Add req parameter
+  res, // Add res parameter
 }) {
   try {
+    // Initialize Supabase client
+    const supabaseServer = createSupabaseServerClient(req, res);
+
     // Validate job_type
     if (!["agency", "freelancers", "freelancer"].includes(job_type)) {
       console.error("Invalid job_type:", job_type);
@@ -149,8 +154,13 @@ export async function upsertResponse({
   submitted_at,
   status,
   job_type,
+  req, // Add req parameter
+  res, // Add res parameter
 }) {
   try {
+    // Initialize Supabase client
+    const supabaseServer = createSupabaseServerClient(req, res);
+
     // Validate job_type
     if (!["agency", "freelancers", "freelancer"].includes(job_type)) {
       console.error("Invalid job_type:", job_type);

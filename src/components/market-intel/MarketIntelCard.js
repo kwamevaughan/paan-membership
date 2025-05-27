@@ -16,7 +16,6 @@ export default function MarketIntelCard({
   handleViewFeedback,
   candidates,
 }) {
-
   const [localIntel, setLocalIntel] = useState({
     ...intel,
     averageRating: Number(intel.averageRating) || 0,
@@ -28,6 +27,9 @@ export default function MarketIntelCard({
   const fullStars = Math.floor(localIntel.averageRating);
   const hasHalfStar = localIntel.averageRating % 1 >= 0.5;
   const emptyStars = 5 - fullStars - (hasHalfStar ? 1 : 0);
+
+  // Get tier badge colors
+  const { bg, text } = getTierBadgeColor(intel.tier_restriction, mode);
 
   const handleRate = async (rating) => {
     try {
@@ -431,9 +433,7 @@ export default function MarketIntelCard({
       </div>
       <div className="space-y-3">
         <div
-          className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${
-            getTierBadgeColor[intel.tier_restriction]
-          } text-white shadow-sm`}
+          className={`inline-flex px-3 py-1 rounded-full text-sm font-medium ${bg} ${text} shadow-sm`}
         >
           {intel.tier_restriction}
         </div>

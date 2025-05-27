@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Header from "@/layouts/header";
 import toast, { Toaster } from "react-hot-toast";
 import { useFormData } from "@/hooks/useFormData";
@@ -24,6 +24,9 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [questions] = useState(initialQuestions);
   const { categories, isLoading } = useCategories();
+  const [showProgressPopup, setShowProgressPopup] = useState(false);
+  const [savedProgress, setSavedProgress] = useState(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const {
     formData,
@@ -40,6 +43,128 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
 
   const totalQuestions = questions.length;
 
+  // Function to check if all required fields in Step 1 are filled
+  const isStep1Complete = () => {
+    if (formData.job_type === "agency") {
+      return (
+        formData.agencyName &&
+        formData.yearEstablished &&
+        formData.headquartersLocation &&
+        formData.registeredOfficeAddress &&
+        formData.primaryContactName &&
+        formData.primaryContactRole &&
+        formData.primaryContactEmail &&
+        formData.primaryContactPhone &&
+        formData.primaryContactLinkedin &&
+        !Object.values(errors).some(error => error)
+      );
+    } else if (formData.job_type === "freelancer") {
+      return (
+        formData.primaryContactName &&
+        formData.primaryContactEmail &&
+        formData.phoneNumber &&
+        formData.countryOfResidence &&
+        formData.languagesSpoken &&
+        !Object.values(errors).some(error => error)
+      );
+    }
+    return false;
+  };
+
+  // --- Enhanced Local Storage Logic ---
+  const LS_KEY = 'registration-progress';
+
+  // Save progress function with debouncing
+  const saveProgress = useCallback((currentStep, currentFormData) => {
+    try {
+      const progressData = {
+        step: currentStep,
+        formData: currentFormData,
+        timestamp: Date.now(),
+        version: "1.0" // For future compatibility
+      };
+      localStorage.setItem(LS_KEY, JSON.stringify(progressData));
+    } catch (error) {
+      console.error("Error saving progress:", error);
+    }
+  }, []);
+
+  // Load and check for saved progress on component mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(LS_KEY);
+      if (saved) {
+        const progressData = JSON.parse(saved);
+        
+        // Validate the saved data structure
+        if (progressData && progressData.step && progressData.formData) {
+          // Check if the saved progress is recent (within 30 days)
+          const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+          const isRecent = !progressData.timestamp || progressData.timestamp > thirtyDaysAgo;
+          
+          if (isRecent) {
+            const validStep = Math.min(Math.max(1, progressData.step), 4);
+            
+            // Ensure formData has proper structure, especially answers array
+            const sanitizedFormData = {
+              ...progressData.formData,
+              answers: Array.isArray(progressData.formData.answers) 
+                ? progressData.formData.answers 
+                : new Array(initialQuestions.length).fill(''),
+              selectedOptions: progressData.formData.selectedOptions || {}
+            };
+            
+            // Ensure answers array has correct length
+            if (sanitizedFormData.answers.length !== initialQuestions.length) {
+              const newAnswers = new Array(initialQuestions.length).fill('');
+              for (let i = 0; i < Math.min(sanitizedFormData.answers.length, initialQuestions.length); i++) {
+                newAnswers[i] = sanitizedFormData.answers[i] || '';
+              }
+              sanitizedFormData.answers = newAnswers;
+            }
+            
+            setSavedProgress({ 
+              step: validStep, 
+              formData: sanitizedFormData,
+              timestamp: progressData.timestamp 
+            });
+            
+            // Only show popup if we're not already on a later step
+            if (validStep > 1) {
+              setShowProgressPopup(true);
+            }
+          } else {
+            // Clear old progress
+            localStorage.removeItem(LS_KEY);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error parsing saved progress:", error);
+      localStorage.removeItem(LS_KEY); // Clear corrupted data
+    }
+    setIsInitialized(true);
+  }, [initialQuestions.length]);
+
+  // Save progress whenever step or formData changes (but only after initialization)
+  useEffect(() => {
+    if (isInitialized && step < 4) { // Don't save progress on completion step
+      saveProgress(step, formData);
+    }
+  }, [step, formData, isInitialized, saveProgress]);
+
+  // Clear progress on successful submission
+  useEffect(() => {
+    if (step === 4 || (step === 3 && formData.job_type === "freelancer")) {
+      try {
+        localStorage.removeItem(LS_KEY);
+      } catch (error) {
+        console.error("Error clearing progress:", error);
+      }
+    }
+  }, [step, formData.job_type]);
+
+  // Handle URL parameters
   useEffect(() => {
     const { opening, job_type } = router.query;
     if (opening && !formData.opening) {
@@ -167,18 +292,98 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
     }
   };
 
-  const isStep1Complete =
-    formData.job_type === "freelancer"
-      ? formData.primaryContactName &&
-        formData.primaryContactEmail &&
-        formData.phoneNumber &&
-        formData.countryOfResidence &&
-        formData.languagesSpoken
-      : formData.agencyName && formData.primaryContactEmail;
-
   const answeredQuestions = questions.filter(
     (q) => formData.answers[q.id - 1]?.length > 0
   ).length;
+
+  const handleResumeProgress = () => {
+    if (savedProgress) {
+      // Ensure the form data has proper structure with all string fields as strings (never null)
+      const sanitizedFormData = {
+        // Initialize all string fields as empty strings (never null)
+        agencyName: savedProgress.formData.agencyName || '',
+        primaryContactName: savedProgress.formData.primaryContactName || '',
+        primaryContactEmail: savedProgress.formData.primaryContactEmail || '',
+        phoneNumber: savedProgress.formData.phoneNumber || '',
+        countryOfResidence: savedProgress.formData.countryOfResidence || '',
+        languagesSpoken: savedProgress.formData.languagesSpoken || '',
+        opening: savedProgress.formData.opening || '',
+        job_type: savedProgress.formData.job_type || '',
+        
+        // Ensure arrays and objects are properly structured
+        answers: Array.isArray(savedProgress.formData.answers) 
+          ? savedProgress.formData.answers.map(answer => answer || '') // Ensure no null answers
+          : new Array(initialQuestions.length).fill(''),
+        selectedOptions: savedProgress.formData.selectedOptions || {},
+        
+        // Handle file fields (can remain null)
+        companyRegistration: savedProgress.formData.companyRegistration || null,
+        portfolioWork: savedProgress.formData.portfolioWork || null,
+        agencyProfile: savedProgress.formData.agencyProfile || null,
+        taxRegistration: savedProgress.formData.taxRegistration || null,
+        
+        // Copy any other fields, ensuring strings are never null
+        ...Object.keys(savedProgress.formData).reduce((acc, key) => {
+          if (!['agencyName', 'primaryContactName', 'primaryContactEmail', 'phoneNumber', 
+                'countryOfResidence', 'languagesSpoken', 'opening', 'job_type', 'answers', 
+                'selectedOptions', 'companyRegistration', 'portfolioWork', 'agencyProfile', 
+                'taxRegistration'].includes(key)) {
+            const value = savedProgress.formData[key];
+            if (typeof value === 'string') {
+              acc[key] = value || '';
+            } else {
+              acc[key] = value;
+            }
+          }
+          return acc;
+        }, {})
+      };
+      
+      // Ensure answers array has correct length
+      if (sanitizedFormData.answers.length !== initialQuestions.length) {
+        const newAnswers = new Array(initialQuestions.length).fill('');
+        for (let i = 0; i < Math.min(sanitizedFormData.answers.length, initialQuestions.length); i++) {
+          newAnswers[i] = sanitizedFormData.answers[i] || '';
+        }
+        sanitizedFormData.answers = newAnswers;
+      }
+      
+      // Set the sanitized form data
+      setFormData(sanitizedFormData);
+      
+      // Use a small delay to ensure formData state update is processed
+      setTimeout(() => {
+        setStep(savedProgress.step);
+        toast.success(`Resuming from step ${savedProgress.step}`, { icon: "🔄" });
+      }, 50);
+    }
+    setShowProgressPopup(false);
+  };
+
+  const handleStartOver = () => {
+    try {
+      localStorage.removeItem(LS_KEY);
+    } catch (error) {
+      console.error("Error clearing storage:", error);
+    }
+    
+    setShowProgressPopup(false);
+    setStep(1);
+    
+    toast.success("Starting fresh!", { icon: "✨" });
+  };
+
+  // Add beforeunload event to save progress when user leaves page
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (step < 4) {
+        saveProgress(step, formData);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [step, formData, saveProgress]);
 
   return (
     <>
@@ -227,6 +432,42 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
         />
       </Head>
 
+      {showProgressPopup && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className={`${mode === 'dark' ? 'bg-gray-800' : 'bg-white'} p-6 rounded-lg shadow-xl max-w-md w-full mx-4`}>
+            <h2 className={`text-xl font-bold mb-4 ${mode === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+              Continue from where you left off?
+            </h2>
+            <p className={`mb-2 ${mode === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+              We found your previous progress from step {savedProgress?.step}.
+            </p>
+            <p className={`mb-6 text-sm ${mode === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              {savedProgress?.timestamp && (
+                <>Last saved: {new Date(savedProgress.timestamp).toLocaleString()}</>
+              )}
+            </p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={handleStartOver}
+                className={`px-4 py-2 rounded-lg ${
+                  mode === 'dark' 
+                    ? 'bg-gray-700 text-white hover:bg-gray-600' 
+                    : 'bg-gray-200 text-gray-800 hover:bg-gray-300'
+                }`}
+              >
+                Start Over
+              </button>
+              <button
+                onClick={handleResumeProgress}
+                className="px-4 py-2 bg-[#f05d23] text-white rounded-lg hover:bg-[#d94f1e]"
+              >
+                Continue from Step {savedProgress?.step}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Header
         mode={mode}
         toggleMode={toggleMode}
@@ -235,8 +476,8 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
         totalPages={1}
         answeredQuestions={answeredQuestions}
         totalQuestions={totalQuestions}
-        isStep1Complete={isStep1Complete}
-        job_type={formData.job_type} // Pass job_type
+        isStep1Complete={isStep1Complete()}
+        job_type={formData.job_type}
       />
 
       <div
@@ -337,8 +578,8 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
                   </button>
                   <button
                     onClick={handleNext}
-                    disabled={isSubmitting}
-                    className="flex items-center justify-center px-4 py-2 bg-[#f05d23] text-white rounded-lg hover:bg-[#d94f1e] disabled:bg-gray-300 disabled:text-gray-600 transition-all duration-200 shadow-md"
+                    disabled={isSubmitting || (step === 1 && !isStep1Complete())}
+                    className={`flex items-center justify-center px-4 py-2 bg-[#f05d23] text-white rounded-lg hover:bg-[#d94f1e] disabled:bg-gray-300 disabled:text-gray-600 transition-all duration-200 shadow-md`}
                   >
                     {step === 3 ? (
                       <>Submit</>

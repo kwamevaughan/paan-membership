@@ -11,7 +11,12 @@ export default function EventForm({
   mode,
 }) {
   const eventTypes = ["Networking", "Workshop", "Conference", "Webinar"];
-  const validTiers = ["Associate Member", "Full Member", "Gold Member", "Free Member"];
+  const validTiers = [
+    "Associate Member",
+    "Full Member",
+    "Gold Member",
+    "Free Member",
+  ];
   const [errors, setErrors] = useState({});
 
   const validateForm = (e) => {

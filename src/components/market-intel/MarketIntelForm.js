@@ -95,7 +95,7 @@ export default function MarketIntelForm({
         return;
       }
     }
-    handleSubmit(e, selectedFile);
+    handleSubmit(e, selectedFile, handleCancel);
     setUploading(false);
   };
 
@@ -408,7 +408,6 @@ export default function MarketIntelForm({
                     : "bg-white text-gray-900 border-gray-200"
                 } focus:ring-2 focus:ring-indigo-500 backdrop-blur-sm`}
               >
-                <option value="All">All Members</option>
                 <option value="Associate Member">Associate Member</option>
                 <option value="Full Member">Full Member</option>
                 <option value="Gold Member">Gold Member</option>

@@ -227,7 +227,8 @@ export default async function handler(req, res) {
       ] = await Promise.all(uploadPromises);
     }
 
-    const questionJobType = job_type === "agency" ? "agencies" : "freelancer";
+    // Use job_type directly
+    const questionJobType = job_type;
 
     const { data: filteredQuestions, error: questionsError } =
       await supabaseServer

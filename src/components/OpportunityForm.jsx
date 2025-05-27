@@ -134,16 +134,16 @@ export default function OpportunityForm({
           {/* Membership Tier */}
           <div className="col-span-1">
             <label
-              htmlFor="tier"
+              htmlFor="tier_restriction" // Changed from tier to tier_restriction
               className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
             >
               Membership Tier <span className="text-rose-500">*</span>
             </label>
             <div className="relative group">
               <select
-                name="tier"
-                id="tier"
-                value={formData.tier}
+                name="tier_restriction" // Changed from tier to tier_restriction
+                id="tier_restriction" // Changed from tier to tier_restriction
+                value={formData.tier_restriction} // Changed from formData.tier to formData.tier_restriction
                 onChange={handleInputChange}
                 required
                 className="appearance-none w-full px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 dark:bg-gray-800 dark:text-white focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 placeholder:text-gray-400"

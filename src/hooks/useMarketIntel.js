@@ -76,6 +76,15 @@ export function useMarketIntel(candidatesMap = {}) {
           `Failed to fetch market intel: ${marketIntelError.message}`
         );
 
+      // Log chart_data to debug
+      marketIntelData.forEach((intel) => {
+        console.log(
+          `[fetchMarketIntel] intel.id: ${intel.id}, chart_data:`,
+          intel.chart_data,
+          typeof intel.chart_data
+        );
+      });
+
       const { data: feedbackData, error: feedbackError } = await supabase
         .from("market_intel_feedback")
         .select("id, market_intel_id, user_id, rating, comment, created_at");
@@ -100,6 +109,9 @@ export function useMarketIntel(candidatesMap = {}) {
             : 0;
         return {
           ...intel,
+          chart_data: intel.chart_data
+            ? JSON.stringify(intel.chart_data, null, 2)
+            : "",
           averageRating: Number(averageRating) || 0,
           feedbackCount: feedback.length,
           feedback,
@@ -152,99 +164,98 @@ export function useMarketIntel(candidatesMap = {}) {
     }));
   };
 
-  const handleSubmit = async (e, selectedFile = null) => {
-    e.preventDefault();
-    if (!formData.title) {
-      toast.error("Title is required");
-      return;
-    }
-    setLoading(true);
+const handleSubmit = async (e, selectedFile = null, onSuccess = () => {}) => {
+  e.preventDefault();
+  if (!formData.title) {
+    toast.error("Title is required");
+    return;
+  }
+  setLoading(true);
 
-    try {
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-      if (userError || !user) throw new Error("User not authenticated");
+  try {
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+    if (userError || !user) throw new Error("User not authenticated");
 
-      const { data: hrUser, error: hrError } = await supabase
-        .from("hr_users")
-        .select("id")
-        .eq("id", user.id)
-        .single();
-      if (hrError || !hrUser) throw new Error("User not authorized");
+    const { data: hrUser, error: hrError } = await supabase
+      .from("hr_users")
+      .select("id")
+      .eq("id", user.id)
+      .single();
+    if (hrError || !hrUser) throw new Error("User not authorized");
 
-      let filePath = formData.file_path;
+    let filePath = formData.file_path;
 
-      if (selectedFile) {
-        const fileName = `${Date.now()}_${selectedFile.name}`;
-        const { error: uploadError } = await supabase.storage
+    if (selectedFile) {
+      const fileName = `${Date.now()}_${selectedFile.name}`;
+      const { error: uploadError } = await supabase.storage
+        .from("market-intel")
+        .upload(fileName, selectedFile);
+      if (uploadError)
+        throw new Error(`File upload failed: ${uploadError.message}`);
+      if (formData.id && formData.file_path) {
+        await supabase.storage
           .from("market-intel")
-          .upload(fileName, selectedFile);
-        if (uploadError)
-          throw new Error(`File upload failed: ${uploadError.message}`);
-        if (formData.id && formData.file_path) {
-          await supabase.storage
-            .from("market-intel")
-            .remove([formData.file_path]);
-        }
-        filePath = fileName;
+          .remove([formData.file_path]);
       }
-
-      const intelData = {
-        title: formData.title,
-        description: formData.description,
-        tier_restriction: formData.tier_restriction,
-        url: formData.url || null,
-        icon_url: formData.icon_url || null,
-        region: formData.region,
-        type: formData.type,
-        downloadable: formData.downloadable,
-        chart_data: formData.chart_data || null,
-        file_path: filePath || null,
-      };
-
-      if (formData.id) {
-        const { error: updateError } = await supabase
-          .from("market_intel")
-          .update(intelData)
-          .eq("id", formData.id);
-        if (updateError)
-          throw new Error(`Update failed: ${updateError.message}`);
-        toast.success("Market intel updated successfully");
-        setMarketIntel((prev) =>
-          prev.map((intel) =>
-            intel.id === formData.id ? { ...intel, ...intelData } : intel
-          )
-        );
-      } else {
-        const { data, error: insertError } = await supabase
-          .from("market_intel")
-          .insert(intelData)
-          .select()
-          .single();
-        if (insertError)
-          throw new Error(`Insert failed: ${insertError.message}`);
-        toast.success("Market intel created successfully");
-        setMarketIntel((prev) => [
-          {
-            ...data,
-            averageRating: 0,
-            feedbackCount: 0,
-            feedback: [],
-          },
-          ...prev,
-        ]);
-      }
-
-      resetForm();
-    } catch (err) {
-      console.error("[useMarketIntel] Submit error:", err.message);
-      toast.error(err.message);
-    } finally {
-      setLoading(false);
+      filePath = fileName;
     }
-  };
+
+    const intelData = {
+      title: formData.title,
+      description: formData.description,
+      tier_restriction: formData.tier_restriction,
+      url: formData.url || null,
+      icon_url: formData.icon_url || null,
+      region: formData.region,
+      type: formData.type,
+      downloadable: formData.downloadable,
+      chart_data: formData.chart_data ? String(formData.chart_data) : null,
+      file_path: filePath || null,
+    };
+
+    if (formData.id) {
+      const { error: updateError } = await supabase
+        .from("market_intel")
+        .update(intelData)
+        .eq("id", formData.id);
+      if (updateError) throw new Error(`Update failed: ${updateError.message}`);
+      toast.success("Market intel updated successfully");
+      setMarketIntel((prev) =>
+        prev.map((intel) =>
+          intel.id === formData.id ? { ...intel, ...intelData } : intel
+        )
+      );
+    } else {
+      const { data, error: insertError } = await supabase
+        .from("market_intel")
+        .insert(intelData)
+        .select()
+        .single();
+      if (insertError) throw new Error(`Insert failed: ${insertError.message}`);
+      toast.success("Market intel created successfully");
+      setMarketIntel((prev) => [
+        {
+          ...data,
+          averageRating: 0,
+          feedbackCount: 0,
+          feedback: [],
+        },
+        ...prev,
+      ]);
+    }
+
+    resetForm();
+    onSuccess();
+  } catch (err) {
+    console.error("[useMarketIntel] Submit error:", err.message);
+    toast.error(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleEdit = (intel) => {
     setFormData({
@@ -257,7 +268,9 @@ export function useMarketIntel(candidatesMap = {}) {
       region: intel.region || "Global",
       type: intel.type || "Report",
       downloadable: intel.downloadable || false,
-      chart_data: intel.chart_data || "",
+      chart_data: intel.chart_data
+        ? JSON.stringify(intel.chart_data, null, 2)
+        : "",
       file_path: intel.file_path || "",
     });
   };

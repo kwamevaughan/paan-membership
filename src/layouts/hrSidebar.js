@@ -45,32 +45,7 @@ const HRSidebar = ({
       [category]: !prev[category],
     }));
   };
-
-  // Custom scrollbar styling
-  useEffect(() => {
-    const style = document.createElement("style");
-    style.textContent = `
-      .custom-scrollbar::-webkit-scrollbar {
-        width: 4px;
-      }
-      .custom-scrollbar::-webkit-scrollbar-track {
-        background: rgba(0, 0, 0, 0.1);
-        border-radius: 10px;
-      }
-      .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 10px;
-      }
-      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.3);
-      }
-    `;
-    document.head.appendChild(style);
-
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
+  
 
   // Handle outside clicks for mobile
   useEffect(() => {
@@ -105,7 +80,7 @@ const HRSidebar = ({
     : "80px";
 
   return (
-    <div className="relative z-[60]">
+    <div className="relative z-[40]">
       {/* Main sidebar */}
       <div
         ref={sidebarRef}

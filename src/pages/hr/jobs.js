@@ -41,8 +41,18 @@ export default function HRJobBoard({
 
   useAuthSession();
 
-  const { isSidebarOpen, toggleSidebar, sidebarState, updateDragOffset } =
-    useSidebar();
+  const {
+    isSidebarOpen,
+    toggleSidebar,
+    sidebarState,
+    updateDragOffset,
+    isMobile,
+    isHovering,
+    handleMouseEnter,
+    handleMouseLeave,
+    handleOutsideClick,
+  } = useSidebar();  
+  
   const handleLogout = useLogout();
 
   const router = useRouter();
@@ -184,13 +194,17 @@ export default function HRJobBoard({
       />
       <div className="flex flex-1">
         <HRSidebar
-          isOpen={isSidebarOpen}
           isSidebarOpen={isSidebarOpen}
           mode={mode}
-          toggleMode={toggleMode}
-          onLogout={handleLogout}
           toggleSidebar={toggleSidebar}
+          onLogout={handleLogout}
           setDragOffset={updateDragOffset}
+          user={{ name: "PAAN HR Team" }}
+          isMobile={isMobile}
+          isHovering={isHovering}
+          handleMouseEnter={handleMouseEnter}
+          handleMouseLeave={handleMouseLeave}
+          handleOutsideClick={handleOutsideClick}
         />
 
         <div

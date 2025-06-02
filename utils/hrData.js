@@ -82,11 +82,20 @@ export async function fetchHRData({
     const emailTemplatesData = fetchEmailTemplates
       ? results[emailTemplatesQueryIndex]?.data || []
       : [];
+
+    // Normalize tier names
+    const normalizeTier = (tier) => {
+      if (!tier || typeof tier !== "string") return tier;
+      // Remove appended requirements (e.g., "- Requirement: ...")
+      const match = tier.match(/^(.+?)(?:\s*-\s*Requirement:.*)?$/i);
+      return match ? match[1].trim() : tier.trim();
+    };
+
     const tiersData = results[tiersQueryIndex]?.data
       ? [
           ...new Set(
             results[tiersQueryIndex].data
-              .map((item) => item.selected_tier)
+              .map((item) => normalizeTier(item.selected_tier))
               .filter(
                 (tier) => tier && typeof tier === "string" && tier.trim() !== ""
               )
@@ -269,6 +278,7 @@ export async function fetchHRData({
             device: response.device || "Unknown",
             submitted_at: response.submitted_at || null,
             questions: filteredQuestions,
+            selected_tier: normalizeTier(candidate.selected_tier), // Normalize tier in candidate data
           };
         })
       : [];

@@ -95,7 +95,7 @@ export default function WelcomeCard({
                       mode === "dark" ? "text-blue-300" : "text-blue-700"
                     }`}
                   >
-                    {totalApplicants} candidates
+                    {totalApplicants} candidates in total
                   </span>
                 </div>
 
@@ -111,7 +111,7 @@ export default function WelcomeCard({
                       mode === "dark" ? "text-orange-300" : "text-orange-700"
                     }`}
                   >
-                    {pendingReviews} pending
+                    {pendingReviews} pending approval
                   </span>
                 </div>
               </div>

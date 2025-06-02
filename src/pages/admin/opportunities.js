@@ -11,9 +11,9 @@ import SimpleFooter from "@/layouts/simpleFooter";
 import OpportunityForm from "@/components/OpportunityForm";
 import OpportunityFilters from "@/components/OpportunityFilters";
 import ItemActionModal from "@/components/ItemActionModal";
-import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { getTierBadgeColor, getStatusBadgeColor } from "@/../utils/badgeUtils";
 import { getDaysRemaining } from "@/../utils/dateUtils";
+import { getAdminBusinessOpportunitiesProps } from "@/../utils/getServerSidePropsUtils";
 
 export default function AdminBusinessOpportunities({
   mode = "light",
@@ -21,9 +21,9 @@ export default function AdminBusinessOpportunities({
   tiers,
   breadcrumbs,
 }) {
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [filterTerm, setFilterTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
@@ -98,7 +98,7 @@ export default function AdminBusinessOpportunities({
     } else if (sortOrder === "title") {
       return a.title.localeCompare(b.title);
     } else if (sortOrder === "tier") {
-      return a.tier.localeCompare(b.tier);
+      return a.tier_restriction.localeCompare(b.tier_restriction);
     }
     return 0;
   });
@@ -130,7 +130,6 @@ export default function AdminBusinessOpportunities({
         <HRSidebar
           isSidebarOpen={isSidebarOpen}
           mode={mode}
-          toggleMode={toggleMode}
           toggleSidebar={toggleSidebar}
           onLogout={handleLogout}
           setDragOffset={updateDragOffset}
@@ -220,7 +219,7 @@ export default function AdminBusinessOpportunities({
                             key={opp.id}
                             className={`relative flex flex-col h-full rounded-2xl border-0 ${
                               mode === "dark" ? "bg-gray-800/50" : "bg-white"
-                            } TMAshadow-lg overflow-hidden hover:shadow-xl transition-all duration-200 group`}
+                            } shadow-lg overflow-hidden hover:shadow-xl transition-all duration-200 group`}
                           >
                             <div className="px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-700">
                               <div className="flex justify-between items-start mb-2">
@@ -400,100 +399,5 @@ export default function AdminBusinessOpportunities({
 }
 
 export async function getServerSideProps({ req, res }) {
-  console.log(
-    "[AdminBusinessOpportunities] Starting session check at",
-    new Date().toISOString()
-  );
-  try {
-    const supabaseServer = createSupabaseServerClient(req, res);
-
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabaseServer.auth.getSession();
-
-    console.log("[AdminBusinessOpportunities] Session Response:", {
-      session: session ? "present" : null,
-      sessionError: sessionError ? sessionError.message : null,
-    });
-
-    if (sessionError || !session) {
-      console.log(
-        "[AdminBusinessOpportunities] No valid Supabase session, redirecting to login"
-      );
-      return {
-        redirect: {
-          destination: "/hr/login",
-          permanent: false,
-        },
-      };
-    }
-
-    // Verify user is in hr_users
-    const { data: hrUser, error: hrUserError } = await supabaseServer
-      .from("hr_users")
-      .select("id")
-      .eq("id", session.user.id)
-      .single();
-    console.log("[AdminBusinessOpportunities] HR User Check:", {
-      hrUser,
-      hrUserError: hrUserError ? hrUserError.message : null,
-    });
-
-    if (hrUserError || !hrUser) {
-      console.error(
-        "[AdminBusinessOpportunities] HR User Error:",
-        hrUserError?.message || "User not in hr_users"
-      );
-      await supabaseServer.auth.signOut();
-      return {
-        redirect: {
-          destination: "/hr/login",
-          permanent: false,
-        },
-      };
-    }
-
-    // Fetch tiers
-    const { data: tiersData, error: tiersError } = await supabaseServer
-      .from("candidates")
-      .select("selected_tier")
-      .neq("selected_tier", null);
-
-    if (tiersError) {
-      console.error(
-        "[AdminBusinessOpportunities] Tiers Error:",
-        tiersError.message
-      );
-      throw new Error(`Failed to fetch tiers: ${tiersError.message}`);
-    }
-
-    const tiers = [
-      ...new Set(
-        tiersData
-          .map((item) => item.selected_tier)
-          .filter(
-            (tier) => tier && typeof tier === "string" && tier.trim() !== ""
-          )
-      ),
-    ].sort();
-
-    return {
-      props: {
-        tiers,
-        breadcrumbs: [
-          { label: "Dashboard", href: "/admin" },
-          { label: "Business Opportunities" },
-        ],
-      },
-    };
-  } catch (error) {
-    console.error("[AdminBusinessOpportunities] Error:", error.message);
-    return {
-      redirect: {
-        destination: "/hr/login",
-        permanent: false,
-      },
-    };
-  }
+  return await getAdminBusinessOpportunitiesProps({ req, res });
 }

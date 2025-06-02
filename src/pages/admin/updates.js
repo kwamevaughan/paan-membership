@@ -11,16 +11,17 @@ import useAuthSession from "@/hooks/useAuthSession";
 import { useUpdates } from "@/hooks/useUpdates";
 import SimpleFooter from "@/layouts/simpleFooter";
 import UpdatesForm from "@/components/UpdatesForm";
-import { createSupabaseServerClient } from "@/lib/supabaseServer";
+import { getAdminUpdatesProps } from "@/../utils/getServerSidePropsUtils";
 
 export default function AdminUpdates({
   mode = "light",
   toggleMode,
   initialUpdates,
+  breadcrumbs,
 }) {
   const [showForm, setShowForm] = useState(false);
   useAuthSession();
-  
+
   const {
     isSidebarOpen,
     toggleSidebar,
@@ -102,16 +103,12 @@ export default function AdminUpdates({
         onLogout={handleLogout}
         pageName="Updates"
         pageDescription="Manage PAAN news, events, and strategic announcements."
-        breadcrumbs={[
-          { label: "Dashboard", href: "/admin" },
-          { label: "Updates" },
-        ]}
+        breadcrumbs={breadcrumbs}
       />
       <div className="flex flex-1 relative">
         <HRSidebar
           isSidebarOpen={isSidebarOpen}
           mode={mode}
-          toggleMode={toggleMode}
           toggleSidebar={toggleSidebar}
           onLogout={handleLogout}
           setDragOffset={updateDragOffset}
@@ -161,15 +158,14 @@ export default function AdminUpdates({
                 className={`mt-6 px-6 py-3 rounded-xl ${
                   mode === "dark"
                     ? "bg-gradient-to-r from-indigo-700 to-purple-700 text-white"
-                    : "bg-gradient-to-r from-indigo-600 to-purple-600 text-white"
-                } shadow-lg hover:shadow-xl`}
+                    : "bg-gradient-to-r from-indigo-600 to-indigo-600 text-white"
+                } shadow-lg:hover:shadow-xl transition-all duration-200`}
               >
                 <Icon icon="heroicons:plus" className="w-5 h-5 mr-2 inline" />
                 Create New Update
               </motion.button>
             </motion.div>
 
-            {/* Filters */}
             <div className="mb-8 flex flex-col sm:flex-row gap-4">
               <div className="flex-1">
                 <input
@@ -179,9 +175,9 @@ export default function AdminUpdates({
                   placeholder="Search updates..."
                   className={`w-full px-4 py-3 rounded-xl ${
                     mode === "dark"
-                      ? "bg-gray-800 text-white border-gray-700"
+                      ? "bg-gray-800 text-white border-gray-600"
                       : "bg-white text-gray-900 border-gray-200"
-                  } focus:ring-2 focus:ring-indigo-500 backdrop-blur-sm`}
+                  } focus:ring-2 focus:ring-indigo-500 transition-all duration-200 backdrop-blur-sm`}
                 />
               </div>
               <div className="w-full sm:w-48">
@@ -190,9 +186,9 @@ export default function AdminUpdates({
                   onChange={(e) => handleCategoryFilter(e.target.value)}
                   className={`w-full px-4 py-3 rounded-xl ${
                     mode === "dark"
-                      ? "bg-gray-800 text-white border-gray-700"
+                      ? "bg-gray-800 text-white border-gray-600"
                       : "bg-white text-gray-900 border-gray-200"
-                  } focus:ring-2 focus:ring-indigo-500 backdrop-blur-sm`}
+                  } focus:ring-2 focus:ring-indigo-500 transition-all duration-200 backdrop-blur-sm`}
                 >
                   {categories.map((category) => (
                     <option key={category} value={category}>
@@ -203,12 +199,11 @@ export default function AdminUpdates({
               </div>
             </div>
 
-            {/* Updates List */}
             {loading ? (
               <div className="text-center">
                 <Icon
                   icon="heroicons:arrow-path"
-                  className="w-8 h-8 animate-spin mx-auto"
+                  className="w-6 h-6 animate-spin mx-auto text-indigo-500"
                 />
                 <p
                   className={`mt-2 ${
@@ -236,17 +231,17 @@ export default function AdminUpdates({
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.5 }}
-                    className={`p-6 rounded-2xl shadow-xl border ${
+                    className={`p-5 rounded-xl shadow-lg border ${
                       mode === "dark"
-                        ? "bg-gray-800/50 border-gray-700/50"
-                        : "bg-white/50 border-gray-200/50"
-                    } backdrop-blur-lg`}
+                        ? "bg-gray-800/70 border-gray-700/50"
+                        : "bg-white/90 border-gray-200/50"
+                    } backdrop-blur-lg hover:shadow-xl transition-all duration-200`}
                   >
                     <div className="flex justify-between items-start">
                       <h3
                         className={`text-xl font-semibold ${
                           mode === "dark" ? "text-white" : "text-gray-900"
-                        }`}
+                        } line-clamp-2`}
                       >
                         {update.title}
                       </h3>
@@ -313,7 +308,7 @@ export default function AdminUpdates({
                           mode === "dark"
                             ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white"
                             : "bg-gradient-to-r from-indigo-500 to-purple-500 text-white"
-                        } hover:shadow-lg transition-all`}
+                        } hover:shadow-lg transition-all duration-200`}
                       >
                         {update.cta_text}
                       </a>
@@ -343,7 +338,7 @@ export default function AdminUpdates({
                           }}
                           className={`p-2 rounded-full ${
                             mode === "dark" ? "bg-gray-700" : "bg-gray-200"
-                          }`}
+                          } hover:bg-gray-600 transition-all duration-200`}
                         >
                           <Icon icon="heroicons:pencil" className="w-4 h-4" />
                         </motion.button>
@@ -353,7 +348,7 @@ export default function AdminUpdates({
                           onClick={() => handleDelete(update.id)}
                           className={`p-2 rounded-full ${
                             mode === "dark" ? "bg-red-700" : "bg-red-200"
-                          }`}
+                          } hover:bg-red-600 transition-all duration-200`}
                         >
                           <Icon icon="heroicons:trash" className="w-4 h-4" />
                         </motion.button>
@@ -367,7 +362,6 @@ export default function AdminUpdates({
           <SimpleFooter mode={mode} isSidebarOpen={isSidebarOpen} />
         </div>
 
-        {/* Background Overlay */}
         {showForm && (
           <motion.div
             initial={{ opacity: 0 }}
@@ -378,7 +372,6 @@ export default function AdminUpdates({
           />
         )}
 
-        {/* Update Form */}
         <UpdatesForm
           showForm={showForm}
           mode={mode}
@@ -396,68 +389,5 @@ export default function AdminUpdates({
 }
 
 export async function getServerSideProps({ req, res }) {
-  try {
-    const supabaseServer = createSupabaseServerClient(req, res);
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabaseServer.auth.getSession();
-
-    if (sessionError || !session) {
-      return {
-        redirect: {
-          destination: "/hr/login",
-          permanent: false,
-        },
-      };
-    }
-
-    const { data: hrUser, error: hrUserError } = await supabaseServer
-      .from("hr_users")
-      .select("id")
-      .eq("id", session.user.id)
-      .single();
-
-    if (hrUserError || !hrUser) {
-      console.error(
-        "[AdminUpdates] HR User Error:",
-        hrUserError?.message || "User not in hr_users"
-      );
-      await supabaseServer.auth.signOut();
-      return {
-        redirect: {
-          destination: "/hr/login",
-          permanent: false,
-        },
-      };
-    }
-
-    console.time("fetchUpdates");
-    const { data: updates, error: updatesError } = await supabaseServer
-      .from("updates")
-      .select(
-        "id, title, description, category, cta_text, cta_url, tier_restriction, tags, created_at, updated_at"
-      )
-      .order("created_at", { ascending: false });
-    console.timeEnd("fetchUpdates");
-
-    if (updatesError) {
-      console.error("[AdminUpdates] Updates Error:", updatesError.message);
-      throw updatesError;
-    }
-
-    return {
-      props: {
-        initialUpdates: updates || [],
-      },
-    };
-  } catch (error) {
-    console.error("[AdminUpdates] Error:", error.message);
-    return {
-      redirect: {
-        destination: "/hr/login",
-        permanent: false,
-      },
-    };
-  }
+  return await getAdminUpdatesProps({ req, res });
 }

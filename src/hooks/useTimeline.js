@@ -62,7 +62,7 @@ export function useTimeline(categoryFilter = "all") {
         {
           name: "business_opportunities",
           select:
-            "id, title, description, location, deadline, tier, service_type, industry, project_type, application_link, created_at, updated_at",
+            "id, title, description, location, deadline, tier_restriction, service_type, industry, project_type, application_link, created_at, updated_at",
           order: { field: "created_at", ascending: false },
           type: "business_opportunities",
           tierField: "tier",

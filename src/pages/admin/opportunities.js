@@ -30,8 +30,18 @@ export default function AdminBusinessOpportunities({
 
   useAuthSession();
 
-  const { isSidebarOpen, toggleSidebar, sidebarState, updateDragOffset } =
-    useSidebar();
+  const {
+    isSidebarOpen,
+    toggleSidebar,
+    sidebarState,
+    updateDragOffset,
+    isMobile,
+    isHovering,
+    handleMouseEnter,
+    handleMouseLeave,
+    handleOutsideClick,
+  } = useSidebar();
+  
   const handleLogout = useLogout();
 
   const {
@@ -119,13 +129,18 @@ export default function AdminBusinessOpportunities({
       />
       <div className="flex flex-1">
         <HRSidebar
-          isOpen={isSidebarOpen}
           isSidebarOpen={isSidebarOpen}
           mode={mode}
           toggleMode={toggleMode}
-          onLogout={handleLogout}
           toggleSidebar={toggleSidebar}
+          onLogout={handleLogout}
           setDragOffset={updateDragOffset}
+          user={{ name: "PAAN HR Team" }}
+          isMobile={isMobile}
+          isHovering={isHovering}
+          handleMouseEnter={handleMouseEnter}
+          handleMouseLeave={handleMouseLeave}
+          handleOutsideClick={handleOutsideClick}
         />
         <div
           className={`content-container flex-1 transition-all duration-300 overflow-hidden ${

@@ -14,6 +14,11 @@ export const useOpportunities = () => {
     industry: "",
     project_type: "",
     application_link: "",
+    job_type: "Agency",
+    skills_required: [],
+    estimated_duration: "",
+    budget_range: "",
+    remote_work: false,
   });
   const [loading, setLoading] = useState(false);
 
@@ -37,7 +42,7 @@ export const useOpportunities = () => {
         await supabase
           .from("business_opportunities")
           .select(
-            "id, title, description, location, deadline, tier_restriction, service_type, industry, project_type, application_link, created_at, updated_at"
+            "id, title, description, location, deadline, tier_restriction, service_type, industry, project_type, application_link, job_type, skills_required, estimated_duration, budget_range, remote_work, created_at, updated_at"
           )
           .order("created_at", { ascending: false });
 
@@ -58,8 +63,11 @@ export const useOpportunities = () => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
   };
 
   const handleSubmit = async (e, id) => {
@@ -80,11 +88,9 @@ export const useOpportunities = () => {
       if (hrError || !hrUser) throw new Error("User not authorized");
 
       // Validate formData
-      const { title, deadline, tier_restriction, application_link } = formData;
-      if (!title || !deadline || !tier_restriction || !application_link) {
-        throw new Error(
-          "Title, deadline, tier_restriction, and application link are required"
-        );
+      const { title, deadline, job_type } = formData;
+      if (!title || !deadline || !job_type) {
+        throw new Error("Title, deadline, and job type are required");
       }
 
       // Validate deadline format
@@ -92,27 +98,67 @@ export const useOpportunities = () => {
         throw new Error("Invalid deadline format");
       }
 
-      // Validate application_link
-      if (!application_link.startsWith("http")) {
+      // Validate application_link if provided
+      if (
+        formData.application_link &&
+        !formData.application_link.startsWith("http")
+      ) {
         throw new Error("Application link must be a valid URL");
       }
+
+      // Conditional validation for Agency
+      if (job_type === "Agency") {
+        if (!formData.tier_restriction) {
+          throw new Error(
+            "Membership tier is required for Agency opportunities"
+          );
+        }
+        if (!formData.service_type || !formData.industry) {
+          throw new Error(
+            "Service type and industry are required for Agency opportunities"
+          );
+        }
+      }
+
+      const payload = {
+        title: formData.title,
+        description: formData.description || null,
+        location: formData.location || null,
+        deadline: formData.deadline,
+        tier_restriction:
+          job_type === "Agency" ? formData.tier_restriction : null,
+        service_type: job_type === "Agency" ? formData.service_type : null,
+        industry: job_type === "Agency" ? formData.industry : null,
+        project_type: formData.project_type || null,
+        application_link: formData.application_link || null,
+        job_type: formData.job_type,
+        skills_required:
+          job_type === "Freelancer" ? formData.skills_required : [],
+        estimated_duration:
+          job_type === "Freelancer"
+            ? formData.estimated_duration || null
+            : null,
+        budget_range:
+          job_type === "Freelancer" ? formData.budget_range || null : null,
+        remote_work: job_type === "Freelancer" ? formData.remote_work : false,
+      };
 
       if (id) {
         // Update existing opportunity
         const { error } = await supabase
           .from("business_opportunities")
-          .update(formData)
+          .update(payload)
           .eq("id", id);
         if (error) throw error;
         toast.success("Opportunity updated successfully!");
         setOpportunities((prev) =>
-          prev.map((opp) => (opp.id === id ? { ...opp, ...formData } : opp))
+          prev.map((opp) => (opp.id === id ? { ...opp, ...payload } : opp))
         );
       } else {
         // Create new opportunity
         const { data, error } = await supabase
           .from("business_opportunities")
-          .insert([formData])
+          .insert([payload])
           .select()
           .single();
         if (error) throw error;
@@ -139,6 +185,11 @@ export const useOpportunities = () => {
       industry: opp.industry || "",
       project_type: opp.project_type || "",
       application_link: opp.application_link || "",
+      job_type: opp.job_type || "Agency",
+      skills_required: opp.skills_required || [],
+      estimated_duration: opp.estimated_duration || "",
+      budget_range: opp.budget_range || "",
+      remote_work: opp.remote_work || false,
     });
   };
 
@@ -182,6 +233,11 @@ export const useOpportunities = () => {
       industry: "",
       project_type: "",
       application_link: "",
+      job_type: "Agency",
+      skills_required: [],
+      estimated_duration: "",
+      budget_range: "",
+      remote_work: false,
     });
   };
 

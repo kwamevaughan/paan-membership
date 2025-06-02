@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import { Icon } from "@iconify/react";
 import HRSidebar from "@/layouts/hrSidebar";
@@ -26,6 +26,8 @@ export default function AdminBusinessOpportunities({
   const [editingId, setEditingId] = useState(null);
   const [filterTerm, setFilterTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
+  const [filterJobType, setFilterJobType] = useState("all");
+  const [filterProjectType, setFilterProjectType] = useState("all"); // Added
   const [showFilters, setShowFilters] = useState(false);
   const [sortOrder, setSortOrder] = useState("deadline");
 
@@ -88,8 +90,15 @@ export default function AdminBusinessOpportunities({
       opp.description?.toLowerCase().includes(filterTerm.toLowerCase()) ||
       opp.location?.toLowerCase().includes(filterTerm.toLowerCase());
 
-    if (filterType === "all") return matchesTerm;
-    return matchesTerm && opp.tier_restriction.includes(filterType);
+    const matchesTier =
+      filterType === "all" ||
+      (opp.tier_restriction && opp.tier_restriction.includes(filterType));
+    const matchesJobType =
+      filterJobType === "all" || opp.job_type === filterJobType;
+    const matchesProjectType =
+      filterProjectType === "all" ||
+      (opp.job_type === "Agency" && opp.project_type === filterProjectType);
+    return matchesTerm && matchesTier && matchesJobType && matchesProjectType;
   });
 
   const sortedOpportunities = [...filteredOpportunities].sort((a, b) => {
@@ -98,15 +107,10 @@ export default function AdminBusinessOpportunities({
     } else if (sortOrder === "title") {
       return a.title.localeCompare(b.title);
     } else if (sortOrder === "tier") {
-      return a.tier_restriction.localeCompare(b.tier_restriction);
+      return (a.tier_restriction || "").localeCompare(b.tier_restriction || "");
     }
     return 0;
   });
-
-  const formatDate = (dateString) => {
-    const options = { year: "numeric", month: "short", day: "numeric" };
-    return new Date(dateString).toLocaleDateString("en-US", options);
-  };
 
   return (
     <div
@@ -123,7 +127,7 @@ export default function AdminBusinessOpportunities({
         toggleMode={toggleMode}
         onLogout={handleLogout}
         pageName="Business Opportunities"
-        pageDescription="Create and manage business opportunities for PAAN members."
+        pageDescription="Create and manage business opportunities for agencies and freelancers."
         breadcrumbs={breadcrumbs}
       />
       <div className="flex flex-1">
@@ -157,8 +161,7 @@ export default function AdminBusinessOpportunities({
                   Business Opportunities
                 </h1>
                 <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Manage and track available business opportunities for your
-                  network
+                  Manage and track opportunities for agencies and freelancers
                 </p>
               </div>
               <div className="mt-4 md:mt-0 flex space-x-3">
@@ -181,6 +184,10 @@ export default function AdminBusinessOpportunities({
                   setFilterTerm={setFilterTerm}
                   filterType={filterType}
                   setFilterType={setFilterType}
+                  filterJobType={filterJobType}
+                  setFilterJobType={setFilterJobType}
+                  filterProjectType={filterProjectType} // Added
+                  setFilterProjectType={setFilterProjectType} // Added
                   showFilters={showFilters}
                   setShowFilters={setShowFilters}
                   sortOrder={sortOrder}
@@ -205,7 +212,7 @@ export default function AdminBusinessOpportunities({
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                       {sortedOpportunities.map((opp) => {
                         const tierColors = getTierBadgeColor(
-                          opp.tier_restriction,
+                          opp.tier_restriction || "N/A",
                           mode
                         );
                         const deadlineColors = getStatusBadgeColor(
@@ -229,7 +236,9 @@ export default function AdminBusinessOpportunities({
                                 <span
                                   className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${tierColors.bg} ${tierColors.text} ${tierColors.border}`}
                                 >
-                                  {opp.tier_restriction.split("(")[0].trim()}
+                                  {opp.tier_restriction
+                                    ? opp.tier_restriction.split("(")[0].trim()
+                                    : "N/A"}
                                 </span>
                               </div>
                               <div className="flex items-center mt-1.5">
@@ -238,7 +247,16 @@ export default function AdminBusinessOpportunities({
                                   className="w-4 h-4 text-gray-500 dark:text-gray-400 mr-1.5 flex-shrink-0"
                                 />
                                 <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                                  {opp.location}
+                                  {opp.location || "Not specified"}
+                                </p>
+                              </div>
+                              <div className="flex items-center mt-1">
+                                <Icon
+                                  icon="heroicons:briefcase"
+                                  className="w-4 h-4 text-gray-500 dark:text-gray-400 mr-1.5 flex-shrink-0"
+                                />
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  {opp.job_type}
                                 </p>
                               </div>
                             </div>
@@ -249,29 +267,78 @@ export default function AdminBusinessOpportunities({
                                 </p>
                               )}
                               <div className="flex flex-wrap gap-2 mb-4">
-                                <div className="flex items-center text-xs px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300">
-                                  <span className="font-medium">
-                                    {opp.service_type}
-                                  </span>
-                                </div>
-                                <div className="flex items-center text-xs px-2.5 py-1.5 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300">
-                                  <Icon
-                                    icon="heroicons:building-office"
-                                    className="w-3.5 h-3.5 mr-1.5"
-                                  />
-                                  <span className="font-medium">
-                                    {opp.industry}
-                                  </span>
-                                </div>
+                                {opp.job_type === "Agency" ? (
+                                  <>
+                                    {opp.service_type && (
+                                      <div className="flex items-center text-xs px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300">
+                                        <span className="font-medium">
+                                          {opp.service_type}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {opp.industry && (
+                                      <div className="flex items-center text-xs px-2.5 py-1.5 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300">
+                                        <Icon
+                                          icon="heroicons:building-office"
+                                          className="w-3.5 h-3.5 mr-1.5"
+                                        />
+                                        <span className="font-medium">
+                                          {opp.industry}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </>
+                                ) : (
+                                  <>
+                                    {opp.skills_required?.length > 0 && (
+                                      <div className="flex items-center text-xs px-2.5 py-1.5 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-300">
+                                        <Icon
+                                          icon="heroicons:light-bulb"
+                                          className="w-3.5 h-3.5 mr-1.5"
+                                        />
+                                        <span className="font-medium">
+                                          {opp.skills_required.join(", ")}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {opp.budget_range && (
+                                      <div className="flex items-center text-xs px-2.5 py-1.5 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-300">
+                                        <Icon
+                                          icon="heroicons:currency-dollar"
+                                          className="w-3.5 h-3.5 mr-1.5"
+                                        />
+                                        <span className="font-medium">
+                                          {opp.budget_range}
+                                        </span>
+                                      </div>
+                                    )}
+                                  </>
+                                )}
                               </div>
-                              <div className="flex items-center text-xs px-2.5 py-1.5 rounded-lg bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 max-w-fit">
-                                <Icon
-                                  icon="heroicons:document-text"
-                                  className="w-3.5 h-3.5 mr-1.5"
-                                />
-                                <span className="font-medium">
-                                  {opp.project_type}
-                                </span>
+                              <div className="flex flex-wrap gap-2">
+                                {opp.project_type && (
+                                  <div className="flex items-center text-xs px-2.5 py-1.5 rounded-lg bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-300 max-w-fit">
+                                    <Icon
+                                      icon="heroicons:document-text"
+                                      className="w-3.5 h-3.5 mr-1.5"
+                                    />
+                                    <span className="font-medium">
+                                      {opp.project_type}
+                                    </span>
+                                  </div>
+                                )}
+                                {opp.job_type === "Freelancer" &&
+                                  opp.remote_work && (
+                                    <div className="flex items-center text-xs px-2.5 py-1.5 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 max-w-fit">
+                                      <Icon
+                                        icon="heroicons:globe-alt"
+                                        className="w-3.5 h-3.5 mr-1.5"
+                                      />
+                                      <span className="font-medium">
+                                        Remote
+                                      </span>
+                                    </div>
+                                  )}
                               </div>
                             </div>
                             <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 mt-auto bg-gray-50 dark:bg-gray-800/80">
@@ -321,7 +388,7 @@ export default function AdminBusinessOpportunities({
                                         handleDelete(opp.id);
                                       }
                                     }}
-                                    className={`inline-flex items-center justify-center p-2 border rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors ${
+                                    className={`inline-flex items-center justify-center p-2 border rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors ${
                                       mode === "dark"
                                         ? "border-gray-700"
                                         : "border-gray-200"
@@ -353,14 +420,17 @@ export default function AdminBusinessOpportunities({
                       No opportunities found
                     </h3>
                     <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-                      {filterTerm || filterType !== "all"
+                      {filterTerm ||
+                      filterType !== "all" ||
+                      filterJobType !== "all" ||
+                      filterProjectType !== "all"
                         ? "Try adjusting your search or filter criteria to find what you're looking for"
-                        : "Get started by creating a new business opportunity for your network"}
+                        : "Get started by creating a new business opportunity for agencies or freelancers"}
                     </p>
                     <div className="mt-8">
                       <button
                         onClick={() => openModal()}
-                        className="inline-flex items-center px-6 py-3 border border-transparent shadow-sm text-sm font-medium rounded-xl text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200"
+                        className="inline-flex items-center px-6 py-3 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 shadow-sm transition-all duration-200"
                       >
                         <Icon
                           icon="heroicons:plus"

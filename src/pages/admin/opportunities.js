@@ -447,7 +447,7 @@ export default function AdminBusinessOpportunities({
             <ItemActionModal
               isOpen={isModalOpen}
               onClose={closeModal}
-              title={isEditing ? "Edit Opportunity" : "Create Opportunity"}
+              title={isEditing ? "Edit Opportunity / Gig" : "Create Opportunity / Gig"}
               mode={mode}
             >
               <OpportunityForm

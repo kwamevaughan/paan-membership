@@ -19,8 +19,8 @@ export async function upsertCandidate({
   languagesSpoken,
   phoneNumber,
   countryOfResidence,
-  req, // Add req parameter
-  res, // Add res parameter
+  req,
+  res,
 }) {
   try {
     // Initialize Supabase client
@@ -39,12 +39,18 @@ export async function upsertCandidate({
       };
     }
 
+    // Normalize selected_tier to remove any requirement text
+    const normalizedTier = selected_tier
+      ? selected_tier.replace(/ - Requirement:.*$/, "").trim()
+      : "Not specified";
+
     console.log("Upserting candidate with data:", {
       primaryContactEmail,
       primaryContactName,
       primaryContactLinkedin,
       job_type,
       reference_number,
+      selected_tier: normalizedTier,
     });
 
     console.log(
@@ -96,7 +102,7 @@ export async function upsertCandidate({
         websiteUrl,
         primaryContactRole,
         primaryContactPhone,
-        selected_tier,
+        selected_tier: normalizedTier,
       });
     }
 
@@ -154,8 +160,8 @@ export async function upsertResponse({
   submitted_at,
   status,
   job_type,
-  req, // Add req parameter
-  res, // Add res parameter
+  req,
+  res,
 }) {
   try {
     // Initialize Supabase client

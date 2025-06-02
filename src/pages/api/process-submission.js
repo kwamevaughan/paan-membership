@@ -143,7 +143,7 @@ export default async function handler(req, res) {
         ? `base64 (${portfolioWork.length} chars)`
         : "null",
       agencyProfile: agencyProfile
-        ? `base64 (${portfolioWork.length} chars)`
+        ? `base64 (${agencyProfile.length} chars)`
         : "null",
       taxRegistration: taxRegistration
         ? `base64 (${taxRegistration.length} chars)`
@@ -287,6 +287,11 @@ export default async function handler(req, res) {
       .filter((qa) => qa.answer !== "None provided")
       .sort((a, b) => a.order - b.order);
 
+    const normalizedTier =
+      answersTable
+        .find((qa) => qa.question.toLowerCase().includes("tier"))
+        ?.answer.replace(/ - Requirement:.*$/, "") || null;
+
     const { error: candidateError } = await upsertCandidate({
       agencyName: job_type === "freelancer" ? primaryContactName : agencyName,
       yearEstablished: job_type === "freelancer" ? null : yearEstablished,
@@ -305,15 +310,12 @@ export default async function handler(req, res) {
       opening_id,
       job_type,
       reference_number: referenceNumber,
-      selected_tier:
-        job_type === "agency"
-          ? answersTable.find((qa) =>
-              qa.question.toLowerCase().includes("tier")
-            )?.answer || null
-          : null,
+      selected_tier: normalizedTier,
       languagesSpoken: job_type === "freelancer" ? languagesSpoken : null,
       phoneNumber,
       countryOfResidence,
+      req,
+      res,
     });
 
     if (candidateError) {
@@ -331,19 +333,21 @@ export default async function handler(req, res) {
     const { error: responseError } = await upsertResponse({
       userId,
       answers,
-      companyRegistrationUrl: companyRegistrationResult.url,
-      portfolioWorkUrl: portfolioWorkResult.url,
-      agencyProfileUrl: agencyProfileResult.url,
-      taxRegistrationUrl: taxRegistrationResult.url,
-      companyRegistrationFileId: companyRegistrationResult.fileId,
-      portfolioWorkFileId: portfolioWorkResult.fileId,
-      agencyProfileFileId: agencyProfileResult.fileId,
-      taxRegistrationFileId: taxRegistrationResult.fileId,
+      company_registration_url: companyRegistrationResult.url,
+      portfolio_work_url: portfolioWorkResult.url,
+      agency_profile_url: agencyProfileResult.url,
+      tax_registration_url: taxRegistrationResult.url,
+      company_registration_file_id: companyRegistrationResult.fileId,
+      portfolio_work_file_id: portfolioWorkResult.fileId,
+      agency_profile_file_id: agencyProfileResult.fileId,
+      tax_registration_file_id: taxRegistrationResult.fileId,
       country,
       device,
-      submittedAt: submittedAt || new Date().toISOString(),
+      submitted_at: submittedAt || new Date().toISOString(),
       status: "pending",
       job_type,
+      req,
+      res,
     });
 
     if (responseError) {

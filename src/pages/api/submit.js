@@ -175,17 +175,13 @@ export default async function handler(req, res) {
         if (tierQuestion && tierQuestion.id) {
           const answer = answers[tierQuestion.id - 1];
           if (Array.isArray(answer) && answer.length > 0) {
-            selectedTier =
-              answer[0].replace(/ - Requirement:.*$/, "").trim() ||
-              "Not specified";
+            selectedTier = answer[0].replace(/ - Requirement:.*$/, "").trim();
           } else if (typeof answer === "string" && answer.trim()) {
-            selectedTier =
-              answer.replace(/ - Requirement:.*$/, "").trim() ||
-              "Not specified";
+            selectedTier = answer.replace(/ - Requirement:.*$/, "").trim();
           }
           console.log(
-            `Tier question found: QID=${tierQuestion.id}, Text="${tierQuestion.text}", Answer=`,
-            answer
+            `Tier question found: QID=${tierQuestion.id}, Text="${tierQuestion.text}", Normalized Answer=`,
+            selectedTier
           );
         } else {
           console.log("No tier question found in questions array");
@@ -193,37 +189,6 @@ export default async function handler(req, res) {
       } catch (error) {
         console.error("Failed to extract selected tier:", error.message);
       }
-    }
-
-    let opening_id = null;
-    if (opening) {
-      const trimmedOpening = opening.trim();
-      console.log("Looking up job opening with title:", trimmedOpening);
-      const { data: jobOpening, error: jobError } = await supabaseServer
-        .from("job_openings")
-        .select("id, title")
-        .ilike("title", `%${trimmedOpening}%`)
-        .single();
-      if (jobError) {
-        if (jobError.code === "PGRST116") {
-          console.warn(
-            `No job opening found for title: '${trimmedOpening}'. Available titles:`,
-            await supabaseServer
-              .from("job_openings")
-              .select("title")
-              .then(({ data }) => data?.map((d) => d.title) || [])
-          );
-        } else {
-          console.error("Error fetching job opening:", jobError);
-        }
-      } else if (jobOpening) {
-        opening_id = jobOpening.id;
-        console.log(
-          `Found job opening: ID=${opening_id}, Title='${jobOpening.title}'`
-        );
-      }
-    } else {
-      console.warn("No opening provided in submission");
     }
 
     // Convert files to base64 for agency uploads
@@ -437,7 +402,8 @@ export default async function handler(req, res) {
       primaryContactEmail,
       primaryContactPhone,
       primaryContactLinkedin,
-      opening: opening ? opening.trim() : null,
+      opening,
+      phoneNumber,
       job_type,
       reference_number: referenceNumber,
       opening_id,
@@ -445,8 +411,8 @@ export default async function handler(req, res) {
       languagesSpoken,
       phoneNumber,
       countryOfResidence,
-      req, // Pass req
-      res, // Pass res
+      req,
+      res,
     };
 
     console.log("Sending to upsertCandidate:", candidateData);
@@ -471,8 +437,8 @@ export default async function handler(req, res) {
       submittedAt,
       status: "Pending",
       job_type,
-      req, // Pass req
-      res, // Pass res
+      req,
+      res,
     };
 
     if (job_type === "agency") {

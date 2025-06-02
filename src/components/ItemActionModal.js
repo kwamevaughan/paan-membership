@@ -10,7 +10,7 @@ export default function ItemActionModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div className="fixed inset-0 z-[50] overflow-y-auto">
       {/* Overlay with glassmorphic effect */}
       <div
         className={`fixed inset-0 backdrop-blur-md bg-black/30 dark:bg-gray-900/40 transition-opacity duration-300
@@ -30,7 +30,7 @@ export default function ItemActionModal({
           backdrop-blur-sm border border-gray-200/50 dark:border-gray-700/50`}
         >
           {/* Header */}
-          <div className="bg-gradient-to-r from-indigo-600 to-purple-600 px-8 py-6 rounded-t-2xl">
+          <div className="bg-gradient-to-r from-blue-400 to-blue-600 px-8 py-6 rounded-t-2xl">
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold text-white">{title}</h2>
               <button

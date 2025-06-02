@@ -167,15 +167,65 @@ export default function StatusChart({
         {
           breakpoint: 1024,
           options: {
-            chart: { height: 350 },
+            chart: { height: 300 },
             legend: { position: "bottom" },
+            xaxis: { labels: { rotate: -45 } },
           },
         },
         {
           breakpoint: 768,
           options: {
-            chart: { height: 300 },
-            xaxis: { labels: { rotate: -45 } },
+            chart: { height: 250 },
+            xaxis: {
+              labels: {
+                rotate: -45,
+                style: { fontSize: "10px" },
+              },
+            },
+            yaxis: [
+              {
+                labels: { style: { fontSize: "10px" } },
+                title: { style: { fontSize: "12px" } },
+              },
+              {
+                opposite: true,
+                labels: { style: { fontSize: "10px" } },
+                title: { style: { fontSize: "12px" } },
+              },
+            ],
+            plotOptions: {
+              bar: { columnWidth: "80%" },
+            },
+          },
+        },
+        {
+          breakpoint: 480,
+          options: {
+            chart: { height: 200 },
+            xaxis: {
+              labels: {
+                rotate: -45,
+                style: { fontSize: "8px" },
+              },
+            },
+            yaxis: [
+              {
+                labels: { style: { fontSize: "8px" } },
+                title: { style: { fontSize: "10px" } },
+              },
+              {
+                opposite: true,
+                labels: { style: { fontSize: "8px" } },
+                title: { style: { fontSize: "10px" } },
+              },
+            ],
+            plotOptions: {
+              bar: { columnWidth: "70%" },
+            },
+            legend: {
+              fontSize: "10px",
+              offsetY: 10,
+            },
           },
         },
       ],
@@ -189,7 +239,7 @@ export default function StatusChart({
       colors: chartColors,
       dataLabels: { enabled: false },
       stroke: {
-        width: [1, 1, 1, 1, 4], // Ensure the array length matches series length
+        width: [1, 1, 1, 1, 4],
         curve: "smooth",
       },
       xaxis: {
@@ -250,7 +300,6 @@ export default function StatusChart({
         shared: true,
         intersect: false,
         custom: ({ series, seriesIndex, dataPointIndex, w }) => {
-          // Ensure w and all required properties exist
           if (
             !isChartReady ||
             !w?.globals ||
@@ -259,7 +308,7 @@ export default function StatusChart({
             !Array.isArray(series) ||
             dataPointIndex === undefined
           ) {
-            return '<div class="custom-tooltip" style="padding: 16px; border-radius: 12px; color: #000; background: rgba(255, 255, 255, 0.8);">Loading...</div>';
+            return '<div class="custom-tooltip" style="padding: 12px; border-radius: 8px; color: #000; background: rgba(255, 255, 255, 0.8);">Loading...</div>';
           }
 
           const month = months[dataPointIndex] || "N/A";
@@ -267,8 +316,8 @@ export default function StatusChart({
 
           return `
             <div class="custom-tooltip" style="
-              padding: 16px;
-              border-radius: 12px;
+              padding: 12px;
+              border-radius: 8px;
               backdrop-filter: blur(12px);
               background: ${
                 mode === "dark"
@@ -282,44 +331,28 @@ export default function StatusChart({
                   : "rgba(255, 255, 255, 0.1)"
               };
               color: ${mode === "dark" ? "#ffffff" : "#231812"};
-              min-width: 200px;
+              min-width: 150px;
+              max-width: 90vw;
+              font-size: 12px;
               position: relative;
               overflow: hidden;
               animation: pulseGlow 4s ease-in-out infinite;
             ">
               <div style="
-                content: '';
-                position: absolute;
-                top: -50%;
-                left: -50%;
-                width: 200%;
-                height: 200%;
-                background: linear-gradient(
-                  45deg, 
-                  transparent, 
-                  rgba(255, 255, 255, 0.05), 
-                  transparent
-                );
-                transform: rotate(45deg);
-                animation: shimmer 5s linear infinite;
-                pointer-events: none;
-              "></div>
-              <div style="
-                margin-bottom: 10px;
-                padding-bottom: 8px;
+                margin-bottom: 8px;
+                padding-bottom: 6px;
                 border-bottom: 1px solid ${
                   mode === "dark"
                     ? "rgba(255, 255, 255, 0.01)"
                     : "rgba(0, 0, 0, 0.01)"
                 };
                 font-weight: 600;
-                font-size: 14px;
+                font-size: 12px;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 position: relative;
                 z-index: 2;
-                text-shadow: none;
               ">
                 <span>${
                   selectedTab ? selectedTab + " - " : ""
@@ -331,17 +364,16 @@ export default function StatusChart({
                       : "rgba(255, 255, 255, 0.05)"
                   };
                   border-radius: 6px;
-                  padding: 3px 8px;
-                  font-size: 12px;
+                  padding: 2px 6px;
+                  font-size: 10px;
                   border: 1px solid ${
                     mode === "dark"
                       ? "rgba(255, 255, 255, 0.01)"
                       : "rgba(255, 255, 255, 0.1)"
                   };
-                  box-shadow: inset 0 0 3px rgba(255, 255, 255, 0.05);
                 ">Total: ${total}</span>
               </div>
-              <div style="display: flex; flex-direction: column; gap: 6px; position: relative; z-index: 2;">
+              <div style="display: flex; flex-direction: column; gap: 4px; position: relative; z-index: 2;">
                 ${
                   Array.isArray(series) && series.length >= 4
                     ? series
@@ -363,7 +395,6 @@ export default function StatusChart({
                           )
                             return "";
 
-                          // Use the index to safely get the chartColor
                           const color =
                             chartColors[index % chartColors.length] || "#ccc";
                           const percentage =
@@ -374,24 +405,23 @@ export default function StatusChart({
 
                           return `
                           <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="display: flex; align-items: center; gap: 6px;">
                               <span style="
-                                width: 12px; 
-                                height: 12px; 
+                                width: 10px; 
+                                height: 10px; 
                                 border-radius: 50%; 
                                 background-color: ${color};
                                 display: inline-block;
-                                box-shadow: 0 0 3px rgba(0,0,0,0.1), inset 0 0 1px rgba(255, 255, 255, 0.1);
                               "></span>
-                              <span style="font-size: 13px;">${seriesName}</span>
+                              <span style="font-size: 11px;">${seriesName}</span>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 6px;">
-                              <span style="font-weight: 600; font-size: 13px;">${value}</span>
-                              <span style="font-size: 11px; opacity: 0.9;">(${percentage}%)</span>
+                            <div style="display: flex; align-items: center; gap: 4px;">
+                              <span style="font-weight: 600; font-size: 11px;">${value}</span>
+                              <span style="font-size: 10px; opacity: 0.9;">(${percentage}%)</span>
                             </div>
                           </div>
                           <div style="
-                            height: 4px;
+                            height: 3px;
                             width: 100%;
                             background: ${
                               mode === "dark"
@@ -400,26 +430,13 @@ export default function StatusChart({
                             };
                             border-radius: 2px;
                             overflow: hidden;
-                            margin-bottom: 4px;
-                            position: relative;
                           ">
                             <div style="
                               height: 100%;
                               width: ${percentage}%;
                               background: linear-gradient(90deg, ${color}60, ${color}90);
                               border-radius: 2px;
-                              position: relative;
-                              overflow: hidden;
-                            ">
-                              <div style="
-                                position: absolute;
-                                top: 0;
-                                left: 0;
-                                right: 0;
-                                height: 50%;
-                                background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent);
-                              "></div>
-                            </div>
+                            "></div>
                           </div>
                         `;
                         })
@@ -436,6 +453,7 @@ export default function StatusChart({
         horizontalAlign: "center",
         labels: { colors: mode === "dark" ? "#fff" : "#231812" },
         markers: { radius: 12 },
+        fontSize: "12px",
       },
       grid: { show: true },
       zoom: { enabled: true, type: "x" },
@@ -470,8 +488,9 @@ export default function StatusChart({
               : "rgba(255, 255, 255, 0.8)"
           } !important;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1) !important;
-          border-radius: 10px !important;
+          border-radius: 8px !important;
           overflow: hidden !important;
+          font-size: 12px !important;
         }
         .apexcharts-tooltip-title {
           background: ${
@@ -483,6 +502,7 @@ export default function StatusChart({
             mode === "dark" ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.05)"
           } !important;
           font-weight: 600 !important;
+          font-size: 12px !important;
         }
         .apexcharts-tooltip-series-group {
           background: transparent !important;
@@ -503,38 +523,23 @@ export default function StatusChart({
           : "bg-gradient-to-br from-white to-gray-50 border-blue-100 shadow-lg hover:shadow-xl text-gray-800"
       }`}
     >
-      <div className="flex justify-between items-center p-4 pb-0">
+      <div className="flex flex-col sm:flex-row justify-between items-center p-4 pb-0 sm:pb-4">
         <div className="flex items-center gap-4">
           <div className="relative">
             <div className="p-3 rounded-2xl bg-[#fef1ce] shadow-lg">
-              {" "}
-              {/* Light yellow background */}
-              <Icon
-                icon="mdi:chart-bar"
-                className="w-6 h-6 text-[#4086f7]"
-              />{" "}
-              {/* Blue icon */}
+              <Icon icon="mdi:chart-bar" className="w-6 h-6 text-[#4086f7]" />
             </div>
           </div>
-          <h2 className={`text-xl font-bold text-[#172840] $`}>
+          <h2
+            className={`text-lg sm:text-xl font-bold text-[#172840] truncate ${
+              mode === "dark" ? "text-white" : "text-gray-800"
+            }`}
+          >
             Candidate Status by Tier
           </h2>
-          <div className="flex items-center gap-2 mt-1">
-            <span
-              className={`text-sm font-medium ${
-                mode === "dark" ? "text-[#84c1d9]" : "text-[#172840]"
-              }`}
-            >
-              <p
-                className={`text-sm mt-1 ${
-                  mode === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              ></p>
-            </span>
-          </div>
         </div>
         <div
-          className={`flex items-center space-x-2 p-1 rounded-full ${
+          className={`flex items-center space-x-2 p-1 rounded-full mt-2 sm:mt-0 ${
             mode === "dark" ? "bg-gray-800" : "bg-sky-50"
           }`}
         >
@@ -556,7 +561,7 @@ export default function StatusChart({
             />
           </button>
           <span
-            className={`text-md font-bold ${
+            className={`text-sm sm:text-md font-bold ${
               mode === "dark" ? "text-gray-300" : "text-[#231812]"
             }`}
           >
@@ -582,33 +587,35 @@ export default function StatusChart({
         </div>
       </div>
 
-      <div className="flex">
-        <div className="w-1/5 p-4">
-          {tiers.map((tab, index) => {
-            const isSelected = selectedTab === tab.name;
-            const textColor = tierColors[index % tierColors.length];
-            return (
-              <button
-                key={index}
-                className={`flex items-center w-full p-2 mb-2 rounded-lg shadow-md font-extrabold text-left transition-colors duration-200 ${
-                  isSelected
-                    ? mode === "dark"
-                      ? "bg-gray-600 text-white"
-                      : "bg-sky-50 text-gray-800"
-                    : mode === "dark"
-                    ? "bg-gray-800 text-gray-200 hover:bg-gray-700"
-                    : "bg-white text-gray-800 hover:bg-gray-100"
-                }`}
-                onClick={() => setSelectedTab(tab.name)}
-              >
-                <span style={{ color: isSelected ? undefined : textColor }}>
-                  {tab.name}
-                </span>
-              </button>
-            );
-          })}
+      <div className="flex flex-col md:flex-row">
+        <div className="w-full md:w-1/5 p-2 sm:p-4 overflow-x-auto md:overflow-x-visible">
+          <div className="flex md:flex-col gap-2">
+            {tiers.map((tab, index) => {
+              const isSelected = selectedTab === tab.name;
+              const textColor = tierColors[index % tierColors.length];
+              return (
+                <button
+                  key={index}
+                  className={`flex items-center w-full md:w-auto p-2 rounded-lg shadow-md font-extrabold text-left transition-colors duration-200 ${
+                    isSelected
+                      ? mode === "dark"
+                        ? "bg-gray-600 text-white"
+                        : "bg-sky-50 text-gray-800"
+                      : mode === "dark"
+                      ? "bg-gray-800 text-gray-200 hover:bg-gray-700"
+                      : "bg-white text-gray-800 hover:bg-gray-100"
+                  }`}
+                  onClick={() => setSelectedTab(tab.name)}
+                >
+                  <span style={{ color: isSelected ? undefined : textColor }}>
+                    {tab.name}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <div className="w-4/5 p-4 overflow-hidden">
+        <div className="w-full md:w-4/5 p-2 sm:p-4 overflow-hidden">
           {ReactApexChart && chartContainerId ? (
             <div id={chartContainerId}>
               <ReactApexChart

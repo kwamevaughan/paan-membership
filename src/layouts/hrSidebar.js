@@ -80,7 +80,7 @@ const HRSidebar = ({
     : "80px";
 
   return (
-    <div className="relative z-[40]">
+    <div className="relative z-[60]">
       {/* Main sidebar */}
       <div
         ref={sidebarRef}

@@ -42,7 +42,7 @@ export const sidebarNav = [
       {
         href: "/admin/opportunities",
         icon: "mdi:briefcase-outline",
-        label: "Business Opportunities",
+        label: "Business Opportunities / Gigs",
       },
       {
         href: "/admin/updates",

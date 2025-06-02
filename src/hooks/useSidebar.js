@@ -7,7 +7,23 @@ const useSidebar = () => {
     hidden: false,
     offset: 0,
   });
+  const [windowWidth, setWindowWidth] = useState(null);
+  const [isHovering, setIsHovering] = useState(false);
 
+  // Window width tracking
+  const handleResize = useCallback(() => {
+    setWindowWidth(window.innerWidth);
+  }, []);
+
+  useEffect(() => {
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [handleResize]);
+
+  const isMobile = windowWidth !== null && windowWidth < 640;
+
+  // Sidebar open/close state
   useEffect(() => {
     const savedState = localStorage.getItem("sidebarOpen");
     const initialState =
@@ -25,18 +41,16 @@ const useSidebar = () => {
     }
   }, [isSidebarOpen]);
 
-  const toggleSidebar = () => setSidebarOpen((prev) => !prev);
+  // Toggle sidebar
+  const toggleSidebar = (open) => {
+    setSidebarOpen(open !== undefined ? open : !isSidebarOpen);
+  };
 
-  const handleSidebarChange = (e) => {
+  // Sidebar visibility change
+  const handleSidebarChange = useCallback((e) => {
     const newHidden = e.detail.hidden;
     setSidebarState((prev) =>
       prev.hidden === newHidden ? prev : { ...prev, hidden: newHidden }
-    );
-  };
-
-  const updateDragOffset = useCallback((offset) => {
-    setSidebarState((prev) =>
-      prev.offset === offset ? prev : { ...prev, offset }
     );
   }, []);
 
@@ -47,13 +61,51 @@ const useSidebar = () => {
         "sidebarVisibilityChange",
         handleSidebarChange
       );
+  }, [handleSidebarChange]);
+
+  // Update drag offset
+  const updateDragOffset = useCallback((offset) => {
+    setSidebarState((prev) =>
+      prev.offset === offset ? prev : { ...prev, offset }
+    );
   }, []);
+
+  // Hover handling
+  const handleMouseEnter = useCallback(() => {
+    if (!isSidebarOpen && !isMobile) {
+      setIsHovering(true);
+    }
+  }, [isSidebarOpen, isMobile]);
+
+  const handleMouseLeave = useCallback(() => {
+    setIsHovering(false);
+  }, []);
+
+  // Outside click handling for mobile
+  const handleOutsideClick = useCallback(
+    (sidebarRef) => (e) => {
+      if (
+        isSidebarOpen &&
+        isMobile &&
+        sidebarRef.current &&
+        !sidebarRef.current.contains(e.target)
+      ) {
+        toggleSidebar(false);
+      }
+    },
+    [isSidebarOpen, isMobile, toggleSidebar]
+  );
 
   return {
     isSidebarOpen: isSidebarOpen === null ? false : isSidebarOpen,
     toggleSidebar,
     sidebarState,
     updateDragOffset,
+    isMobile,
+    isHovering,
+    handleMouseEnter,
+    handleMouseLeave,
+    handleOutsideClick,
   };
 };
 

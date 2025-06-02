@@ -1,3 +1,4 @@
+// src/layouts/hrHeader.jsx
 import { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
@@ -12,6 +13,8 @@ const HRHeader = ({
   isSidebarOpen,
   onLogout,
   sidebarState,
+  toggleSidebar,
+  isMobile, // Added from useSidebar
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -45,7 +48,7 @@ const HRHeader = ({
     >
       <div
         className={`
-          p-2 m-4 transition-all duration-300 bg-transparent
+          p-2 m-4 transition-all duration-300
           ${
             sidebarState.hidden
               ? "md:ml-0"
@@ -63,13 +66,25 @@ const HRHeader = ({
         `}
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center w-full">
+          <div className="flex items-center w-full gap-2">
+            {isMobile && (
+              <button
+                onClick={() => toggleSidebar(!isSidebarOpen)}
+                className="text-white hover:scale-110 transition-transform"
+                title={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+              >
+                <Icon
+                  icon={isSidebarOpen ? "ri:close-line" : "ri:menu-line"}
+                  className="w-6 h-6 text-gray-900"
+                />
+              </button>
+            )}
             <div className="flex-grow">
               <Search mode={mode} />
             </div>
           </div>
 
-          <div className="flex justify-end items-center w-full ">
+          <div className="flex justify-end items-center w-full gap-2">
             {/* Dark Mode Toggle */}
             <TooltipIconButton
               label={
@@ -95,7 +110,7 @@ const HRHeader = ({
             <TooltipIconButton
               label="View Notifications"
               mode={mode}
-              className=" bg-white/50"
+              className="bg-white/50"
             >
               <Icon
                 icon="mdi-light:bell"

@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import dynamic from "next/dynamic";
 import toast, { Toaster } from "react-hot-toast";
-import { Icon } from "@iconify/react";
 import HRSidebar from "@/layouts/hrSidebar";
 import HRHeader from "@/layouts/hrHeader";
 import useSidebar from "@/hooks/useSidebar";
@@ -19,7 +18,7 @@ import { fetchHRData } from "../../../utils/hrData";
 import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
-import { useSubscribers } from "@/hooks/useSubscribers"; // Import the new hook
+import { useSubscribers } from "@/hooks/useSubscribers";
 import countriesGeoJson from "../../data/countries.js";
 import OverviewBoxes from "@/components/OverviewBoxes";
 import RecentActivities from "@/components/RecentActivities";
@@ -42,7 +41,7 @@ export default function HROverview({
   initialQuestions,
   breadcrumbs,
 }) {
-  const { subscribers, loading: subscribersLoading } = useSubscribers(); // Use the hook
+  const { subscribers, loading: subscribersLoading } = useSubscribers();
   const [candidates, setCandidates] = useState(initialCandidates || []);
   const [jobOpenings, setJobOpenings] = useState(initialJobOpenings || []);
   const [questions, setQuestions] = useState(initialQuestions || []);
@@ -57,8 +56,17 @@ export default function HROverview({
 
   useAuthSession();
 
-  const { isSidebarOpen, toggleSidebar, sidebarState, updateDragOffset } =
-    useSidebar();
+  const {
+    isSidebarOpen,
+    toggleSidebar,
+    sidebarState,
+    updateDragOffset,
+    isMobile,
+    isHovering,
+    handleMouseEnter,
+    handleMouseLeave,
+    handleOutsideClick,
+  } = useSidebar();
   const handleLogout = useLogout();
 
   const [emailData, setEmailData] = useState({
@@ -75,22 +83,6 @@ export default function HROverview({
     setEmailData,
     setIsEmailModalOpen,
   });
-
-  useEffect(() => {
-    const handleSidebarChange = (e) => {
-      const newHidden = e.detail.hidden;
-      setSidebarState((prev) => {
-        if (prev.hidden === newHidden) return prev;
-        return { ...prev, hidden: newHidden };
-      });
-    };
-    document.addEventListener("sidebarVisibilityChange", handleSidebarChange);
-    return () =>
-      document.removeEventListener(
-        "sidebarVisibilityChange",
-        handleSidebarChange
-      );
-  }, []);
 
   const handleSendEmail = async () => {
     const sendingToast = toast.loading("Sending email...");
@@ -212,23 +204,31 @@ export default function HROverview({
         pageName=""
         pageDescription="."
         breadcrumbs={breadcrumbs}
+        isMobile={isMobile} // Pass isMobile to HRHeader
       />
       <div className="flex flex-1">
         <HRSidebar
-          isOpen={isSidebarOpen}
           isSidebarOpen={isSidebarOpen}
           mode={mode}
           toggleMode={toggleMode}
-          onLogout={handleLogout}
           toggleSidebar={toggleSidebar}
+          onLogout={handleLogout}
           setDragOffset={updateDragOffset}
+          user={{ name: "PAAN HR Team" }}
+          isMobile={isMobile}
+          isHovering={isHovering}
+          handleMouseEnter={handleMouseEnter}
+          handleMouseLeave={handleMouseLeave}
+          handleOutsideClick={handleOutsideClick}
         />
         <div
-          className={`content-container flex-1 p-10 pt-4 transition-all duration-300 overflow-hidden ${
+          className={`content-container flex-1 p-4 md:p-10 pt-4 transition-all duration-300 overflow-hidden ${
             isSidebarOpen ? "sidebar-open" : ""
           } ${sidebarState.hidden ? "sidebar-hidden" : ""}`}
           style={{
-            marginLeft: sidebarState.hidden
+            marginLeft: isMobile
+              ? "0px"
+              : sidebarState.hidden
               ? "0px"
               : `${84 + (isSidebarOpen ? 120 : 0) + sidebarState.offset}px`,
           }}
@@ -241,6 +241,7 @@ export default function HROverview({
                 candidates.filter((c) => c.status === "Pending").length
               }
               mode={mode}
+              isMobile={isMobile}
             />
 
             <OverviewBoxes
@@ -283,7 +284,7 @@ export default function HROverview({
                   key={subscribers.length}
                   initialSubscribers={subscribers}
                   mode={mode}
-                  loading={subscribersLoading} // Pass loading state
+                  loading={subscribersLoading}
                 />
               </div>
               <div className="md:col-span-2">
@@ -363,7 +364,6 @@ export async function getServerSideProps({ req, res }) {
       };
     }
 
-    // Verify user is in hr_users
     const { data: hrUser, error: hrUserError } = await supabaseServer
       .from("hr_users")
       .select("id")

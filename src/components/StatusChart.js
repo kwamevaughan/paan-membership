@@ -528,7 +528,7 @@
             : "bg-gradient-to-br from-white to-gray-50 border-blue-100 shadow-lg hover:shadow-xl text-gray-800"
         }`}
       >
-        <div className="flex flex-col sm:flex-row justify-between items-center p-4 pb-0 sm:pb-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start p-4 pb-0 sm:pb-4">
           <div className="flex items-center gap-4">
             <div className="relative">
               <div className="p-3 rounded-2xl bg-[#fef1ce] shadow-lg">
@@ -544,7 +544,7 @@
             </h2>
           </div>
           <div
-            className={`flex items-center space-x-2 p-1 rounded-full mt-2 sm:mt-0 ${
+            className={`flex items-center space-x-2 p-1 rounded-full mt-2 sm:mt-0 self-center sm:self-auto ${
               mode === "dark" ? "bg-gray-800" : "bg-sky-50"
             }`}
           >
@@ -562,7 +562,9 @@
                 icon="lsicon:left-filled"
                 width={20}
                 height={20}
-                className={`${mode === "dark" ? "text-white" : "text-[#231812]"}`}
+                className={`${
+                  mode === "dark" ? "text-white" : "text-[#231812]"
+                }`}
               />
             </button>
             <span
@@ -586,7 +588,9 @@
                 icon="lsicon:right-filled"
                 width={20}
                 height={20}
-                className={`${mode === "dark" ? "text-white" : "text-[#231812]"}`}
+                className={`${
+                  mode === "dark" ? "text-white" : "text-[#231812]"
+                }`}
               />
             </button>
           </div>

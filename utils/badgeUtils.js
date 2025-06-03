@@ -14,7 +14,7 @@ const normalizeTier = (tier) => {
   return tier.split("(")[0].trim().toLowerCase();
 };
 
-// Tier Color Map (Same as before, just simplified)
+// Tier Color Map
 const tierColors = {
   "associate member": {
     dark: {
@@ -23,8 +23,8 @@ const tierColors = {
       border: "border-blue-800",
     },
     light: {
-      bg: "bg-blue-50",
-      text: "text-blue-800",
+      bg: "bg-blue-500",
+      text: "text-white",
       border: "border-blue-200",
     },
   },
@@ -35,8 +35,8 @@ const tierColors = {
       border: "border-emerald-800",
     },
     light: {
-      bg: "bg-emerald-50",
-      text: "text-emerald-800",
+      bg: "bg-emerald-500",
+      text: "text-white",
       border: "border-emerald-200",
     },
   },
@@ -47,8 +47,8 @@ const tierColors = {
       border: "border-yellow-800",
     },
     light: {
-      bg: "bg-amber-50",
-      text: "text-yellow-800",
+      bg: "bg-amber-500",
+      text: "text-white",
       border: "border-yellow-200",
     },
   },
@@ -116,6 +116,15 @@ const statusColors = {
       icon: "text-emerald-400",
     },
   },
+};
+
+// Tier Icons
+export const tierIcons = {
+  "Associate Member": "mdi:crown",
+  "Full Member": "mdi:check-decagram",
+  "Gold Member": "mdi:star",
+  "Free Member": "mdi:account",
+  default: "mdi:account",
 };
 
 // Helper function to get mode-based colors

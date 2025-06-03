@@ -13,7 +13,7 @@ export default function ItemActionModal({
     <div className="fixed inset-0 z-[50] overflow-y-auto">
       {/* Enhanced Glassmorphic Background */}
       <div
-        className={`fixed inset-0 transition-all duration-500 backdrop-blur-xl
+        className={`fixed inset-0 transition-all duration-500 backdrop-blur-sm
           ${
             mode === "dark"
               ? "bg-gradient-to-br from-slate-900/20 via-blue-900/10 to-blue-900/20"
@@ -39,14 +39,14 @@ export default function ItemActionModal({
                 ? "bg-gray-900/40 text-white border border-white/10"
                 : "bg-white/30 text-gray-900 border border-white/20"
             } 
-            backdrop-blur-2xl`}
+            backdrop-blur-lg`}
           style={{
-            backdropFilter: "blur(24px) saturate(180%)",
-            WebkitBackdropFilter: "blur(24px) saturate(180%)",
+            backdropFilter: "blur(12px) saturate(180%)", // Reduce blur here
+            WebkitBackdropFilter: "blur(12px) saturate(180%)", // Reduce blur here
             background:
               mode === "dark"
                 ? "linear-gradient(135deg, rgba(15, 23, 42, 0.4) 0%, rgba(30, 41, 59, 0.3) 100%)"
-                : "linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.1) 100%)",
+                : "linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 1) 100%)",
           }}
         >
           {/* Premium Header with Gradient Overlay */}
@@ -55,7 +55,7 @@ export default function ItemActionModal({
             style={{
               background:
                 "linear-gradient(135deg, rgba(37, 99, 235, 0.8) 0%, rgba(59, 130, 246, 0.8) 50%, rgba(96, 165, 250, 0.8) 100%)",
-              backdropFilter: "blur(12px)",
+              backdropFilter: "blur(8px)", // Reduce blur here
             }}
           >
             {/* Animated Background Elements */}
@@ -72,7 +72,7 @@ export default function ItemActionModal({
                 onClick={onClose}
                 className="group p-3 rounded-2xl transition-all duration-300 hover:bg-white/20 hover:scale-110 active:scale-95"
                 style={{
-                  backdropFilter: "blur(8px)",
+                  backdropFilter: "blur(4px)", // Reduce blur here
                   background: "rgba(255, 255, 255, 0.1)",
                 }}
               >

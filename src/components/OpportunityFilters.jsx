@@ -6,14 +6,14 @@ import toast from "react-hot-toast";
 export default function OpportunityFilters({
   filterTerm,
   setFilterTerm,
-  filterType,
   setFilterType,
-  filterJobType,
+  filterType,
   setFilterJobType,
-  filterProjectType,
+  filterJobType,
   setFilterProjectType,
-  showFilters,
+  filterProjectType,
   setShowFilters,
+  showFilters,
   sortOrder,
   setSortOrder,
   mode,
@@ -26,24 +26,29 @@ export default function OpportunityFilters({
 
   useEffect(() => {
     async function fetchProjectTypes() {
-      const { data, error } = await supabase
-        .from("project_types")
-        .select("name")
-        .eq("job_type", "Agency")
-        .order("name", { ascending: true });
-      if (error) {
-        console.error(
-          "[OpportunityFilters] Error fetching project types:",
-          error
-        );
-      } else {
-        setProjectTypes(data.map((item) => item.name));
+      try {
+        const { data, error } = await supabase
+          .from("project_types")
+          .select("name")
+          .eq("job_type", "Agency")
+          .order("name", { ascending: true });
+        if (error) {
+          console.error(
+            "[OpportunityFilters] Error fetching project types:",
+            error
+          );
+        } else {
+          setProjectTypes(data.map((item) => item.name));
+        }
+      } catch (err) {
+        console.error("[OpportunityFilters] Fetch error:", err);
       }
     }
     fetchProjectTypes();
   }, []);
 
   const handleViewInterestedUsers = () => {
+    
     if (!selectedOpportunityId) {
       toast.error("Please select an opportunity to view interested users.", {
         style: {
@@ -58,11 +63,7 @@ export default function OpportunityFilters({
   };
 
   return (
-    <div
-      className={`p-6 border-b relative ${
-        mode === "dark" ? "border-gray-700" : "border-gray-200"
-      }`}
-    >
+    <div className="p-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div
           className={`relative rounded-xl shadow-sm flex-grow max-w-md ${
@@ -81,11 +82,11 @@ export default function OpportunityFilters({
             value={filterTerm}
             onChange={(e) => setFilterTerm(e.target.value)}
             disabled={loading}
-            className={`block w-full pl-11 py-3 sm:text-sm border rounded-xl ${
+            className={`block w-full pl-11 py-3 sm:text-sm border rounded-md ${
               mode === "dark"
                 ? "border-gray-600 bg-gray-800 text-white placeholder-gray-400"
                 : "border-gray-300 bg-gray-100 text-gray-900 placeholder-gray-500"
-            } focus:ring-indigo-500 focus:border-indigo-500 ${
+            } focus:ring-blue-500 focus:border-blue-500 ${
               loading ? "cursor-not-allowed" : ""
             }`}
             placeholder="Search opportunities..."
@@ -99,11 +100,14 @@ export default function OpportunityFilters({
               <select
                 id="select-opportunity"
                 value={selectedOpportunityId}
-                onChange={(e) => setSelectedOpportunityId(e.target.value)}
+                onChange={(e) => {
+                  
+                  setSelectedOpportunityId(e.target.value);
+                }}
                 disabled={loading || opportunities.length === 0}
                 className={`appearance-none inline-flex justify-center shadow-sm px-4 py-3 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 border ${
                   mode === "dark" ? "border-gray-600" : "border-gray-300"
-                } rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 pr-8 ${
+                } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-8 ${
                   loading || opportunities.length === 0
                     ? "opacity-50 cursor-not-allowed"
                     : ""
@@ -123,7 +127,7 @@ export default function OpportunityFilters({
             <button
               onClick={handleViewInterestedUsers}
               disabled={loading || !selectedOpportunityId}
-              className={`inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl border ${
+              className={`inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-md border ${
                 selectedOpportunityId
                   ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-200 dark:border-green-900"
                   : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200"
@@ -142,9 +146,9 @@ export default function OpportunityFilters({
           <button
             onClick={() => setShowFilters(!showFilters)}
             disabled={loading}
-            className={`inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-xl border ${
+            className={`inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-md border ${
               showFilters
-                ? "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/30 dark:text-indigo-200 dark:border-indigo-900"
+                ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-900"
                 : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200"
             } hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200 shadow-sm ${
               loading ? "opacity-50 cursor-not-allowed" : ""
@@ -167,7 +171,7 @@ export default function OpportunityFilters({
               disabled={loading}
               className={`appearance-none inline-flex justify-center shadow-sm px-4 py-3 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 border ${
                 mode === "dark" ? "border-gray-600" : "border-gray-300"
-              } rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 pr-8 ${
+              } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-8 ${
                 loading ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
@@ -198,11 +202,11 @@ export default function OpportunityFilters({
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
                 disabled={loading}
-                className={`appearance-none w-full px-5 py-3 border rounded-xl text-sm ${
+                className={`appearance-none w-full px-5 py-3 border rounded-md text-sm ${
                   mode === "dark"
                     ? "border-gray-600 bg-gray-800 text-white"
                     : "border-gray-300 bg-gray-100 text-gray-900"
-                } focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 pr-8 shadow-sm ${
+                } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-8 shadow-sm ${
                   loading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
@@ -232,11 +236,11 @@ export default function OpportunityFilters({
                 value={filterJobType}
                 onChange={(e) => setFilterJobType(e.target.value)}
                 disabled={loading}
-                className={`appearance-none w-full px-5 py-3 border rounded-xl text-sm ${
+                className={`appearance-none w-full px-5 py-3 border rounded-md text-sm ${
                   mode === "dark"
                     ? "border-gray-600 bg-gray-800 text-white"
                     : "border-gray-300 bg-gray-100 text-gray-900"
-                } focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 pr-8 shadow-sm ${
+                } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-8 shadow-sm ${
                   loading ? "opacity-50 cursor-not-allowed" : ""
                 }`}
               >
@@ -264,11 +268,11 @@ export default function OpportunityFilters({
                 value={filterProjectType}
                 onChange={(e) => setFilterProjectType(e.target.value)}
                 disabled={loading || projectTypes.length === 0}
-                className={`appearance-none w-full px-5 py-3 border rounded-xl text-sm ${
+                className={`appearance-none w-full px-5 py-3 border rounded-md text-sm ${
                   mode === "dark"
                     ? "border-gray-600 bg-gray-800 text-white"
                     : "border-gray-300 bg-gray-100 text-gray-900"
-                } focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 pr-8 shadow-sm ${
+                } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-8 shadow-sm ${
                   loading || projectTypes.length === 0
                     ? "opacity-50 cursor-not-allowed"
                     : ""
@@ -292,7 +296,7 @@ export default function OpportunityFilters({
         <div className="absolute inset-0 flex items-center justify-center bg-opacity-50">
           <Icon
             icon="eos-icons:loading"
-            className="w-6 h-6 animate-spin text-indigo-500 dark:text-indigo-300"
+            className="w-6 h-6 animate-spin text-blue-500 dark:text-blue-300"
           />
         </div>
       )}

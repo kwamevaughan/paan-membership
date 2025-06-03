@@ -7,11 +7,17 @@ import useSidebar from "@/hooks/useSidebar";
 import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useOpportunities } from "@/hooks/useOpportunities";
+import { useOpportunityInterests } from "@/hooks/useOpportunityInterests"; // New hook
 import SimpleFooter from "@/layouts/simpleFooter";
 import OpportunityForm from "@/components/OpportunityForm";
 import OpportunityFilters from "@/components/OpportunityFilters";
 import ItemActionModal from "@/components/ItemActionModal";
-import { getTierBadgeColor, getStatusBadgeColor, tierIcons } from "@/../utils/badgeUtils";
+import InterestedUsersModal from "@/components/InterestedUsersModal"; // New modal
+import {
+  getTierBadgeColor,
+  getStatusBadgeColor,
+  tierIcons,
+} from "@/../utils/badgeUtils";
 import { getDaysRemaining } from "@/../utils/dateUtils";
 import { getAdminBusinessOpportunitiesProps } from "@/../utils/getServerSidePropsUtils";
 
@@ -30,6 +36,8 @@ export default function AdminBusinessOpportunities({
   const [filterProjectType, setFilterProjectType] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [sortOrder, setSortOrder] = useState("deadline");
+  const [isUsersModalOpen, setIsUsersModalOpen] = useState(false); // New state for users modal
+  const [selectedOpportunityId, setSelectedOpportunityId] = useState(null); // New state for selected opportunity
 
   useAuthSession();
 
@@ -58,6 +66,12 @@ export default function AdminBusinessOpportunities({
     resetForm,
   } = useOpportunities();
 
+  const {
+    interestedUsers,
+    loading: usersLoading,
+    error: usersError,
+  } = useOpportunityInterests(selectedOpportunityId);
+
   const openModal = (editMode = false, opp = null) => {
     if (editMode && opp) {
       handleEdit(opp);
@@ -76,6 +90,16 @@ export default function AdminBusinessOpportunities({
     setIsEditing(false);
     setEditingId(null);
     resetForm();
+  };
+
+  const openUsersModal = (opportunityId) => {
+    setSelectedOpportunityId(opportunityId);
+    setIsUsersModalOpen(true);
+  };
+
+  const closeUsersModal = () => {
+    setIsUsersModalOpen(false);
+    setSelectedOpportunityId(null);
   };
 
   const submitForm = (e) => {
@@ -171,7 +195,7 @@ export default function AdminBusinessOpportunities({
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
               <div>
-                <h1 className="text-3xl font-semibold ">
+                <h1 className="text-3xl font-semibold">
                   Business Opportunities
                 </h1>
                 <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
@@ -206,7 +230,6 @@ export default function AdminBusinessOpportunities({
 
             <div className="space-y-8">
               <div className="relative group">
-                {/* Glassmorphism background */}
                 <div
                   className={`absolute inset-0 rounded-2xl backdrop-blur-xl ${
                     mode === "dark"
@@ -216,8 +239,6 @@ export default function AdminBusinessOpportunities({
                     mode === "dark" ? "border-white/10" : "border-white/20"
                   } shadow-2xl group-hover:shadow-3xl transition-all duration-500`}
                 ></div>
-
-                {/* Main container */}
                 <div
                   className={`relative rounded-2xl overflow-hidden shadow-lg border ${
                     mode === "dark"
@@ -240,6 +261,8 @@ export default function AdminBusinessOpportunities({
                     setSortOrder={setSortOrder}
                     mode={mode}
                     loading={loading}
+                    opportunities={sortedOpportunities} // Pass opportunities data
+                    onOpenUsersModal={openUsersModal} // Pass the function to open the users modal
                   />
                   {loading ? (
                     <div className="p-12 text-center">
@@ -513,6 +536,20 @@ export default function AdminBusinessOpportunities({
                                   </div>
                                   <div className="flex space-x-2">
                                     <button
+                                      onClick={() => openUsersModal(opp.id)}
+                                      className={`inline-flex items-center justify-center p-2.5 rounded-lg transition-all duration-300 ${
+                                        mode === "dark"
+                                          ? "bg-green-900/30 text-green-300 hover:bg-green-900/50"
+                                          : "bg-green-100 text-green-600 hover:bg-green-200"
+                                      }`}
+                                      aria-label="View Interested Users"
+                                    >
+                                      <Icon
+                                        icon="mdi:account-group"
+                                        className="w-4 h-4"
+                                      />
+                                    </button>
+                                    <button
                                       onClick={() => openModal(true, opp)}
                                       className={`inline-flex items-center justify-center p-2.5 rounded-lg transition-all duration-300 ${
                                         mode === "dark"
@@ -603,7 +640,6 @@ export default function AdminBusinessOpportunities({
                       </div>
                     </div>
                   )}
-                  {/* Large top-right circle */}
                   <div
                     className={`absolute top-2 right-2 w-12 sm:w-16 h-12 sm:h-16 opacity-10`}
                   >
@@ -616,8 +652,6 @@ export default function AdminBusinessOpportunities({
                     ></div>
                   </div>
                 </div>
-
-                {/* Bottom gradient accent */}
                 <div
                   className={`absolute bottom-0 left-0 right-0 h-1 ${
                     mode === "dark"
@@ -625,8 +659,6 @@ export default function AdminBusinessOpportunities({
                       : "bg-gradient-to-r from-[#3c82f6] to-[#dbe9fe]"
                   }`}
                 ></div>
-
-                {/* Floating elements */}
                 <div
                   className={`absolute -top-1 sm:-top-2 -right-1 sm:-right-2 w-3 sm:w-4 h-3 sm:h-4 bg-[#85c2da] rounded-full opacity-60`}
                 ></div>
@@ -656,6 +688,15 @@ export default function AdminBusinessOpportunities({
                 mode={mode}
               />
             </ItemActionModal>
+
+            <InterestedUsersModal
+              isOpen={isUsersModalOpen}
+              onClose={closeUsersModal}
+              users={interestedUsers}
+              loading={usersLoading}
+              error={usersError}
+              mode={mode}
+            />
           </div>
           <SimpleFooter mode={mode} isSidebarOpen={isSidebarOpen} />
         </div>

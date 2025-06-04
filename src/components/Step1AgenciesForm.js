@@ -120,7 +120,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
           <h2 className="text-3xl font-bold text-center">Let’s Get Started</h2>
         </div>
         <p
-          className={`text-center mb-8 italic ${
+          className={`text-center mb-4 italic ${
             mode === "dark" ? "text-gray-400" : "text-gray-600"
           }`}
         >

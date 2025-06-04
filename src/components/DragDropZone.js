@@ -63,7 +63,7 @@ export default function DragDropZone({
           >
             <span
               className={`font-medium ${
-                mode === "dark" ? "text-white" : "text-[#231812]"
+                mode === "dark" ? "text-gray-600" : "text-[#231812]"
               }`}
             >
               {fileTypeDescription[type]}{" "}

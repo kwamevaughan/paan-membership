@@ -339,7 +339,7 @@ export default function Step3Documents({
           <h4 className="font-bold mb-3 flex items-center">
             <Icon
               icon="mdi:clipboard-check"
-              className="w-5 h-5 mr-2 text-[#f05d23]"
+              className="w-5 h-5 mr-2 text-blue-500"
             />
             Declaration
           </h4>

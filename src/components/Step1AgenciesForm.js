@@ -132,7 +132,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
         <div className="mb-6 flex justify-center">
           <button
             onClick={() => setIsInstructionsOpen(true)}
-            className="flex items-center px-4 py-2 bg-blue-400 text-white rounded-lg hover:bg-blue-500 transition-all duration-200 shadow-md focus:outline-none focus:ring-2"
+            className="flex items-center px-4 py-2 bg-[#84c1d9] border-none text-white rounded-lg hover:bg-[#7cc9e8] transition-all duration-200 shadow-md focus:outline-none focus:ring-2"
             aria-label="View application instructions"
           >
             <Icon icon="mdi:help-circle" className="w-5 h-5 mr-2" />
@@ -153,7 +153,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
             <div className="flex items-center">
               <Icon
                 icon="mdi:office-building"
-                className="absolute left-3 text-[#f05d23] w-5 h-5"
+                className="absolute left-3 text-blue-400 w-5 h-5"
               />
               <input
                 type="text"
@@ -163,17 +163,17 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                 onChange={handleInputChange}
                 placeholder="e.g., Company XYZ"
                 required
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200 ${
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
                   mode === "dark"
                     ? `bg-gray-700 text-white border-gray-600 ${
                         errors.agencyName
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-500"
                       }`
                     : `bg-gray-50 text-[#231812] border-gray-300 ${
                         errors.agencyName
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-500"
                       }`
                 }`}
               />
@@ -196,7 +196,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
             <div className="flex items-center">
               <Icon
                 icon="mdi:calendar"
-                className="absolute left-3 text-[#f05d23] w-5 h-5"
+                className="absolute left-3 text-blue-400 w-5 h-5"
               />
               <input
                 type="number"
@@ -206,17 +206,17 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                 onChange={handleInputChange}
                 placeholder="e.g., 2005"
                 required
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200 ${
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
                   mode === "dark"
                     ? `bg-gray-700 text-white border-gray-600 ${
                         errors.yearEstablished
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-400"
                       }`
                     : `bg-gray-50 text-[#231812] border-gray-300 ${
                         errors.yearEstablished
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-400"
                       }`
                 }`}
               />
@@ -242,28 +242,28 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                   ? `bg-gray-700 text-white border-gray-600 ${
                       errors.headquartersLocation
                         ? "border-red-500"
-                        : "focus:border-[#f05d23]"
+                        : "focus:border-blue-400"
                     }`
                   : `bg-gray-50 text-[#231812] border-gray-300 ${
                       errors.headquartersLocation
                         ? "border-red-500"
-                        : "focus:border-[#f05d23]"
+                        : "focus:border-blue-400"
                     }`
               }`}
             >
               <Icon
                 icon="mdi:map-marker"
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#f05d23] w-5 h-5 z-10"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400 w-5 h-5 z-10"
               />
               <Select
-                id="headquarters-location-select" // Assign a fixed id
+                id="headquarters-location-select"
                 value={
                   formData.headquartersLocation
                     ? {
                         label: formData.headquartersLocation,
                         value: formData.headquartersLocation,
                       }
-                    : { label: "Kenya", value: "Kenya" } // Default selection
+                    : { label: "Kenya", value: "Kenya" }
                 }
                 onChange={handleCountryChange}
                 options={countryOptions}
@@ -293,7 +293,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
             <div className="flex items-center">
               <Icon
                 icon="mdi:home"
-                className="absolute left-3 text-[#f05d23] w-5 h-5"
+                className="absolute left-3 text-blue-400 w-5 h-5"
               />
               <input
                 type="text"
@@ -303,17 +303,17 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                 onChange={handleInputChange}
                 placeholder="e.g., 123 Main St, Nairobi, Kenya"
                 required
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200 ${
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
                   mode === "dark"
                     ? `bg-gray-700 text-white border-gray-600 ${
                         errors.registeredOfficeAddress
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-400"
                       }`
                     : `bg-gray-50 text-[#231812] border-gray-300 ${
                         errors.registeredOfficeAddress
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-400"
                       }`
                 }`}
               />
@@ -334,21 +334,21 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
               Website URL <span className="text-red-500">*</span>
             </label>
             <div
-              className={`flex items-center px-3 py-3 border rounded-lg shadow-sm focus-within:outline-none focus-within:ring-2 focus-within:ring-[#f05d23] transition-all duration-200 ${
+              className={`flex items-center px-3 py-3 border rounded-lg shadow-sm focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-200 transition-all duration-200 ${
                 mode === "dark"
                   ? `bg-gray-700 text-white border-gray-600 ${
                       errors.websiteUrl
                         ? "border-red-500"
-                        : "focus-within:border-[#f05d23]"
+                        : "focus-within:border-blue-400"
                     }`
                   : `bg-gray-50 text-[#231812] border-gray-300 ${
                       errors.websiteUrl
                         ? "border-red-500"
-                        : "focus-within:border-[#f05d23]"
+                        : "focus-within:border-blue-400"
                     }`
               }`}
             >
-              <Icon icon="mdi:web" className="text-[#f05d23] w-5 h-5" />
+              <Icon icon="mdi:web" className="text-blue-400 w-5 h-5" />
               <span className="text-sm text-gray-500 pl-3 pr-1">https://</span>
               <input
                 type="text"
@@ -387,7 +387,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
             <div className="flex items-center">
               <Icon
                 icon="mdi:user"
-                className="absolute left-3 text-[#f05d23] w-5 h-5"
+                className="absolute left-3 text-blue-400 w-5 h-5"
               />
               <input
                 type="text"
@@ -397,17 +397,17 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                 onChange={handleInputChange}
                 placeholder="e.g., John Doe"
                 required
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200 ${
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
                   mode === "dark"
                     ? `bg-gray-700 text-white border-gray-600 ${
                         errors.primaryContactName
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-400"
                       }`
                     : `bg-gray-50 text-[#231812] border-gray-300 ${
                         errors.primaryContactName
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-400"
                       }`
                 }`}
               />
@@ -430,7 +430,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
             <div className="flex items-center">
               <Icon
                 icon="mdi:briefcase"
-                className="absolute left-3 text-[#f05d23] w-5 h-5"
+                className="absolute left-3 text-blue-400 w-5 h-5"
               />
               <input
                 type="text"
@@ -440,17 +440,17 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                 onChange={handleInputChange}
                 placeholder="e.g., CEO"
                 required
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200 ${
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
                   mode === "dark"
                     ? `bg-gray-700 text-white border-gray-600 ${
                         errors.primaryContactRole
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-400"
                       }`
                     : `bg-gray-50 text-[#231812] border-gray-300 ${
                         errors.primaryContactRole
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-400"
                       }`
                 }`}
               />
@@ -473,7 +473,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
             <div className="flex items-center">
               <Icon
                 icon="mdi:email"
-                className="absolute left-3 text-[#f05d23] w-5 h-5"
+                className="absolute left-3 text-blue-400 w-5 h-5"
               />
               <input
                 type="email"
@@ -483,17 +483,17 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                 onChange={handleInputChange}
                 placeholder="e.g., john.doe@example.com"
                 required
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200 ${
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
                   mode === "dark"
                     ? `bg-gray-700 text-white border-gray-600 ${
                         errors.primaryContactEmail
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-400"
                       }`
                     : `bg-gray-50 text-[#231812] border-gray-300 ${
                         errors.primaryContactEmail
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-400"
                       }`
                 }`}
               />
@@ -516,7 +516,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
             <div className="flex items-center">
               <Icon
                 icon="mdi:phone"
-                className="absolute left-3 text-[#f05d23] w-5 h-5"
+                className="absolute left-3 text-blue-400 w-5 h-5"
               />
               <input
                 type="tel"
@@ -526,17 +526,17 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                 onChange={handleInputChange}
                 placeholder="e.g., +254 701 850 850"
                 required
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200 ${
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
                   mode === "dark"
                     ? `bg-gray-700 text-white border-gray-600 ${
                         errors.primaryContactPhone
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-400"
                       }`
                     : `bg-gray-50 text-[#231812] border-gray-300 ${
                         errors.primaryContactPhone
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-400"
                       }`
                 }`}
               />
@@ -559,7 +559,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
             <div className="flex items-center">
               <Icon
                 icon="mdi:linkedin"
-                className="absolute left-3 text-[#f05d23] w-5 h-5"
+                className="absolute left-3 text-blue-400 w-5 h-5"
               />
               <input
                 type="text"
@@ -569,17 +569,17 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                 onChange={handleInputChange}
                 placeholder="e.g., https://linkedin.com/in/johndoe"
                 required
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200 ${
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
                   mode === "dark"
                     ? `bg-gray-700 text-white border-gray-600 ${
                         errors.primaryContactLinkedin
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-400"
                       }`
                     : `bg-gray-50 text-[#231812] border-gray-300 ${
                         errors.primaryContactLinkedin
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-400"
                       }`
                 }`}
               />
@@ -599,7 +599,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
             <div className="flex items-center">
               <Icon
                 icon="mdi:briefcase"
-                className="absolute left-3 text-[#f05d23] w-5 h-5"
+                className="absolute left-3 text-blue-400 w-5 h-5"
               />
               <input
                 type="text"
@@ -617,7 +617,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
             </div>
             {!formData.opening && (
               <div className="text-center mt-2">
-                <Link href="/" className="text-[#f05d23] underline">
+                <Link href="/" className="text-blue-400 underline">
                   Click here to return to the landing page
                 </Link>
               </div>

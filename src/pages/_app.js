@@ -19,16 +19,14 @@ function MyApp({ Component, pageProps }) {
   const toggleMode = () => {
     const newMode = mode === "light" ? "dark" : "light";
     setMode(newMode);
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       window.localStorage.setItem("mode", newMode);
     }
   };
 
   useEffect(() => {
-    // Only run client-side
-    if (typeof window === 'undefined') return;
-    
-    // Load saved mode or system preference on mount
+    if (typeof window === "undefined") return;
+
     const savedMode = window.localStorage.getItem("mode");
     if (savedMode) {
       setMode(savedMode);
@@ -41,7 +39,6 @@ function MyApp({ Component, pageProps }) {
       window.localStorage.setItem("mode", systemMode);
     }
 
-    // Listen for system theme changes
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleChange = (e) => {
       const systemMode = e.matches ? "dark" : "light";
@@ -57,8 +54,19 @@ function MyApp({ Component, pageProps }) {
   // Handle route change with toast
   useEffect(() => {
     const routeChangeStart = (url) => {
+      // Skip toast for interview page or customize it
+      if (url.startsWith("/interview")) {
+        // Option 1: Skip toast entirely for interview page
+        // return;
+
+        // Option 2: Use a custom page name for interview page
+        // toast.loading("Fetching Expression of Interest...", {
+        //   id: "route-loading",
+        // });
+        return;
+      }
+
       const pageSlug = url.split("/").pop() || "overview";
-      // Flatten sidebarNav to access items
       const navItems = sidebarNav.flatMap((category) => category.items);
       const page = navItems.find(
         (item) => item.href === url || item.href.endsWith(`/${pageSlug}`)
@@ -81,7 +89,7 @@ function MyApp({ Component, pageProps }) {
 
     router.events.on("routeChangeStart", routeChangeStart);
     router.events.on("routeChangeComplete", routeChangeComplete);
-    router.events.on("routeChangeError", routeChangeError);
+    router.events.off("routeChangeError", routeChangeError);
 
     return () => {
       router.events.off("routeChangeStart", routeChangeStart);
@@ -92,10 +100,9 @@ function MyApp({ Component, pageProps }) {
 
   // Compute breadcrumbs
   const breadcrumbs = (() => {
-    const path = router.asPath.split("?")[0]; // Remove query params
-    const segments = path.split("/").filter((s) => s); // Split and remove empty
-    const crumbs = [{ href: "/", label: "Home" }]; // Start with Home
-
+    const path = router.asPath.split("?")[0];
+    const segments = path.split("/").filter((s) => s);
+    const crumbs = [{ href: "/", label: "Home" }];
     let currentPath = "";
     const navItems = sidebarNav.flatMap((category) => category.items);
 
@@ -106,6 +113,8 @@ function MyApp({ Component, pageProps }) {
       );
       const label = navItem
         ? navItem.label
+        : segment === "interview"
+        ? "Expression of Interest" // Customize breadcrumb label for interview
         : segment.charAt(0).toUpperCase() + segment.slice(1);
       crumbs.push({ href: currentPath, label });
     });

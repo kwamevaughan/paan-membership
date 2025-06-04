@@ -11,7 +11,6 @@ export default function Step3Documents({
   uploadProgress,
   setUploadProgress,
   mode,
-  handleNext,
   ...fileUploadProps
 }) {
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
@@ -84,23 +83,22 @@ export default function Step3Documents({
       ...prev,
       declarations: declarationChecks,
     }));
-  }, [declarationChecks]);
+  }, [declarationChecks, setFormData]);
 
   // Move to next file when current one is uploaded
   useEffect(() => {
     if (
       completedFiles.includes(fileTypes[activeFileIndex].id) &&
-      !isAnimating
+      !isAnimating &&
+      activeFileIndex < fileTypes.length - 1
     ) {
-      if (activeFileIndex < fileTypes.length - 1) {
-        setIsAnimating(true);
-        setTimeout(() => {
-          setActiveFileIndex((prev) => prev + 1);
-          setIsAnimating(false);
-        }, 500);
-      }
+      setIsAnimating(true);
+      setTimeout(() => {
+        setActiveFileIndex((prev) => prev + 1);
+        setIsAnimating(false);
+      }, 500);
     }
-  }, [completedFiles, activeFileIndex]);
+  }, [completedFiles, activeFileIndex, fileTypes.length]);
 
   // Track completed files
   useEffect(() => {
@@ -114,11 +112,11 @@ export default function Step3Documents({
       const firstIncomplete = fileTypes.findIndex(
         (type) => !completed.includes(type.id)
       );
-      if (firstIncomplete !== -1) {
+      if (firstIncomplete !== -1 && firstIncomplete !== activeFileIndex) {
         setActiveFileIndex(firstIncomplete);
       }
     }
-  }, [formData]);
+  }, [formData, fileTypes, activeFileIndex]);
 
   const handleFileUpload = (type, file) => {
     if (file && file.size > MAX_FILE_SIZE) {
@@ -185,7 +183,7 @@ export default function Step3Documents({
           {fileTypes.map((file, index) => (
             <div
               key={file.id}
-              className="z-10 flex flex-col items-center"
+              className="z-10 flex flex-col items-center group"
               onClick={() => !isAnimating && setActiveFileIndex(index)}
             >
               <motion.div
@@ -218,9 +216,12 @@ export default function Step3Documents({
                 )}
               </motion.div>
               <span
-                className={`text-xs mt-1 ${secondaryTextColor} hidden sm:block`}
+                className={`text-xs mt-1 ${secondaryTextColor} hidden sm:block group-hover:text-[#f05d23] transition-colors`}
               >
-                {file.title.split(" ")[0]}
+                {file.title}
+              </span>
+              <span className="absolute top-full mt-2 text-xs text-white bg-gray-800 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+                Click to edit {file.title}
               </span>
             </div>
           ))}
@@ -371,99 +372,6 @@ export default function Step3Documents({
             </p>
           )}
         </motion.div>
-
-        {/* Navigation and Submit Buttons */}
-        <div className="flex justify-between mt-6">
-          <button
-            className={`px-4 py-2 rounded ${
-              activeFileIndex === 0 ? "invisible" : ""
-            } 
-              ${
-                mode === "dark"
-                  ? "bg-gray-700 hover:bg-gray-600"
-                  : "bg-gray-200 hover:bg-gray-300"
-              }`}
-            onClick={() =>
-              !isAnimating &&
-              setActiveFileIndex((prev) => Math.max(0, prev - 1))
-            }
-            disabled={activeFileIndex === 0 || isAnimating}
-          >
-            <Icon icon="mdi:arrow-left" className="inline mr-1" /> Previous
-          </button>
-
-          {activeFileIndex < fileTypes.length - 1 ? (
-            <button
-              className={`px-4 py-2 rounded
-                ${
-                  mode === "dark"
-                    ? "bg-gray-700 hover:bg-gray-600"
-                    : "bg-gray-200 hover:bg-gray-300"
-                }`}
-              onClick={() =>
-                !isAnimating &&
-                setActiveFileIndex((prev) =>
-                  Math.min(fileTypes.length - 1, prev + 1)
-                )
-              }
-              disabled={isAnimating}
-            >
-              Next <Icon icon="mdi:arrow-right" className="inline ml-1" />
-            </button>
-          ) : (
-            <button
-              onClick={() => {
-                if (!areAllDeclarationsChecked()) {
-                  toast.error("You must agree to all declarations to proceed", {
-                    icon: "⚠️",
-                  });
-                  return;
-                }
-
-                // Check if all required files are uploaded
-                const missingFiles = fileTypes.filter(
-                  (file) => !completedFiles.includes(file.id)
-                );
-
-                if (missingFiles.length > 0) {
-                  toast.error(
-                    `Missing required documents: ${missingFiles
-                      .map((f) => f.title)
-                      .join(", ")}`,
-                    {
-                      icon: "⚠️",
-                      duration: 5000,
-                    }
-                  );
-                  return;
-                }
-
-                // All validations passed, proceed with submission
-                handleNext();
-              }}
-              disabled={isSubmitting}
-              className={`flex items-center justify-center px-6 py-2 bg-[#f05d23] text-white rounded-lg 
-                hover:bg-[#d94f1e] disabled:bg-gray-300 disabled:text-gray-600 
-                transition-all duration-200 shadow-md ${
-                  isSubmitting ? "opacity-70 cursor-not-allowed" : ""
-                }`}
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="animate-pulse">Submitting</span>
-                  <span className="inline-block w-5 text-center animate-bounce ml-1">
-                    ...
-                  </span>
-                </>
-              ) : (
-                <>
-                  Submit
-                  <Icon icon="mdi:send" className="ml-2 w-5 h-5" />
-                </>
-              )}
-            </button>
-          )}
-        </div>
       </div>
     </div>
   );

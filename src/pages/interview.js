@@ -589,7 +589,6 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
                   setFormData={setFormData}
                   isSubmitting={isSubmitting}
                   mode={mode}
-                  handleNext={handleNext}
                   {...fileUploadProps}
                 />
               )}
@@ -633,7 +632,12 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
                     }
                     className={`flex items-center justify-center px-4 py-2 bg-[#f05d23] text-white rounded-lg hover:bg-[#d94f1e] disabled:bg-gray-300 disabled:text-gray-600 transition-all duration-200 shadow-md`}
                   >
-                    {step === 3 ? (
+                    {step === 3 && formData.job_type === "agency" ? ( // Use "Upload & Submit" for agencies in step 3
+                      <>
+                        Upload & Submit
+                        <Icon icon="mdi:send" className="ml-2 w-5 h-5" />
+                      </>
+                    ) : step === 3 && formData.job_type === "freelancer" ? ( // Use "Submit" for freelancers in step 3
                       <>
                         Submit
                         <Icon icon="mdi:send" className="ml-2 w-5 h-5" />

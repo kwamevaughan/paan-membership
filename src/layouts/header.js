@@ -72,11 +72,11 @@ const Header = ({
     <header
       className={`${mode === "dark" ? "bg-slate-900" : "bg-white"} 
       ${scrolled ? "shadow-2xl backdrop-blur-xl bg-opacity-95" : ""} 
-      transition-all duration-500 relative z-50 border-b 
-      ${mode === "dark" ? "border-slate-800/70" : "border-slate-200/70"}`}
+      transition-all duration-500 relative z-20 border-b 
+      ${mode === "dark" ? "border-slate-800/70" : "border-slate-200/70"} `}
     >
       {/* Animated gradient bar */}
-      <div className="h-1 w-full bg-gradient-to-r from-[#f25849] via-[#f05d23] to-[#84c1d9] bg-[length:200%_auto] animate-gradient"></div>
+      <div className="h-1 w-full bg-gradient-to-r from-blue-200 via-blue-400 to-blue-600 bg-[length:200%_auto] animate-gradient"></div>
 
       <div className="container mx-auto px-4 sm:px-6 py-4 md:py-5">
         <div className="flex justify-between items-center">
@@ -148,8 +148,8 @@ const Header = ({
                       ? "bg-[#0a3a63] border-transparent text-white shadow-lg"
                       : isCurrent
                       ? mode === "dark"
-                        ? "bg-slate-800/90 border-[#f05d23] text-white shadow-md"
-                        : "bg-white/90 border-[#f05d23] text-slate-700 shadow-md"
+                        ? "bg-slate-800/90 border-blue-400 text-white shadow-md"
+                        : "bg-white/90 border-blue-400 text-slate-700 shadow-md"
                       : mode === "dark"
                       ? "bg-slate-800/90 border-slate-700/60 text-slate-500"
                       : "bg-white/90 border-slate-200/60 text-slate-400"
@@ -224,7 +224,7 @@ const Header = ({
                 {/* Progress Bar Below Steps */}
                 <div className="mt-6 w-full h-3.5 bg-gray-100 rounded-full overflow-hidden dark:bg-gray-800/70 backdrop-blur-md shadow-inner relative">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#f25849] via-[#f05d23] to-[#84c1d9] bg-[length:200%_auto] animate-gradient transition-all duration-1000 ease-in-out relative"
+                    className="h-full rounded-full bg-gradient-to-r from-blue-200 via-blue-400 to-blue-600 bg-[length:200%_auto] animate-gradient transition-all duration-1000 ease-in-out relative"
                     style={{ width: `${progressPercentage}%` }}
                   >
                     <span

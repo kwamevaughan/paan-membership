@@ -95,7 +95,7 @@ export default function MovingDotBorder({ children, mode, className = "" }) {
       id="gradient-container"
       className={`relative p-[4px] rounded-2xl ${
         mode !== "dark"
-          ? "bg-gradient-to-r from-[#1e3a8a] via-[#f05d23] to-[#6b21a8] bg-[length:400%_400%] animate-circularGradient"
+          ? "bg-gradient-to-r from-blue-200 via-blue-400 to-[#f25849] bg-[length:400%_400%] animate-circularGradient"
           : "bg-transparent"
       } ${className}`}
     >

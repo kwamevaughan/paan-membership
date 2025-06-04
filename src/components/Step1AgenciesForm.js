@@ -4,9 +4,11 @@ import Link from "next/link";
 import Select from "react-select";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { useCountry } from "@/hooks/useCountry";
+import ItemActionModal from "./ItemActionModal"; // Import ItemActionModal
 
 export default function Step1AgenciesForm({ formData, handleChange, mode }) {
   const [isMounted, setIsMounted] = useState(false);
+  const [isInstructionsOpen, setIsInstructionsOpen] = useState(false); // Modal state
 
   const { countryOptions } = useCountry();
   const { errors, validateField, validateForm } = useFormValidation();
@@ -113,7 +115,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
         }`}
       >
         <div className="flex items-center justify-center mb-6">
-          <Icon icon="mdi:handshake" className="w-8 h-8 text-[#f05d23] mr-2" />
+          <Icon icon="mdi:handshake" className="w-8 h-8 text-blue-400 mr-2" />
           <h2 className="text-3xl font-bold text-center">Let’s Get Started</h2>
         </div>
         <p
@@ -124,6 +126,19 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
           Welcome to the Pan-African Agency Network! Please fill out the EOI
           form to begin your journey.
         </p>
+
+        {/* Instructions Button */}
+        <div className="mb-6 flex justify-center">
+          <button
+            onClick={() => setIsInstructionsOpen(true)}
+            className="flex items-center px-4 py-2 bg-blue-400 text-white rounded-lg hover:bg-blue-500 transition-all duration-200 shadow-md focus:outline-none focus:ring-2"
+            aria-label="View application instructions"
+          >
+            <Icon icon="mdi:help-circle" className="w-5 h-5 mr-2" />
+            View Instructions
+          </button>
+        </div>
+
         <div className="space-y-6 max-h-[50vh] overflow-y-auto">
           <h3 className="text-lg font-bold">Agency Details</h3>
 
@@ -240,14 +255,14 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#f05d23] w-5 h-5 z-10"
               />
               <Select
-                id="headquarters-location-select" // Assign a fixed id
+                id="headquarters-location-select"
                 value={
                   formData.headquartersLocation
                     ? {
                         label: formData.headquartersLocation,
                         value: formData.headquartersLocation,
                       }
-                    : { label: "Kenya", value: "Kenya" } // Default selection
+                    : { label: "Kenya", value: "Kenya" }
                 }
                 onChange={handleCountryChange}
                 options={countryOptions}
@@ -255,13 +270,13 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                 isSearchable
                 isClearable
                 styles={customStyles}
-                className="w-full pl-10 py-2"
-                classNamePrefix="react-select"
+                className="w-full"
+                classNamePrefix="dropdown"
               />
             </div>
             {errors.headquartersLocation && (
               <span className="mt-1 text-xs text-red-500 flex items-center">
-                <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />{" "}
+                <Icon icon="mdi:alert-circle" className="mr-2 h-4 w-4" />
                 {errors.headquartersLocation}
               </span>
             )}
@@ -272,12 +287,12 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
               htmlFor="registeredOfficeAddress"
               className="block text-sm font-medium mb-1"
             >
-              Registered Office Address <span className="text-red-500">*</span>
+              Registered Office <span className="text-red-500">*</span>
             </label>
             <div className="flex items-center">
               <Icon
-                icon="mdi:home"
-                className="absolute left-3 text-[#f05d23] w-5 h-5"
+                icon="house"
+                className="absolute left-3 text-[#f05d23] w-3 h-3"
               />
               <input
                 type="text"
@@ -287,24 +302,28 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                 onChange={handleInputChange}
                 placeholder="e.g., 123 Main St, Nairobi, Kenya"
                 required
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200 ${
-                  mode === "dark"
-                    ? `bg-gray-700 text-white border-gray-600 ${
-                        errors.registeredOfficeAddress
-                          ? "border-red-500"
-                          : "focus:border-[#f05d23]"
-                      }`
-                    : `bg-gray-50 text-[#231812] border-gray-300 ${
-                        errors.registeredOfficeAddress
-                          ? "border-red-500"
-                          : "focus:border-[#f05d23]"
-                      }`
-                }`}
+                className={`
+      w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200
+      ${
+        mode === "dark"
+          ? `bg-gray-700 text-white border-gray-600 ${
+              errors.registeredOfficeAddress
+                ? "border-red-500"
+                : "focus:border-[#f05d23]"
+            }`
+          : `bg-gray-50 text-[#231812] border-gray-300 ${
+              errors.registeredOfficeAddress
+                ? "border-red-500"
+                : "focus:border-[#f05d23]"
+            }`
+      }
+    `}
               />
             </div>
+
             {errors.registeredOfficeAddress && (
               <span className="mt-1 text-xs text-red-500 flex items-center">
-                <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />{" "}
+                <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />
                 {errors.registeredOfficeAddress}
               </span>
             )}
@@ -609,6 +628,181 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
           </div>
         </div>
       </div>
+      {/* Instructions Modal */}
+
+      <ItemActionModal
+        isOpen={isInstructionsOpen}
+        onClose={() => setIsInstructionsOpen(false)}
+        title="Application Instructions"
+        mode={mode}
+      >
+        <div className="space-y-6">
+          {/* Header Section */}
+          <div className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-gray-700">
+            <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
+              <Icon icon="lucide:file-text" className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
+                Prepare for Your Application
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Get ready in just 10 minutes
+              </p>
+            </div>
+          </div>
+
+          {/* Required Documents Section */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Icon
+                icon="lucide:folder-open"
+                className="w-5 h-5 text-blue-500"
+              />
+              <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+                Required Documents (PDF Format)
+              </h4>
+            </div>
+
+            <div className="grid gap-3">
+              {[
+                {
+                  icon: "lucide:building-2",
+                  title: "Company Registration Certificate",
+                  description: "Official business registration document",
+                },
+                {
+                  icon: "lucide:briefcase",
+                  title: "Portfolio",
+                  description:
+                    "Examples of your agency's previous work or projects",
+                },
+                {
+                  icon: "lucide:user-check",
+                  title: "Agency Profile",
+                  description: "Overview of capabilities, team, and services",
+                },
+                {
+                  icon: "lucide:receipt",
+                  title: "Tax Registration Certificate",
+                  description:
+                    "Tax documentation per your country's requirements",
+                },
+              ].map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:shadow-sm transition-shadow"
+                >
+                  <div className="p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm">
+                    <Icon icon={item.icon} className="w-4 h-4 text-blue-500" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h5 className="font-medium text-gray-900 dark:text-gray-100 text-sm">
+                      {item.title}
+                    </h5>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                      {item.description}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Process Information */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Icon icon="lucide:info" className="w-5 h-5 text-blue-500" />
+              <h4 className="font-semibold text-gray-900 dark:text-gray-100">
+                What to Expect
+              </h4>
+            </div>
+
+            <div className="space-y-3">
+              {[
+                {
+                  icon: "lucide:clock",
+                  text: "Complete registration in approximately 10 minutes",
+                  highlight: "10 minutes",
+                },
+                {
+                  icon: "lucide:save",
+                  text: "Progress automatically saved for same-device resume",
+                  highlight: "automatically saved",
+                },
+                {
+                  icon: "lucide:check-circle",
+                  text: "Ensure all required fields are completed before submission",
+                  highlight: "required fields",
+                },
+              ].map((item, index) => (
+                <div key={index} className="flex items-center gap-3">
+                  <Icon
+                    icon={item.icon}
+                    className="w-4 h-4 text-blue-500 flex-shrink-0"
+                  />
+                  <p className="text-sm text-gray-700 dark:text-gray-300">
+                    {item.text.split(item.highlight).map((part, i) =>
+                      i === 0 ? (
+                        part
+                      ) : (
+                        <span key={i}>
+                          <span className="font-semibold text-blue-600 dark:text-blue-400">
+                            {item.highlight}
+                          </span>
+                          {part}
+                        </span>
+                      )
+                    )}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Contact Section */}
+          <div className="p-4 bg-gradient-to-r from-blue-50 to-orange-50 dark:from-blue-900/20 dark:to-orange-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <div className="flex items-start gap-3">
+              <Icon
+                icon="lucide:help-circle"
+                className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5"
+              />
+              <div>
+                <p className="text-sm text-gray-700 dark:text-gray-300 mb-2">
+                  Need assistance? We're here to help!
+                </p>
+                <a
+                  href="mailto:membership@paan.africa"
+                  className="inline-flex items-center gap-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                >
+                  <Icon icon="lucide:mail" className="w-4 h-4" />
+                  membership@paan.africa
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <button
+              onClick={() => setIsInstructionsOpen(false)}
+              className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors font-medium"
+            >
+              Close
+            </button>
+            <button
+              onClick={() => {
+                setIsInstructionsOpen(false);
+                // Add logic to proceed to application
+              }}
+              className="flex-1 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all font-medium shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+            >
+              <span>Start Application</span>
+              <Icon icon="lucide:arrow-right" className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </ItemActionModal>
     </div>
   );
 }

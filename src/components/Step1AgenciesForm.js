@@ -256,14 +256,14 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#f05d23] w-5 h-5 z-10"
               />
               <Select
-                id="headquarters-location-select"
+                id="headquarters-location-select" // Assign a fixed id
                 value={
                   formData.headquartersLocation
                     ? {
                         label: formData.headquartersLocation,
                         value: formData.headquartersLocation,
                       }
-                    : { label: "Kenya", value: "Kenya" }
+                    : { label: "Kenya", value: "Kenya" } // Default selection
                 }
                 onChange={handleCountryChange}
                 options={countryOptions}
@@ -271,13 +271,13 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                 isSearchable
                 isClearable
                 styles={customStyles}
-                className="w-full"
-                classNamePrefix="dropdown"
+                className="w-full pl-10 py-2"
+                classNamePrefix="react-select"
               />
             </div>
             {errors.headquartersLocation && (
               <span className="mt-1 text-xs text-red-500 flex items-center">
-                <Icon icon="mdi:alert-circle" className="mr-2 h-4 w-4" />
+                <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />{" "}
                 {errors.headquartersLocation}
               </span>
             )}
@@ -288,12 +288,12 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
               htmlFor="registeredOfficeAddress"
               className="block text-sm font-medium mb-1"
             >
-              Registered Office <span className="text-red-500">*</span>
+              Registered Office Address <span className="text-red-500">*</span>
             </label>
             <div className="flex items-center">
               <Icon
-                icon="house"
-                className="absolute left-3 text-[#f05d23] w-3 h-3"
+                icon="mdi:home"
+                className="absolute left-3 text-[#f05d23] w-5 h-5"
               />
               <input
                 type="text"
@@ -303,28 +303,24 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                 onChange={handleInputChange}
                 placeholder="e.g., 123 Main St, Nairobi, Kenya"
                 required
-                className={`
-      w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200
-      ${
-        mode === "dark"
-          ? `bg-gray-700 text-white border-gray-600 ${
-              errors.registeredOfficeAddress
-                ? "border-red-500"
-                : "focus:border-[#f05d23]"
-            }`
-          : `bg-gray-50 text-[#231812] border-gray-300 ${
-              errors.registeredOfficeAddress
-                ? "border-red-500"
-                : "focus:border-[#f05d23]"
-            }`
-      }
-    `}
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200 ${
+                  mode === "dark"
+                    ? `bg-gray-700 text-white border-gray-600 ${
+                        errors.registeredOfficeAddress
+                          ? "border-red-500"
+                          : "focus:border-[#f05d23]"
+                      }`
+                    : `bg-gray-50 text-[#231812] border-gray-300 ${
+                        errors.registeredOfficeAddress
+                          ? "border-red-500"
+                          : "focus:border-[#f05d23]"
+                      }`
+                }`}
               />
             </div>
-
             {errors.registeredOfficeAddress && (
               <span className="mt-1 text-xs text-red-500 flex items-center">
-                <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />
+                <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />{" "}
                 {errors.registeredOfficeAddress}
               </span>
             )}

@@ -19,7 +19,9 @@ export default function Freelancers({ initialOpenings }) {
     if (selectedOpening) {
       const url = `/interview?opening=${encodeURIComponent(
         selectedOpening.title
-      )}&job_type=${encodeURIComponent(selectedOpening.job_type)}`;
+      )}&job_type=${encodeURIComponent(
+        selectedOpening.job_type
+      )}&opening_id=${encodeURIComponent(selectedOpening.id)}`; // Add opening_id
       window.location.href = url;
     }
   };
@@ -92,7 +94,9 @@ export default function Freelancers({ initialOpenings }) {
               Select an EOI below
             </option>
             {openings.map((opening) => (
-              <option key={opening.title} value={opening.title}>
+              <option key={opening.id} value={opening.title}>
+                {" "}
+                {/* Use id as key */}
                 {opening.title}
               </option>
             ))}
@@ -211,7 +215,7 @@ export default function Freelancers({ initialOpenings }) {
 export async function getStaticProps() {
   const { data, error } = await supabase
     .from("job_openings")
-    .select("title, job_type")
+    .select("id, title, job_type") // Add id
     .eq("job_type", "freelancers")
     .gt("expires_on", new Date().toISOString());
 

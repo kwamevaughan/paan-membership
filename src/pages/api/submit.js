@@ -74,6 +74,7 @@ export default async function handler(req, res) {
       countryOfResidence,
       languagesSpoken,
       opening,
+      opening_id,
       job_type: rawJobType,
       answers,
     } = data;
@@ -356,6 +357,11 @@ export default async function handler(req, res) {
     });
 
     if (job_type === "agency") {
+      if (!opening_id || opening_id.trim() === "") {
+        return res.status(400).json({
+          error: "A valid opening_id is required for agency submissions",
+        });
+      }
       if (
         !agencyName ||
         !yearEstablished ||
@@ -375,6 +381,11 @@ export default async function handler(req, res) {
         });
       }
     } else if (job_type === "freelancer") {
+      if (!opening_id || opening_id.trim() === "") {
+        return res.status(400).json({
+          error: "A valid opening_id is required for freelancer submissions",
+        });
+      }
       if (
         !primaryContactName ||
         !primaryContactEmail ||

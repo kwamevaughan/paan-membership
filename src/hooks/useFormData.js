@@ -28,6 +28,7 @@ export const useFormData = (questionCount = 0) => {
     countryOfResidence: "",
     languagesSpoken: "",
     opening: "",
+    opening_id: "",
     job_type: getInitialJobType(),
     answers: Array(questionCount).fill([]),
     companyRegistration: null,
@@ -42,6 +43,7 @@ export const useFormData = (questionCount = 0) => {
     const params = new URLSearchParams(window.location.search);
     const jobType = params.get("job_type");
     const opening = params.get("opening");
+    const opening_id = params.get("opening_id");
     const normalizedJobType =
       jobType === "agencies"
         ? "agency"
@@ -53,6 +55,7 @@ export const useFormData = (questionCount = 0) => {
       ...prev,
       job_type: normalizedJobType,
       opening: opening || prev.opening,
+      opening_id: opening_id || prev.opening_id || "",
     }));
   }, []);
 
@@ -200,7 +203,13 @@ export const useFormData = (questionCount = 0) => {
         );
       }
 
+      // Validate opening_id
+      if (!formData.opening_id || formData.opening_id.trim() === "") {
+        throw new Error("A valid Opening ID is required");
+      }
+
       console.log("Submitting form with job_type:", formData.job_type);
+      console.log("Submitting form with opening_id:", formData.opening_id);
 
       const cleanedFormData = {
         ...formData,
@@ -244,6 +253,7 @@ export const useFormData = (questionCount = 0) => {
         countryOfResidence: cleanedFormData.countryOfResidence,
         languagesSpoken: cleanedFormData.languagesSpoken,
         opening: cleanedFormData.opening,
+        opening_id: cleanedFormData.opening_id,
         job_type: cleanedFormData.job_type,
         answers: cleanedFormData.answers,
       };

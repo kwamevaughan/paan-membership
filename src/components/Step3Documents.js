@@ -167,10 +167,10 @@ export default function Step3Documents({
   return (
     <div className="animate-fade-in max-w-2xl mx-auto">
       <div
-        className={`shadow-lg rounded-lg p-6 border-t-4 border-[#f05d23] ${bgColor} ${textColor}`}
+        className={`shadow-lg rounded-lg p-6 border-t-4 border-blue-400 ${bgColor} ${textColor}`}
       >
         <div className="flex items-center justify-center mb-6">
-          <Icon icon="mdi:upload" className="w-8 h-8 text-[#f05d23] mr-2" />
+          <Icon icon="mdi:upload" className="w-8 h-8 text-blue-400 mr-2" />
           <h2 className="text-3xl font-bold text-center">
             Submit Your Documents
           </h2>
@@ -190,9 +190,9 @@ export default function Step3Documents({
                 className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-colors
                   ${
                     getCompletionStatus(index) === "complete"
-                      ? "bg-green-500 text-white"
+                      ? "bg-blue-400 text-white"
                       : getCompletionStatus(index) === "active"
-                      ? "bg-[#f05d23] text-white"
+                      ? "bg-blue-400 text-white"
                       : `${
                           mode === "dark" ? "bg-gray-700" : "bg-gray-200"
                         } ${secondaryTextColor}`
@@ -216,7 +216,7 @@ export default function Step3Documents({
                 )}
               </motion.div>
               <span
-                className={`text-xs mt-1 ${secondaryTextColor} hidden sm:block group-hover:text-[#f05d23] transition-colors`}
+                className={`text-xs mt-1 ${secondaryTextColor} hidden sm:block group-hover:text-blue-400 transition-colors`}
               >
                 {file.title}
               </span>
@@ -285,7 +285,7 @@ export default function Step3Documents({
             <h4 className="font-semibold mb-2 flex items-center">
               <Icon
                 icon="mdi:file-document-multiple"
-                className="w-5 h-5 mr-2 text-[#f05d23]"
+                className="w-5 h-5 mr-2 text-blue-500"
               />
               Uploaded Documents ({completedFiles.length}/{fileTypes.length}) -
               Total Size: {formatFileSize(getTotalFileSize())}
@@ -296,7 +296,7 @@ export default function Step3Documents({
                   <div
                     className={`w-4 h-4 rounded-full mr-2 ${
                       completedFiles.includes(file.id)
-                        ? "bg-green-500"
+                        ? "bg-blue-400"
                         : "bg-gray-300"
                     }`}
                   ></div>

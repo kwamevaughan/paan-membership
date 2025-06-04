@@ -630,7 +630,7 @@ export default function InterviewPage({
                     disabled={
                       isSubmitting || (step === 1 && !isStep1Complete())
                     }
-                    className={`flex items-center justify-center px-4 py-2 bg-[#f05d23] text-white rounded-lg hover:bg-[#d94f1e] disabled:bg-gray-300 disabled:text-gray-600 transition-all duration-200 shadow-md`}
+                    className={`flex items-center justify-center px-4 py-2 bg-blue-400 text-white rounded-lg hover:bg-blue-500 disabled:bg-gray-300 disabled:text-gray-600 transition-all duration-200 shadow-md`}
                   >
                     {step === 3 && formData.job_type === "agency" ? ( // Use "Upload & Submit" for agencies in step 3
                       <>

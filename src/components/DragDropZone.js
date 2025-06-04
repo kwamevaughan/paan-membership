@@ -36,7 +36,7 @@ export default function DragDropZone({
       onDragLeave={(e) => handleDragLeave(e, type)}
       className={`p-6 flex justify-center border-2 border-dashed rounded-xl transition-all duration-300 transform ${
         isDragging
-          ? "border-[#f05d23] bg-orange-50 scale-105"
+          ? "border-blue-400 bg-blue-50 scale-105"
           : mode === "dark"
           ? "border-gray-600 bg-gray-700"
           : "border-gray-300 bg-white"
@@ -50,8 +50,8 @@ export default function DragDropZone({
           <span
             className={`inline-flex justify-center items-center w-12 h-12 rounded-full mb-4 ${
               mode === "dark"
-                ? "bg-gray-600 text-[#f05d23]"
-                : "bg-gray-100 text-[#f05d23]"
+                ? "bg-gray-600 text-blue-400"
+                : "bg-gray-100 text-blue-500"
             }`}
           >
             <Icon icon="mdi:upload" className="w-6 h-6" />
@@ -69,7 +69,7 @@ export default function DragDropZone({
               {fileTypeDescription[type]}{" "}
               <span className="text-red-500">*</span> - Drop your file here or{" "}
             </span>
-            <span className="font-semibold text-[#f05d23] hover:text-[#d94f1e] transition">
+            <span className="font-semibold text-blue-400 hover:text-blue-600 transition">
               browse
             </span>
           </div>

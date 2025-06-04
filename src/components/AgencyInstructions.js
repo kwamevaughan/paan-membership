@@ -21,7 +21,7 @@ export default function AgencyInstructions({ mode, setIsInstructionsOpen }) {
               mode === "dark" ? "text-gray-300" : "text-gray-600"
             }`}
           >
-            Get ready in just 10 minutes
+            Submission takes less than 10 minutes
           </p>
         </div>
       </div>
@@ -57,11 +57,8 @@ export default function AgencyInstructions({ mode, setIsInstructionsOpen }) {
               title: "Agency Profile",
               description: "Overview of capabilities, team, and services",
             },
-            {
-              icon: "lucide:receipt",
-              title: "Tax Registration Certificate",
-              description: "Tax documentation per your country's requirements",
-            },
+            
+            
           ].map((item, index) => (
             <div
               key={index}
@@ -180,7 +177,7 @@ export default function AgencyInstructions({ mode, setIsInstructionsOpen }) {
               Need assistance? We&apos;re here to help!
             </p>
             <a
-              href="mailto:membership@paan.africa"
+              href="mailto:support@paan.africa"
               className={`inline-flex items-center gap-2 text-sm font-medium ${
                 mode === "dark"
                   ? "text-blue-400 hover:text-blue-300"
@@ -188,7 +185,7 @@ export default function AgencyInstructions({ mode, setIsInstructionsOpen }) {
               } transition-colors`}
             >
               <Icon icon="lucide:mail" className="w-4 h-4" />
-              membership@paan.africa
+              support@paan.africa
             </a>
           </div>
         </div>

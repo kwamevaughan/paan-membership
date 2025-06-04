@@ -145,7 +145,7 @@ const Header = ({
                             className={`flex items-center justify-center h-10 w-10 rounded-full border-2 transition-all duration-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f05d23]
                   ${
                     isCompleted
-                      ? "bg-[#0a3a63] border-transparent text-white shadow-lg"
+                      ? "bg-blue-400 border-transparent text-white shadow-lg"
                       : isCurrent
                       ? mode === "dark"
                         ? "bg-slate-800/90 border-blue-400 text-white shadow-md"

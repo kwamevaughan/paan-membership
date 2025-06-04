@@ -177,3 +177,51 @@ export async function getAdminUpdatesProps({ req, res }) {
     };
   }
 }
+
+
+export async function getInterviewPageProps({ req, res, query }) {
+  console.log("[getInterviewPageProps] Starting at", new Date().toISOString());
+
+  const supabaseServer = createSupabaseServerClient(req, res);
+  const decodedJobType = query.job_type
+    ? decodeURIComponent(query.job_type).toLowerCase()
+    : "freelancer";
+  const normalizedJobType =
+    decodedJobType === "agencies"
+      ? "agency"
+      : decodedJobType === "freelancers" || decodedJobType === "freelancer"
+      ? "freelancer"
+      : "freelancer";
+
+  try {
+    const { data: questions, error } = await supabaseServer
+      .from("interview_questions")
+      .select("*, max_answers")
+      .order("id", { ascending: true });
+
+    if (error) throw error;
+
+    return {
+      props: {
+        initialQuestions: questions || [],
+        job_type: normalizedJobType,
+        opening: query.opening ? decodeURIComponent(query.opening) : "",
+        opening_id: query.opening_id
+          ? decodeURIComponent(query.opening_id)
+          : "",
+      },
+    };
+  } catch (error) {
+    console.error("[getInterviewPageProps] Error fetching questions:", error);
+    return {
+      props: {
+        initialQuestions: [],
+        job_type: normalizedJobType,
+        opening: query.opening ? decodeURIComponent(query.opening) : "",
+        opening_id: query.opening_id
+          ? decodeURIComponent(query.opening_id)
+          : "",
+      },
+    };
+  }
+}

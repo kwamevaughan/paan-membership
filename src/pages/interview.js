@@ -18,7 +18,14 @@ import { supabase } from "@/lib/supabase";
 import Head from "next/head";
 import { useCategories } from "@/hooks/useCategories";
 
-export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
+export default function InterviewPage({
+  mode,
+  toggleMode,
+  initialQuestions,
+  job_type,
+  opening,
+  opening_id,
+}) {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -42,6 +49,16 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
   const fileUploadProps = useFileUpload(formData, setFormData);
 
   const totalQuestions = questions.length;
+
+  // Initialize formData with server-side props
+  useEffect(() => {
+    setFormData((prev) => ({
+      ...prev,
+      job_type: prev.job_type || job_type || "freelancer",
+      opening: prev.opening || opening || "",
+      opening_id: prev.opening_id || opening_id || "",
+    }));
+  }, [job_type, opening, opening_id, setFormData]);
 
   // Function to check if all required fields in Step 1 are filled
   const isStep1Complete = () => {
@@ -176,29 +193,26 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
 
   // Handle URL parameters
   useEffect(() => {
-    const { opening, job_type } = router.query;
+    const { opening, job_type: queryJobType, opening_id } = router.query;
     if (opening && !formData.opening) {
       setFormData((prev) => ({
         ...prev,
         opening: decodeURIComponent(opening),
+        opening_id: opening_id ? decodeURIComponent(opening_id) : "", // Handle opening_id
       }));
     }
-    if (job_type && !formData.job_type) {
-      const decodedJobType = decodeURIComponent(job_type).toLowerCase();
+    if (queryJobType && formData.job_type !== queryJobType) {
+      const decodedJobType = decodeURIComponent(queryJobType).toLowerCase();
       const normalizedJobType =
         decodedJobType === "agencies"
           ? "agency"
           : decodedJobType === "freelancers" || decodedJobType === "freelancer"
           ? "freelancer"
-          : "";
-      if (normalizedJobType) {
-        setFormData((prev) => ({
-          ...prev,
-          job_type: normalizedJobType,
-        }));
-      } else {
-        toast.error("Invalid job type provided in URL.", { icon: "⚠️" });
-      }
+          : "freelancer"; // Default to freelancer if invalid
+      setFormData((prev) => ({
+        ...prev,
+        job_type: normalizedJobType,
+      }));
     }
   }, [router.query, formData.opening, formData.job_type, setFormData]);
 
@@ -308,31 +322,24 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
 
   const handleResumeProgress = () => {
     if (savedProgress) {
-      // Ensure the form data has proper structure with all string fields as strings (never null)
       const sanitizedFormData = {
-        // Initialize all string fields as empty strings (never null)
         agencyName: savedProgress.formData.agencyName || "",
         primaryContactName: savedProgress.formData.primaryContactName || "",
         primaryContactEmail: savedProgress.formData.primaryContactEmail || "",
         phoneNumber: savedProgress.formData.phoneNumber || "",
         countryOfResidence: savedProgress.formData.countryOfResidence || "",
         languagesSpoken: savedProgress.formData.languagesSpoken || "",
-        opening: savedProgress.formData.opening || "",
-        job_type: savedProgress.formData.job_type || "",
-
-        // Ensure arrays and objects are properly structured
+        opening: savedProgress.formData.opening || opening || "",
+        opening_id: savedProgress.formData.opening_id || opening_id || "",
+        job_type: savedProgress.formData.job_type || job_type || "freelancer", // Fallback to server-side prop or default
         answers: Array.isArray(savedProgress.formData.answers)
-          ? savedProgress.formData.answers.map((answer) => answer || "") // Ensure no null answers
+          ? savedProgress.formData.answers.map((answer) => answer || "")
           : new Array(initialQuestions.length).fill(""),
         selectedOptions: savedProgress.formData.selectedOptions || {},
-
-        // Handle file fields (can remain null)
         companyRegistration: savedProgress.formData.companyRegistration || null,
         portfolioWork: savedProgress.formData.portfolioWork || null,
         agencyProfile: savedProgress.formData.agencyProfile || null,
         taxRegistration: savedProgress.formData.taxRegistration || null,
-
-        // Copy any other fields, ensuring strings are never null
         ...Object.keys(savedProgress.formData).reduce((acc, key) => {
           if (
             ![
@@ -343,6 +350,7 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
               "countryOfResidence",
               "languagesSpoken",
               "opening",
+              "opening_id",
               "job_type",
               "answers",
               "selectedOptions",
@@ -353,17 +361,12 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
             ].includes(key)
           ) {
             const value = savedProgress.formData[key];
-            if (typeof value === "string") {
-              acc[key] = value || "";
-            } else {
-              acc[key] = value;
-            }
+            acc[key] = typeof value === "string" ? value || "" : value;
           }
           return acc;
         }, {}),
       };
 
-      // Ensure answers array has correct length
       if (sanitizedFormData.answers.length !== initialQuestions.length) {
         const newAnswers = new Array(initialQuestions.length).fill("");
         for (
@@ -377,10 +380,7 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
         sanitizedFormData.answers = newAnswers;
       }
 
-      // Set the sanitized form data
       setFormData(sanitizedFormData);
-
-      // Use a small delay to ensure formData state update is processed
       setTimeout(() => {
         setStep(savedProgress.step);
         toast.success(`Resuming from step ${savedProgress.step}`, {
@@ -527,7 +527,7 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
         answeredQuestions={answeredQuestions}
         totalQuestions={totalQuestions}
         isStep1Complete={isStep1Complete()}
-        job_type={formData.job_type}
+        job_type={formData.job_type || job_type || "freelancer"} // Fallback to prop
       />
 
       <div
@@ -660,28 +660,14 @@ export default function InterviewPage({ mode, toggleMode, initialQuestions }) {
   );
 }
 
-export async function getStaticProps() {
-  try {
-    const { data: questions, error } = await supabase
-      .from("interview_questions")
-      .select("*, max_answers")
-      .order("id", { ascending: true });
 
-    if (error) throw error;
-
-    return {
-      props: {
-        initialQuestions: questions,
-      },
-      revalidate: 60,
-    };
-  } catch (error) {
-    console.error("Error fetching questions:", error);
-    return {
-      props: {
-        initialQuestions: [],
-      },
-      revalidate: 60,
-    };
-  }
+export async function getServerSideProps(context) {
+  const { getInterviewPageProps } = await import(
+    "@/../utils/getServerSidePropsUtils"
+  );
+  return await getInterviewPageProps({
+    req: context.req,
+    res: context.res,
+    query: context.query, // Pass query parameters
+  });
 }

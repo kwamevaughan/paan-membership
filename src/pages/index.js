@@ -213,7 +213,7 @@ export default function Agencies({ initialOpenings }) {
 export async function getStaticProps() {
   const { data, error } = await supabase
     .from("job_openings")
-    .select("id, title, job_type") // Add id
+    .select("id, title, job_type") 
     .eq("job_type", "agencies")
     .gt("expires_on", new Date().toISOString());
 

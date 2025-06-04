@@ -12,7 +12,7 @@ const Header = ({
   answeredQuestions,
   totalQuestions,
   isStep1Complete,
-  job_type, // New prop
+  job_type = "freelancer", // Default to 'freelancer'
 }) => {
   const [scrolled, setScrolled] = useState(false);
   const [hoverStep, setHoverStep] = useState(null);

@@ -6,6 +6,15 @@ class MyDocument extends Document {
     return (
       <Html lang="en">
         <Head>
+          {/* Preload Google Fonts for Questrial */}
+          <link
+            rel="preload"
+            href="https://fonts.googleapis.com/css2?family=Questrial&display=swap"
+            as="font"
+            type="font/woff2"
+            crossorigin="anonymous"
+          />
+
           {/* Google tag (gtag.js) */}
           <Script
             strategy="afterInteractive"
@@ -17,11 +26,11 @@ class MyDocument extends Document {
             id="google-analytics-script"
             dangerouslySetInnerHTML={{
               __html: `
-                                window.dataLayer = window.dataLayer || [];
-                                function gtag(){dataLayer.push(arguments);}
-                                gtag('js', new Date());
-                                gtag('config', 'G-8V8NXWB1YQ');
-                            `,
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
+                gtag('config', 'G-8V8NXWB1YQ');
+              `,
             }}
           />
 

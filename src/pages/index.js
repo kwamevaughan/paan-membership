@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { useRouter } from "next/router";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
 import SEO from "@/components/SEO";
 
 export default function Agencies({ initialOpenings }) {
+  const router = useRouter();
   const [selectedOpening, setSelectedOpening] = useState("");
   const [openings] = useState(initialOpenings);
 
@@ -17,12 +18,13 @@ export default function Agencies({ initialOpenings }) {
 
   const handleProceed = () => {
     if (selectedOpening) {
-      const url = `/interview?opening=${encodeURIComponent(
-        selectedOpening.title
-      )}&job_type=${encodeURIComponent(
-        selectedOpening.job_type
-      )}&opening_id=${encodeURIComponent(selectedOpening.id)}`; // Add opening_id
-      window.location.href = url;
+      router.push(
+        `/interview?opening=${encodeURIComponent(
+          selectedOpening.title
+        )}&job_type=${encodeURIComponent(
+          selectedOpening.job_type
+        )}&opening_id=${encodeURIComponent(selectedOpening.id)}`
+      );
     }
   };
 
@@ -41,6 +43,7 @@ export default function Agencies({ initialOpenings }) {
           frameBorder="0"
           allow="autoplay; fullscreen"
           title="Background Video"
+          loading="lazy"
         />
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-black to-transparent opacity-90 z-1"></div>
       </div>
@@ -66,7 +69,7 @@ export default function Agencies({ initialOpenings }) {
           Pan-African Agency Network (PAAN)
         </h1>
         <p className="text-[#231812] mb-4 text-base">
-          We are an alliance of agencies shaping the future of Africa&apos;s
+          We are an alliance of agencies shaping the future of Africa's
           communication, marketing, PR, tech, research, digital, and creative
           industries.
         </p>
@@ -79,6 +82,7 @@ export default function Agencies({ initialOpenings }) {
           <label
             htmlFor="opening"
             className="block text-lg font-medium text-[#231812] mb-2"
+            aria-label="Select an Expression of Interest"
           >
             Current EOIs <span className="text-red-500">*</span>
           </label>
@@ -93,8 +97,6 @@ export default function Agencies({ initialOpenings }) {
             </option>
             {openings.map((opening) => (
               <option key={opening.id} value={opening.title}>
-                {" "}
-                {/* Use id as key */}
                 {opening.title}
               </option>
             ))}
@@ -211,21 +213,8 @@ export default function Agencies({ initialOpenings }) {
 }
 
 export async function getStaticProps() {
-  const { data, error } = await supabase
-    .from("job_openings")
-    .select("id, title, job_type") 
-    .eq("job_type", "agencies")
-    .gt("expires_on", new Date().toISOString());
-
-  if (error) {
-    console.error("Error fetching openings in getStaticProps:", error);
-    return { props: { initialOpenings: [] }, revalidate: 60 };
-  }
-
-  return {
-    props: {
-      initialOpenings: data,
-    },
-    revalidate: 60,
-  };
+  const { getAgenciesPageStaticProps } = await import(
+    "@/../utils/getPropsUtils"
+  );
+  return await getAgenciesPageStaticProps();
 }

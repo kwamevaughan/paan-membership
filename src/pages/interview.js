@@ -663,7 +663,7 @@ export default function InterviewPage({
 
 export async function getServerSideProps(context) {
   const { getInterviewPageProps } = await import(
-    "@/../utils/getServerSidePropsUtils"
+    "utils/getPropsUtils"
   );
   return await getInterviewPageProps({
     req: context.req,

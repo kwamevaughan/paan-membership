@@ -1,11 +1,12 @@
 import Link from "next/link";
+import { useRouter } from "next/router";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
 import { useState } from "react";
-import { supabase } from "@/lib/supabase";
 import SEO from "@/components/SEO";
 
 export default function Freelancers({ initialOpenings }) {
+    const router = useRouter();
   const [selectedOpening, setSelectedOpening] = useState("");
   const [openings] = useState(initialOpenings);
 
@@ -17,12 +18,13 @@ export default function Freelancers({ initialOpenings }) {
 
   const handleProceed = () => {
     if (selectedOpening) {
-      const url = `/interview?opening=${encodeURIComponent(
-        selectedOpening.title
-      )}&job_type=${encodeURIComponent(
-        selectedOpening.job_type
-      )}&opening_id=${encodeURIComponent(selectedOpening.id)}`; // Add opening_id
-      window.location.href = url;
+      router.push(
+        `/interview?opening=${encodeURIComponent(
+          selectedOpening.title
+        )}&job_type=${encodeURIComponent(
+          selectedOpening.job_type
+        )}&opening_id=${encodeURIComponent(selectedOpening.id)}`
+      );
     }
   };
 
@@ -41,6 +43,7 @@ export default function Freelancers({ initialOpenings }) {
           frameBorder="0"
           allow="autoplay; fullscreen"
           title="Background Video"
+          loading="lazy"
         />
         <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-black to-transparent opacity-90 z-1"></div>
       </div>
@@ -81,6 +84,7 @@ export default function Freelancers({ initialOpenings }) {
           <label
             htmlFor="opening"
             className="block text-lg font-medium text-[#231812] mb-2"
+            aria-label="Select an Expression of Interest"
           >
             Current EOIs <span className="text-red-500">*</span>
           </label>
@@ -95,8 +99,6 @@ export default function Freelancers({ initialOpenings }) {
             </option>
             {openings.map((opening) => (
               <option key={opening.id} value={opening.title}>
-                {" "}
-                {/* Use id as key */}
                 {opening.title}
               </option>
             ))}
@@ -104,13 +106,13 @@ export default function Freelancers({ initialOpenings }) {
           {selectedOpening && (
             <button
               onClick={handleProceed}
-              className="bg-[#172840] hover:bg-[#6FA1B7] text-white mt-4 flex items-center mx-auto px-8 py-3 rounded-full font-medium text-sm transition duration-300"
+              className="bg-[#172840] hover:bg-[#6FA1B7] text-white mt-4 flex items-center mx-auto px-8 py-3 rounded-full font-medium text-sm transition-all duration-300"
             >
               Proceed
               <Icon
                 icon="tabler:arrow-up-right"
                 width={20}
-                height={20}
+                height={30}
                 className="ml-2"
               />
             </button>
@@ -118,7 +120,7 @@ export default function Freelancers({ initialOpenings }) {
         </div>
 
         <Link href="/" className="">
-          <span className="flex items-center gap-2 font-bold p-4 z-10 transform transition-transform hover:translate-y-[-2px] sm:absolute sm:bottom-0 sm:right-0 sm:flex sm:mt-4 w-full sm:w-auto justify-center">
+          <span className="flex items-center gap-2 font-bold p-4 z-10 transform transition-transform hover:-translate-y-[-2px] sm:absolute sm:bottom-0 sm:right-0 sm:flex sm:mt-4 w-full sm:w-auto justify-center">
             For Agencies
             <Image
               src="/assets/images/single-arrow.png"
@@ -170,7 +172,7 @@ export default function Freelancers({ initialOpenings }) {
               height={30}
               className="text-[#FF0000]"
             />
-            <span className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-sm text-white bg-black p-2 rounded-lg text-center opacity-0 group-hover:opacity-70 transition-opacity duration-300 w-36 max-w-xs">
+            <span className="absolute bottom [$FF0000-8 left-0 w-full h-full transform -translate-x-1/2 text-sm text-white bg-black p-2 rounded-lg text-center opacity-0 group-hover:opacity-70 transition-opacity duration-300 w-36 max-w-xs">
               Subscribe to us on YouTube
             </span>
           </a>
@@ -202,7 +204,7 @@ export default function Freelancers({ initialOpenings }) {
               height={30}
               className="text-[#4267B2]"
             />
-            <span className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-sm text-white bg-black p-2 rounded-lg text-center opacity-0 group-hover:opacity-70 transition-opacity duration-300 w-36 max-w-xs">
+            <span className="absolute bottom-8 left-1/2 transform -translate-x-x-1/2 text-sm text-white bg-black p-2 rounded-lg text-center opacityforest-0 group-hover:opacity-70 transition-opacity duration-300 w-36 max-w-xs">
               Follow us on Facebook
             </span>
           </a>
@@ -210,24 +212,11 @@ export default function Freelancers({ initialOpenings }) {
       </div>
     </div>
   );
-}
+};
 
 export async function getStaticProps() {
-  const { data, error } = await supabase
-    .from("job_openings")
-    .select("id, title, job_type") // Add id
-    .eq("job_type", "freelancers")
-    .gt("expires_on", new Date().toISOString());
-
-  if (error) {
-    console.error("Error fetching openings in getStaticProps:", error);
-    return { props: { initialOpenings: [] }, revalidate: 60 };
-  }
-
-  return {
-    props: {
-      initialOpenings: data,
-    },
-    revalidate: 60,
-  };
-}
+  const { getFreelancersPageStaticProps } = await import(
+    "@/../utils/getPropsUtils"
+  );
+  return await getFreelancersPageStaticProps();
+};

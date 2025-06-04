@@ -108,7 +108,6 @@ export async function getAdminBusinessOpportunitiesProps({ req, res }) {
       ),
     ].sort();
 
-
     return {
       props: {
         tiers,
@@ -157,7 +156,6 @@ export async function getAdminUpdatesProps({ req, res }) {
       throw new Error(`Failed to fetch updates: ${updatesError.message}`);
     }
 
-
     return {
       props: {
         initialUpdates: updatesData || [],
@@ -177,7 +175,6 @@ export async function getAdminUpdatesProps({ req, res }) {
     };
   }
 }
-
 
 export async function getInterviewPageProps({ req, res, query }) {
   console.log("[getInterviewPageProps] Starting at", new Date().toISOString());
@@ -222,6 +219,80 @@ export async function getInterviewPageProps({ req, res, query }) {
           ? decodeURIComponent(query.opening_id)
           : "",
       },
+    };
+  }
+}
+
+export async function getAgenciesPageStaticProps() {
+  console.log(
+    "[getAgenciesPageStaticProps] Starting at",
+    new Date().toISOString()
+  );
+
+  const supabaseServer = createSupabaseServerClient();
+
+  try {
+    const { data, error } = await supabaseServer
+      .from("job_openings")
+      .select("id, title, job_type")
+      .eq("job_type", "agencies")
+      .gt("expires_on", new Date().toISOString());
+
+    if (error) throw error;
+
+    return {
+      props: {
+        initialOpenings: data || [],
+      },
+      revalidate: 600, // Revalidate every 10 minutes
+    };
+  } catch (error) {
+    console.error(
+      "[getAgenciesPageStaticProps] Error fetching openings:",
+      error
+    );
+    return {
+      props: {
+        initialOpenings: [],
+      },
+      revalidate: 600,
+    };
+  }
+}
+
+export async function getFreelancersPageStaticProps() {
+  console.log(
+    "[getFreelancersPageStaticProps] Starting at",
+    new Date().toISOString()
+  );
+
+  const supabaseServer = createSupabaseServerClient();
+
+  try {
+    const { data, error } = await supabaseServer
+      .from("job_openings")
+      .select("id, title, job_type")
+      .eq("job_type", "freelancers")
+      .gt("expires_on", new Date().toISOString());
+
+    if (error) throw error;
+
+    return {
+      props: {
+        initialOpenings: data || [],
+      },
+      revalidate: 600, // Revalidate every 10 minutes
+    };
+  } catch (error) {
+    console.error(
+      "[getFreelancersPageStaticProps] Error fetching openings:",
+      error
+    );
+    return {
+      props: {
+        initialOpenings: [],
+      },
+      revalidate: 600,
     };
   }
 }

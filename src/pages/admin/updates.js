@@ -11,7 +11,7 @@ import useAuthSession from "@/hooks/useAuthSession";
 import { useUpdates } from "@/hooks/useUpdates";
 import SimpleFooter from "@/layouts/simpleFooter";
 import UpdatesForm from "@/components/UpdatesForm";
-import { getAdminUpdatesProps } from "@/../utils/getServerSidePropsUtils";
+import { getAdminUpdatesProps } from "utils/getPropsUtils";
 
 export default function AdminUpdates({
   mode = "light",

@@ -367,7 +367,7 @@ export default function AdminBusinessOpportunities({
 
 export async function getServerSideProps({ req, res }) {
   const { getAdminBusinessOpportunitiesProps } = await import(
-    "@/../utils/getServerSidePropsUtils"
+    "utils/getPropsUtils"
   );
   return await getAdminBusinessOpportunitiesProps({ req, res });
 }

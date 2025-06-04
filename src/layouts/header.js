@@ -72,7 +72,7 @@ const Header = ({
     <header
       className={`${mode === "dark" ? "bg-slate-900" : "bg-white"} 
       ${scrolled ? "shadow-2xl backdrop-blur-xl bg-opacity-95" : ""} 
-      transition-all duration-500 sticky top-0 z-50 border-b 
+      transition-all duration-500 relative z-50 border-b 
       ${mode === "dark" ? "border-slate-800/70" : "border-slate-200/70"}`}
     >
       {/* Animated gradient bar */}

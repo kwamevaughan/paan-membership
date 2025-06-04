@@ -4,22 +4,22 @@ import Link from "next/link";
 import Select from "react-select";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { useCountry } from "@/hooks/useCountry";
-import ItemActionModal from "./ItemActionModal"; // Import ItemActionModal
+import ItemActionModal from "./ItemActionModal";
 import AgencyInstructions from "./AgencyInstructions";
 
 export default function Step1AgenciesForm({ formData, handleChange, mode }) {
   const [isMounted, setIsMounted] = useState(false);
-  const [isInstructionsOpen, setIsInstructionsOpen] = useState(false); // Modal state
+  const [isInstructionsOpen, setIsInstructionsOpen] = useState(false);
 
   const { countryOptions } = useCountry();
   const { errors, validateField, validateForm } = useFormValidation();
 
   useEffect(() => {
-    setIsMounted(true); // Set the component as mounted after client-side render
+    setIsMounted(true);
   }, []);
 
   if (!isMounted) {
-    return null; // Return null or a loading state before the component is mounted
+    return null;
   }
 
   const customStyles = {
@@ -71,17 +71,14 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
-    // Ensure the URL starts with "https://"
-    if (
-      name === "websiteUrl" &&
-      value &&
-      typeof value === "string" &&
-      !value.startsWith("https://")
-    ) {
+    if (name === "websiteUrl" || name === "primaryContactLinkedin") {
+      // Strip any existing http:// or https:// for storage consistency
+      const cleanedValue = value.replace(/^https?:\/\//, "").trim();
+      // Always store with https://
       handleChange({
         target: {
           name,
-          value: `https://${value.replace(/^https?:\/\//, "")}`,
+          value: cleanedValue ? `https://${cleanedValue}` : "",
         },
       });
     } else {
@@ -97,11 +94,8 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-
-    // Validate the form before submitting
     const validationErrors = validateForm(formData);
     if (Object.keys(validationErrors).length === 0) {
-      // No errors, submit the form
       console.log("Form submitted successfully:", formData);
     } else {
       console.log("Form contains errors:", validationErrors);
@@ -115,30 +109,31 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
           mode === "dark" ? "bg-gray-800 text-white" : "bg-white text-[#231812]"
         }`}
       >
-        <div className="flex items-center justify-center mb-6">
-          <Icon icon="mdi:handshake" className="w-8 h-8 text-blue-400 mr-2" />
-          <h2 className="text-3xl font-bold text-center">Let’s Get Started</h2>
-        </div>
-        <p
-          className={`text-center mb-4 italic ${
-            mode === "dark" ? "text-gray-400" : "text-gray-600"
-          }`}
-        >
-          Welcome to the Pan-African Agency Network! Please fill out the EOI
-          form to begin your journey.
-        </p>
+        <div className="flex items-center justify-between mb-8">
+          <span className="flex">
+            <Icon icon="mdi:handshake" className="w-8 h-8 text-blue-400 mr-2" />
+            <h2 className="text-2xl font-bold text-center">
+              Let’s Get Started
+            </h2>
+          </span>
 
-        {/* Instructions Button */}
-        <div className="mb-6 flex justify-center">
           <button
             onClick={() => setIsInstructionsOpen(true)}
-            className="flex items-center px-4 py-2 bg-[#84c1d9] border-none text-white rounded-lg hover:bg-[#7cc9e8] transition-all duration-200 shadow-md focus:outline-none focus:ring-2"
+            className="flex items-center px-4 py-2 bg-[#172840] border-none text-white rounded-lg hover:bg-[#6FA1B7] transition-all duration-200 shadow-md focus:outline-none focus:ring-2"
             aria-label="View application instructions"
           >
             <Icon icon="mdi:help-circle" className="w-5 h-5 mr-2" />
             View Instructions
           </button>
         </div>
+        <p
+          className={`mb-10 italic ${
+            mode === "dark" ? "text-gray-400" : "text-gray-600"
+          }`}
+        >
+          Welcome to the Pan-African Agency Network! Please fill out the EOI
+          form to begin your journey.
+        </p>
 
         <div className="space-y-6 max-h-[50vh] overflow-y-auto">
           <h3 className="text-lg font-bold">Agency Details</h3>
@@ -549,37 +544,48 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
             )}
           </div>
 
-          <div className="relative">
+          <div className="relative w-full">
             <label
               htmlFor="primaryContactLinkedin"
               className="block text-sm font-medium mb-1"
             >
               LinkedIn URL <span className="text-red-500">*</span>
             </label>
-            <div className="flex items-center">
-              <Icon
-                icon="mdi:linkedin"
-                className="absolute left-3 text-blue-400 w-5 h-5"
-              />
+            <div
+              className={`flex items-center px-3 py-3 border rounded-lg shadow-sm focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-200 transition-all duration-200 ${
+                mode === "dark"
+                  ? `bg-gray-700 text-white border-gray-600 ${
+                      errors.primaryContactLinkedin
+                        ? "border-red-500"
+                        : "focus-within:border-blue-400"
+                    }`
+                  : `bg-gray-50 text-[#231812] border-gray-300 ${
+                      errors.primaryContactLinkedin
+                        ? "border-red-500"
+                        : "focus-within:border-blue-400"
+                    }`
+              }`}
+            >
+              <Icon icon="mdi:linkedin" className="text-blue-400 w-5 h-5" />
+              <span className="text-sm text-gray-500 pl-3 pr-1">https://</span>
               <input
                 type="text"
                 name="primaryContactLinkedin"
                 id="primaryContactLinkedin"
-                value={formData.primaryContactLinkedin}
+                value={formData.primaryContactLinkedin.replace(
+                  /^https?:\/\//,
+                  ""
+                )}
                 onChange={handleInputChange}
-                placeholder="e.g., https://linkedin.com/in/johndoe"
+                placeholder="linkedin.com/in/johndoe"
                 required
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
+                className={`w-full pl-1 pr-4 py-2 bg-transparent focus:outline-none focus:ring-0 ${
                   mode === "dark"
-                    ? `bg-gray-700 text-white border-gray-600 ${
-                        errors.primaryContactLinkedin
-                          ? "border-red-500"
-                          : "focus:border-blue-400"
+                    ? `text-white ${
+                        errors.primaryContactLinkedin ? "border-red-500" : ""
                       }`
-                    : `bg-gray-50 text-[#231812] border-gray-300 ${
-                        errors.primaryContactLinkedin
-                          ? "border-red-500"
-                          : "focus:border-blue-400"
+                    : `text-[#231812] ${
+                        errors.primaryContactLinkedin ? "border-red-500" : ""
                       }`
                 }`}
               />
@@ -625,7 +631,6 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
           </div>
         </div>
       </div>
-      {/* Instructions Modal */}
 
       <ItemActionModal
         isOpen={isInstructionsOpen}

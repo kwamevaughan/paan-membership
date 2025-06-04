@@ -3,7 +3,6 @@ import { Icon } from "@iconify/react";
 import ItemActionModal from "./ItemActionModal";
 import EmailModal from "./EmailModal";
 import { supabase } from "@/lib/supabase";
-import toast from "react-hot-toast";
 
 // Custom hooks for better separation of concerns
 const useOpportunity = (opportunityId, mode) => {

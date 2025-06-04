@@ -4,7 +4,7 @@ import HRHeader from "@/layouts/hrHeader";
 import HRSidebar from "@/layouts/hrSidebar";
 import SimpleFooter from "@/layouts/simpleFooter";
 import OpportunityFilters from "@/components/OpportunityFilters";
-import OpportunityGrid from "@/components/OpportunityGrid"; // New component
+import OpportunityGrid from "@/components/OpportunityGrid";
 import ItemActionModal from "@/components/ItemActionModal";
 import InterestedUsersModal from "@/components/InterestedUsersModal";
 import OpportunityForm from "@/components/OpportunityForm";
@@ -13,8 +13,8 @@ import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useOpportunities } from "@/hooks/useOpportunities";
 import { useOpportunityInterests } from "@/hooks/useOpportunityInterests";
-import useModals from "@/hooks/useModals"; // New hook
-import { filterAndSortOpportunities } from "@/../utils/opportunityUtils"; // New utility
+import useModals from "@/hooks/useModals";
+import { filterAndSortOpportunities } from "@/../utils/opportunityUtils";
 import { Icon } from "@iconify/react";
 
 export default function AdminBusinessOpportunities({
@@ -57,11 +57,53 @@ export default function AdminBusinessOpportunities({
     resetForm,
   } = useOpportunities();
 
-  const { isModalOpen, isUsersModalOpen, selectedOpportunityId, modalActions } =
-    useModals({ handleEdit, handleSubmit, resetForm });
+  const {
+    isModalOpen,
+    isUsersModalOpen,
+    selectedOpportunityId,
+    isEditing,
+    editingId,
+    modalActions,
+  } = useModals({ handleEdit, handleSubmit, resetForm });
 
-  const { interestedUsers, loading: usersLoading, error: usersError } =
-    useOpportunityInterests(selectedOpportunityId);
+  // State for delete confirmation modal
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [opportunityToDelete, setOpportunityToDelete] = useState(null);
+
+  // Function to open delete confirmation modal
+  const openDeleteModal = (id) => {
+    console.log(
+      "[AdminBusinessOpportunities] Opening delete modal for ID:",
+      id
+    ); // Debug log
+    setOpportunityToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  // Function to close delete confirmation modal
+  const closeDeleteModal = () => {
+    console.log("[AdminBusinessOpportunities] Closing delete modal"); // Debug log
+    setIsDeleteModalOpen(false);
+    setOpportunityToDelete(null);
+  };
+
+  // Function to confirm deletion
+  const confirmDelete = () => {
+    console.log(
+      "[AdminBusinessOpportunities] Confirming deletion for ID:",
+      opportunityToDelete
+    ); // Debug log
+    if (opportunityToDelete) {
+      handleDelete(opportunityToDelete);
+      closeDeleteModal();
+    }
+  };
+
+  const {
+    interestedUsers,
+    loading: usersLoading,
+    error: usersError,
+  } = useOpportunityInterests(selectedOpportunityId);
 
   const sortedOpportunities = filterAndSortOpportunities({
     opportunities,
@@ -72,12 +114,12 @@ export default function AdminBusinessOpportunities({
     sortOrder,
   });
 
-  
-
   return (
     <div
       className={`min-h-screen flex flex-col font-sans antialiased ${
-        mode === "dark" ? "bg-gray-950 text-gray-100" : "bg-gray-100 text-gray-900"
+        mode === "dark"
+          ? "bg-gray-950 text-gray-100"
+          : "bg-gray-100 text-gray-900"
       } transition-colors duration-300`}
     >
       <Toaster
@@ -131,7 +173,9 @@ export default function AdminBusinessOpportunities({
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
             <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
               <div>
-                <h1 className="text-3xl font-semibold">Business Opportunities</h1>
+                <h1 className="text-3xl font-semibold">
+                  Business Opportunities
+                </h1>
                 <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
                   Discover and manage opportunities for agencies and freelancers
                 </p>
@@ -148,17 +192,6 @@ export default function AdminBusinessOpportunities({
                   <Icon icon="heroicons:plus" className="w-5 h-5 mr-2" />
                   New Opportunity
                 </button>
-                <button
-                  onClick={() => setShowFilters(!showFilters)}
-                  className={`inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-lg shadow-sm transition-all duration-300 ${
-                    mode === "dark"
-                      ? "bg-gray-700 text-gray-100 hover:bg-gray-600 focus:ring-gray-500"
-                      : "bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-400"
-                  }`}
-                >
-                  <Icon icon="heroicons:funnel" className="w-5 h-5 mr-2" />
-                  {showFilters ? "Hide Filters" : "Show Filters"}
-                </button>
               </div>
             </div>
 
@@ -171,7 +204,7 @@ export default function AdminBusinessOpportunities({
                       : "bg-gradient-to-br from-white/80 via-white/20 to-white/80"
                   } border ${
                     mode === "dark" ? "border-white/10" : "border-white/20"
-                  } shadow-2xl group-hover:shadow-3xl transition-all duration-500`}
+                  } shadow-2xl group-hover:shadow-lg transition-all duration-500`}
                 ></div>
                 <div
                   className={`relative rounded-2xl overflow-hidden shadow-lg border ${
@@ -198,12 +231,13 @@ export default function AdminBusinessOpportunities({
                     opportunities={sortedOpportunities}
                     onOpenUsersModal={modalActions.openUsersModal}
                   />
+
                   <OpportunityGrid
-                    opportunities={sortedOpportunities}
+                    opportunities={opportunities}
                     loading={loading}
                     mode={mode}
                     onEdit={modalActions.openModal}
-                    onDelete={handleDelete}
+                    onDelete={openDeleteModal}
                     onViewUsers={modalActions.openUsersModal}
                   />
                   <div
@@ -234,13 +268,18 @@ export default function AdminBusinessOpportunities({
               </div>
             </div>
 
+            {/* Form Modal */}
             <ItemActionModal
               isOpen={isModalOpen}
               onClose={modalActions.closeModal}
               title={
-                modalActions.isEditing
-                  ? "Edit Opportunity / Gig"
-                  : "Create Opportunity / Gig"
+                isEditing
+                  ? formData.job_type === "Freelancer"
+                    ? "Edit Gig"
+                    : "Edit Opportunity"
+                  : formData.job_type === "Freelancer"
+                  ? "Create Gig"
+                  : "Create Opportunity"
               }
               mode={mode}
             >
@@ -248,15 +287,67 @@ export default function AdminBusinessOpportunities({
                 formData={formData}
                 handleInputChange={handleInputChange}
                 submitForm={(e) =>
-                  modalActions.submitForm(e, modalActions.isEditing ? modalActions.editingId : null)
+                  modalActions.submitForm(e, isEditing ? editingId : null)
                 }
                 cancelForm={modalActions.closeModal}
-                isEditing={modalActions.isEditing}
+                isEditing={isEditing}
                 tiers={tiers}
                 mode={mode}
               />
             </ItemActionModal>
 
+            {/* Delete Confirmation Modal */}
+            <ItemActionModal
+              isOpen={isDeleteModalOpen}
+              onClose={closeDeleteModal}
+              title="Confirm Deletion"
+              mode={mode}
+            >
+              <div className="space-y-6">
+                <p
+                  className={`text-sm ${
+                    mode === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Are you sure you want to delete the{" "}
+                  {opportunities.find((opp) => opp.id === opportunityToDelete)
+                    ?.job_type === "Freelancer"
+                    ? "gig"
+                    : "opportunity"}{" "}
+                  <strong>
+                    "
+                    {opportunities.find((opp) => opp.id === opportunityToDelete)
+                      ?.title || ""}
+                    "
+                  </strong>
+                  ? This action cannot be undone.
+                </p>
+                <div className="flex justify-end space-x-4">
+                  <button
+                    onClick={closeDeleteModal}
+                    className={`px-6 py-3 text-sm font-medium rounded-xl border transition-all duration-200 flex items-center shadow-sm ${
+                      mode === "dark"
+                        ? "border-gray-600 text-gray-200 bg-gray-800 hover:bg-gray-700"
+                        : "border-gray-200 text-gray-700 bg-white hover:bg-gray-50"
+                    }`}
+                  >
+                    <Icon icon="heroicons:x-mark" className="h-4 w-4 mr-2" />
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmDelete}
+                    className={`px-6 py-3 text-sm font-medium rounded-xl text-white bg-red-600 hover:bg-red-700 transition-all duration-200 flex items-center shadow-sm ${
+                      mode === "dark" ? "shadow-white/10" : "shadow-gray-200"
+                    }`}
+                  >
+                    <Icon icon="heroicons:trash" className="h-4 w-4 mr-2" />
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </ItemActionModal>
+
+            {/* Interested Users Modal */}
             <InterestedUsersModal
               isOpen={isUsersModalOpen}
               onClose={modalActions.closeUsersModal}
@@ -275,6 +366,8 @@ export default function AdminBusinessOpportunities({
 }
 
 export async function getServerSideProps({ req, res }) {
-  const { getAdminBusinessOpportunitiesProps } = await import("@/../utils/getServerSidePropsUtils");
+  const { getAdminBusinessOpportunitiesProps } = await import(
+    "@/../utils/getServerSidePropsUtils"
+  );
   return await getAdminBusinessOpportunitiesProps({ req, res });
 }

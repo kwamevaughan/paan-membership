@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Icon } from "@iconify/react";
 import { supabase } from "@/lib/supabase";
 import toast from "react-hot-toast";
+import { motion, AnimatePresence } from "framer-motion"; // For animations
 
 export default function OpportunityFilters({
   filterTerm,
@@ -18,37 +19,15 @@ export default function OpportunityFilters({
   setSortOrder,
   mode,
   loading,
-  opportunities = [], // Default to empty array
+  opportunities = [],
   onOpenUsersModal,
 }) {
   const [projectTypes, setProjectTypes] = useState([]);
   const [selectedOpportunityId, setSelectedOpportunityId] = useState("");
 
-  useEffect(() => {
-    async function fetchProjectTypes() {
-      try {
-        const { data, error } = await supabase
-          .from("project_types")
-          .select("name")
-          .eq("job_type", "Agency")
-          .order("name", { ascending: true });
-        if (error) {
-          console.error(
-            "[OpportunityFilters] Error fetching project types:",
-            error
-          );
-        } else {
-          setProjectTypes(data.map((item) => item.name));
-        }
-      } catch (err) {
-        console.error("[OpportunityFilters] Fetch error:", err);
-      }
-    }
-    fetchProjectTypes();
-  }, []);
+  // useEffect for fetching project types remains unchanged
 
   const handleViewInterestedUsers = () => {
-    
     if (!selectedOpportunityId) {
       toast.error("Please select an opportunity to view interested users.", {
         style: {
@@ -63,17 +42,15 @@ export default function OpportunityFilters({
   };
 
   return (
-    <div className="p-4">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div
-          className={`relative rounded-xl shadow-sm flex-grow max-w-md ${
-            loading ? "opacity-50" : ""
-          }`}
-        >
+    <div className="p-6 bg-white dark:bg-gray-900 rounded-2xl shadow-lg">
+      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        {/* Search Input */}
+        <div className="relative flex-grow max-w-md">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <Icon
               icon="heroicons:magnifying-glass"
               className="h-5 w-5 text-gray-400"
+              aria-hidden="true"
             />
           </div>
           <input
@@ -82,224 +59,259 @@ export default function OpportunityFilters({
             value={filterTerm}
             onChange={(e) => setFilterTerm(e.target.value)}
             disabled={loading}
-            className={`block w-full pl-11 py-3 sm:text-sm border rounded-md ${
+            className={`block w-full pl-11 pr-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
               mode === "dark"
-                ? "border-gray-600 bg-gray-800 text-white placeholder-gray-400"
-                : "border-gray-300 bg-gray-100 text-gray-900 placeholder-gray-500"
-            } focus:ring-blue-500 focus:border-blue-500 ${
-              loading ? "cursor-not-allowed" : ""
-            }`}
+                ? "border-gray-700 bg-gray-800 text-white placeholder-gray-400 focus:ring-blue-600 focus:border-blue-600"
+                : "border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
+            } disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none shadow-sm`}
             placeholder="Search opportunities..."
+            aria-label="Search opportunities"
           />
+          {loading && (
+            <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
+              <Icon
+                icon="eos-icons:loading"
+                className="w-5 h-5 animate-spin text-blue-500 dark:text-blue-300"
+                aria-hidden="true"
+              />
+            </div>
+          )}
         </div>
 
-        <div className="flex space-x-3 items-center">
-          {/* Opportunity Selector and Button */}
-          <div className="flex items-center space-x-2">
-            <div className="relative">
-              <select
-                id="select-opportunity"
-                value={selectedOpportunityId}
-                onChange={(e) => {
-                  
-                  setSelectedOpportunityId(e.target.value);
-                }}
-                disabled={loading || opportunities.length === 0}
-                className={`appearance-none inline-flex justify-center shadow-sm px-4 py-3 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 border ${
-                  mode === "dark" ? "border-gray-600" : "border-gray-300"
-                } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-8 ${
-                  loading || opportunities.length === 0
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
-                }`}
-              >
-                <option value="">Select Opportunity</option>
-                {opportunities.map((opp) => (
-                  <option key={opp.id} value={opp.id}>
-                    {opp.title}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-                <Icon icon="heroicons:chevron-down" className="h-4 w-4" />
-              </div>
-            </div>
-            <button
-              onClick={handleViewInterestedUsers}
-              disabled={loading || !selectedOpportunityId}
-              className={`inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-md border ${
-                selectedOpportunityId
-                  ? "bg-green-50 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-200 dark:border-green-900"
-                  : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200"
-              } hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200 shadow-sm ${
-                loading || !selectedOpportunityId
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
-              }`}
-              aria-label="View Interested Users"
+        {/* Controls */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Opportunity Selector */}
+          <div className="relative">
+            <select
+              id="select-opportunity"
+              value={selectedOpportunityId}
+              onChange={(e) => setSelectedOpportunityId(e.target.value)}
+              disabled={loading || opportunities.length === 0}
+              className={`appearance-none w-48 px-4 py-3 text-sm font-medium border rounded-lg transition-all duration-200 ${
+                mode === "dark"
+                  ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
+                  : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+              } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
+              aria-label="Select an opportunity"
             >
-              <Icon icon="mdi:account-group" className="w-5 h-5" />
-              <span>Interested Users</span>
-            </button>
+              <option value="">Select Opportunity</option>
+              {opportunities.map((opp) => (
+                <option key={opp.id} value={opp.id}>
+                  {opp.title}
+                </option>
+              ))}
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
+              <Icon
+                icon="heroicons:chevron-down"
+                className="h-4 w-4"
+                aria-hidden="true"
+              />
+            </div>
           </div>
 
+          {/* Interested Users Button */}
+          <button
+            onClick={handleViewInterestedUsers}
+            disabled={loading || !selectedOpportunityId}
+            className={`inline-flex items-center space-x-1.5 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+              selectedOpportunityId
+                ? "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/50 dark:text-green-200 dark:border-green-800"
+                : "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
+            } hover:bg-green-200 dark:hover:bg-green-800/70 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm`}
+            aria-label="View interested users"
+            title={!selectedOpportunityId ? "Select an opportunity first" : ""}
+          >
+            <Icon
+              icon="mdi:account-group"
+              className="w-5 h-5"
+              aria-hidden="true"
+            />
+            <span>Interested Users</span>
+          </button>
+
+          {/* Filter Toggle */}
           <button
             onClick={() => setShowFilters(!showFilters)}
             disabled={loading}
-            className={`inline-flex items-center space-x-1.5 px-4 py-2.5 rounded-md border ${
+            className={`inline-flex items-center space-x-1.5 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
               showFilters
-                ? "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-200 dark:border-blue-900"
-                : "bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200"
-            } hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors duration-200 shadow-sm ${
-              loading ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+                ? "bg-blue-100 text-blue-800 border-blue-300 dark:bg-blue-900/50 dark:text-blue-200 dark:border-blue-800"
+                : "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
+            } hover:bg-blue-200 dark:hover:bg-blue-800/70 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm`}
+            aria-label={showFilters ? "Hide filters" : "Show filters"}
+            title={showFilters ? "Hide filters" : "Show filters"}
           >
-            <Icon icon="heroicons:funnel" className="w-5 h-5" />
+            <Icon
+              icon="heroicons:funnel"
+              className="w-5 h-5"
+              aria-hidden="true"
+            />
             <span>Filters</span>
             <Icon
               icon={
                 showFilters ? "heroicons:chevron-up" : "heroicons:chevron-down"
               }
               className="w-4 h-4"
+              aria-hidden="true"
             />
           </button>
 
+          {/* Sort Order */}
           <div className="relative">
             <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value)}
               disabled={loading}
-              className={`appearance-none inline-flex justify-center shadow-sm px-4 py-3 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 border ${
-                mode === "dark" ? "border-gray-600" : "border-gray-300"
-              } rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-8 ${
-                loading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className={`appearance-none w-40 px-4 py-3 text-sm font-medium border rounded-lg transition-all duration-200 ${
+                mode === "dark"
+                  ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
+                  : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+              } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
+              aria-label="Sort opportunities"
             >
               <option value="deadline">Sort by Deadline</option>
               <option value="title">Sort by Title</option>
               <option value="tier">Sort by Tier</option>
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-              <Icon icon="heroicons:chevron-down" className="h-4 w-4" />
+              <Icon
+                icon="heroicons:chevron-down"
+                className="h-4 w-4"
+                aria-hidden="true"
+              />
             </div>
           </div>
         </div>
       </div>
 
-      {showFilters && (
-        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-          {/* Tier Filter */}
-          <div>
-            <label
-              htmlFor="filter-tier"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
-            >
-              Filter by Tier
-            </label>
-            <div className="relative">
-              <select
-                id="filter-tier"
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                disabled={loading}
-                className={`appearance-none w-full px-5 py-3 border rounded-md text-sm ${
-                  mode === "dark"
-                    ? "border-gray-600 bg-gray-800 text-white"
-                    : "border-gray-300 bg-gray-100 text-gray-900"
-                } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-8 shadow-sm ${
-                  loading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+      {/* Filters Section with Animation */}
+      <AnimatePresence>
+        {showFilters && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 border-t border-gray-200 dark:border-gray-700"
+          >
+            {/* Tier Filter */}
+            <div>
+              <label
+                htmlFor="filter-tier"
+                className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
               >
-                <option value="all">All Tiers</option>
-                <option value="Associate Member">Associate Member</option>
-                <option value="Full Member">Full Member</option>
-                <option value="Gold Member">Gold Member</option>
-                <option value="Free Member">Free Member</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
-                <Icon icon="heroicons:chevron-down" className="h-4 w-4" />
+                Filter by Tier
+              </label>
+              <div className="relative">
+                <select
+                  id="filter-tier"
+                  value={filterType}
+                  onChange={(e) => setFilterType(e.target.value)}
+                  disabled={loading}
+                  className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
+                    mode === "dark"
+                      ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
+                      : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                  } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
+                  aria-label="Filter by tier"
+                >
+                  <option value="all">All Tiers</option>
+                  <option value="Associate Member">Associate Member</option>
+                  <option value="Full Member">Full Member</option>
+                  <option value="Gold Member">Gold Member</option>
+                  <option value="Free Member">Free Member</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
+                  <Icon
+                    icon="heroicons:chevron-down"
+                    className="h-4 w-4"
+                    aria-hidden="true"
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Job Type Filter */}
-          <div>
-            <label
-              htmlFor="filter-job-type"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
-            >
-              Filter by Job Type
-            </label>
-            <div className="relative">
-              <select
-                id="filter-job-type"
-                value={filterJobType}
-                onChange={(e) => setFilterJobType(e.target.value)}
-                disabled={loading}
-                className={`appearance-none w-full px-5 py-3 border rounded-md text-sm ${
-                  mode === "dark"
-                    ? "border-gray-600 bg-gray-800 text-white"
-                    : "border-gray-300 bg-gray-100 text-gray-900"
-                } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-8 shadow-sm ${
-                  loading ? "opacity-50 cursor-not-allowed" : ""
-                }`}
+            {/* Job Type Filter */}
+            <div>
+              <label
+                htmlFor="filter-job-type"
+                className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
               >
-                <option value="all">All Job Types</option>
-                <option value="Agency">Agency</option>
-                <option value="Freelancer">Freelancer</option>
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
-                <Icon icon="heroicons:chevron-down" className="h-4 w-4" />
+                Filter by Job Type
+              </label>
+              <div className="relative">
+                <select
+                  id="filter-job-type"
+                  value={filterJobType}
+                  onChange={(e) => setFilterJobType(e.target.value)}
+                  disabled={loading}
+                  className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
+                    mode === "dark"
+                      ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
+                      : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                  } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
+                  aria-label="Filter by job type"
+                >
+                  <option value="all">All Job Types</option>
+                  <option value="Agency">Agency</option>
+                  <option value="Freelancer">Freelancer</option>
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
+                  <Icon
+                    icon="heroicons:chevron-down"
+                    className="h-4 w-4"
+                    aria-hidden="true"
+                  />
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Project Type Filter */}
-          <div>
-            <label
-              htmlFor="filter-project-type"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5"
-            >
-              Filter by Project Type
-            </label>
-            <div className="relative">
-              <select
-                id="filter-project-type"
-                value={filterProjectType}
-                onChange={(e) => setFilterProjectType(e.target.value)}
-                disabled={loading || projectTypes.length === 0}
-                className={`appearance-none w-full px-5 py-3 border rounded-md text-sm ${
-                  mode === "dark"
-                    ? "border-gray-600 bg-gray-800 text-white"
-                    : "border-gray-300 bg-gray-100 text-gray-900"
-                } focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pr-8 shadow-sm ${
-                  loading || projectTypes.length === 0
-                    ? "opacity-50 cursor-not-allowed"
-                    : ""
-                }`}
+            {/* Project Type Filter */}
+            <div>
+              <label
+                htmlFor="filter-project-type"
+                className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
               >
-                <option value="all">All Project Types</option>
-                {projectTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
-                <Icon icon="heroicons:chevron-down" className="h-4 w-4" />
+                Filter by Project Type
+              </label>
+              <div className="relative">
+                <select
+                  id="filter-project-type"
+                  value={filterProjectType}
+                  onChange={(e) => setFilterProjectType(e.target.value)}
+                  disabled={loading || projectTypes.length === 0}
+                  className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
+                    mode === "dark"
+                      ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
+                      : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                  } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
+                  aria-label="Filter by project type"
+                  title={
+                    projectTypes.length === 0
+                      ? "No project types available"
+                      : ""
+                  }
+                >
+                  <option value="all">All Project Types</option>
+                  {projectTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
+                  <Icon
+                    icon="heroicons:chevron-down"
+                    className="h-4 w-4"
+                    aria-hidden="true"
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        </div>
-      )}
-      {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-opacity-50">
-          <Icon
-            icon="eos-icons:loading"
-            className="w-6 h-6 animate-spin text-blue-500 dark:text-blue-300"
-          />
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

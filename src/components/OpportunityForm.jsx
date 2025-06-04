@@ -32,10 +32,6 @@ export default function OpportunityForm({
         console.error("[OpportunityForm] Error fetching project types:", error);
         setProjectTypes([]);
       } else {
-        console.log(
-          "[OpportunityForm] Fetched project types for Agency:",
-          data
-        );
         setProjectTypes(data.map((item) => item.name));
       }
       setLoading(false);
@@ -78,8 +74,6 @@ export default function OpportunityForm({
   ];
 
   const isFreelancer = jobType === "Freelancer";
-
-
 
   return (
     <form onSubmit={submitForm}>
@@ -731,6 +725,7 @@ export default function OpportunityForm({
             } ${loading ? "opacity-50 cursor-not-allowed" : ""}`}
             disabled={loading}
           >
+            {" "}
             <Icon
               icon={isEditing ? "heroicons:pencil" : "heroicons:plus"}
               className="h-4 w-4 mr-2"

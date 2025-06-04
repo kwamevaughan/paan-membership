@@ -63,8 +63,8 @@ export default function OpportunityGrid({
   }
 
   return (
-    <div className="p-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="p-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
         {opportunities.map((opp) => {
           const tierColors = getTierBadgeColor(
             opp.tier_restriction || "N/A",
@@ -82,261 +82,147 @@ export default function OpportunityGrid({
           return (
             <div
               key={opp.id}
-              className={`relative flex flex-col h-full rounded-xl shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border ${
+              className={`relative flex flex-col rounded-2xl border backdrop-blur-md bg-white/80 dark:bg-gray-800/50 hover:shadow-2xl transition-all duration-300 overflow-hidden transform hover:scale-[1.01] ${
                 mode === "dark"
-                  ? "bg-gray-800/70 border-gray-800"
-                  : "bg-white border-gray-200"
-              } group`}
+                  ? "border-gray-700/50 hover:border-gray-600"
+                  : "border-gray-200 hover:border-gray-300"
+              }`}
             >
-              <div className="px-6 pt-6 pb-4 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex justify-between items-start mb-3">
+              {/* Header */}
+              <div className="p-6 pb-4">
+                <div className="mb-4">
                   <h3
-                    className={`text-lg font-semibold line-clamp-2 group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors ${
+                    className={`text-xl font-semibold tracking-tight leading-snug transition-colors duration-200 group-hover:text-blue-600 ${
                       mode === "dark" ? "text-white" : "text-gray-900"
                     }`}
                   >
                     {opp.title}
                   </h3>
-                  <span
-                    className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${tierColors.bg} ${tierColors.text} ${tierColors.border} transition-all duration-300 space-x-1.5`}
-                  >
-                    <Icon
-                      icon={tierIcon}
-                      className={`w-6 h-6 ${tierColors.text}`}
-                    />
-                    <span>
+                  <div className="mt-2">
+                    <span
+                      className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium border ${tierColors.bg} ${tierColors.text} ${tierColors.border} shadow-sm`}
+                    >
+                      <Icon
+                        icon={tierIcon}
+                        className={`w-4 h-4 mr-1.5 ${tierColors.text}`}
+                      />
                       {opp.tier_restriction
                         ? opp.tier_restriction.split("(")[0].trim()
                         : "N/A"}
                     </span>
-                  </span>
-                </div>
-                <div className="flex gap-4">
-                  <div className="flex items-center mt-2">
-                    <Icon
-                      icon="heroicons:map-pin"
-                      className={`w-4 h-4 flex-shrink-0 ${
-                        mode === "dark" ? "text-gray-400" : "text-gray-500"
-                      } mr-1.5`}
-                    />
-                    <p
-                      className={`text-sm truncate ${
-                        mode === "dark" ? "text-gray-300" : "text-gray-600"
-                      }`}
-                    >
-                      {opp.location || "Not specified"}
-                    </p>
                   </div>
-                  <div className="flex items-center mt-1.5">
-                    <Icon
-                      icon="heroicons:briefcase"
-                      className={`w-4 h-4 flex-shrink-0 ${
-                        mode === "dark" ? "text-gray-400" : "text-gray-500"
-                      } mr-1.5`}
-                    />
-                    <p
-                      className={`text-sm ${
-                        mode === "dark" ? "text-gray-300" : "text-gray-600"
-                      }`}
-                    >
-                      {opp.job_type}
-                    </p>
+                </div>
+
+                {/* Location and Type */}
+                <div className="flex flex-wrap items-center gap-6 mb-4 text-sm text-gray-600 dark:text-gray-300">
+                  <div className="flex items-center gap-1">
+                    <Icon icon="heroicons:map-pin" className="w-4 h-4" />
+                    <span>{opp.location || "Remote"}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Icon icon="heroicons:briefcase" className="w-4 h-4" />
+                    <span>{opp.job_type}</span>
                   </div>
                 </div>
               </div>
-              <div className="px-6 py-4 flex-grow">
+
+              {/* Content */}
+              <div className="px-6 pb-6 flex-grow">
                 {opp.description && (
-                  <p
-                    className={`text-sm line-clamp-3 mb-4 ${
-                      mode === "dark" ? "text-gray-300" : "text-gray-600"
-                    }`}
-                  >
+                  <p className="text-sm leading-relaxed mb-6 line-clamp-3 text-gray-600 dark:text-gray-300">
                     {opp.description}
                   </p>
                 )}
-                <div className="flex flex-wrap gap-2 mb-4">
+
+                <div className="space-y-3">
                   {opp.job_type === "Agency" ? (
-                    <>
+                    <div className="flex flex-wrap gap-2">
                       {opp.service_type && (
-                        <div
-                          className={`flex items-center text-xs px-3 py-1.5 rounded-full transition-all duration-300 ${
-                            mode === "dark"
-                              ? "bg-blue-900/30 text-blue-300"
-                              : "bg-blue-100 text-blue-700"
-                          }`}
-                        >
-                          <span className="font-medium">
-                            {opp.service_type}
-                          </span>
-                        </div>
+                        <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+                          {opp.service_type}
+                        </span>
                       )}
                       {opp.industry && (
-                        <div
-                          className={`flex items-center text-xs px-3 py-1.5 rounded-full ${
-                            mode === "dark"
-                              ? "bg-blue-900/30 text-blue-300"
-                              : "bg-blue-100 text-blue-700"
-                          }`}
-                        >
-                          <Icon
-                            icon="heroicons:building-office"
-                            className="w-3.5 h-3.5 mr-1.5"
-                          />
-                          <span className="font-medium">{opp.industry}</span>
-                        </div>
+                        <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-300">
+                          {opp.industry}
+                        </span>
                       )}
-                    </>
+                    </div>
                   ) : (
-                    <>
-                      {opp.skills_required?.length > 0 && (
-                        <div
-                          className={`flex items-center text-xs px-3 py-1.5 rounded-full ${
-                            mode === "dark"
-                              ? "bg-green-900/30 text-green-300"
-                              : "bg-green-100 text-green-700"
-                          }`}
-                        >
-                          <Icon
-                            icon="heroicons:light-bulb"
-                            className="w-3.5 h-3.5 mr-1.5"
-                          />
-                          <span className="font-medium">
-                            {opp.skills_required.join(", ")}
-                          </span>
-                        </div>
-                      )}
+                    <div className="space-y-2">
                       {opp.budget_range && (
-                        <div
-                          className={`flex items-center text-xs px-3 py-1.5 rounded-full ${
-                            mode === "dark"
-                              ? "bg-yellow-900/30 text-yellow-300"
-                              : "bg-yellow-100 text-yellow-700"
-                          }`}
-                        >
+                        <div className="flex items-center gap-2">
                           <Icon
                             icon="heroicons:currency-dollar"
-                            className="w-3.5 h-3.5 mr-1.5"
+                            className="w-4 h-4 text-green-600 dark:text-green-400"
                           />
-                          <span className="font-medium">
+                          <span className="text-sm font-medium text-green-700 dark:text-green-300">
                             {opp.budget_range}
                           </span>
                         </div>
                       )}
-                    </>
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {opp.project_type && (
-                    <div
-                      className={`flex items-center text-xs px-3 py-1.5 rounded-full max-w-fit ${
-                        mode === "dark"
-                          ? "bg-indigo-900/30 text-indigo-300"
-                          : "bg-indigo-100 text-indigo-700"
-                      }`}
-                    >
-                      <Icon
-                        icon="heroicons:document-text"
-                        className="w-3.5 h-3.5 mr-1.5"
-                      />
-                      <span className="font-medium">{opp.project_type}</span>
-                    </div>
-                  )}
-                  {opp.job_type === "Freelancer" && opp.remote_work && (
-                    <div
-                      className={`flex items-center text-xs px-3 py-1.5 rounded-full max-w-fit ${
-                        mode === "dark"
-                          ? "bg-blue-900/30 text-blue-300"
-                          : "bg-blue-100 text-blue-700"
-                      }`}
-                    >
-                      <Icon
-                        icon="heroicons:globe-alt"
-                        className="w-3.5 h-3.5 mr-1.5"
-                      />
-                      <span className="font-medium">Remote</span>
+                      {opp.skills_required?.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-2">
+                          {opp.skills_required.slice(0, 3).map((skill, idx) => (
+                            <span
+                              key={idx}
+                              className="inline-block px-2 py-1 rounded text-xs bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                          {opp.skills_required.length > 3 && (
+                            <span className="inline-block px-2 py-1 rounded text-xs bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+                              +{opp.skills_required.length - 3} more
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
               </div>
+
+              {/* Footer */}
               <div
-                className={`px-6 py-4 border-t mt-auto ${
+                className={`px-6 py-4 border-t flex items-center justify-between ${
                   mode === "dark"
-                    ? "bg-gray-800/50 border-gray-700"
+                    ? "bg-gray-800/40 border-gray-700"
                     : "bg-gray-50 border-gray-200"
                 }`}
               >
-                <div className="flex justify-between items-center">
-                  <div>
-                    <p
-                      className={`text-xs mb-1 ${
-                        mode === "dark" ? "text-gray-400" : "text-gray-500"
-                      }`}
-                    >
-                      Deadline
-                    </p>
-                    <div
-                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-full ${deadlineColors.bg}`}
-                    >
-                      <Icon
-                        icon="heroicons:clock"
-                        className={`w-3.5 h-3.5 ${deadlineColors.icon}`}
-                      />
-                      <span
-                        className={`text-xs font-medium ${deadlineColors.text}`}
-                      >
-                        {daysLeft <= 0 ? "Expired" : `${daysLeft} days left`}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => {
-                        
-                        onViewUsers(opp.id);
-                      }}
-                      className={`inline-flex items-center justify-center p-2.5 rounded-lg transition-all duration-300 ${
-                        mode === "dark"
-                          ? "bg-green-900/30 text-green-300 hover:bg-green-900/50"
-                          : "bg-green-100 text-green-600 hover:bg-green-200"
-                      }`}
-                      aria-label="View Interested Users"
-                    >
-                      <Icon icon="mdi:account-group" className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => onEdit(true, opp)}
-                      className={`inline-flex items-center justify-center p-2.5 rounded-lg transition-all duration-300 ${
-                        mode === "dark"
-                          ? "bg-blue-900/30 text-blue-300 hover:bg-blue-900/50"
-                          : "bg-blue-100 text-blue-600 hover:bg-blue-200"
-                      }`}
-                      aria-label="Edit"
-                    >
-                      <Icon
-                        icon="heroicons:pencil-square"
-                        className="w-4 h-4"
-                      />
-                    </button>
-                    <button
-                      onClick={() => {
-                        if (
-                          window.confirm(
-                            "Are you sure you want to delete this opportunity?"
-                          )
-                        ) {
-                          onDelete(opp.id);
-                        }
-                      }}
-                      className={`inline-flex items-center justify-center p-2.5 rounded-lg transition-all duration-300 ${
-                        mode === "dark"
-                          ? "bg-red-900/30 text-red-400 hover:bg-red-900/50"
-                          : "bg-red-100 text-red-600 hover:bg-red-200"
-                      }`}
-                      aria-label="Delete"
-                    >
-                      <Icon icon="heroicons:trash" className="w-4 h-4" />
-                    </button>
-                  </div>
+                <div className="flex items-center gap-2 text-sm font-medium">
+                  <Icon
+                    icon="heroicons:clock"
+                    className={`w-4 h-4 ${deadlineColors.icon}`}
+                  />
+                  <span className={deadlineColors.text}>
+                    {daysLeft <= 0 ? "Expired" : `${daysLeft} days left`}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => onViewUsers(opp.id)}
+                    className="p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 transition"
+                    title="View interested users"
+                  >
+                    <Icon icon="mdi:account-group" className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => onEdit(true, opp)}
+                    className="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition"
+                    title="Edit opportunity"
+                  >
+                    <Icon icon="heroicons:pencil-square" className="w-4 h-4" />
+                  </button>
+                  <button
+                    onClick={() => onDelete(opp.id)}
+                    className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition"
+                    title="Delete opportunity"
+                  >
+                    <Icon icon="heroicons:trash" className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             </div>

@@ -9,6 +9,7 @@ export default function useModals({ handleEdit, handleSubmit, resetForm }) {
 
   const openModal = (editMode = false, opp = null) => {
     if (editMode && opp) {
+      
       handleEdit(opp);
       setIsEditing(true);
       setEditingId(opp.id);

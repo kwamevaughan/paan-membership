@@ -48,10 +48,7 @@ export const useOpportunities = () => {
 
       if (opportunitiesError) throw opportunitiesError;
 
-      console.log(
-        "[useOpportunities] Fetched opportunities:",
-        opportunitiesData
-      );
+      
       setOpportunities(opportunitiesData || []);
     } catch (error) {
       console.error("[useOpportunities] Error fetching opportunities:", error);

@@ -11,14 +11,14 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
   const [isMounted, setIsMounted] = useState(false);
   const [isInstructionsOpen, setIsInstructionsOpen] = useState(false);
 
-  const { countryOptions } = useCountry();
+  const { countryOptions, getDialCode, loading } = useCountry();
   const { errors, validateField, validateForm } = useFormValidation();
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
-  if (!isMounted) {
+  if (!isMounted || loading) {
     return null;
   }
 
@@ -28,13 +28,13 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
       backgroundColor: mode === "dark" ? "#374151" : "#F9FAFB",
       borderColor: mode === "dark" ? "#4B5563" : "#D1D5DB",
       color: mode === "dark" ? "#FFFFFF" : "#231812",
-      boxShadow: state.isFocused ? "0 0 0 2px #f05d23" : "none",
+      boxShadow: state.isFocused ? "0 0 0 2px #60a5fa" : "none",
       borderWidth: errors.headquartersLocation ? "2px" : "1px",
       borderStyle: "solid",
       borderRadius: "0.5rem",
       padding: "0.5rem 0",
       "&:hover": {
-        borderColor: mode === "dark" ? "#6B7280" : "#9CA3AF",
+        borderColor: mode === "dark" ? "#6B7280" : "#60a5fa",
       },
     }),
     input: (provided) => ({
@@ -48,18 +48,18 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
     menu: (provided) => ({
       ...provided,
       backgroundColor: mode === "dark" ? "#374151" : "#FFFFFF",
-      color: mode === "dark" ? "#FFFFFF" : "#231812",
+      color: mode === "dark" ? "#FFFFFF" : "#000",
     }),
     option: (provided, state) => ({
       ...provided,
       backgroundColor: state.isSelected
-        ? "#f05d23"
+        ? "#afd2fe"
         : mode === "dark"
         ? "#374151"
         : "#FFFFFF",
-      color: state.isSelected || mode === "dark" ? "#FFFFFF" : "#231812",
+      color: state.isSelected || mode === "dark" ? "#000" : "#000",
       "&:hover": {
-        backgroundColor: mode === "dark" ? "#4B5563" : "#F3F4F6",
+        backgroundColor: mode === "dark" ? "#4B5563" : "#F9FAFB",
       },
     }),
     placeholder: (provided) => ({
@@ -72,9 +72,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
     const { name, value } = e.target;
 
     if (name === "websiteUrl" || name === "primaryContactLinkedin") {
-      // Strip any existing http:// or https:// for storage consistency
       const cleanedValue = value.replace(/^https?:\/\//, "").trim();
-      // Always store with https://
       handleChange({
         target: {
           name,
@@ -88,8 +86,24 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
 
   const handleCountryChange = (selectedOption) => {
     const value = selectedOption ? selectedOption.value : "";
+    const countryCode = getDialCode(value) || "+254"; // Default to Kenya if no country selected
+
+    // Update headquartersLocation
     handleChange({ target: { name: "headquartersLocation", value } });
     validateField("headquartersLocation", value);
+
+    // Update phone number only if it's empty or starts with the previous country code
+    const currentPhone = formData.primaryContactPhone || "";
+    const prevCountryCode = getDialCode(formData.headquartersLocation) || "+254";
+    if (!currentPhone || currentPhone.startsWith(prevCountryCode)) {
+      const phoneWithoutCode = currentPhone.replace(/^\+\d+\s*/, "").trim();
+      handleChange({
+        target: {
+          name: "primaryContactPhone",
+          value: phoneWithoutCode ? `${countryCode} ${phoneWithoutCode}` : countryCode,
+        },
+      });
+    }
   };
 
   const handleSubmit = (e) => {
@@ -253,7 +267,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
               <Select
                 id="headquarters-location-select"
                 value={
-                  formData.headquartersLocation
+                  formData.headquartersLocation                    
                     ? {
                         label: formData.headquartersLocation,
                         value: formData.headquartersLocation,
@@ -519,7 +533,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                 id="primaryContactPhone"
                 value={formData.primaryContactPhone}
                 onChange={handleInputChange}
-                placeholder="e.g., +254 701 850 850"
+                placeholder={`e.g., ${getDialCode(formData.headquartersLocation) || "+254"} 701 850 850`}
                 required
                 className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
                   mode === "dark"
@@ -566,24 +580,22 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                     }`
               }`}
             >
-              <Icon icon="mdi:linkedin" className="text-blue-400 w-5 h-5" />
+              <Icon
+                icon="mdi:linkedin"
+                className="text-blue-400 w-5 h-5"
+              />
               <span className="text-sm text-gray-500 pl-3 pr-1">https://</span>
               <input
                 type="text"
                 name="primaryContactLinkedin"
                 id="primaryContactLinkedin"
-                value={formData.primaryContactLinkedin.replace(
-                  /^https?:\/\//,
-                  ""
-                )}
+                value={formData.primaryContactLinkedin.replace(/^https?:\/\//, "")}
                 onChange={handleInputChange}
                 placeholder="linkedin.com/in/johndoe"
                 required
                 className={`w-full pl-1 pr-4 py-2 bg-transparent focus:outline-none focus:ring-0 ${
                   mode === "dark"
-                    ? `text-white ${
-                        errors.primaryContactLinkedin ? "border-red-500" : ""
-                      }`
+                    ? `text-white ${errors.primaryContactLinkedin ? "border-red-500" : ""}`
                     : `text-[#231812] ${
                         errors.primaryContactLinkedin ? "border-red-500" : ""
                       }`

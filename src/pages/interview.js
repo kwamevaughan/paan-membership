@@ -531,7 +531,7 @@ export default function InterviewPage({
       />
 
       <div
-        className={`flex flex-col items-center relative min-h-screen ${
+        className={`flex flex-col items-center relative ${
           mode === "dark" ? "bg-[#0f172a]" : "bg-gray-200"
         }`}
       >
@@ -547,7 +547,7 @@ export default function InterviewPage({
           />
         </div>
 
-        <div className="max-w-3xl w-full mx-auto p-6 pb-24 relative z-20">
+        <div className="max-w-3xl w-full mx-auto p-6 py-10 relative z-20">
           <MovingDotBorder mode={mode}>
             <div
               className={`rounded-[calc(1rem-4px)] p-6 ${

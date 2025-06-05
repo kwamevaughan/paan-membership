@@ -155,7 +155,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
         }`}
       >
         <div
-          className={`px-4 py-4 border-b ${
+          className={`px-4 py-4 ${
             mode === "dark"
               ? "bg-gradient-to-r from-gray-800 to-gray-900 border-gray-700"
               : "bg-gradient-to-r from-gray-50 to-white border-gray-100"
@@ -167,7 +167,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                 className={`p-3 rounded-xl ${
                   mode === "dark"
                     ? "bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-400/30"
-                    : "bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200"
+                    : "bg-gradient-to-br from-blue-100 to-purple-100 border border-blue-200"
                 }`}
               >
                 <Icon
@@ -178,7 +178,17 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                 />
               </div>
               <div>
-                <h2 className="text-2xl font-bold mb-1">Let&apos;s Get Started</h2>
+                <h2 className="text-xl font-bold mb-1">
+                  Let&apos;s Get Started
+                </h2>
+                <p
+                  className={`text-sm leading-relaxed ${
+                    mode === "dark" ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Complete this Expression of Interest form to begin your
+                  journey.
+                </p>
               </div>
             </div>
 
@@ -199,119 +209,102 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
             </button>
           </div>
         </div>
-        <div
-          className={`px-6 py-4 border-b rounded-xl mb-4 ${
-            mode === "dark"
-              ? "bg-gradient-to-r from-orange-500/10 to-red-500/10 border-gray-700"
-              : "bg-gradient-to-r from-orange-50 to-red-50 border-gray-100"
-          }`}
-        >
-          <div className="flex items-start gap-4">
-            <Icon
-              icon="solar:global-bold-duotone"
-              className={`w-6 h-6 mt-1 ${
-                mode === "dark" ? "text-orange-400" : "text-orange-600"
-              }`}
-            />
-            <p
-              className={`text-base leading-relaxed ${
-                mode === "dark" ? "text-gray-300" : "text-gray-700"
-              }`}
-            >
-              Complete this Expression of Interest form to begin your journey.
-            </p>
-          </div>
-        </div>
 
         <div className="space-y-6 max-h-[50vh] overflow-y-auto">
           <h3 className="text-lg font-bold">Agency Details</h3>
 
-          <div className="relative">
-            <label
-              htmlFor="agencyName"
-              className="block text-sm font-medium mb-1"
-            >
-              Agency Name <span className="text-red-500">*</span>
-            </label>
-            <div className="flex items-center">
-              <Icon
-                icon="mdi:office-building"
-                className="absolute left-3 text-blue-400 w-5 h-5"
-              />
-              <input
-                type="text"
-                name="agencyName"
-                id="agencyName"
-                value={formData.agencyName}
-                onChange={handleInputChange}
-                placeholder="e.g., Company XYZ"
-                required
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
-                  mode === "dark"
-                    ? `bg-gray-700 text-white border-gray-600 ${
-                        errors.agencyName
-                          ? "border-red-500"
-                          : "focus:border-blue-500"
-                      }`
-                    : `bg-gray-50 text-[#231812] border-gray-300 ${
-                        errors.agencyName
-                          ? "border-red-500"
-                          : "focus:border-blue-500"
-                      }`
-                }`}
-              />
+          {/* Agency Name and Year Established (Already on Same Row) */}
+          <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
+            {/* Agency Name */}
+            <div className="relative flex-1">
+              <label
+                htmlFor="agencyName"
+                className="block text-sm font-medium mb-1"
+              >
+                Agency Name <span className="text-red-500">*</span>
+              </label>
+              <div className="flex items-center">
+                <Icon
+                  icon="mdi:office-building"
+                  className="absolute left-3 text-blue-400 w-5 h-5"
+                />
+                <input
+                  type="text"
+                  name="agencyName"
+                  id="agencyName"
+                  value={formData.agencyName}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Company XYZ"
+                  required
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
+                    mode === "dark"
+                      ? `bg-gray-700 text-white border-gray-600 ${
+                          errors.agencyName
+                            ? "border-red-500"
+                            : "focus:border-blue-500"
+                        }`
+                      : `bg-gray-50 text-[#231812] border-gray-300 ${
+                          errors.agencyName
+                            ? "border-red-500"
+                            : "focus:border-blue-500"
+                        }`
+                  }`}
+                />
+              </div>
+              {errors.agencyName && (
+                <span className="mt-1 text-xs text-red-500 flex items-center">
+                  <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />{" "}
+                  {errors.agencyName}
+                </span>
+              )}
             </div>
-            {errors.agencyName && (
-              <span className="mt-1 text-xs text-red-500 flex items-center">
-                <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />{" "}
-                {errors.agencyName}
-              </span>
-            )}
+
+            {/* Year Established */}
+            <div className="relative flex-1">
+              <label
+                htmlFor="yearEstablished"
+                className="block text-sm font-medium mb-1"
+              >
+                Year Established <span className="text-red-500">*</span>
+              </label>
+              <div className="flex items-center">
+                <Icon
+                  icon="mdi:calendar"
+                  className="absolute left-3 text-blue-400 w-5 h-5"
+                />
+                <input
+                  type="number"
+                  name="yearEstablished"
+                  id="yearEstablished"
+                  value={formData.yearEstablished}
+                  onChange={handleInputChange}
+                  placeholder="e.g., 2005"
+                  required
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
+                    mode === "dark"
+                      ? `bg-gray-700 text-white border-gray-600 ${
+                          errors.yearEstablished
+                            ? "border-red-500"
+                            : "focus:border-blue-400"
+                        }`
+                      : `bg-gray-50 text-[#231812] border-gray-300 ${
+                          errors.yearEstablished
+                            ? "border-red-500"
+                            : "focus:border-blue-400"
+                        }`
+                  }`}
+                />
+              </div>
+              {errors.yearEstablished && (
+                <span className="mt-1 text-xs text-red-500 flex items-center">
+                  <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />{" "}
+                  {errors.yearEstablished}
+                </span>
+              )}
+            </div>
           </div>
 
-          <div className="relative">
-            <label
-              htmlFor="yearEstablished"
-              className="block text-sm font-medium mb-1"
-            >
-              Year Established <span className="text-red-500">*</span>
-            </label>
-            <div className="flex items-center">
-              <Icon
-                icon="mdi:calendar"
-                className="absolute left-3 text-blue-400 w-5 h-5"
-              />
-              <input
-                type="number"
-                name="yearEstablished"
-                id="yearEstablished"
-                value={formData.yearEstablished}
-                onChange={handleInputChange}
-                placeholder="e.g., 2005"
-                required
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
-                  mode === "dark"
-                    ? `bg-gray-700 text-white border-gray-600 ${
-                        errors.yearEstablished
-                          ? "border-red-500"
-                          : "focus:border-blue-400"
-                      }`
-                    : `bg-gray-50 text-[#231812] border-gray-300 ${
-                        errors.yearEstablished
-                          ? "border-red-500"
-                          : "focus:border-blue-400"
-                      }`
-                }`}
-              />
-            </div>
-            {errors.yearEstablished && (
-              <span className="mt-1 text-xs text-red-500 flex items-center">
-                <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />{" "}
-                {errors.yearEstablished}
-              </span>
-            )}
-          </div>
-
+          {/* Headquarters Country (Separate Row) */}
           <div className="relative">
             <label
               htmlFor="headquartersLocation"
@@ -366,6 +359,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
             )}
           </div>
 
+          {/* Registered Office Address (Separate Row) */}
           <div className="relative">
             <label
               htmlFor="registeredOfficeAddress"
@@ -409,6 +403,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
             )}
           </div>
 
+          {/* Website URL (Separate Row) */}
           <div className="relative w-full">
             <label
               htmlFor="websiteUrl"
@@ -452,7 +447,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
             </div>
             {errors.websiteUrl && (
               <span className="mt-1 text-xs text-red-500 flex items-center">
-                <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />
+                <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />{" "}
                 {errors.websiteUrl}
               </span>
             )}
@@ -460,181 +455,192 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
 
           <h3 className="text-lg font-bold mt-8">Primary Contact Person</h3>
 
-          <div className="relative">
-            <label
-              htmlFor="primaryContactName"
-              className="block text-sm font-medium mb-1"
-            >
-              Name <span className="text-red-500">*</span>
-            </label>
-            <div className="flex items-center">
-              <Icon
-                icon="mdi:user"
-                className="absolute left-3 text-blue-400 w-5 h-5"
-              />
-              <input
-                type="text"
-                name="primaryContactName"
-                id="primaryContactName"
-                value={formData.primaryContactName}
-                onChange={handleInputChange}
-                placeholder="e.g., John Doe"
-                required
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
-                  mode === "dark"
-                    ? `bg-gray-700 text-white border-gray-600 ${
-                        errors.primaryContactName
-                          ? "border-red-500"
-                          : "focus:border-blue-400"
-                      }`
-                    : `bg-gray-50 text-[#231812] border-gray-300 ${
-                        errors.primaryContactName
-                          ? "border-red-500"
-                          : "focus:border-blue-400"
-                      }`
-                }`}
-              />
+          {/* Primary Contact Name and Role/Title (On Same Row) */}
+          <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
+            {/* Primary Contact Name */}
+            <div className="relative flex-1">
+              <label
+                htmlFor="primaryContactName"
+                className="block text-sm font-medium mb-1"
+              >
+                Name <span className="text-red-500">*</span>
+              </label>
+              <div className="flex items-center">
+                <Icon
+                  icon="mdi:user"
+                  className="absolute left-3 text-blue-400 w-5 h-5"
+                />
+                <input
+                  type="text"
+                  name="primaryContactName"
+                  id="primaryContactName"
+                  value={formData.primaryContactName}
+                  onChange={handleInputChange}
+                  placeholder="e.g., John Doe"
+                  required
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
+                    mode === "dark"
+                      ? `bg-gray-700 text-white border-gray-600 ${
+                          errors.primaryContactName
+                            ? "border-red-500"
+                            : "focus:border-blue-400"
+                        }`
+                      : `bg-gray-50 text-[#231812] border-gray-300 ${
+                          errors.primaryContactName
+                            ? "border-red-500"
+                            : "focus:border-blue-400"
+                        }`
+                  }`}
+                />
+              </div>
+              {errors.primaryContactName && (
+                <span className="mt-1 text-xs text-red-500 flex items-center">
+                  <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />{" "}
+                  {errors.primaryContactName}
+                </span>
+              )}
             </div>
-            {errors.primaryContactName && (
-              <span className="mt-1 text-xs text-red-500 flex items-center">
-                <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />{" "}
-                {errors.primaryContactName}
-              </span>
-            )}
+
+            {/* Primary Contact Role/Title */}
+            <div className="relative flex-1">
+              <label
+                htmlFor="primaryContactRole"
+                className="block text-sm font-medium mb-1"
+              >
+                Role/Title <span className="text-red-500">*</span>
+              </label>
+              <div className="flex items-center">
+                <Icon
+                  icon="mdi:briefcase"
+                  className="absolute left-3 text-blue-400 w-5 h-5"
+                />
+                <input
+                  type="text"
+                  name="primaryContactRole"
+                  id="primaryContactRole"
+                  value={formData.primaryContactRole}
+                  onChange={handleInputChange}
+                  placeholder="e.g., CEO"
+                  required
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
+                    mode === "dark"
+                      ? `bg-gray-700 text-white border-gray-600 ${
+                          errors.primaryContactRole
+                            ? "border-red-500"
+                            : "focus:border-blue-400"
+                        }`
+                      : `bg-gray-50 text-[#231812] border-gray-300 ${
+                          errors.primaryContactRole
+                            ? "border-red-500"
+                            : "focus:border-blue-400"
+                        }`
+                  }`}
+                />
+              </div>
+              {errors.primaryContactRole && (
+                <span className="mt-1 text-xs text-red-500 flex items-center">
+                  <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />{" "}
+                  {errors.primaryContactRole}
+                </span>
+              )}
+            </div>
           </div>
 
-          <div className="relative">
-            <label
-              htmlFor="primaryContactRole"
-              className="block text-sm font-medium mb-1"
-            >
-              Role/Title <span className="text-red-500">*</span>
-            </label>
-            <div className="flex items-center">
-              <Icon
-                icon="mdi:briefcase"
-                className="absolute left-3 text-blue-400 w-5 h-5"
-              />
-              <input
-                type="text"
-                name="primaryContactRole"
-                id="primaryContactRole"
-                value={formData.primaryContactRole}
-                onChange={handleInputChange}
-                placeholder="e.g., CEO"
-                required
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
-                  mode === "dark"
-                    ? `bg-gray-700 text-white border-gray-600 ${
-                        errors.primaryContactRole
-                          ? "border-red-500"
-                          : "focus:border-blue-400"
-                      }`
-                    : `bg-gray-50 text-[#231812] border-gray-300 ${
-                        errors.primaryContactRole
-                          ? "border-red-500"
-                          : "focus:border-blue-400"
-                      }`
-                }`}
-              />
+          {/* Primary Contact Email and Phone Number (On Same Row) */}
+          <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
+            {/* Primary Contact Email */}
+            <div className="relative flex-1">
+              <label
+                htmlFor="primaryContactEmail"
+                className="block text-sm font-medium mb-1"
+              >
+                Email <span className="text-red-500">*</span>
+              </label>
+              <div className="flex items-center">
+                <Icon
+                  icon="mdi:email"
+                  className="absolute left-3 text-blue-400 w-5 h-5"
+                />
+                <input
+                  type="email"
+                  name="primaryContactEmail"
+                  id="primaryContactEmail"
+                  value={formData.primaryContactEmail}
+                  onChange={handleInputChange}
+                  placeholder="e.g., john.doe@example.com"
+                  required
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
+                    mode === "dark"
+                      ? `bg-gray-700 text-white border-gray-600 ${
+                          errors.primaryContactEmail
+                            ? "border-red-500"
+                            : "focus:border-blue-400"
+                        }`
+                      : `bg-gray-50 text-[#231812] border-gray-300 ${
+                          errors.primaryContactEmail
+                            ? "border-red-500"
+                            : "focus:border-blue-400"
+                        }`
+                  }`}
+                />
+              </div>
+              {errors.primaryContactEmail && (
+                <span className="mt-1 text-xs text-red-500 flex items-center">
+                  <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />{" "}
+                  {errors.primaryContactEmail}
+                </span>
+              )}
             </div>
-            {errors.primaryContactRole && (
-              <span className="mt-1 text-xs text-red-500 flex items-center">
-                <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />{" "}
-                {errors.primaryContactRole}
-              </span>
-            )}
+
+            {/* Primary Contact Phone Number */}
+            <div className="relative flex-1">
+              <label
+                htmlFor="primaryContactPhone"
+                className="block text-sm font-medium mb-1"
+              >
+                Phone Number <span className="text-red-500">*</span>
+              </label>
+              <div className="flex items-center">
+                <Icon
+                  icon="mdi:phone"
+                  className="absolute left-3 text-blue-400 w-5 h-5"
+                />
+                <input
+                  type="tel"
+                  name="primaryContactPhone"
+                  id="primaryContactPhone"
+                  value={formData.primaryContactPhone}
+                  onChange={handleInputChange}
+                  placeholder={`e.g., ${
+                    getDialCode(formData.headquartersLocation) || "+254"
+                  } 701 850 850`}
+                  required
+                  pattern="[0-9+]*"
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
+                    mode === "dark"
+                      ? `bg-gray-700 text-white border-gray-600 ${
+                          errors.primaryContactPhone
+                            ? "border-red-500"
+                            : "focus:border-blue-400"
+                        }`
+                      : `bg-gray-50 text-[#231812] border-gray-300 ${
+                          errors.primaryContactPhone
+                            ? "border-red-500"
+                            : "focus:border-blue-400"
+                        }`
+                  }`}
+                />
+              </div>
+              {errors.primaryContactPhone && (
+                <span className="mt-1 text-xs text-red-500 flex items-center">
+                  <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />{" "}
+                  {errors.primaryContactPhone}
+                </span>
+              )}
+            </div>
           </div>
 
-          <div className="relative">
-            <label
-              htmlFor="primaryContactEmail"
-              className="block text-sm font-medium mb-1"
-            >
-              Email <span className="text-red-500">*</span>
-            </label>
-            <div className="flex items-center">
-              <Icon
-                icon="mdi:email"
-                className="absolute left-3 text-blue-400 w-5 h-5"
-              />
-              <input
-                type="email"
-                name="primaryContactEmail"
-                id="primaryContactEmail"
-                value={formData.primaryContactEmail}
-                onChange={handleInputChange}
-                placeholder="e.g., john.doe@example.com"
-                required
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
-                  mode === "dark"
-                    ? `bg-gray-700 text-white border-gray-600 ${
-                        errors.primaryContactEmail
-                          ? "border-red-500"
-                          : "focus:border-blue-400"
-                      }`
-                    : `bg-gray-50 text-[#231812] border-gray-300 ${
-                        errors.primaryContactEmail
-                          ? "border-red-500"
-                          : "focus:border-blue-400"
-                      }`
-                }`}
-              />
-            </div>
-            {errors.primaryContactEmail && (
-              <span className="mt-1 text-xs text-red-500 flex items-center">
-                <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />{" "}
-                {errors.primaryContactEmail}
-              </span>
-            )}
-          </div>
-
-          <div className="relative">
-            <label
-              htmlFor="primaryContactPhone"
-              className="block text-sm font-medium mb-1"
-            >
-              Phone Number <span className="text-red-500">*</span>
-            </label>
-            <div className="flex items-center">
-              <Icon
-                icon="mdi:phone"
-                className="absolute left-3 text-blue-400 w-5 h-5"
-              />
-              <input
-                type="tel"
-                name="primaryContactPhone"
-                id="primaryContactPhone"
-                value={formData.primaryContactPhone}
-                onChange={handleInputChange}
-                placeholder={`e.g., ${
-                  getDialCode(formData.headquartersLocation) || "+254"
-                } 701 850 850`}
-                required
-                pattern="[0-9+]*"
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
-                  mode === "dark"
-                    ? `bg-gray-700 text-white border-gray-600 ${
-                        errors.primaryContactPhone
-                          ? "border-red-500"
-                          : "focus:border-blue-400"
-                      }`
-                    : `bg-gray-50 text-[#231812] border-gray-300 ${
-                        errors.primaryContactPhone
-                          ? "border-red-500"
-                          : "focus:border-blue-400"
-                      }`
-                }`}
-              />
-            </div>
-            {errors.primaryContactPhone && (
-              <span className="mt-1 text-xs text-red-500 flex items-center">
-                <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />{" "}
-                {errors.primaryContactPhone}
-              </span>
-            )}
-          </div>
-
+          {/* Primary Contact LinkedIn URL (Separate Row) */}
           <div className="relative w-full">
             <label
               htmlFor="primaryContactLinkedin"
@@ -689,6 +695,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
             )}
           </div>
 
+          {/* Applying For (Separate Row) */}
           <div className="relative">
             <label className="block text-sm font-medium mb-1">
               Applying for <span className="text-red-500">*</span>

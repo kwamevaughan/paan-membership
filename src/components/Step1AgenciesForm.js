@@ -154,31 +154,74 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
           mode === "dark" ? "bg-gray-800 text-white" : "bg-white text-[#231812]"
         }`}
       >
-        <div className="flex items-center justify-between mb-8">
-          <span className="flex">
-            <Icon icon="mdi:handshake" className="w-8 h-8 text-blue-400 mr-2" />
-            <h2 className="text-2xl font-bold text-center">
-              Let’s Get Started
-            </h2>
-          </span>
-
-          <button
-            onClick={() => setIsInstructionsOpen(true)}
-            className="flex items-center px-4 py-2 bg-[#172840] border-none text-white rounded-lg hover:bg-[#6FA1B7] transition-all duration-200 shadow-md focus:outline-none focus:ring-2"
-            aria-label="View application instructions"
-          >
-            <Icon icon="mdi:help-circle" className="w-5 h-5 mr-2" />
-            View Instructions
-          </button>
-        </div>
-        <p
-          className={`mb-6 italic ${
-            mode === "dark" ? "text-gray-400" : "text-gray-600"
+        <div
+          className={`px-4 py-4 border-b ${
+            mode === "dark"
+              ? "bg-gradient-to-r from-gray-800 to-gray-900 border-gray-700"
+              : "bg-gradient-to-r from-gray-50 to-white border-gray-100"
           }`}
         >
-          Welcome to the Pan-African Agency Network! Please fill out the EOI
-          form to begin your journey.
-        </p>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <div
+                className={`p-3 rounded-xl ${
+                  mode === "dark"
+                    ? "bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-400/30"
+                    : "bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200"
+                }`}
+              >
+                <Icon
+                  icon="mdi:handshake"
+                  className={`w-6 h-6 ${
+                    mode === "dark" ? "text-blue-400" : "text-blue-600"
+                  }`}
+                />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold mb-1">Let&apos;s Get Started</h2>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setIsInstructionsOpen(true)}
+              className={`group flex items-center px-5 py-3 rounded-xl font-medium transition-all duration-300 border-2 hover:scale-[1.02] active:scale-[0.98] ${
+                mode === "dark"
+                  ? "border-blue-400/30 bg-blue-900/30 text-blue-300 hover:bg-blue-800/40 hover:border-blue-400/50"
+                  : "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-300 shadow-sm hover:shadow-md"
+              }`}
+              aria-label="View application instructions"
+            >
+              <Icon
+                icon="solar:question-circle-bold-duotone"
+                className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300"
+              />
+              Instructions
+            </button>
+          </div>
+        </div>
+        <div
+          className={`px-6 py-4 border-b rounded-xl mb-4 ${
+            mode === "dark"
+              ? "bg-gradient-to-r from-orange-500/10 to-red-500/10 border-gray-700"
+              : "bg-gradient-to-r from-orange-50 to-red-50 border-gray-100"
+          }`}
+        >
+          <div className="flex items-start gap-4">
+            <Icon
+              icon="solar:global-bold-duotone"
+              className={`w-6 h-6 mt-1 ${
+                mode === "dark" ? "text-orange-400" : "text-orange-600"
+              }`}
+            />
+            <p
+              className={`text-base leading-relaxed ${
+                mode === "dark" ? "text-gray-300" : "text-gray-700"
+              }`}
+            >
+              Complete this Expression of Interest form to begin your journey.
+            </p>
+          </div>
+        </div>
 
         <div className="space-y-6 max-h-[50vh] overflow-y-auto">
           <h3 className="text-lg font-bold">Agency Details</h3>

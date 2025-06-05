@@ -36,11 +36,6 @@ const DraggableQuestion = ({
     },
   });
 
-  // Debug job_type
-  console.log("DraggableQuestion question:", {
-    id: question.id,
-    job_type: question.job_type,
-  });
 
   return (
     <tr
@@ -92,14 +87,7 @@ const DraggableQuestion = ({
             <Icon icon="mdi:pencil" width={14} height={14} />
           </button>
           <button
-            onClick={() => {
-              const confirmed = window.confirm(
-                `Are you sure you want to delete "${question.text}"?`
-              );
-              if (confirmed) {
-                deleteQuestion(question.id, question.text);
-              }
-            }}
+            onClick={() => deleteQuestion(question)}
             className="p-1 text-red-500 hover:text-red-600"
             aria-label="Delete question"
           >

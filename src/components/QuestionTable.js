@@ -1,6 +1,8 @@
 import { Icon } from "@iconify/react";
 import DraggableQuestion from "@/components/DraggableQuestion";
 import { stripHtmlTags } from "@/../utils/questionUtils";
+import { useState } from "react";
+import ItemActionModal from "@/components/ItemActionModal";
 
 export default function QuestionTable({
   questions = [],
@@ -13,7 +15,9 @@ export default function QuestionTable({
   sortDirection,
   deleteQuestion,
 }) {
-  
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [questionToDelete, setQuestionToDelete] = useState(null);
+
   const getCategoryName = (categoryId) => {
     if (!Array.isArray(categories) || categories.length === 0) {
       return "—";
@@ -49,18 +53,23 @@ export default function QuestionTable({
     return `${options.slice(0, 3).join(", ")}, ...`;
   };
 
-  const handleMobileDelete = (question) => {
-    const cleanText = stripHtmlTags(question.text);
-    console.log(
-      `Delete Question? Are you sure you want to delete "${cleanText}"?`
-    );
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${cleanText}"?`
-    );
-    if (confirmed) {
-      deleteQuestion(question.id, question.text);
+  const handleDelete = (question) => {
+    setQuestionToDelete(question);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (questionToDelete) {
+      deleteQuestion(questionToDelete.id, questionToDelete.text);
       console.log("Question deleted successfully!");
     }
+    setIsDeleteModalOpen(false);
+    setQuestionToDelete(null);
+  };
+
+  const cancelDelete = () => {
+    setIsDeleteModalOpen(false);
+    setQuestionToDelete(null);
   };
 
   return (
@@ -178,7 +187,7 @@ export default function QuestionTable({
                 moveQuestion={moveQuestion}
                 mode={mode}
                 onEdit={onEdit}
-                deleteQuestion={deleteQuestion}
+                deleteQuestion={() => handleDelete(question)} // Pass handleDelete
                 categories={categories}
                 getCategoryName={getCategoryName}
                 isComplete={isQuestionComplete(question)}
@@ -247,7 +256,7 @@ export default function QuestionTable({
                   Edit
                 </button>
                 <button
-                  onClick={() => handleMobileDelete(question)}
+                  onClick={() => handleDelete(question)}
                   className="px-2 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-200 flex items-center gap-1 text-xs"
                 >
                   <Icon
@@ -273,6 +282,44 @@ export default function QuestionTable({
           </p>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ItemActionModal
+        isOpen={isDeleteModalOpen}
+        onClose={cancelDelete}
+        title="Confirm Deletion"
+        mode={mode}
+      >
+        <div className="space-y-4">
+          <p
+            className={`${mode === "dark" ? "text-gray-300" : "text-gray-700"}`}
+          >
+            Are you sure you want to delete the question "
+            <span className="font-medium">
+              {questionToDelete ? stripHtmlTags(questionToDelete.text) : ""}
+            </span>
+            "?
+          </p>
+          <div className="flex justify-end gap-4">
+            <button
+              onClick={cancelDelete}
+              className={`px-4 py-2 rounded-lg ${
+                mode === "dark"
+                  ? "bg-gray-700 text-white hover:bg-gray-600"
+                  : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+              } transition duration-200`}
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmDelete}
+              className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-200"
+            >
+              Confirm
+            </button>
+          </div>
+        </div>
+      </ItemActionModal>
     </div>
   );
 }

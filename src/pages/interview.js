@@ -17,6 +17,7 @@ import { useRouter } from "next/router";
 import { supabase } from "@/lib/supabase";
 import Head from "next/head";
 import { useCategories } from "@/hooks/useCategories";
+import ItemActionModal from "@/components/ItemActionModal"; // Add this import
 
 export default function InterviewPage({
   mode,
@@ -50,6 +51,8 @@ export default function InterviewPage({
 
   const totalQuestions = questions.length;
 
+  // ... (rest of your existing useEffect and helper functions remain unchanged)
+
   // Initialize formData with server-side props
   useEffect(() => {
     setFormData((prev) => ({
@@ -60,7 +63,6 @@ export default function InterviewPage({
     }));
   }, [job_type, opening, opening_id, setFormData]);
 
-  // Function to check if all required fields in Step 1 are filled
   const isStep1Complete = () => {
     if (formData.job_type === "agency") {
       return (
@@ -88,17 +90,15 @@ export default function InterviewPage({
     return false;
   };
 
-  // --- Enhanced Local Storage Logic ---
   const LS_KEY = "registration-progress";
 
-  // Save progress function with debouncing
   const saveProgress = useCallback((currentStep, currentFormData) => {
     try {
       const progressData = {
         step: currentStep,
         formData: currentFormData,
         timestamp: Date.now(),
-        version: "1.0", // For future compatibility
+        version: "1.0",
       };
       localStorage.setItem(LS_KEY, JSON.stringify(progressData));
     } catch (error) {
@@ -106,24 +106,17 @@ export default function InterviewPage({
     }
   }, []);
 
-  // Load and check for saved progress on component mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem(LS_KEY);
       if (saved) {
         const progressData = JSON.parse(saved);
-
-        // Validate the saved data structure
         if (progressData && progressData.step && progressData.formData) {
-          // Check if the saved progress is recent (within 30 days)
           const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
           const isRecent =
             !progressData.timestamp || progressData.timestamp > thirtyDaysAgo;
-
           if (isRecent) {
             const validStep = Math.min(Math.max(1, progressData.step), 4);
-
-            // Ensure formData has proper structure, especially answers array
             const sanitizedFormData = {
               ...progressData.formData,
               answers: Array.isArray(progressData.formData.answers)
@@ -131,8 +124,6 @@ export default function InterviewPage({
                 : new Array(initialQuestions.length).fill(""),
               selectedOptions: progressData.formData.selectedOptions || {},
             };
-
-            // Ensure answers array has correct length
             if (sanitizedFormData.answers.length !== initialQuestions.length) {
               const newAnswers = new Array(initialQuestions.length).fill("");
               for (
@@ -148,39 +139,32 @@ export default function InterviewPage({
               }
               sanitizedFormData.answers = newAnswers;
             }
-
             setSavedProgress({
               step: validStep,
               formData: sanitizedFormData,
               timestamp: progressData.timestamp,
             });
-
-            // Only show popup if we're not already on a later step
             if (validStep > 1) {
               setShowProgressPopup(true);
             }
           } else {
-            // Clear old progress
             localStorage.removeItem(LS_KEY);
           }
         }
       }
     } catch (error) {
       console.error("Error parsing saved progress:", error);
-      localStorage.removeItem(LS_KEY); // Clear corrupted data
+      localStorage.removeItem(LS_KEY);
     }
     setIsInitialized(true);
   }, [initialQuestions.length]);
 
-  // Save progress whenever step or formData changes (but only after initialization)
   useEffect(() => {
     if (isInitialized && step < 4) {
-      // Don't save progress on completion step
       saveProgress(step, formData);
     }
   }, [step, formData, isInitialized, saveProgress]);
 
-  // Clear progress on successful submission
   useEffect(() => {
     if (step === 4 || (step === 3 && formData.job_type === "freelancer")) {
       try {
@@ -191,14 +175,13 @@ export default function InterviewPage({
     }
   }, [step, formData.job_type]);
 
-  // Handle URL parameters
   useEffect(() => {
     const { opening, job_type: queryJobType, opening_id } = router.query;
     if (opening && !formData.opening) {
       setFormData((prev) => ({
         ...prev,
         opening: decodeURIComponent(opening),
-        opening_id: opening_id ? decodeURIComponent(opening_id) : "", // Handle opening_id
+        opening_id: opening_id ? decodeURIComponent(opening_id) : "",
       }));
     }
     if (queryJobType && formData.job_type !== queryJobType) {
@@ -208,7 +191,7 @@ export default function InterviewPage({
           ? "agency"
           : decodedJobType === "freelancers" || decodedJobType === "freelancer"
           ? "freelancer"
-          : "freelancer"; // Default to freelancer if invalid
+          : "freelancer";
       setFormData((prev) => ({
         ...prev,
         job_type: normalizedJobType,
@@ -220,10 +203,8 @@ export default function InterviewPage({
     if (step === 1) {
       const isValid = validateForm(formData, step);
       if (!isValid || !isStep1Complete()) {
-        // Collect missing and invalid fields
         const missingFields = [];
         const invalidFields = Object.keys(errors).filter((key) => errors[key]);
-
         if (formData.job_type === "agency") {
           if (!formData.agencyName) missingFields.push("Agency Name");
           if (!formData.yearEstablished) missingFields.push("Year Established");
@@ -251,8 +232,6 @@ export default function InterviewPage({
             missingFields.push("Country of Residence");
           if (!formData.languagesSpoken) missingFields.push("Contact");
         }
-
-        // Format the error message
         let errorMessage = "Please address the following issues:";
         if (missingFields.length > 0) {
           errorMessage += `\n\n- Missing: ${missingFields.join(", ")}`;
@@ -288,7 +267,6 @@ export default function InterviewPage({
           });
           errorMessage += `\n\n- Invalid: ${invalidFieldNames.join(", ")}`;
         }
-
         toast.error(errorMessage, {
           icon: "⚠️",
           duration: 5000,
@@ -311,7 +289,7 @@ export default function InterviewPage({
             icon: "✅",
           });
           setSubmissionStatus({ ...submissionStatus, status: "success" });
-          setStep(3); // Skip to Confirmation for freelancer
+          setStep(3);
         } catch (error) {
           toast.error(`Submission failed: ${error.message}`, {
             id: submitToast,
@@ -332,7 +310,6 @@ export default function InterviewPage({
     } else if (step === 3) {
       setIsSubmitting(true);
       const maxFileSize = 5 * 1024 * 1024;
-
       if (
         !formData.companyRegistration ||
         !formData.workingPortfolio ||
@@ -343,7 +320,6 @@ export default function InterviewPage({
         setIsSubmitting(false);
         return;
       }
-
       if (
         (formData.companyRegistration &&
           formData.companyRegistration.size > maxFileSize) ||
@@ -357,7 +333,6 @@ export default function InterviewPage({
         setIsSubmitting(false);
         return;
       }
-
       const submitToast = toast.loading("Submitting your application...");
       try {
         const result = await handleSubmit();
@@ -405,7 +380,7 @@ export default function InterviewPage({
         languagesSpoken: savedProgress.formData.languagesSpoken || "",
         opening: savedProgress.formData.opening || opening || "",
         opening_id: savedProgress.formData.opening_id || opening_id || "",
-        job_type: savedProgress.formData.job_type || job_type || "freelancer", // Fallback to server-side prop or default
+        job_type: savedProgress.formData.job_type || job_type || "freelancer",
         answers: Array.isArray(savedProgress.formData.answers)
           ? savedProgress.formData.answers.map((answer) => answer || "")
           : new Array(initialQuestions.length).fill(""),
@@ -440,7 +415,6 @@ export default function InterviewPage({
           return acc;
         }, {}),
       };
-
       if (sanitizedFormData.answers.length !== initialQuestions.length) {
         const newAnswers = new Array(initialQuestions.length).fill("");
         for (
@@ -453,7 +427,6 @@ export default function InterviewPage({
         }
         sanitizedFormData.answers = newAnswers;
       }
-
       setFormData(sanitizedFormData);
       setTimeout(() => {
         setStep(savedProgress.step);
@@ -471,21 +444,17 @@ export default function InterviewPage({
     } catch (error) {
       console.error("Error clearing storage:", error);
     }
-
     setShowProgressPopup(false);
     setStep(1);
-
     toast.success("Starting fresh!", { icon: "✨" });
   };
 
-  // Add beforeunload event to save progress when user leaves page
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (step < 4) {
         saveProgress(step, formData);
       }
     };
-
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [step, formData, saveProgress]);
@@ -537,61 +506,150 @@ export default function InterviewPage({
         />
       </Head>
 
-      {showProgressPopup && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      {/* Replace the inline popup with ItemActionModal */}
+      <ItemActionModal
+        isOpen={showProgressPopup}
+        onClose={() => setShowProgressPopup(false)}
+        title="Continue Your EOI Application"
+        mode={mode}
+      >
+        <div className="space-y-8  max-w-lg mx-auto">
+          {/* Progress Indicator */}
           <div
-            className={`${
-              mode === "dark" ? "bg-gray-800" : "bg-white"
-            } p-6 rounded-lg shadow-xl max-w-md w-full mx-4`}
+            className={`relative p-6 rounded-2xl border-2 border-dashed transition-all duration-300 ${
+              mode === "dark"
+                ? "border-gray-600 bg-gray-800/50 backdrop-blur-sm"
+                : "border-gray-200 bg-gray-50/80 backdrop-blur-sm"
+            }`}
           >
-            <h2
-              className={`text-xl font-bold mb-4 ${
-                mode === "dark" ? "text-white" : "text-gray-900"
-              }`}
-            >
-              Continue from where you left off?
-            </h2>
-            <p
-              className={`mb-2 ${
-                mode === "dark" ? "text-gray-300" : "text-gray-600"
-              }`}
-            >
-              We found your previous progress from step {savedProgress?.step}.
-            </p>
-            <p
-              className={`mb-6 text-sm ${
-                mode === "dark" ? "text-gray-400" : "text-gray-500"
-              }`}
-            >
-              {savedProgress?.timestamp && (
-                <>
-                  Last saved:{" "}
-                  {new Date(savedProgress.timestamp).toLocaleString()}
-                </>
-              )}
-            </p>
-            <div className="flex justify-end gap-4">
-              <button
-                onClick={handleStartOver}
-                className={`px-4 py-2 rounded-lg ${
+            <div className="flex items-start gap-4">
+              <div
+                className={`flex-shrink-0 p-3 rounded-xl ${
                   mode === "dark"
-                    ? "bg-gray-700 text-white hover:bg-gray-600"
-                    : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                    ? "bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-400/30"
+                    : "bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200"
                 }`}
               >
-                Start Over
-              </button>
-              <button
-                onClick={handleResumeProgress}
-                className="px-4 py-2 bg-[#f05d23] text-white rounded-lg hover:bg-[#d94f1e]"
-              >
-                Continue from Step {savedProgress?.step}
-              </button>
+                <Icon
+                  icon="solar:bookmark-check-bold-duotone"
+                  className={`w-6 h-6 ${
+                    mode === "dark" ? "text-blue-400" : "text-blue-600"
+                  }`}
+                  aria-hidden="true"
+                />
+              </div>
+
+              <div className="flex-1 min-w-0">
+                <h3
+                  className={`text-lg font-semibold mb-2 ${
+                    mode === "dark" ? "text-gray-100" : "text-gray-900"
+                  }`}
+                >
+                  Application in Progress
+                </h3>
+
+                <p
+                  className={`text-base leading-relaxed ${
+                    mode === "dark" ? "text-gray-300" : "text-gray-700"
+                  }`}
+                >
+                  Your PAAN Expression of Interest is saved at{" "}
+                  <span className="font-semibold text-blue-400">
+                    Step {savedProgress?.step}
+                  </span>
+                  . Continue your application or start over with fresh
+                  information.
+                </p>
+
+                {savedProgress?.timestamp && (
+                  <div
+                    className={`flex items-center gap-2 mt-3 text-sm ${
+                      mode === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    <Icon
+                      icon="solar:history-2-linear"
+                      className="w-4 h-4 flex-shrink-0"
+                      aria-hidden="true"
+                    />
+                    <span>
+                      {new Date(savedProgress.timestamp).toLocaleDateString(
+                        "en-US",
+                        {
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        }
+                      )}
+                    </span>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      )}
 
+          {/* Action Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3">
+            {/* Start Over Button */}
+            <button
+              onClick={handleStartOver}
+              className={`group flex items-center justify-center w-full px-5 py-3 rounded-xl font-medium transition-all duration-300 border-2 hover:scale-[1.02] active:scale-[0.98] ${
+                mode === "dark"
+                  ? "border-gray-600 bg-gray-800 text-gray-300 hover:border-gray-500 hover:bg-gray-700 hover:text-white"
+                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50 hover:text-gray-900 shadow-sm hover:shadow-md"
+              }`}
+            >
+              <Icon
+                icon="solar:restart-bold-duotone"
+                className="w-5 h-5 mr-2.5 group-hover:rotate-180 transition-transform duration-500"
+                aria-hidden="true"
+              />
+              Start Over
+            </button>
+
+            {/* Continue Button */}
+            <button
+              onClick={handleResumeProgress}
+              className="group flex items-center justify-center w-full px-5 py-3 bg-gradient-to-r from-blue-400 to-sky-900 text-white rounded-xl font-medium hover:from-blue-600 hover:to-sky-900 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
+              <Icon
+                icon="solar:play-circle-bold-duotone"
+                className="w-5 h-5 mr-2.5 group-hover:scale-110 transition-transform duration-300 relative z-10"
+                aria-hidden="true"
+              />
+              <span className="relative z-10">Continue Application</span>
+            </button>
+          </div>
+
+          {/* Optional: Quick tip */}
+          <div
+            className={`flex items-start gap-3 p-4 rounded-xl ${
+              mode === "dark"
+                ? "bg-blue-500/10 border border-blue-400/20"
+                : "bg-blue-50 border border-blue-100"
+            }`}
+          >
+            <Icon
+              icon="solar:lightbulb-bolt-linear"
+              className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
+                mode === "dark" ? "text-blue-400" : "text-blue-600"
+              }`}
+              aria-hidden="true"
+            />
+            <p
+              className={`text-sm leading-relaxed ${
+                mode === "dark" ? "text-blue-300" : "text-blue-700"
+              }`}
+            >
+              <strong>Secure & Private:</strong> Your EOI information is
+              automatically saved and encrypted as you progress through the
+              application.
+            </p>
+          </div>
+        </div>
+      </ItemActionModal>
       <Header
         mode={mode}
         toggleMode={toggleMode}
@@ -601,7 +659,7 @@ export default function InterviewPage({
         answeredQuestions={answeredQuestions}
         totalQuestions={totalQuestions}
         isStep1Complete={isStep1Complete()}
-        job_type={formData.job_type || job_type || "freelancer"} // Fallback to prop
+        job_type={formData.job_type || job_type || "freelancer"}
       />
 
       <div
@@ -732,14 +790,11 @@ export default function InterviewPage({
   );
 }
 
-
 export async function getServerSideProps(context) {
-  const { getInterviewPageProps } = await import(
-    "utils/getPropsUtils"
-  );
+  const { getInterviewPageProps } = await import("utils/getPropsUtils");
   return await getInterviewPageProps({
     req: context.req,
     res: context.res,
-    query: context.query, // Pass query parameters
+    query: context.query,
   });
 }

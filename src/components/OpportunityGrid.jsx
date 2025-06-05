@@ -82,39 +82,22 @@ export default function OpportunityGrid({
           return (
             <div
               key={opp.id}
-              className={`relative flex flex-col rounded-2xl border backdrop-blur-md bg-white/80 dark:bg-gray-800/50 hover:shadow-2xl transition-all duration-300 overflow-hidden transform hover:scale-[1.01] ${
+              className={`relative flex flex-col rounded-2xl border backdrop-blur-md  dark:bg-gray-800/50 transition-all duration-300 overflow-hidden transform hover:scale-[1.01] ${
                 mode === "dark"
-                  ? "border-gray-700/50 hover:border-gray-600"
-                  : "border-gray-200 hover:border-gray-300"
+                  ? "bg-gradient-to-br from-gray-800 to-gray-700 border-gray-600 shadow-md hover:shadow-xl text-white"
+                  : "bg-gradient-to-br from-white to-blue-50 border-blue-100 shadow-lg hover:shadow-xl text-gray-800"
               }`}
             >
               {/* Header */}
               <div className="p-6 pb-4">
                 <div className="mb-4">
-                  <h3
-                    className={`text-xl font-semibold tracking-tight leading-snug transition-colors duration-200 group-hover:text-blue-600 ${
-                      mode === "dark" ? "text-white" : "text-gray-900"
-                    }`}
-                  >
+                  <h3 className="font-bold text-lg mb-1 truncate pr-6 max-w-full">
                     {opp.title}
                   </h3>
-                  <div className="mt-2">
-                    <span
-                      className={`inline-flex items-center px-3 py-1.5 rounded-full text-sm font-medium border ${tierColors.bg} ${tierColors.text} ${tierColors.border} shadow-sm`}
-                    >
-                      <Icon
-                        icon={tierIcon}
-                        className={`w-4 h-4 mr-1.5 ${tierColors.text}`}
-                      />
-                      {opp.tier_restriction
-                        ? opp.tier_restriction.split("(")[0].trim()
-                        : "N/A"}
-                    </span>
-                  </div>
                 </div>
 
                 {/* Location and Type */}
-                <div className="flex flex-wrap items-center gap-6 mb-4 text-sm text-gray-600 dark:text-gray-300">
+                <div className="flex flex-wrap items-center align-middle gap-2 mb-4 text-sm text-gray-600 dark:text-gray-300">
                   <div className="flex items-center gap-1">
                     <Icon icon="heroicons:map-pin" className="w-4 h-4" />
                     <span>{opp.location || "Remote"}</span>
@@ -122,6 +105,16 @@ export default function OpportunityGrid({
                   <div className="flex items-center gap-1">
                     <Icon icon="heroicons:briefcase" className="w-4 h-4" />
                     <span>{opp.job_type}</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span
+                      className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium   shadow-sm`}
+                    >
+                      <Icon icon={tierIcon} className={`w-4 h-4 mr-1.5`} />
+                      {opp.tier_restriction
+                        ? opp.tier_restriction.split("(")[0].trim()
+                        : "N/A"}
+                    </span>
                   </div>
                 </div>
               </div>

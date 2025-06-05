@@ -127,7 +127,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
           </button>
         </div>
         <p
-          className={`mb-10 italic ${
+          className={`mb-6 italic ${
             mode === "dark" ? "text-gray-400" : "text-gray-600"
           }`}
         >

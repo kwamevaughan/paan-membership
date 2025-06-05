@@ -219,9 +219,82 @@ export default function InterviewPage({
   const handleNext = async () => {
     if (step === 1) {
       const isValid = validateForm(formData, step);
-      if (!isValid) {
-        toast.error("Please fill out all required fields correctly.", {
+      if (!isValid || !isStep1Complete()) {
+        // Collect missing and invalid fields
+        const missingFields = [];
+        const invalidFields = Object.keys(errors).filter((key) => errors[key]);
+
+        if (formData.job_type === "agency") {
+          if (!formData.agencyName) missingFields.push("Agency Name");
+          if (!formData.yearEstablished) missingFields.push("Year Established");
+          if (!formData.headquartersLocation)
+            missingFields.push("Headquarters Country");
+          if (!formData.registeredOfficeAddress)
+            missingFields.push("Registered Office Address");
+          if (!formData.websiteUrl) missingFields.push("Website URL");
+          if (!formData.primaryContactName)
+            missingFields.push("Primary Contact Name");
+          if (!formData.primaryContactRole)
+            missingFields.push("Primary Contact Role");
+          if (!formData.primaryContactEmail)
+            missingFields.push("Primary Contact Email");
+          if (!formData.primaryContactPhone)
+            missingFields.push("Primary Contact Phone");
+          if (!formData.primaryContactLinkedin)
+            missingFields.push("LinkedIn URL");
+        } else if (formData.job_type === "freelancer") {
+          if (!formData.primaryContactName) missingFields.push("Full Name");
+          if (!formData.primaryContactEmail)
+            missingFields.push("Email Address");
+          if (!formData.phoneNumber) missingFields.push("Phone Number");
+          if (!formData.countryOfResidence)
+            missingFields.push("Country of Residence");
+          if (!formData.languagesSpoken) missingFields.push("Contact");
+        }
+
+        // Format the error message
+        let errorMessage = "Please address the following issues:";
+        if (missingFields.length > 0) {
+          errorMessage += `\n\n- Missing: ${missingFields.join(", ")}`;
+        }
+        if (invalidFields.length > 0) {
+          const invalidFieldNames = invalidFields.map((key) => {
+            if (formData.job_type === "agency") {
+              return (
+                {
+                  agencyName: "Agency Name",
+                  yearEstablished: "Year Established",
+                  headquartersLocation: "Headquarters Country",
+                  registeredOfficeAddress: "Registered Office Address",
+                  websiteUrl: "Website URL",
+                  primaryContactName: "Primary Contact Name",
+                  primaryContactRole: "Primary Contact Role",
+                  primaryContactEmail: "Primary Contact Email",
+                  primaryContactPhone: "Primary Contact Phone",
+                  primaryContactLinkedin: "LinkedIn URL",
+                }[key] || key
+              );
+            } else {
+              return (
+                {
+                  primaryContactName: "Full Name",
+                  primaryContactEmail: "Email Address",
+                  phoneNumber: "Phone Number",
+                  countryOfResidence: "Country of Residence",
+                  languagesSpoken: "Contact",
+                }[key] || key
+              );
+            }
+          });
+          errorMessage += `\n\n- Invalid: ${invalidFieldNames.join(", ")}`;
+        }
+
+        toast.error(errorMessage, {
           icon: "⚠️",
+          duration: 5000,
+          style: {
+            whiteSpace: "pre-line",
+          },
         });
         return;
       }
@@ -262,11 +335,11 @@ export default function InterviewPage({
 
       if (
         !formData.companyRegistration ||
-        !formData.portfolioWork ||
+        !formData.workingPortfolio ||
         !formData.agencyProfile ||
         !formData.taxRegistration
       ) {
-        toast.error("Please provide all required documents.", { icon: "⚠️" });
+        toast.error("Please provide all required documents.", { icon: " ❌" });
         setIsSubmitting(false);
         return;
       }
@@ -274,12 +347,13 @@ export default function InterviewPage({
       if (
         (formData.companyRegistration &&
           formData.companyRegistration.size > maxFileSize) ||
-        (formData.portfolioWork && formData.portfolioWork.size > maxFileSize) ||
+        (formData.workingPortfolio &&
+          formData.workingPortfolio.size > maxFileSize) ||
         (formData.agencyProfile && formData.agencyProfile.size > maxFileSize) ||
         (formData.taxRegistration &&
           formData.taxRegistration.size > maxFileSize)
       ) {
-        toast.error("File size exceeds 5MB limit.", { icon: "⚠️" });
+        toast.error("File size exceeds 5MB limit.", { icon: " ❌" });
         setIsSubmitting(false);
         return;
       }
@@ -627,25 +701,23 @@ export default function InterviewPage({
                   </button>
                   <button
                     onClick={handleNext}
-                    disabled={
-                      isSubmitting || (step === 1 && !isStep1Complete())
-                    }
-                    className={`flex items-center justify-center px-4 py-2 bg-blue-400 text-white rounded-lg hover:bg-blue-500 disabled:bg-gray-300 disabled:text-gray-600 transition-all duration-200 shadow-md`}
+                    disabled={isSubmitting}
+                    className={`flex items-center justify-center px-4 py-2 bg-[#172840] text-white rounded-lg hover:bg-sky-900 disabled:bg-gray-300 disabled:text-gray-600 transition-all duration-200 shadow-md`}
                   >
-                    {step === 3 && formData.job_type === "agency" ? ( // Use "Upload & Submit" for agencies in step 3
+                    {step === 3 && formData.workingPortfolio === "agency" ? (
                       <>
                         Upload & Submit
-                        <Icon icon="mdi:send" className="ml-2 w-5 h-5" />
+                        <Icon icon="chevron-right" className="ml-2 h-4 w-4" />
                       </>
-                    ) : step === 3 && formData.job_type === "freelancer" ? ( // Use "Submit" for freelancers in step 3
+                    ) : step === 3 ? (
                       <>
                         Submit
-                        <Icon icon="mdi:send" className="ml-2 w-5 h-5" />
+                        <Icon icon="chevron-right" className="ml-2 h-4 w-4" />
                       </>
                     ) : (
                       <>
                         Next
-                        <Icon icon="mdi:arrow-right" className="ml-2 w-5 h-5" />
+                        <Icon icon="chevron-right" className="ml-2 h-4 w-4" />
                       </>
                     )}
                   </button>

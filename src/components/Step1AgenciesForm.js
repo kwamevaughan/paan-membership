@@ -16,7 +16,22 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
 
   useEffect(() => {
     setIsMounted(true);
-  }, []);
+    // Set default phone number country code on page load if phone is empty
+    if (!formData.primaryContactPhone && formData.headquartersLocation) {
+      const defaultCode = getDialCode(formData.headquartersLocation) || "+254";
+      handleChange({
+        target: {
+          name: "primaryContactPhone",
+          value: defaultCode,
+        },
+      });
+    }
+  }, [
+    formData.headquartersLocation,
+    formData.primaryContactPhone,
+    getDialCode,
+    handleChange,
+  ]);
 
   if (!isMounted || loading) {
     return null;
@@ -68,6 +83,8 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
     }),
   };
 
+  
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
 
@@ -77,6 +94,17 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
         target: {
           name,
           value: cleanedValue ? `https://${cleanedValue}` : "",
+        },
+      });
+    } else if (name === "primaryContactPhone") {
+      // Allow only digits and a leading '+' for the country code
+      const cleanedValue = value
+        .replace(/[^0-9+]/g, "")
+        .replace(/\+(?=.*\+)/g, "");
+      handleChange({
+        target: {
+          name,
+          value: cleanedValue,
         },
       });
     } else {
@@ -94,13 +122,16 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
 
     // Update phone number only if it's empty or starts with the previous country code
     const currentPhone = formData.primaryContactPhone || "";
-    const prevCountryCode = getDialCode(formData.headquartersLocation) || "+254";
+    const prevCountryCode =
+      getDialCode(formData.headquartersLocation) || "+254";
     if (!currentPhone || currentPhone.startsWith(prevCountryCode)) {
       const phoneWithoutCode = currentPhone.replace(/^\+\d+\s*/, "").trim();
       handleChange({
         target: {
           name: "primaryContactPhone",
-          value: phoneWithoutCode ? `${countryCode} ${phoneWithoutCode}` : countryCode,
+          value: phoneWithoutCode
+            ? `${countryCode} ${phoneWithoutCode}`
+            : countryCode,
         },
       });
     }
@@ -267,7 +298,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
               <Select
                 id="headquarters-location-select"
                 value={
-                  formData.headquartersLocation                    
+                  formData.headquartersLocation
                     ? {
                         label: formData.headquartersLocation,
                         value: formData.headquartersLocation,
@@ -533,8 +564,11 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                 id="primaryContactPhone"
                 value={formData.primaryContactPhone}
                 onChange={handleInputChange}
-                placeholder={`e.g., ${getDialCode(formData.headquartersLocation) || "+254"} 701 850 850`}
+                placeholder={`e.g., ${
+                  getDialCode(formData.headquartersLocation) || "+254"
+                } 701 850 850`}
                 required
+                pattern="[0-9+]*"
                 className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
                   mode === "dark"
                     ? `bg-gray-700 text-white border-gray-600 ${
@@ -580,22 +614,24 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                     }`
               }`}
             >
-              <Icon
-                icon="mdi:linkedin"
-                className="text-blue-400 w-5 h-5"
-              />
+              <Icon icon="mdi:linkedin" className="text-blue-400 w-5 h-5" />
               <span className="text-sm text-gray-500 pl-3 pr-1">https://</span>
               <input
                 type="text"
                 name="primaryContactLinkedin"
                 id="primaryContactLinkedin"
-                value={formData.primaryContactLinkedin.replace(/^https?:\/\//, "")}
+                value={formData.primaryContactLinkedin.replace(
+                  /^https?:\/\//,
+                  ""
+                )}
                 onChange={handleInputChange}
                 placeholder="linkedin.com/in/johndoe"
                 required
                 className={`w-full pl-1 pr-4 py-2 bg-transparent focus:outline-none focus:ring-0 ${
                   mode === "dark"
-                    ? `text-white ${errors.primaryContactLinkedin ? "border-red-500" : ""}`
+                    ? `text-white ${
+                        errors.primaryContactLinkedin ? "border-red-500" : ""
+                      }`
                     : `text-[#231812] ${
                         errors.primaryContactLinkedin ? "border-red-500" : ""
                       }`

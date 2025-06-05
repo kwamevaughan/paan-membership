@@ -106,13 +106,13 @@ export default function Freelancers({ initialOpenings }) {
           {selectedOpening && (
             <button
               onClick={handleProceed}
-              className="bg-[#172840] hover:bg-[#6FA1B7] text-white mt-4 flex items-center mx-auto px-8 py-3 rounded-full font-medium text-sm transition-all duration-300"
+              className="bg-[#172840] hover:bg-[#6FA1B7] text-white mt-4 flex items-center mx-auto px-8 py-3 rounded-full font-medium text-sm transition duration-300"
             >
               Proceed
               <Icon
                 icon="tabler:arrow-up-right"
                 width={20}
-                height={30}
+                height={20}
                 className="ml-2"
               />
             </button>

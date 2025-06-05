@@ -15,6 +15,25 @@ export const useFormValidation = () => {
     "French – Intermediate",
   ];
 
+  // User-friendly field names for toast messages
+  const fieldNames = {
+    agencyName: "Agency Name",
+    yearEstablished: "Year Established",
+    headquartersLocation: "Headquarters Location",
+    registeredOfficeAddress: "Registered Office Address",
+    websiteUrl: "Website URL",
+    primaryContactName: "Full Name",
+    primaryContactRole: "Primary Contact Role",
+    primaryContactEmail: "Email Address",
+    primaryContactPhone: "Phone Number",
+    primaryContactLinkedin: "LinkedIn URL",
+    phoneNumber: "Phone Number",
+    countryOfResidence: "Country of Residence",
+    languagesSpoken: "Languages Spoken",
+    companyRegistration: "Company Registration",
+    taxRegistration: "Tax Registration",
+  };
+
   const validateField = (name, value, formData = {}) => {
     let error = "";
     switch (name) {
@@ -115,7 +134,7 @@ export const useFormValidation = () => {
     const fieldsToValidate = [];
 
     if (step === 1) {
-      if (formData.job_type === "agencies") {
+      if (formData.job_type === "agency") {
         fieldsToValidate.push(
           "agencyName",
           "yearEstablished",
@@ -128,7 +147,7 @@ export const useFormValidation = () => {
           "primaryContactPhone",
           "primaryContactLinkedin"
         );
-      } else if (formData.job_type === "freelancers") {
+      } else if (formData.job_type === "freelancer") {
         fieldsToValidate.push(
           "primaryContactName",
           "primaryContactEmail",
@@ -137,6 +156,15 @@ export const useFormValidation = () => {
           "languagesSpoken"
         );
       }
+
+      // Validate each field and collect errors
+      fieldsToValidate.forEach((field) => {
+        const value = formData[field];
+        const error = validateField(field, value, formData);
+        if (error) {
+          newErrors[field] = error;
+        }
+      });
     } else if (step === 3 && formData.job_type === "agencies") {
       if (!formData.companyRegistration) {
         newErrors.companyRegistration = "Company registration is required";
@@ -153,15 +181,22 @@ export const useFormValidation = () => {
       }
     }
 
-    fieldsToValidate.forEach((field) => {
-      const error = validateField(field, formData[field], formData);
-      if (error) {
-        newErrors[field] = error;
-      }
-    });
-
+    // Update errors state
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+
+    // Log for debugging
+    console.log("Validation Errors:", newErrors);
+
+    // Map errors to user-friendly names for toast
+    const toastErrors = Object.keys(newErrors).reduce((acc, key) => {
+      acc[fieldNames[key] || key] = newErrors[key];
+      return acc;
+    }, {});
+
+    return {
+      isValid: Object.keys(newErrors).length === 0,
+      toastErrors,
+    };
   };
 
   return { errors, validateField, validateForm };

@@ -494,7 +494,7 @@ export default function Step2Questions({
     }
   };
 
-  const buttonStyles = `px-6 py-2 bg-[#f05d23] text-white rounded-lg hover:bg-[#d94f1e] transition shadow-md`;
+  const buttonStyles = `px-6 py-2 bg-[#172840] text-white rounded-lg hover:bg-sky-900 transition shadow-md`;
   const isNextDisabled =
     currentCategoryIndex === validCategories.length - 1 &&
     currentQuestionIndex === currentQuestions.length - 1

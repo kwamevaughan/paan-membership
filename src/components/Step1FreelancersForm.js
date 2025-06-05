@@ -4,9 +4,12 @@ import Link from "next/link";
 import Select from "react-select";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { useCountry } from "@/hooks/useCountry";
+import ItemActionModal from "./ItemActionModal";
+import FreelancerInstructions from "./FreelancerInstructions";
 
 export default function Step1FreelancersForm({ formData, handleChange, mode }) {
   const [isMounted, setIsMounted] = useState(false);
+  const [isInstructionsOpen, setIsInstructionsOpen] = useState(false);
   const { countryOptions, getDialCode } = useCountry();
   const { errors, validateField } = useFormValidation();
   const [dialCode, setDialCode] = useState("");
@@ -14,7 +17,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
   // Languages and proficiency levels
   const languages = ["English", "French"];
   const proficiencyLevels = ["Fluent", "Intermediate"];
-  const borderColors = ["border-blue-500", "border-green-500"];
+  const borderColors = ["border-[#172840]", "border-[#172840]"];
 
   useEffect(() => {
     setIsMounted(true);
@@ -35,13 +38,13 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
       backgroundColor: mode === "dark" ? "#374151" : "#F9FAFB",
       borderColor: mode === "dark" ? "#4B5563" : "#D1D5DB",
       color: mode === "dark" ? "#FFFFFF" : "#231812",
-      boxShadow: state.isFocused ? "0 0 0 2px #f05d23" : "none",
-      borderWidth: errors.countryOfResidence ? "2px" : "1px",
+      boxShadow: state.isFocused ? "0 0 0 2px #60a5fa" : "none",
+      borderWidth: errors.headquartersLocation ? "2px" : "1px",
       borderStyle: "solid",
       borderRadius: "0.5rem",
       padding: "0.5rem 0",
       "&:hover": {
-        borderColor: mode === "dark" ? "#6B7280" : "#9CA3AF",
+        borderColor: mode === "dark" ? "#6B7280" : "#60a5fa",
       },
     }),
     input: (provided) => ({
@@ -55,18 +58,18 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
     menu: (provided) => ({
       ...provided,
       backgroundColor: mode === "dark" ? "#374151" : "#FFFFFF",
-      color: mode === "dark" ? "#FFFFFF" : "#231812",
+      color: mode === "dark" ? "#FFFFFF" : "#000",
     }),
     option: (provided, state) => ({
       ...provided,
       backgroundColor: state.isSelected
-        ? "#f05d23"
+        ? "#afd2fe"
         : mode === "dark"
         ? "#374151"
         : "#FFFFFF",
-      color: state.isSelected || mode === "dark" ? "#FFFFFF" : "#231812",
+      color: state.isSelected || mode === "dark" ? "#000" : "#000",
       "&:hover": {
-        backgroundColor: mode === "dark" ? "#4B5563" : "#F3F4F6",
+        backgroundColor: mode === "dark" ? "#4B5563" : "#F9FAFB",
       },
     }),
     placeholder: (provided) => ({
@@ -110,11 +113,21 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
 
   const handlePhoneChange = (e) => {
     let { value } = e.target;
-    if (dialCode && !value.startsWith(dialCode)) {
-      value = `${dialCode} ${value.trim()}`;
+
+    // Remove any characters that are not digits, "+", or spaces
+    let cleanedValue = value.replace(/[^0-9+\s]/g, "");
+
+    // Ensure the dial code is preserved
+    if (dialCode && !cleanedValue.startsWith(dialCode)) {
+      cleanedValue = `${dialCode} ${cleanedValue.trim()}`;
     }
-    handleChange({ target: { name: "phoneNumber", value } });
-    validateField("phoneNumber", value);
+
+    // Prevent multiple "+" signs
+    cleanedValue = cleanedValue.replace(/\+{2,}/g, "+");
+
+    // Update form data and validate
+    handleChange({ target: { name: "phoneNumber", value: cleanedValue } });
+    validateField("phoneNumber", cleanedValue);
   };
 
   const handleLanguageToggle = (language) => {
@@ -151,26 +164,60 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
   return (
     <div className="animate-fade-in max-w-2xl mx-auto">
       <div
-        className={`rounded-lg px-2 py-2 ${
-          mode === "dark" ? "bg-gray-800 text-white" : "bg-white text-[#231812]"
+        className={`px-4 py-4 ${
+          mode === "dark"
+            ? "bg-gradient-to-r from-gray-800 to-gray-900 border-gray-700"
+            : "bg-gradient-to-r from-gray-50 to-white border-gray-100"
         }`}
       >
-        <div className="flex items-center justify-center mb-6">
-          <Icon icon="mdi:user" className="w-8 h-8 text-[#f05d23] mr-2" />
-          <h2 className="text-3xl font-bold text-center">
-            Personal Information
-          </h2>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <div
+              className={`p-3 rounded-xl ${
+                mode === "dark"
+                  ? "bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-400/30"
+                  : "bg-gradient-to-br from-blue-100 to-purple-100 border border-blue-200"
+              }`}
+            >
+              <Icon
+                icon="mdi:handshake"
+                className={`w-6 h-6 ${
+                  mode === "dark" ? "text-blue-400" : "text-blue-600"
+                }`}
+              />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold mb-1">Let's Get Started</h2>
+              <p
+                className={`text-sm leading-relaxed ${
+                  mode === "dark" ? "text-gray-300" : "text-gray-700"
+                }`}
+              >
+                Welcome to the PAAN Certified Freelancers Program! Please
+                provide your details to begin.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setIsInstructionsOpen(true)}
+            className={`group flex items-center px-5 py-3 rounded-xl font-medium transition-all duration-300 border-2 hover:scale-[1.02] active:scale-[0.98] ${
+              mode === "dark"
+                ? "border-blue-400/30 bg-blue-900/30 text-blue-300 hover:bg-blue-800/40 hover:border-blue-400/50"
+                : "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-300 shadow-sm hover:shadow-md"
+            }`}
+            aria-label="View application instructions"
+          >
+            <Icon
+              icon="solar:question-circle-bold-duotone"
+              className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300"
+            />
+            Instructions
+          </button>
         </div>
-        <p
-          className={`text-center mb-8 italic ${
-            mode === "dark" ? "text-gray-400" : "text-gray-600"
-          }`}
-        >
-          Welcome to the PAAN Certified Freelancers Program! Please provide your
-          details to begin.
-        </p>
+
         <div className="space-y-6 max-h-[50vh] overflow-y-auto">
-          <h3 className="text-lg font-bold">Your Details</h3>
+          <h3 className="text-lg font-bold">Personal information</h3>
 
           {/* Full Name */}
           <div className="relative">
@@ -183,7 +230,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
             <div className="flex items-center">
               <Icon
                 icon="mdi:user"
-                className="absolute left-3 text-[#f05d23] w-5 h-5"
+                className="absolute left-3 text-blue-400 w-5 h-5"
               />
               <input
                 type="text"
@@ -227,7 +274,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
             <div className="flex items-center">
               <Icon
                 icon="mdi:email"
-                className="absolute left-3 text-[#f05d23] w-5 h-5"
+                className="absolute left-3 text-blue-400 w-5 h-5"
               />
               <input
                 type="email"
@@ -285,7 +332,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
             >
               <Icon
                 icon="mdi:map-marker"
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#f05d23] w-5 h-5 z-10"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400 w-5 h-5 z-10"
               />
               <Select
                 id="country-of-residence-select"
@@ -327,7 +374,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
             <div className="flex items-center">
               <Icon
                 icon="mdi:phone"
-                className="absolute left-3 text-[#f05d23] w-5 h-5"
+                className="absolute left-3 text-blue-400 w-5 h-5"
               />
               <input
                 type="tel"
@@ -340,18 +387,19 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
                     ? `${dialCode} 701 850 850`
                     : "e.g., +254 701 850 850"
                 }
+                pattern="\+?[0-9\s]+"
                 required
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200 ${
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200 ${
                   mode === "dark"
                     ? `bg-gray-700 text-white border-gray-600 ${
                         errors.phoneNumber
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-400"
                       }`
                     : `bg-gray-50 text-[#231812] border-gray-300 ${
                         errors.phoneNumber
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-400"
                       }`
                 }`}
               />
@@ -391,10 +439,10 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
                         borderColors[idx % borderColors.length]
                       } ${
                         isSelected
-                          ? "bg-[#f05d23] border-[#f05d23] text-white shadow-md"
+                          ? "bg-[#172840] border-[#172840] text-white shadow-md"
                           : mode === "dark"
                           ? "bg-gray-700 text-white hover:bg-gray-600 hover:border-[#d94f1e]"
-                          : "bg-gray-50 text-[#231812] hover:bg-gray-100 hover:border-[#d94f1e]"
+                          : "bg-gray-50 text-[#231812] hover:bg-gray-100 hover:border-blue-400"
                       }`}
                     >
                       <div className="flex items-center">
@@ -452,7 +500,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
             <div className="flex items-center">
               <Icon
                 icon="mdi:briefcase"
-                className="absolute left-3 text-[#f05d23] w-5 h-5"
+                className="absolute left-3 text-blue-400 w-5 h-5"
               />
               <input
                 type="text"
@@ -478,6 +526,17 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
           </div>
         </div>
       </div>
+      <ItemActionModal
+        isOpen={isInstructionsOpen}
+        onClose={() => setIsInstructionsOpen(false)}
+        title="Application Instructions"
+        mode={mode}
+      >
+        <FreelancerInstructions
+          mode={mode}
+          setIsInstructionsOpen={setIsInstructionsOpen}
+        />
+      </ItemActionModal>
     </div>
   );
 }

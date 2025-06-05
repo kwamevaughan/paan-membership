@@ -17,7 +17,7 @@ import { useRouter } from "next/router";
 import { supabase } from "@/lib/supabase";
 import Head from "next/head";
 import { useCategories } from "@/hooks/useCategories";
-import ItemActionModal from "@/components/ItemActionModal"; // Add this import
+import ItemActionModal from "@/components/ItemActionModal";
 
 export default function InterviewPage({
   mode,
@@ -50,8 +50,6 @@ export default function InterviewPage({
   const fileUploadProps = useFileUpload(formData, setFormData);
 
   const totalQuestions = questions.length;
-
-  // ... (rest of your existing useEffect and helper functions remain unchanged)
 
   // Initialize formData with server-side props
   useEffect(() => {
@@ -201,79 +199,25 @@ export default function InterviewPage({
 
   const handleNext = async () => {
     if (step === 1) {
-      const isValid = validateForm(formData, step);
-      if (!isValid || !isStep1Complete()) {
-        const missingFields = [];
-        const invalidFields = Object.keys(errors).filter((key) => errors[key]);
-        if (formData.job_type === "agency") {
-          if (!formData.agencyName) missingFields.push("Agency Name");
-          if (!formData.yearEstablished) missingFields.push("Year Established");
-          if (!formData.headquartersLocation)
-            missingFields.push("Headquarters Country");
-          if (!formData.registeredOfficeAddress)
-            missingFields.push("Registered Office Address");
-          if (!formData.websiteUrl) missingFields.push("Website URL");
-          if (!formData.primaryContactName)
-            missingFields.push("Primary Contact Name");
-          if (!formData.primaryContactRole)
-            missingFields.push("Primary Contact Role");
-          if (!formData.primaryContactEmail)
-            missingFields.push("Primary Contact Email");
-          if (!formData.primaryContactPhone)
-            missingFields.push("Primary Contact Phone");
-          if (!formData.primaryContactLinkedin)
-            missingFields.push("LinkedIn URL");
-        } else if (formData.job_type === "freelancer") {
-          if (!formData.primaryContactName) missingFields.push("Full Name");
-          if (!formData.primaryContactEmail)
-            missingFields.push("Email Address");
-          if (!formData.phoneNumber) missingFields.push("Phone Number");
-          if (!formData.countryOfResidence)
-            missingFields.push("Country of Residence");
-          if (!formData.languagesSpoken) missingFields.push("Contact");
-        }
-        let errorMessage = "Please address the following issues:";
-        if (missingFields.length > 0) {
-          errorMessage += `\n\n- Missing: ${missingFields.join(", ")}`;
-        }
-        if (invalidFields.length > 0) {
-          const invalidFieldNames = invalidFields.map((key) => {
-            if (formData.job_type === "agency") {
-              return (
-                {
-                  agencyName: "Agency Name",
-                  yearEstablished: "Year Established",
-                  headquartersLocation: "Headquarters Country",
-                  registeredOfficeAddress: "Registered Office Address",
-                  websiteUrl: "Website URL",
-                  primaryContactName: "Primary Contact Name",
-                  primaryContactRole: "Primary Contact Role",
-                  primaryContactEmail: "Primary Contact Email",
-                  primaryContactPhone: "Primary Contact Phone",
-                  primaryContactLinkedin: "LinkedIn URL",
-                }[key] || key
-              );
-            } else {
-              return (
-                {
-                  primaryContactName: "Full Name",
-                  primaryContactEmail: "Email Address",
-                  phoneNumber: "Phone Number",
-                  countryOfResidence: "Country of Residence",
-                  languagesSpoken: "Contact",
-                }[key] || key
-              );
-            }
-          });
-          errorMessage += `\n\n- Invalid: ${invalidFieldNames.join(", ")}`;
-        }
-        toast.error(errorMessage, {
-          icon: "⚠️",
-          duration: 5000,
-          style: {
-            whiteSpace: "pre-line",
-          },
-        });
+      const { isValid, toastErrors } = validateForm(formData, step);
+      console.log("Form Data:", formData); // Debug formData
+      console.log("Validation Result:", { isValid, toastErrors }); // Debug validation
+      if (!isValid) {
+        const errorMessage = Object.entries(toastErrors)
+          .map(([field, error]) => `${field}: ${error}`)
+          .join("\n");
+        toast.error(
+          errorMessage
+            ? `Please address the following issues:\n${errorMessage}`
+            : "An unexpected error occurred.",
+          {
+            icon: "⚠️",
+            duration: 5000,
+            style: {
+              whiteSpace: "pre-line",
+            },
+          }
+        );
         return;
       }
       setStep(2);
@@ -311,12 +255,13 @@ export default function InterviewPage({
       setIsSubmitting(true);
       const maxFileSize = 5 * 1024 * 1024;
       if (
-        !formData.companyRegistration ||
-        !formData.workingPortfolio ||
-        !formData.agencyProfile ||
-        !formData.taxRegistration
+        formData.job_type === "agency" &&
+        (!formData.companyRegistration ||
+          !formData.workingPortfolio ||
+          !formData.agencyProfile ||
+          !formData.taxRegistration)
       ) {
-        toast.error("Please provide all required documents.", { icon: " ❌" });
+        toast.error("Please provide all required documents.", { icon: "❌" });
         setIsSubmitting(false);
         return;
       }
@@ -329,7 +274,7 @@ export default function InterviewPage({
         (formData.taxRegistration &&
           formData.taxRegistration.size > maxFileSize)
       ) {
-        toast.error("File size exceeds 5MB limit.", { icon: " ❌" });
+        toast.error("File size exceeds 5MB limit.", { icon: "❌" });
         setIsSubmitting(false);
         return;
       }
@@ -506,15 +451,13 @@ export default function InterviewPage({
         />
       </Head>
 
-      {/* Replace the inline popup with ItemActionModal */}
       <ItemActionModal
         isOpen={showProgressPopup}
         onClose={() => setShowProgressPopup(false)}
         title="Continue Your EOI Application"
         mode={mode}
       >
-        <div className="space-y-8  max-w-lg mx-auto">
-          {/* Progress Indicator */}
+        <div className="space-y-8 max-w-lg mx-auto">
           <div
             className={`relative p-6 rounded-2xl border-2 border-dashed transition-all duration-300 ${
               mode === "dark"
@@ -589,9 +532,7 @@ export default function InterviewPage({
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div className="flex flex-col sm:flex-row gap-3">
-            {/* Start Over Button */}
             <button
               onClick={handleStartOver}
               className={`group flex items-center justify-center w-full px-5 py-3 rounded-xl font-medium transition-all duration-300 border-2 hover:scale-[1.02] active:scale-[0.98] ${
@@ -608,7 +549,6 @@ export default function InterviewPage({
               Start Over
             </button>
 
-            {/* Continue Button */}
             <button
               onClick={handleResumeProgress}
               className="group flex items-center justify-center w-full px-5 py-3 bg-gradient-to-r from-blue-400 to-sky-900 text-white rounded-xl font-medium hover:from-blue-600 hover:to-sky-900 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden"
@@ -623,7 +563,6 @@ export default function InterviewPage({
             </button>
           </div>
 
-          {/* Optional: Quick tip */}
           <div
             className={`flex items-start gap-3 p-4 rounded-xl ${
               mode === "dark"

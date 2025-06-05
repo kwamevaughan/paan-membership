@@ -161,7 +161,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
               : "bg-gradient-to-r from-gray-50 to-white border-gray-100"
           }`}
         >
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <div
                 className={`p-3 rounded-xl ${

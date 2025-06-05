@@ -5,7 +5,7 @@ export const useFormValidation = () => {
 
   const nameRegex = /^[a-zA-Z\s'-]{2,}$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const phoneRegex = /^\+?[\d\s-]{10,}$/;
+  const phoneRegex = /^\+\d{1,4}\s?\d{7,}$/;
   const urlRegex = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-./?%&=]*)?$/;
 
   const validLanguageOptions = [
@@ -83,7 +83,8 @@ export const useFormValidation = () => {
         if (!value) {
           error = "Phone number is required";
         } else if (!phoneRegex.test(value)) {
-          error = "Please enter a valid phone number";
+          error =
+            "Please enter a valid phone number with country code (e.g., +254 701 850 850)";
         }
         break;
       case "languagesSpoken":

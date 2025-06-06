@@ -111,11 +111,10 @@ export default async function handler(req, res) {
       companyRegistration,
       portfolioWork,
       agencyProfile,
-      taxRegistration,
+      portfolioLinks,
       companyRegistrationMimeType,
       portfolioWorkMimeType,
       agencyProfileMimeType,
-      taxRegistrationMimeType,
       country,
       device,
       submittedAt,
@@ -145,21 +144,18 @@ export default async function handler(req, res) {
       agencyProfile: agencyProfile
         ? `base64 (${agencyProfile.length} chars)`
         : "null",
-      taxRegistration: taxRegistration
-        ? `base64 (${taxRegistration.length} chars)`
-        : "null",
+      portfolioLinks: portfolioLinks ? JSON.stringify(portfolioLinks) : "null"
     });
 
     let companyRegistrationResult = { url: null, fileId: null };
     let portfolioWorkResult = { url: null, fileId: null };
     let agencyProfileResult = { url: null, fileId: null };
-    let taxRegistrationResult = { url: null, fileId: null };
 
     if (job_type === "agency") {
       const { data: existingResponse, error: fetchError } = await supabaseServer
         .from("responses")
         .select(
-          "company_registration_file_id, portfolio_work_file_id, agency_profile_file_id, tax_registration_file_id"
+          "company_registration_file_id, portfolio_work_file_id, agency_profile_file_id"
         )
         .eq("user_id", userId)
         .single();
@@ -173,8 +169,6 @@ export default async function handler(req, res) {
         existingResponse?.company_registration_file_id;
       const oldPortfolioWorkFileId = existingResponse?.portfolio_work_file_id;
       const oldAgencyProfileFileId = existingResponse?.agency_profile_file_id;
-      const oldTaxRegistrationFileId =
-        existingResponse?.tax_registration_file_id;
 
       const uploadPromises = [
         companyRegistration && typeof companyRegistration === "string"
@@ -207,23 +201,12 @@ export default async function handler(req, res) {
               agencyProfileMimeType || "application/pdf"
             )
           : Promise.resolve({ url: null, fileId: null }),
-        taxRegistration && typeof taxRegistration === "string"
-          ? uploadFileToDrive(
-              primaryContactName,
-              opening,
-              taxRegistration,
-              "tax-registration",
-              oldTaxRegistrationFileId,
-              taxRegistrationMimeType || "application/pdf"
-            )
-          : Promise.resolve({ url: null, fileId: null }),
       ];
 
       [
         companyRegistrationResult,
         portfolioWorkResult,
         agencyProfileResult,
-        taxRegistrationResult,
       ] = await Promise.all(uploadPromises);
     }
 
@@ -336,11 +319,10 @@ export default async function handler(req, res) {
       company_registration_url: companyRegistrationResult.url,
       portfolio_work_url: portfolioWorkResult.url,
       agency_profile_url: agencyProfileResult.url,
-      tax_registration_url: taxRegistrationResult.url,
       company_registration_file_id: companyRegistrationResult.fileId,
       portfolio_work_file_id: portfolioWorkResult.fileId,
       agency_profile_file_id: agencyProfileResult.fileId,
-      tax_registration_file_id: taxRegistrationResult.fileId,
+      portfolio_links: portfolioLinks || [],
       country,
       device,
       submitted_at: submittedAt || new Date().toISOString(),
@@ -434,7 +416,6 @@ export default async function handler(req, res) {
         companyRegistrationUrl: companyRegistrationResult.url,
         portfolioWorkUrl: portfolioWorkResult.url,
         agencyProfileUrl: agencyProfileResult.url,
-        taxRegistrationUrl: taxRegistrationResult.url,
       });
     }
 

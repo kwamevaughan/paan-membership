@@ -36,12 +36,18 @@ export default function ConnectingDotsBackground({
     const updateDimensions = () => {
       if (canvasRef.current) {
         const container = canvasRef.current.parentElement;
-        setDimensions({
-          width: container.offsetWidth,
-          height: container.offsetHeight,
+        const width = container.offsetWidth;
+        const height = container.offsetHeight;
+
+        setDimensions((prev) => {
+          if (prev.width !== width || prev.height !== height) {
+            return { width, height };
+          }
+          return prev;
         });
       }
     };
+
 
     const handleMouseMove = (e) => {
       const canvas = canvasRef.current;

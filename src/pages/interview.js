@@ -257,9 +257,7 @@ export default function InterviewPage({
       if (
         formData.job_type === "agency" &&
         (!formData.companyRegistration ||
-          !formData.workingPortfolio ||
-          !formData.agencyProfile ||
-          !formData.taxRegistration)
+          !formData.agencyProfile)
       ) {
         toast.error("Please provide all required documents.", { icon: "❌" });
         setIsSubmitting(false);
@@ -268,11 +266,9 @@ export default function InterviewPage({
       if (
         (formData.companyRegistration &&
           formData.companyRegistration.size > maxFileSize) ||
-        (formData.workingPortfolio &&
-          formData.workingPortfolio.size > maxFileSize) ||
-        (formData.agencyProfile && formData.agencyProfile.size > maxFileSize) ||
-        (formData.taxRegistration &&
-          formData.taxRegistration.size > maxFileSize)
+        (formData.portfolioWork &&
+          formData.portfolioWork.size > maxFileSize) ||
+        (formData.agencyProfile && formData.agencyProfile.size > maxFileSize)
       ) {
         toast.error("File size exceeds 5MB limit.", { icon: "❌" });
         setIsSubmitting(false);

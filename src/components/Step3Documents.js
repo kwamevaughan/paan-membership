@@ -22,19 +22,15 @@ export default function Step3Documents({
       description: "Upload your official business registration document",
     },
     {
-      id: "portfolioWork",
-      title: "Portfolio Work",
-      description: "Share examples of your previous projects",
-    },
-    {
       id: "agencyProfile",
-      title: "Agency Profile",
+      title: "Agency Company Profile",
       description: "Present your agency's capabilities and team",
     },
     {
-      id: "taxRegistration",
-      title: "Tax Registration Certificate",
-      description: "Provide your tax documentation as per your country",
+      id: "portfolioWork",
+      title: "Company Portfolio",
+      description: "Upload your portfolio file or add links to your online work",
+      isOptional: true,
     },
   ];
 
@@ -62,6 +58,8 @@ export default function Step3Documents({
     membershipConsent: false,
   });
 
+  const [portfolioLinks, setPortfolioLinks] = useState([{ url: "" }]);
+
   // Format file size in KB or MB
   const formatFileSize = (bytes) => {
     if (bytes < 1024) return `${bytes} bytes`;
@@ -72,6 +70,9 @@ export default function Step3Documents({
   // Calculate total file size
   const getTotalFileSize = () => {
     return fileTypes.reduce((total, type) => {
+      if (type.id === "portfolioWork" && formData.portfolioLinks) {
+        return total; // Don't count portfolio links in total size
+      }
       const file = formData[type.id];
       return total + (file && file.size ? file.size : 0);
     }, 0);
@@ -103,8 +104,16 @@ export default function Step3Documents({
   // Track completed files
   useEffect(() => {
     const completed = fileTypes
-      .map((type) => type.id)
-      .filter((id) => formData[id] !== undefined && formData[id] !== null);
+      .map((type) => {
+        if (type.id === "portfolioWork") {
+          // For portfolio work, consider it complete if either a file is uploaded or there are valid links
+          return (formData[type.id] !== undefined && formData[type.id] !== null) || 
+                 (formData.portfolioLinks && formData.portfolioLinks.length > 0 && 
+                  formData.portfolioLinks.some(link => link.url.trim() !== "")) ? type.id : null;
+        }
+        return (formData[type.id] !== undefined && formData[type.id] !== null) ? type.id : null;
+      })
+      .filter(id => id !== null);
     setCompletedFiles(completed);
 
     // Set active file to first incomplete file
@@ -156,6 +165,41 @@ export default function Step3Documents({
 
   const areAllDeclarationsChecked = () => {
     return Object.values(declarationChecks).every((val) => val === true);
+  };
+
+  // Add new portfolio link field
+  const addPortfolioLink = () => {
+    setPortfolioLinks([...portfolioLinks, { url: "" }]);
+  };
+
+  // Remove portfolio link field
+  const removePortfolioLink = (index) => {
+    setPortfolioLinks(portfolioLinks.filter((_, i) => i !== index));
+  };
+
+  // Update portfolio link
+  const updatePortfolioLink = (index, url) => {
+    // Strip out any existing protocol
+    const cleanUrl = url.replace(/^(https?:\/\/)/, '');
+    const newLinks = [...portfolioLinks];
+    newLinks[index].url = cleanUrl;
+    setPortfolioLinks(newLinks);
+    setFormData(prev => ({
+      ...prev,
+      portfolioLinks: newLinks.filter(link => link.url.trim() !== "")
+    }));
+  };
+
+  // Update the document summary section to show links count for portfolio
+  const getDocumentSummary = (file) => {
+    if (file.id === "portfolioWork") {
+      if (formData.portfolioLinks && formData.portfolioLinks.length > 0) {
+        const validLinks = formData.portfolioLinks.filter(link => link.url.trim() !== "").length;
+        return validLinks > 0 ? `(${validLinks} link${validLinks > 1 ? 's' : ''} added)` : '';
+      }
+      return formData[file.id] ? `(${formatFileSize(formData[file.id].size)})` : '';
+    }
+    return formData[file.id] ? `(${formatFileSize(formData[file.id].size)})` : '';
   };
 
   const bgColor = mode === "dark" ? "bg-gray-800" : "bg-white";
@@ -238,37 +282,108 @@ export default function Step3Documents({
           >
             <h3 className="text-xl font-bold mb-2">
               {fileTypes[activeFileIndex].title}
+              {fileTypes[activeFileIndex].isOptional && (
+                <span className="text-sm font-normal text-gray-500 ml-2">(Optional)</span>
+              )}
             </h3>
             <p className={`mb-4 ${secondaryTextColor}`}>
-              {fileTypes[activeFileIndex].description} (Max size:{" "}
-              {formatFileSize(MAX_FILE_SIZE)})
+              {fileTypes[activeFileIndex].description}
+              {!fileTypes[activeFileIndex].isOptional && ` (Max size: ${formatFileSize(MAX_FILE_SIZE)})`}
             </p>
 
-            <DragDropZone
-              key={fileTypes[activeFileIndex].id}
-              type={fileTypes[activeFileIndex].id}
-              file={formData[fileTypes[activeFileIndex].id]}
-              isDragging={
-                fileUploadProps[
-                  `isDragging${
-                    fileTypes[activeFileIndex].id[0].toUpperCase() +
-                    fileTypes[activeFileIndex].id.slice(1)
-                  }`
-                ]
-              }
-              uploadProgress={uploadProgress}
-              isSubmitting={isSubmitting}
-              setFormData={(prev) =>
-                handleFileUpload(
-                  fileTypes[activeFileIndex].id,
-                  prev[fileTypes[activeFileIndex].id]
-                )
-              }
-              setUploadProgress={setUploadProgress}
-              mode={mode}
-              required
-              {...fileUploadProps}
-            />
+            {fileTypes[activeFileIndex].id === "portfolioWork" ? (
+              <div className="space-y-4">
+                <div className={`p-4 rounded-lg ${mode === "dark" ? "bg-gray-700" : "bg-gray-100"} mb-4`}>
+                  <p className={`${secondaryTextColor} text-sm`}>
+                    You can either upload a portfolio file or add links to your online work. If you don&apos;t have a portfolio file ready, you can add links to your previous work below.
+                  </p>
+                </div>
+                <DragDropZone
+                  key="portfolioWork"
+                  type="portfolioWork"
+                  file={formData.portfolioWork}
+                  isDragging={fileUploadProps.isDraggingPortfolioWork}
+                  uploadProgress={uploadProgress}
+                  isSubmitting={isSubmitting}
+                  setFormData={(prev) =>
+                    handleFileUpload("portfolioWork", prev.portfolioWork)
+                  }
+                  setUploadProgress={setUploadProgress}
+                  mode={mode}
+                  {...fileUploadProps}
+                />
+                
+                <div className="mt-6">
+                  <h4 className="font-semibold mb-3">Add links to your online work</h4>
+                  <p className={`${secondaryTextColor} text-sm mb-4`}>
+                    Add URLs to your previous work, case studies, or any online portfolio. You can add multiple links.
+                  </p>
+                  <div className="space-y-3">
+                    {portfolioLinks.map((link, index) => (
+                      <div key={index} className="flex gap-2">
+                        <div className="flex-1 relative">
+                          <span className={`absolute left-3 top-1/2 -translate-y-1/2 ${mode === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                            https://
+                          </span>
+                          <input
+                            type="text"
+                            value={link.url}
+                            onChange={(e) => updatePortfolioLink(index, e.target.value)}
+                            placeholder="example.com/portfolio"
+                            className={`w-full pl-[4.5rem] pr-3 py-2 rounded-lg border ${
+                              mode === "dark" 
+                                ? "bg-gray-700 border-gray-600 text-white" 
+                                : "bg-white border-gray-300 text-gray-900"
+                            } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                          />
+                        </div>
+                        {index > 0 && (
+                          <button
+                            onClick={() => removePortfolioLink(index)}
+                            className="p-2 text-red-500 hover:text-red-700"
+                          >
+                            <Icon icon="mdi:close" className="w-5 h-5" />
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button
+                      onClick={addPortfolioLink}
+                      className="flex items-center text-blue-500 hover:text-blue-700"
+                    >
+                      <Icon icon="mdi:plus" className="w-5 h-5 mr-1" />
+                      Add another link
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <DragDropZone
+                key={fileTypes[activeFileIndex].id}
+                type={fileTypes[activeFileIndex].id}
+                file={formData[fileTypes[activeFileIndex].id]}
+                isDragging={
+                  fileUploadProps[
+                    `isDragging${
+                      fileTypes[activeFileIndex].id[0].toUpperCase() +
+                      fileTypes[activeFileIndex].id.slice(1)
+                    }`
+                  ]
+                }
+                uploadProgress={uploadProgress}
+                isSubmitting={isSubmitting}
+                setFormData={(prev) =>
+                  handleFileUpload(
+                    fileTypes[activeFileIndex].id,
+                    prev[fileTypes[activeFileIndex].id]
+                  )
+                }
+                setUploadProgress={setUploadProgress}
+                mode={mode}
+                required
+                {...fileUploadProps}
+              />
+            )}
           </motion.div>
         </AnimatePresence>
 
@@ -306,17 +421,23 @@ export default function Step3Documents({
                     }
                   >
                     {file.title}{" "}
-                    {completedFiles.includes(file.id) &&
-                      formData[file.id] &&
-                      `(${formatFileSize(formData[file.id].size)})`}
+                    {completedFiles.includes(file.id) && getDocumentSummary(file)}
                   </span>
                   {completedFiles.includes(file.id) && (
                     <button
                       className="ml-auto text-xs underline text-red-500 hover:text-red-700"
                       onClick={() => {
-                        setFormData((prev) => ({ ...prev, [file.id]: null }));
-                        setCompletedFiles((prev) =>
-                          prev.filter((id) => id !== file.id)
+                        if (file.id === "portfolioWork") {
+                          setFormData(prev => ({
+                            ...prev,
+                            [file.id]: null,
+                            portfolioLinks: []
+                          }));
+                        } else {
+                          setFormData(prev => ({ ...prev, [file.id]: null }));
+                        }
+                        setCompletedFiles(prev =>
+                          prev.filter(id => id !== file.id)
                         );
                       }}
                     >

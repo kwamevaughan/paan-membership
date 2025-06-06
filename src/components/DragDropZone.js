@@ -16,9 +16,8 @@ export default function DragDropZone({
 }) {
   const fileTypeDescription = {
     companyRegistration: "Company Registration",
-    portfolioWork: "Portfolio Work",
-    agencyProfile: "Agency Profile",
-    taxRegistration: "Tax Registration",
+    agencyProfile: "Agency Company Profile",
+    portfolioWork: "Company Portfolio"
   };
 
   const fileTypeIcon = {
@@ -107,7 +106,7 @@ export default function DragDropZone({
                     : "border-gray-200 text-[#f05d23]"
                 }`}
               >
-                {fileName.endsWith(".pdf") ? (
+                {fileName && fileName.endsWith(".pdf") ? (
                   <Icon icon={fileTypeIcon.pdf} className="w-5 h-5" />
                 ) : (
                   <Icon icon={fileTypeIcon.docx} className="w-5 h-5" />

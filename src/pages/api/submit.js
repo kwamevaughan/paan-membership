@@ -371,13 +371,12 @@ export default async function handler(req, res) {
         !primaryContactName ||
         !primaryContactEmail ||
         !companyRegistrationBase64 ||
-        !portfolioWorkBase64 ||
         !agencyProfileBase64 ||
-        !taxRegistrationBase64
+        (!portfolioWorkBase64 && (!data.portfolioLinks || data.portfolioLinks.length === 0))
       ) {
         return res.status(400).json({
           error:
-            "All fields (agencyName, yearEstablished, headquartersLocation, websiteUrl, opening, primaryContactName, primaryContactEmail, companyRegistration, portfolioWork, agencyProfile, taxRegistration) are required for agency submissions",
+            "All fields (agencyName, yearEstablished, headquartersLocation, websiteUrl, opening, primaryContactName, primaryContactEmail, companyRegistration, agencyProfile, and either portfolioWork file or portfolioLinks) are required for agency submissions",
         });
       }
     } else if (job_type === "freelancer") {
@@ -457,11 +456,10 @@ export default async function handler(req, res) {
         company_registration_url: null,
         portfolio_work_url: null,
         agency_profile_url: null,
-        tax_registration_url: null,
         company_registration_file_id: null,
         portfolio_work_file_id: null,
         agency_profile_file_id: null,
-        tax_registration_file_id: null,
+        portfolio_links: data.portfolioLinks || []
       });
     }
 
@@ -503,11 +501,10 @@ export default async function handler(req, res) {
       companyRegistration: companyRegistrationBase64,
       portfolioWork: portfolioWorkBase64,
       agencyProfile: agencyProfileBase64,
-      taxRegistration: taxRegistrationBase64,
+      portfolioLinks: data.portfolioLinks || [],
       companyRegistrationMimeType,
       portfolioWorkMimeType,
       agencyProfileMimeType,
-      taxRegistrationMimeType,
       country,
       device,
       submittedAt,

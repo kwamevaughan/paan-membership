@@ -150,11 +150,10 @@ export async function upsertResponse({
   company_registration_url,
   portfolio_work_url,
   agency_profile_url,
-  tax_registration_url,
   company_registration_file_id,
   portfolio_work_file_id,
   agency_profile_file_id,
-  tax_registration_file_id,
+  portfolio_links,
   country,
   device,
   submitted_at,
@@ -194,11 +193,10 @@ export async function upsertResponse({
         company_registration_url,
         portfolio_work_url,
         agency_profile_url,
-        tax_registration_url,
         company_registration_file_id,
         portfolio_work_file_id,
         agency_profile_file_id,
-        tax_registration_file_id,
+        portfolio_links: portfolio_links || []
       });
     }
 
@@ -217,11 +215,10 @@ export async function upsertResponse({
                 "company_registration_url",
                 "portfolio_work_url",
                 "agency_profile_url",
-                "tax_registration_url",
                 "company_registration_file_id",
                 "portfolio_work_file_id",
                 "agency_profile_file_id",
-                "tax_registration_file_id",
+                "portfolio_links"
               ]
             : []),
         ],

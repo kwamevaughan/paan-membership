@@ -34,7 +34,7 @@ export const useFormData = (questionCount = 0) => {
     companyRegistration: null,
     portfolioWork: null,
     agencyProfile: null,
-    taxRegistration: null,
+    portfolioLinks: [],
   });
   const [submissionStatus, setSubmissionStatus] = useState(null);
 
@@ -256,6 +256,7 @@ export const useFormData = (questionCount = 0) => {
         opening_id: cleanedFormData.opening_id,
         job_type: cleanedFormData.job_type,
         answers: cleanedFormData.answers,
+        portfolioLinks: cleanedFormData.portfolioLinks,
       };
       form.append("data", JSON.stringify(nonFileData));
 
@@ -268,9 +269,6 @@ export const useFormData = (questionCount = 0) => {
       }
       if (cleanedFormData.agencyProfile) {
         form.append("agencyProfile", cleanedFormData.agencyProfile);
-      }
-      if (cleanedFormData.taxRegistration) {
-        form.append("taxRegistration", cleanedFormData.taxRegistration);
       }
 
       const response = await fetch("/api/submit", {

@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { Icon } from "@iconify/react";
 import toast from "react-hot-toast";
 import Select from "react-select";
+import ItemActionModal from "./ItemActionModal";
 
 const EditorComponent = dynamic(() => import("../components/EditorComponent"), {
   ssr: false,
@@ -299,449 +300,432 @@ export default function EditJobModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
-      <div
-        className={`rounded-xl shadow-2xl transform transition-all duration-300 animate-fade-in w-full max-w-3xl mx-4 flex flex-col max-h-[90vh] overflow-hidden ${
-          mode === "dark" ? "bg-gray-800 text-white" : "bg-white text-[#231812]"
-        }`}
-      >
-        <div className="bg-gradient-to-r from-[#f05d23] to-[#d94f1e] rounded-t-xl p-4 flex items-center justify-between">
-          <div className="flex items-center">
-            <Icon icon="mdi:briefcase" className="w-8 h-8 text-white mr-3" />
-            <h2 className="text-2xl font-bold text-white">Edit Job Opening</h2>
+    <ItemActionModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={
+        <div className="flex items-center gap-2">
+          <Icon icon="mdi:briefcase" className="w-6 h-6" />
+          Edit Job Opening
+        </div>
+      }
+      mode={mode}
+    >
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label
+            className={`block text-sm font-medium mb-2 ${
+              mode === "dark" ? "text-gray-200" : "text-[#231812]"
+            }`}
+          >
+            Job Title <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <Icon
+              icon="mdi:format-title"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+            />
+            <input
+              type="text"
+              value={editJob.title || ""}
+              onChange={(e) =>
+                setEditJob((prev) => ({ ...prev, title: e.target.value }))
+              }
+              className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
+                mode === "dark"
+                  ? "bg-gray-700 text-gray-200 border-gray-600"
+                  : "bg-gray-50 text-[#231812] border-gray-300"
+              }`}
+              placeholder="e.g., Comms and Projects Specialist"
+              required
+            />
           </div>
+        </div>
+        <div>
+          <label
+            className={`block text-sm font-medium mb-2 ${
+              mode === "dark" ? "text-gray-200" : "text-[#231812]"
+            }`}
+          >
+            Employment Type <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <Icon
+              icon="mdi:briefcase"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+            />
+            <select
+              value={editJob.employment_type || "full_time"}
+              onChange={(e) =>
+                setEditJob((prev) => ({
+                  ...prev,
+                  employment_type: e.target.value,
+                }))
+              }
+              className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
+                mode === "dark"
+                  ? "bg-gray-700 text-gray-200 border-gray-600"
+                  : "bg-gray-50 text-[#231812] border-gray-300"
+              }`}
+              required
+            >
+              <option value="full_time">Full-Time</option>
+              <option value="part_time">Part-Time</option>
+              <option value="contractor">Contractor</option>
+              <option value="temporary">Temporary</option>
+              <option value="intern">Internship</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label
+            className={`block text-sm font-medium mb-2 ${
+              mode === "dark" ? "text-gray-200" : "text-[#231812]"
+            }`}
+          >
+            Job Type <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <Icon
+              icon="mdi:account-group"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+            />
+            <select
+              value={editJob.job_type || "agencies"}
+              onChange={(e) =>
+                setEditJob((prev) => ({
+                  ...prev,
+                  job_type: e.target.value,
+                }))
+              }
+              className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
+                mode === "dark"
+                  ? "bg-gray-700 text-gray-200 border-gray-600"
+                  : "bg-gray-50 text-[#231812] border-gray-300"
+              }`}
+              required
+            >
+              <option value="agencies">Agencies</option>
+              <option value="freelancers">Freelancers</option>
+            </select>
+          </div>
+        </div>
+        <div className="flex flex-col">
+          <label
+            className={`block text-sm font-medium mb-2 ${
+              mode === "dark" ? "text-gray-200" : "text-[#231812]"
+            }`}
+          >
+            Description (Optional)
+          </label>
+          <EditorComponent
+            initialValue={editJob.description || ""}
+            onBlur={(newContent) =>
+              setEditJob((prev) => ({ ...prev, description: newContent }))
+            }
+            mode={mode}
+            holderId="jodit-editor-edit-modal"
+            className="w-full rounded-lg shadow-inner transition-shadow duration-200 hover:shadow-md"
+          />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label
+              className={`block text-sm font-medium mb-2 ${
+                mode === "dark" ? "text-gray-200" : "text-[#231812]"
+              }`}
+            >
+              Job Description File (DOCX/PDF, Optional)
+            </label>
+            <div className="relative">
+              <Icon
+                icon="mdi:file-upload"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+              />
+              <input
+                type="file"
+                accept=".pdf,.docx"
+                onChange={(e) =>
+                  setEditJob((prev) => ({
+                    ...prev,
+                    newFile: e.target.files[0],
+                    removeFile: false,
+                  }))
+                }
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg ${
+                  mode === "dark"
+                    ? "bg-gray-700 text-gray-200 border-gray-600"
+                    : "bg-gray-50 text-[#231812] border-gray-300"
+                }`}
+              />
+            </div>
+            {(editJob.file_url || editJob.newFile) && !editJob.removeFile && (
+              <div
+                className={`mt-4 p-4 border rounded-lg shadow-md ${
+                  mode === "dark"
+                    ? "bg-gray-800 border-gray-700 text-gray-300"
+                    : "bg-gray-100 border-gray-200 text-gray-600"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="truncate flex-1 text-sm">
+                    {editJob.newFile
+                      ? editJob.newFile.name
+                      : `Job Description - ${editJob.title}`}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {editJob.file_url && !editJob.newFile && (
+                      <button
+                        type="button"
+                        onClick={(e) => handlePreviewClick(e, editJob.file_url)}
+                        className={`p-2 rounded-full ${
+                          mode === "dark"
+                            ? "bg-gray-700 text-[#f05d23] hover:bg-gray-600"
+                            : "bg-gray-200 text-[#f05d23] hover:bg-gray-300"
+                        } transition duration-200`}
+                        title="View file"
+                      >
+                        <Icon icon="mdi:eye" width={24} height={24} />
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditJob((prev) => ({
+                          ...prev,
+                          removeFile: !prev.newFile,
+                          newFile: null,
+                        }));
+                      }}
+                      className={`p-2 rounded-full ${
+                        mode === "dark"
+                          ? "bg-gray-700 text-red-500 hover:bg-gray-600"
+                          : "bg-gray-200 text-red-500 hover:bg-gray-300"
+                      } transition duration-200`}
+                      title="Remove file"
+                    >
+                      <Icon icon="mdi:trash-can" width={24} height={24} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            {editJob.removeFile && (
+              <p className="mt-4 text-sm text-red-500">
+                File will be removed on save.
+              </p>
+            )}
+          </div>
+          <div>
+            <label
+              className={`block text-sm font-medium mb-2 ${
+                mode === "dark" ? "text-gray-200" : "text-[#231812]"
+              }`}
+            >
+              Expires On <span className="text-red-500">*</span>
+            </label>
+            <div
+              className="relative flex items-center cursor-pointer"
+              onClick={handleDateClick}
+            >
+              <Icon
+                icon="mdi:calendar"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+              />
+              <input
+                type="date"
+                value={editJob.expires_on || ""}
+                onChange={(e) =>
+                  setEditJob((prev) => ({
+                    ...prev,
+                    expires_on: e.target.value,
+                  }))
+                }
+                min={today}
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
+                  mode === "dark"
+                    ? "bg-gray-700 text-gray-200 border-gray-600"
+                    : "bg-gray-50 text-[#231812] border-gray-300"
+                }`}
+                required
+              />
+            </div>
+          </div>
+        </div>
+        <div>
+          <label
+            className={`block text-sm font-medium mb-2 ${
+              mode === "dark" ? "text-gray-200" : "text-[#231812]"
+            }`}
+          >
+            Department (Optional)
+          </label>
+          <div className="relative">
+            <Icon
+              icon="mdi:domain"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+            />
+            <input
+              type="text"
+              value={editJob.department || ""}
+              onChange={(e) =>
+                setEditJob((prev) => ({
+                  ...prev,
+                  department: e.target.value,
+                }))
+              }
+              className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
+                mode === "dark"
+                  ? "bg-gray-700 text-gray-200 border-gray-600"
+                  : "bg-gray-50 text-[#231812] border-gray-300"
+              }`}
+              placeholder="e.g., Business Development"
+            />
+          </div>
+        </div>
+        <div>
+          <label
+            className={`block text-sm font-medium mb-2 ${
+              mode === "dark" ? "text-gray-200" : "text-[#231812]"
+            }`}
+          >
+            Location <span className="text-red-500">*</span>
+          </label>
+          <div className="space-y-4">
+            <div className="relative">
+              <Icon
+                icon="mdi:map-marker"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+              />
+              <input
+                type="text"
+                value={editJob.location?.city || ""}
+                onChange={(e) =>
+                  setEditJob((prev) => ({
+                    ...prev,
+                    location: { ...prev.location, city: e.target.value },
+                  }))
+                }
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
+                  mode === "dark"
+                    ? "bg-gray-700 text-gray-200 border-gray-600"
+                    : "bg-gray-50 text-[#231812] border-gray-300"
+                }`}
+                placeholder="City (e.g., Nairobi)"
+                required
+              />
+            </div>
+            <div className="relative">
+              <Icon
+                icon="mdi:map"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+              />
+              <input
+                type="text"
+                value={editJob.location?.region || ""}
+                onChange={(e) =>
+                  setEditJob((prev) => ({
+                    ...prev,
+                    location: { ...prev.location, region: e.target.value },
+                  }))
+                }
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
+                  mode === "dark"
+                    ? "bg-gray-700 text-gray-200 border-gray-600"
+                    : "bg-gray-50 text-[#231812] border-gray-300"
+                }`}
+                placeholder="Region (e.g., Nairobi County)"
+                required
+              />
+            </div>
+            <div className="relative">
+              <Icon
+                icon="mdi:earth"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23] z-10"
+              />
+              <Select
+                value={
+                  editJob.location?.country
+                    ? {
+                        label: editJob.location.country,
+                        value: editJob.location.country,
+                      }
+                    : null
+                }
+                onChange={(selectedOption) =>
+                  setEditJob((prev) => ({
+                    ...prev,
+                    location: {
+                      ...prev.location,
+                      country: selectedOption ? selectedOption.value : "",
+                    },
+                  }))
+                }
+                options={countryOptions}
+                placeholder="Select or type country"
+                isSearchable
+                isClearable
+                styles={customStyles}
+                className="w-full"
+                classNamePrefix="react-select"
+              />
+            </div>
+          </div>
+        </div>
+        <div>
+          <label
+            className={`block text-sm font-medium mb-2 ${
+              mode === "dark" ? "text-gray-200" : "text-[#231812]"
+            }`}
+          >
+            Is the Job Remote?
+          </label>
+          <div className="relative">
+            <label className="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={editJob.remote || false}
+                onChange={(e) =>
+                  setEditJob((prev) => ({
+                    ...prev,
+                    remote: e.target.checked,
+                  }))
+                }
+                className="w-5 h-5 text-[#f05d23] border-gray-300 rounded focus:ring-[#f05d23] mr-2"
+              />
+              <span
+                className={`text-sm ${
+                  mode === "dark" ? "text-gray-200" : "text-[#231812]"
+                }`}
+              >
+                This is a remote position
+              </span>
+            </label>
+          </div>
+        </div>
+        <div className="flex gap-4">
           <button
             type="button"
             onClick={onClose}
-            className="text-white hover:text-gray-200 transition duration-200"
+            className={`flex-1 py-2 rounded-full transition duration-200 flex items-center justify-center gap-2 shadow-md ${
+              mode === "dark"
+                ? "bg-gray-600 text-white hover:bg-gray-500"
+                : "bg-gray-200 text-[#231812] hover:bg-gray-300"
+            }`}
           >
-            <Icon icon="mdi:close" width={24} height={24} />
+            <Icon icon="mdi:close" width={20} height={20} />
+            Cancel
+          </button>
+          <button
+            type="submit"
+            className="flex-1 py-2 bg-[#f05d23] text-white rounded-full hover:bg-[#d94f1e] transition duration-200 flex items-center justify-center gap-2 shadow-md"
+          >
+            <Icon icon="mdi:content-save" width={20} height={20} />
+            Save
           </button>
         </div>
-        <div className="flex-1 p-6 overflow-y-auto">
-          <form
-            onSubmit={handleSubmit}
-            className="space-y-6 h-full flex flex-col"
-          >
-            <div>
-              <label
-                className={`block text-sm font-medium mb-2 ${
-                  mode === "dark" ? "text-gray-200" : "text-[#231812]"
-                }`}
-              >
-                Job Title <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <Icon
-                  icon="mdi:format-title"
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
-                />
-                <input
-                  type="text"
-                  value={editJob.title || ""}
-                  onChange={(e) =>
-                    setEditJob((prev) => ({ ...prev, title: e.target.value }))
-                  }
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
-                    mode === "dark"
-                      ? "bg-gray-700 text-gray-200 border-gray-600"
-                      : "bg-gray-50 text-[#231812] border-gray-300"
-                  }`}
-                  placeholder="e.g., Comms and Projects Specialist"
-                  required
-                />
-              </div>
-            </div>
-            <div>
-              <label
-                className={`block text-sm font-medium mb-2 ${
-                  mode === "dark" ? "text-gray-200" : "text-[#231812]"
-                }`}
-              >
-                Employment Type <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <Icon
-                  icon="mdi:briefcase"
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
-                />
-                <select
-                  value={editJob.employment_type || "full_time"}
-                  onChange={(e) =>
-                    setEditJob((prev) => ({
-                      ...prev,
-                      employment_type: e.target.value,
-                    }))
-                  }
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
-                    mode === "dark"
-                      ? "bg-gray-700 text-gray-200 border-gray-600"
-                      : "bg-gray-50 text-[#231812] border-gray-300"
-                  }`}
-                  required
-                >
-                  <option value="full_time">Full-Time</option>
-                  <option value="part_time">Part-Time</option>
-                  <option value="contractor">Contractor</option>
-                  <option value="temporary">Temporary</option>
-                  <option value="intern">Internship</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <label
-                className={`block text-sm font-medium mb-2 ${
-                  mode === "dark" ? "text-gray-200" : "text-[#231812]"
-                }`}
-              >
-                Job Type <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <Icon
-                  icon="mdi:account-group"
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
-                />
-                <select
-                  value={editJob.job_type || "agencies"}
-                  onChange={(e) =>
-                    setEditJob((prev) => ({
-                      ...prev,
-                      job_type: e.target.value,
-                    }))
-                  }
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
-                    mode === "dark"
-                      ? "bg-gray-700 text-gray-200 border-gray-600"
-                      : "bg-gray-50 text-[#231812] border-gray-300"
-                  }`}
-                  required
-                >
-                  <option value="agencies">Agencies</option>
-                  <option value="freelancers">Freelancers</option>
-                </select>
-              </div>
-            </div>
-            <div className="flex flex-col">
-              <label
-                className={`block text-sm font-medium mb-2 ${
-                  mode === "dark" ? "text-gray-200" : "text-[#231812]"
-                }`}
-              >
-                Description (Optional)
-              </label>
-              <EditorComponent
-                initialValue={editJob.description || ""}
-                onBlur={(newContent) =>
-                  setEditJob((prev) => ({ ...prev, description: newContent }))
-                }
-                mode={mode}
-                holderId="jodit-editor-edit-modal"
-                className="w-full rounded-lg shadow-inner transition-shadow duration-200 hover:shadow-md"
-              />
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label
-                  className={`block text-sm font-medium mb-2 ${
-                    mode === "dark" ? "text-gray-200" : "text-[#231812]"
-                  }`}
-                >
-                  Job Description File (DOCX/PDF, Optional)
-                </label>
-                <div className="relative">
-                  <Icon
-                    icon="mdi:file-upload"
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
-                  />
-                  <input
-                    type="file"
-                    accept=".pdf,.docx"
-                    onChange={(e) =>
-                      setEditJob((prev) => ({
-                        ...prev,
-                        newFile: e.target.files[0],
-                        removeFile: false,
-                      }))
-                    }
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg ${
-                      mode === "dark"
-                        ? "bg-gray-700 text-gray-200 border-gray-600"
-                        : "bg-gray-50 text-[#231812] border-gray-300"
-                    }`}
-                  />
-                </div>
-                {(editJob.file_url || editJob.newFile) &&
-                  !editJob.removeFile && (
-                    <div
-                      className={`mt-4 p-4 border rounded-lg shadow-md ${
-                        mode === "dark"
-                          ? "bg-gray-800 border-gray-700 text-gray-300"
-                          : "bg-gray-100 border-gray-200 text-gray-600"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="truncate flex-1 text-sm">
-                          {editJob.newFile
-                            ? editJob.newFile.name
-                            : `Job Description - ${editJob.title}`}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          {editJob.file_url && !editJob.newFile && (
-                            <button
-                              type="button"
-                              onClick={(e) =>
-                                handlePreviewClick(e, editJob.file_url)
-                              }
-                              className={`p-2 rounded-full ${
-                                mode === "dark"
-                                  ? "bg-gray-700 text-[#f05d23] hover:bg-gray-600"
-                                  : "bg-gray-200 text-[#f05d23] hover:bg-gray-300"
-                              } transition duration-200`}
-                              title="View file"
-                            >
-                              <Icon icon="mdi:eye" width={24} height={24} />
-                            </button>
-                          )}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditJob((prev) => ({
-                                ...prev,
-                                removeFile: !prev.newFile,
-                                newFile: null,
-                              }));
-                            }}
-                            className={`p-2 rounded-full ${
-                              mode === "dark"
-                                ? "bg-gray-700 text-red-500 hover:bg-gray-600"
-                                : "bg-gray-200 text-red-500 hover:bg-gray-300"
-                            } transition duration-200`}
-                            title="Remove file"
-                          >
-                            <Icon icon="mdi:trash-can" width={24} height={24} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                {editJob.removeFile && (
-                  <p className="mt-4 text-sm text-red-500">
-                    File will be removed on save.
-                  </p>
-                )}
-              </div>
-              <div>
-                <label
-                  className={`block text-sm font-medium mb-2 ${
-                    mode === "dark" ? "text-gray-200" : "text-[#231812]"
-                  }`}
-                >
-                  Expires On <span className="text-red-500">*</span>
-                </label>
-                <div
-                  className="relative flex items-center cursor-pointer"
-                  onClick={handleDateClick}
-                >
-                  <Icon
-                    icon="mdi:calendar"
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
-                  />
-                  <input
-                    type="date"
-                    value={editJob.expires_on || ""}
-                    onChange={(e) =>
-                      setEditJob((prev) => ({
-                        ...prev,
-                        expires_on: e.target.value,
-                      }))
-                    }
-                    min={today}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
-                      mode === "dark"
-                        ? "bg-gray-700 text-gray-200 border-gray-600"
-                        : "bg-gray-50 text-[#231812] border-gray-300"
-                    }`}
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-            <div>
-              <label
-                className={`block text-sm font-medium mb-2 ${
-                  mode === "dark" ? "text-gray-200" : "text-[#231812]"
-                }`}
-              >
-                Department (Optional)
-              </label>
-              <div className="relative">
-                <Icon
-                  icon="mdi:domain"
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
-                />
-                <input
-                  type="text"
-                  value={editJob.department || ""}
-                  onChange={(e) =>
-                    setEditJob((prev) => ({
-                      ...prev,
-                      department: e.target.value,
-                    }))
-                  }
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
-                    mode === "dark"
-                      ? "bg-gray-700 text-gray-200 border-gray-600"
-                      : "bg-gray-50 text-[#231812] border-gray-300"
-                  }`}
-                  placeholder="e.g., Business Development"
-                />
-              </div>
-            </div>
-            <div>
-              <label
-                className={`block text-sm font-medium mb-2 ${
-                  mode === "dark" ? "text-gray-200" : "text-[#231812]"
-                }`}
-              >
-                Location <span className="text-red-500">*</span>
-              </label>
-              <div className="space-y-4">
-                <div className="relative">
-                  <Icon
-                    icon="mdi:map-marker"
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
-                  />
-                  <input
-                    type="text"
-                    value={editJob.location?.city || ""}
-                    onChange={(e) =>
-                      setEditJob((prev) => ({
-                        ...prev,
-                        location: { ...prev.location, city: e.target.value },
-                      }))
-                    }
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
-                      mode === "dark"
-                        ? "bg-gray-700 text-gray-200 border-gray-600"
-                        : "bg-gray-50 text-[#231812] border-gray-300"
-                    }`}
-                    placeholder="City (e.g., Nairobi)"
-                    required
-                  />
-                </div>
-                <div className="relative">
-                  <Icon
-                    icon="mdi:map"
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
-                  />
-                  <input
-                    type="text"
-                    value={editJob.location?.region || ""}
-                    onChange={(e) =>
-                      setEditJob((prev) => ({
-                        ...prev,
-                        location: { ...prev.location, region: e.target.value },
-                      }))
-                    }
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
-                      mode === "dark"
-                        ? "bg-gray-700 text-gray-200 border-gray-600"
-                        : "bg-gray-50 text-[#231812] border-gray-300"
-                    }`}
-                    placeholder="Region (e.g., Nairobi County)"
-                    required
-                  />
-                </div>
-                <div className="relative">
-                  <Icon
-                    icon="mdi:earth"
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23] z-10"
-                  />
-                  <Select
-                    value={
-                      editJob.location?.country
-                        ? {
-                            label: editJob.location.country,
-                            value: editJob.location.country,
-                          }
-                        : null
-                    }
-                    onChange={(selectedOption) =>
-                      setEditJob((prev) => ({
-                        ...prev,
-                        location: {
-                          ...prev.location,
-                          country: selectedOption ? selectedOption.value : "",
-                        },
-                      }))
-                    }
-                    options={countryOptions}
-                    placeholder="Select or type country"
-                    isSearchable
-                    isClearable
-                    styles={customStyles}
-                    className="w-full"
-                    classNamePrefix="react-select"
-                  />
-                </div>
-              </div>
-            </div>
-            <div>
-              <label
-                className={`block text-sm font-medium mb-2 ${
-                  mode === "dark" ? "text-gray-200" : "text-[#231812]"
-                }`}
-              >
-                Is the Job Remote?
-              </label>
-              <div className="relative">
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={editJob.remote || false}
-                    onChange={(e) =>
-                      setEditJob((prev) => ({
-                        ...prev,
-                        remote: e.target.checked,
-                      }))
-                    }
-                    className="w-5 h-5 text-[#f05d23] border-gray-300 rounded focus:ring-[#f05d23] mr-2"
-                  />
-                  <span
-                    className={`text-sm ${
-                      mode === "dark" ? "text-gray-200" : "text-[#231812]"
-                    }`}
-                  >
-                    This is a remote position
-                  </span>
-                </label>
-              </div>
-            </div>
-            <div className="flex gap-4">
-              <button
-                type="button"
-                onClick={onClose}
-                className={`flex-1 py-2 rounded-full transition duration-200 flex items-center justify-center gap-2 shadow-md ${
-                  mode === "dark"
-                    ? "bg-gray-600 text-white hover:bg-gray-500"
-                    : "bg-gray-200 text-[#231812] hover:bg-gray-300"
-                }`}
-              >
-                <Icon icon="mdi:close" width={20} height={20} />
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="flex-1 py-2 bg-[#f05d23] text-white rounded-full hover:bg-[#d94f1e] transition duration-200 flex items-center justify-center gap-2 shadow-md"
-              >
-                <Icon icon="mdi:content-save" width={20} height={20} />
-                Save
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+      </form>
+    </ItemActionModal>
   );
 }

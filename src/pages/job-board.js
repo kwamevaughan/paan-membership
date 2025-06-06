@@ -9,7 +9,6 @@ import { Icon } from "@iconify/react";
 import { generateJobPostingSchema } from "@/lib/jobPostingSchema";
 import fs from "fs/promises"; // For filesystem access in Node.js
 import path from "path"; // For resolving file paths
-import ConnectingDotsBackground from "@/components/ConnectingDotsBackground";
 
 export default function PublicJobListings({ mode, toggleMode, initialJobs, countries }) {
     const [jobs, setJobs] = useState(initialJobs);
@@ -102,15 +101,7 @@ export default function PublicJobListings({ mode, toggleMode, initialJobs, count
 
         <main className="flex-1 py-12 px-4 sm:px-6 lg:px-8">
           <div className="absolute inset-0 z-10 pointer-events-none">
-            <ConnectingDotsBackground
-              color="#f05d23"
-              secondaryColor={mode === "dark" ? "#f05d23" : "#505050"}
-              dotCount={50}
-              dotSize={2.2}
-              lineDistance={180}
-              speed={0.6}
-              mode={mode}
-            />
+            
           </div>
           <div className="max-w-7xl mx-auto">
             <h1
@@ -120,22 +111,22 @@ export default function PublicJobListings({ mode, toggleMode, initialJobs, count
             >
               <Icon
                 icon="mdi:briefcase"
-                className="inline-block mr-2 w-8 h-8 text-[#f05d23]"
+                className="inline-block mr-2 w-8 h-8 text-blue-400"
               />
               Current Job Openings
             </h1>
 
             <div
-              className={`p-6 rounded-lg shadow-md mb-8 ${
-                mode === "dark" ? "bg-gray-800" : "bg-white"
+              className={`p-8 rounded-2xl shadow-2xl backdrop-blur-sm mb-8 ${
+                mode === "dark" ? "bg-gray-800/95" : "bg-white/95"
               }`}
             >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="relative">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="relative group">
                   <Icon
                     icon="mdi:magnify"
-                    className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${
-                      mode === "dark" ? "text-gray-400" : "text-gray-500"
+                    className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors duration-300 ${
+                      mode === "dark" ? "text-gray-400 group-hover:text-blue-400" : "text-gray-500 group-hover:text-blue-400"
                     }`}
                   />
                   <input
@@ -143,48 +134,54 @@ export default function PublicJobListings({ mode, toggleMode, initialJobs, count
                     placeholder="Search by job title..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-2 rounded-md border focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
+                    className={`w-full pl-12 pr-4 py-3 rounded-xl border-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 ${
                       mode === "dark"
-                        ? "bg-gray-700 text-white border-gray-600"
-                        : "bg-white text-gray-900 border-gray-300"
+                        ? "bg-gray-700/50 text-white border-gray-600 hover:border-blue-400/50"
+                        : "bg-white/50 text-gray-900 border-gray-200 hover:border-blue-400/50"
                     }`}
                   />
                 </div>
-                <div className="relative">
+                <div className="relative group">
                   <Icon
                     icon="mdi:filter"
-                    className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${
-                      mode === "dark" ? "text-gray-400" : "text-gray-500"
+                    className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors duration-300 ${
+                      mode === "dark" ? "text-gray-400 group-hover:text-blue-400" : "text-gray-500 group-hover:text-blue-400"
                     }`}
                   />
                   <select
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-2 rounded-md border focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
+                    className={`w-full pl-12 pr-4 py-3 rounded-xl border-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 appearance-none ${
                       mode === "dark"
-                        ? "bg-gray-700 text-white border-gray-600"
-                        : "bg-white text-gray-900 border-gray-300"
+                        ? "bg-gray-700/50 text-white border-gray-600 hover:border-blue-400/50"
+                        : "bg-white/50 text-gray-900 border-gray-200 hover:border-blue-400/50"
                     }`}
                   >
                     <option value="all">All Statuses</option>
                     <option value="active">Active</option>
                     <option value="expired">Expired</option>
                   </select>
+                  <Icon
+                    icon="mdi:chevron-down"
+                    className={`absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 pointer-events-none ${
+                      mode === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  />
                 </div>
-                <div className="relative">
+                <div className="relative group">
                   <Icon
                     icon="mdi:map-marker"
-                    className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${
-                      mode === "dark" ? "text-gray-400" : "text-gray-500"
+                    className={`absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 transition-colors duration-300 ${
+                      mode === "dark" ? "text-gray-400 group-hover:text-blue-400" : "text-gray-500 group-hover:text-blue-400"
                     }`}
                   />
                   <select
                     value={locationFilter}
                     onChange={(e) => setLocationFilter(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-2 rounded-md border focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
+                    className={`w-full pl-12 pr-4 py-3 rounded-xl border-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300 appearance-none ${
                       mode === "dark"
-                        ? "bg-gray-700 text-white border-gray-600"
-                        : "bg-white text-gray-900 border-gray-300"
+                        ? "bg-gray-700/50 text-white border-gray-600 hover:border-blue-400/50"
+                        : "bg-white/50 text-gray-900 border-gray-200 hover:border-blue-400/50"
                     }`}
                   >
                     <option value="">All Locations</option>
@@ -194,15 +191,21 @@ export default function PublicJobListings({ mode, toggleMode, initialJobs, count
                       </option>
                     ))}
                   </select>
+                  <Icon
+                    icon="mdi:chevron-down"
+                    className={`absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 pointer-events-none ${
+                      mode === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  />
                 </div>
               </div>
-              <div className="mt-4 flex justify-end">
+              <div className="mt-6 flex justify-end">
                 <button
                   onClick={handleClearFilters}
-                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-md font-medium transition-colors ${
+                  className={`inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
                     mode === "dark"
-                      ? "bg-gray-700 text-white hover:bg-gray-600"
-                      : "bg-gray-200 text-gray-800 hover:bg-gray-300"
+                      ? "bg-gray-700/50 text-white hover:bg-gray-600/50"
+                      : "bg-gray-200/50 text-gray-800 hover:bg-gray-300/50"
                   }`}
                 >
                   <Icon icon="mdi:refresh" className="w-5 h-5" />
@@ -213,17 +216,17 @@ export default function PublicJobListings({ mode, toggleMode, initialJobs, count
 
             {filteredJobs.length === 0 ? (
               <div
-                className={`p-6 rounded-lg shadow-md text-center ${
+                className={`p-8 rounded-2xl shadow-2xl backdrop-blur-sm text-center ${
                   mode === "dark"
-                    ? "bg-gray-800 text-gray-300"
-                    : "bg-white text-gray-600"
+                    ? "bg-gray-800/95 text-gray-300"
+                    : "bg-white/95 text-gray-600"
                 }`}
               >
                 <Icon
                   icon="mdi:alert-circle"
-                  className="inline-block w-6 h-6 text-[#f05d23] mb-2"
+                  className="inline-block w-8 h-8 text-blue-400 mb-3"
                 />
-                <p>
+                <p className="text-lg">
                   No job openings match your criteria. Try adjusting your
                   filters!
                 </p>
@@ -234,47 +237,59 @@ export default function PublicJobListings({ mode, toggleMode, initialJobs, count
                   <Link
                     key={job.id}
                     href={`/jobs/${job.slug}`}
-                    className={`block p-6 rounded-lg shadow-md transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
+                    className={`block p-8 rounded-2xl shadow-2xl backdrop-blur-sm transition-all duration-300 transform hover:scale-[1.02] hover:shadow-2xl ${
                       mode === "dark"
-                        ? "bg-gray-800 text-white border-gray-700"
-                        : "bg-white text-[#231812] border-gray-200"
+                        ? "bg-gray-800/95 text-white"
+                        : "bg-white/95 text-[#231812]"
                     } ${
                       job.is_expired
                         ? "opacity-75"
-                        : "border-t-4 border-[#f05d23]"
+                        : "ring-2 ring-blue-400/20"
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-4">
-                      <h2 className="text-xl font-semibold truncate">
+                    <div className="flex items-center justify-between mb-6">
+                      <h2 className="text-xl font-bold truncate">
                         {job.title}
                       </h2>
-                      <Icon
-                        icon={
-                          job.is_expired
-                            ? "mdi:clock-end"
-                            : "mdi:briefcase-check"
-                        }
-                        className={`w-6 h-6 ${
-                          job.is_expired ? "text-red-500" : "text-green-500"
-                        }`}
-                      />
-                    </div>
-                    <div className="space-y-3">
-                      <p className="flex items-center gap-2 text-sm">
+                      <div className={`p-2 rounded-xl ${
+                        mode === "dark" ? "bg-gray-700" : "bg-blue-50"
+                      }`}>
                         <Icon
-                          icon="mdi:calendar"
-                          className="w-5 h-5 text-[#f05d23]"
+                          icon={
+                            job.is_expired
+                              ? "mdi:clock-end"
+                              : "mdi:briefcase-check"
+                          }
+                          className={`w-6 h-6 ${
+                            job.is_expired ? "text-red-500" : "text-blue-400"
+                          }`}
                         />
+                      </div>
+                    </div>
+                    <div className="space-y-4">
+                      <p className="flex items-center gap-3 text-sm">
+                        <div className={`p-2 rounded-xl ${
+                          mode === "dark" ? "bg-gray-700" : "bg-blue-50"
+                        }`}>
+                          <Icon
+                            icon="mdi:calendar"
+                            className="w-5 h-5 text-blue-400"
+                          />
+                        </div>
                         <span>
                           <strong>Expires:</strong> {job.expires_on}
                         </span>
                       </p>
                       {job.location && (
-                        <p className="flex items-center gap-2 text-sm">
-                          <Icon
-                            icon="mdi:map-marker"
-                            className="w-5 h-5 text-[#f05d23]"
-                          />
+                        <p className="flex items-center gap-3 text-sm">
+                          <div className={`p-2 rounded-xl ${
+                            mode === "dark" ? "bg-gray-700" : "bg-blue-50"
+                          }`}>
+                            <Icon
+                              icon="mdi:map-marker"
+                              className="w-5 h-5 text-blue-400"
+                            />
+                          </div>
                           <span>
                             <strong>Location:</strong>{" "}
                             {typeof job.location === "object"
@@ -285,18 +300,22 @@ export default function PublicJobListings({ mode, toggleMode, initialJobs, count
                       )}
                       {job.description && (
                         <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
-                          <Icon
-                            icon="mdi:text"
-                            className="inline-block w-5 h-5 text-[#f05d23] mr-2"
-                          />
+                          <div className={`p-2 rounded-xl inline-block mr-2 ${
+                            mode === "dark" ? "bg-gray-700" : "bg-blue-50"
+                          }`}>
+                            <Icon
+                              icon="mdi:text"
+                              className="w-5 h-5 text-blue-400"
+                            />
+                          </div>
                           {job.description.replace(/<[^>]+>/g, "")}
                         </p>
                       )}
                       <p
-                        className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                        className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium ${
                           job.is_expired
-                            ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                            : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            ? "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-200"
+                            : "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200"
                         }`}
                       >
                         <Icon
@@ -306,10 +325,10 @@ export default function PublicJobListings({ mode, toggleMode, initialJobs, count
                         {job.is_expired ? "Expired" : "Active"}
                       </p>
                     </div>
-                    <div className="mt-4 flex justify-end">
-                      <span className="inline-flex items-center gap-1 text-[#f05d23] font-medium hover:underline">
+                    <div className="mt-6 flex justify-end">
+                      <span className="inline-flex items-center gap-2 text-blue-400 font-medium group">
                         View Details
-                        <Icon icon="mdi:arrow-right" className="w-5 h-5" />
+                        <Icon icon="mdi:arrow-right" className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
                       </span>
                     </div>
                   </Link>

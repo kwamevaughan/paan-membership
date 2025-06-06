@@ -109,8 +109,8 @@ export default function JobDetail({ mode, toggleMode, initialJob, countries }) {
       <div
         className={`min-h-screen flex flex-col ${
           mode === "dark"
-            ? "bg-gradient-to-b from-gray-900 to-gray-800"
-            : "bg-gradient-to-b from-gray-50 to-gray-100"
+            ? "bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900"
+            : "bg-gradient-to-b from-gray-50 via-white to-gray-50"
         }`}
       >
         <Head>
@@ -175,25 +175,17 @@ export default function JobDetail({ mode, toggleMode, initialJob, countries }) {
 
         <main className="flex-1 p-6 pt-24">
           <div className="absolute inset-0 z-10 pointer-events-none">
-            <ConnectingDotsBackground
-              color="#f05d23"
-              secondaryColor={mode === "dark" ? "#f05d23" : "#505050"}
-              dotCount={50}
-              dotSize={2.2}
-              lineDistance={180}
-              speed={0.6}
-              mode={mode}
-            />
+            
           </div>
-          <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
-              <div className="mb-6">
+              <div className="mb-8">
                 <button
                   onClick={() => router.push("/job-board")}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                  className={`flex items-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-105 ${
                     mode === "dark"
-                      ? "bg-gray-700 text-white hover:bg-gray-600"
-                      : "bg-gray-200 text-[#231812] hover:bg-gray-300"
+                      ? "bg-gray-800/50 text-white hover:bg-gray-700/50 shadow-lg"
+                      : "bg-white/50 text-[#231812] hover:bg-gray-50/50 shadow-lg"
                   }`}
                 >
                   <Icon icon="mdi:arrow-left" className="w-5 h-5" />
@@ -202,46 +194,53 @@ export default function JobDetail({ mode, toggleMode, initialJob, countries }) {
               </div>
               {job ? (
                 <div
-                  className={`p-6 rounded-lg shadow-lg ${
+                  className={`p-8 rounded-2xl shadow-2xl backdrop-blur-sm ${
                     mode === "dark"
-                      ? "bg-gray-800 text-white"
-                      : "bg-white text-[#231812]"
+                      ? "bg-gray-800/95 text-white"
+                      : "bg-white/95 text-[#231812]"
                   }`}
                 >
-                  <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
-                    <Icon
-                      icon="mdi:file-document"
-                      className="w-6 h-6 text-[#f05d23]"
-                    />
+                  <h2 className="text-3xl font-bold mb-6 flex items-center gap-3">
+                    <div className={`p-2 rounded-xl ${
+                      mode === "dark" ? "bg-gray-700" : "bg-blue-50"
+                    }`}>
+                      <Icon
+                        icon="mdi:file-document"
+                        className="w-8 h-8 text-blue-400"
+                      />
+                    </div>
                     Job Description
                   </h2>
                   {job.file_url ? (
-                    <iframe
-                      src={previewUrl}
-                      width="100%"
-                      height="600px"
-                      className={`border-2 rounded-lg shadow-inner ${
-                        mode === "dark" ? "border-gray-700" : "border-gray-200"
-                      }`}
-                      title="Job Description Document"
-                      allow="autoplay"
-                    />
+                    <div className="relative group">
+                      <div className="absolute inset-0 bg-gradient-to-t from-gray-900/20 to-transparent rounded-xl pointer-events-none" />
+                      <iframe
+                        src={previewUrl}
+                        width="100%"
+                        height="700px"
+                        className={`border-2 rounded-xl shadow-inner transition-all duration-300 group-hover:shadow-lg ${
+                          mode === "dark" ? "border-gray-700" : "border-gray-200"
+                        }`}
+                        title="Job Description Document"
+                        allow="autoplay"
+                      />
+                    </div>
                   ) : job.description ? (
                     <div
-                      className="prose max-w-none"
+                      className="prose max-w-none prose-headings:text-2xl prose-p:text-gray-600 dark:prose-p:text-gray-300 prose-a:text-blue-400 dark:prose-a:text-blue-400"
                       dangerouslySetInnerHTML={{ __html: job.description }}
                     />
                   ) : (
                     <div
-                      className={`p-4 rounded-lg flex items-center gap-2 ${
+                      className={`p-6 rounded-xl flex items-center gap-3 ${
                         mode === "dark"
-                          ? "bg-gray-700 text-gray-300"
-                          : "bg-gray-100 text-gray-600"
+                          ? "bg-gray-700/50 text-gray-300"
+                          : "bg-blue-50/50 text-gray-600"
                       }`}
                     >
                       <Icon
                         icon="mdi:information"
-                        className="w-5 h-5 text-[#f05d23]"
+                        className="w-6 h-6 text-blue-400"
                       />
                       <p className="italic">
                         No detailed description or file available for this
@@ -252,205 +251,182 @@ export default function JobDetail({ mode, toggleMode, initialJob, countries }) {
                   )}
                 </div>
               ) : (
-                <p
-                  className={`text-center flex items-center justify-center gap-2 ${
-                    mode === "dark" ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
-                  <Icon icon="mdi:loading" className="w-5 h-5 animate-spin" />
-                  Loading job details...
-                </p>
+                <div className={`p-8 rounded-2xl shadow-2xl backdrop-blur-sm flex items-center justify-center ${
+                  mode === "dark" ? "bg-gray-800/95" : "bg-white/95"
+                }`}>
+                  <p
+                    className={`text-lg flex items-center gap-3 ${
+                      mode === "dark" ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  >
+                    <Icon icon="mdi:loading" className="w-6 h-6 animate-spin text-blue-400" />
+                    Loading job details...
+                  </p>
+                </div>
               )}
             </div>
 
             {job && (
               <div className="lg:col-span-1">
                 <div
-                  className={`p-6 rounded-lg shadow-lg sticky top-24 ${
+                  className={`p-8 rounded-2xl shadow-2xl backdrop-blur-sm sticky top-24 ${
                     mode === "dark"
-                      ? "bg-gray-800 text-white"
-                      : "bg-white text-[#231812]"
+                      ? "bg-gray-800/95 text-white"
+                      : "bg-white/95 text-[#231812]"
                   }`}
                 >
-                  <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                    <Icon
-                      icon="mdi:clipboard-check"
-                      className="w-6 h-6 text-[#f05d23]"
-                    />
+                  <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                    <div className={`p-2 rounded-xl ${
+                      mode === "dark" ? "bg-gray-700" : "bg-blue-50"
+                    }`}>
+                      <Icon
+                        icon="mdi:clipboard-check"
+                        className="w-8 h-8 text-blue-400"
+                      />
+                    </div>
                     Application Details
                   </h3>
                   <div className="space-y-6">
-                    <div className="flex gap-2">
-                      <p
-                        className={`text-base font-medium flex items-center gap-2 ${
-                          mode === "dark" ? "text-gray-300" : "text-gray-600"
-                        }`}
-                      >
-                        <Icon
-                          icon="mdi:briefcase"
-                          className="w-5 h-5 text-[#f05d23]"
-                        />
-                        Employment Type
-                      </p>
-                      <p className="text-base">
-                        {employmentTypeLabel[job.employment_type] || "N/A"}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <p
-                        className={`text-base font-medium flex items-center gap-2 ${
-                          mode === "dark" ? "text-gray-300" : "text-gray-600"
-                        }`}
-                      >
-                        <Icon
-                          icon="mdi:map-marker"
-                          className="w-5 h-5 text-[#f05d23]"
-                        />
-                        Location
-                      </p>
-                      <p className="text-base">
-                        {job.location
-                          ? `${job.location.city}, ${job.location.region}, ${job.location.country}`
-                          : "N/A"}
-                      </p>
-                    </div>
-                    <div className="flex gap-2">
-                      <p
-                        className={`text-base font-medium flex items-center gap-2 ${
-                          mode === "dark" ? "text-gray-300" : "text-gray-600"
-                        }`}
-                      >
-                        <Icon
-                          icon="mdi:home"
-                          className="w-5 h-5 text-[#f05d23]"
-                        />
-                        Remote
-                      </p>
-                      <p className="text-base">{job.remote ? "Yes" : "No"}</p>
-                    </div>
-                    {job.department && (
-                      <div className="flex gap-2">
-                        <p
-                          className={`text-base font-medium flex items-center gap-2 ${
-                            mode === "dark" ? "text-gray-300" : "text-gray-600"
-                          }`}
-                        >
-                          <Icon
-                            icon="mdi:domain"
-                            className="w-5 h-5 text-[#f05d23]"
-                          />
-                          Department
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className={`p-4 rounded-xl ${
+                        mode === "dark" ? "bg-gray-700/50" : "bg-gray-50/50"
+                      }`}>
+                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Employment Type</p>
+                        <p className="text-base font-semibold flex items-center gap-2">
+                          <Icon icon="mdi:briefcase" className="w-5 h-5 text-blue-400" />
+                          {employmentTypeLabel[job.employment_type] || "N/A"}
                         </p>
-                        <p className="text-base">{job.department}</p>
                       </div>
-                    )}
-                    <div className="flex gap-2">
-                      <p
-                        className={`text-base font-medium flex items-center gap-2 ${
-                          mode === "dark" ? "text-gray-300" : "text-gray-600"
-                        }`}
-                      >
-                        <Icon
-                          icon="mdi:calendar"
-                          className="w-5 h-5 text-[#f05d23]"
-                        />
-                        Expires On
-                      </p>
-                      <p className="text-base">{job.expires_on}</p>
+                      <div className={`p-4 rounded-xl ${
+                        mode === "dark" ? "bg-gray-700/50" : "bg-gray-50/50"
+                      }`}>
+                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Location</p>
+                        <p className="text-base font-semibold flex items-center gap-2">
+                          <Icon icon="mdi:map-marker" className="w-5 h-5 text-blue-400" />
+                          {job.location ? `${job.location.city}` : "N/A"}
+                        </p>
+                      </div>
+                      {job.department && (
+                        <div className={`p-4 rounded-xl ${
+                          mode === "dark" ? "bg-gray-700/50" : "bg-gray-50/50"
+                        }`}>
+                          <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Department</p>
+                          <p className="text-base font-semibold flex items-center gap-2">
+                            <Icon icon="mdi:domain" className="w-5 h-5 text-blue-400" />
+                            {job.department}
+                          </p>
+                        </div>
+                      )}
                     </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className={`p-4 rounded-xl ${
+                        mode === "dark" ? "bg-gray-700/50" : "bg-gray-50/50"
+                      }`}>
+                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Remote</p>
+                        <p className="text-base font-semibold flex items-center gap-2">
+                          <Icon icon="mdi:home" className="w-5 h-5 text-blue-400" />
+                          {job.remote ? "Yes" : "No"}
+                        </p>
+                      </div>
+                      <div className={`p-4 rounded-xl ${
+                        mode === "dark" ? "bg-gray-700/50" : "bg-gray-50/50"
+                      }`}>
+                        <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Expires On</p>
+                        <p className="text-base font-semibold flex items-center gap-2">
+                          <Icon icon="mdi:calendar" className="w-5 h-5 text-blue-400" />
+                          {job.expires_on}
+                        </p>
+                      </div>
+                    </div>
+
                     {!job.is_expired && timeLeft && (
                       <div
-                        className={`justify-center mb-6 p-4 rounded-lg shadow-sm flex items-center gap-2 ${
-                          mode === "dark" ? "bg-gray-700" : "bg-[#fff8f0]"
+                        className={`p-6 rounded-xl shadow-lg ${
+                          mode === "dark" ? "bg-gray-700/50" : "bg-blue-50/50"
                         }`}
                       >
-                        <Icon
-                          icon="mdi:timer"
-                          className="w-6 h-6 text-[#f05d23]"
-                        />
-                        <div
-                          className={`flex items-center ${
-                            mode === "dark" ? "text-white" : "text-[#231812]"
-                          }`}
-                        >
-                          <strong className="mr-2">Time Left:</strong>
-                          <div className="flex gap-2 text-lg">
-                            {timeLeft.months > 0 && (
-                              <span>
-                                {timeLeft.months} month
-                                {timeLeft.months > 1 ? "s" : ""}
-                              </span>
-                            )}
-                            {timeLeft.days > 0 && (
-                              <span>
-                                {timeLeft.days} day
-                                {timeLeft.days > 1 ? "s" : ""}
-                              </span>
-                            )}
-                            {timeLeft.hours > 0 && (
-                              <span>{timeLeft.hours}h</span>
-                            )}
-                            {timeLeft.minutes > 0 && (
-                              <span>{timeLeft.minutes}m</span>
-                            )}
-                            {timeLeft.seconds > 0 && (
-                              <span>{timeLeft.seconds}s</span>
-                            )}
-                          </div>
+                        <div className="flex items-center gap-3 mb-4">
+                          <Icon icon="mdi:timer" className="w-6 h-6 text-blue-400" />
+                          <h4 className="text-lg font-semibold">Time Left</h4>
+                        </div>
+                        <div className="grid grid-cols-4 gap-2">
+                          {timeLeft.months > 0 && (
+                            <div className={`p-2 rounded-lg text-center ${
+                              mode === "dark" ? "bg-gray-800/50" : "bg-white/50"
+                            }`}>
+                              <p className="text-xl font-bold text-blue-400">{timeLeft.months}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">Months</p>
+                            </div>
+                          )}
+                          {timeLeft.days > 0 && (
+                            <div className={`p-2 rounded-lg text-center ${
+                              mode === "dark" ? "bg-gray-800/50" : "bg-white/50"
+                            }`}>
+                              <p className="text-xl font-bold text-blue-400">{timeLeft.days}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">Days</p>
+                            </div>
+                          )}
+                          {timeLeft.hours > 0 && (
+                            <div className={`p-2 rounded-lg text-center ${
+                              mode === "dark" ? "bg-gray-800/50" : "bg-white/50"
+                            }`}>
+                              <p className="text-xl font-bold text-blue-400">{timeLeft.hours}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">Hours</p>
+                            </div>
+                          )}
+                          {timeLeft.minutes > 0 && (
+                            <div className={`p-2 rounded-lg text-center ${
+                              mode === "dark" ? "bg-gray-800/50" : "bg-white/50"
+                            }`}>
+                              <p className="text-xl font-bold text-blue-400">{timeLeft.minutes}</p>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">Minutes</p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
-                    <div className="flex gap-2">
-                      <p
-                        className={`text-base font-medium flex items-center gap-2 ${
-                          job.is_expired
-                            ? "text-red-500"
-                            : mode === "dark"
-                            ? "text-gray-300"
-                            : "text-gray-600"
-                        }`}
-                      >
+
+                    <div className={`p-4 rounded-xl ${
+                      mode === "dark" ? "bg-gray-700/50" : "bg-gray-50/50"
+                    }`}>
+                      <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Status</p>
+                      <p className={`text-base font-semibold flex items-center gap-2 ${
+                        job.is_expired ? "text-red-500" : "text-green-500"
+                      }`}>
                         <Icon
-                          icon={
-                            job.is_expired ? "mdi:alert" : "mdi:check-circle"
-                          }
-                          className={`w-5 h-5 ${
-                            job.is_expired ? "text-red-500" : "text-green-500"
-                          }`}
+                          icon={job.is_expired ? "mdi:alert" : "mdi:check-circle"}
+                          className="w-5 h-5"
                         />
-                        Status
-                      </p>
-                      <p
-                        className={`text-base ${
-                          job.is_expired ? "text-red-500" : "text-green-500"
-                        }`}
-                      >
                         {job.is_expired ? "Expired" : "Active"}
                       </p>
                     </div>
-                    <button
-                      onClick={handleApply}
-                      disabled={job.is_expired}
-                      className={`w-full py-4 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 transform hover:scale-105 ${
-                        job.is_expired
-                          ? "bg-gray-400 text-gray-600 cursor-not-allowed"
-                          : "bg-[#f05d23] text-white hover:bg-[#d94f1e] hover:shadow-lg"
-                      }`}
-                    >
-                      <Icon icon="mdi:send" className="w-6 h-6" />
-                      Apply Now
-                    </button>
-                    <button
-                      onClick={() => setIsShareModalOpen(true)}
-                      className={`w-full py-4 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all duration-300 transform hover:scale-105 ${
-                        mode === "dark"
-                          ? "bg-gray-700 text-white hover:bg-gray-600"
-                          : "bg-gray-200 text-[#231812] hover:bg-gray-300"
-                      }`}
-                    >
-                      <Icon icon="mdi:share" className="w-6 h-6" />
-                      Share
-                    </button>
+
+                    <div className="space-y-4">
+                      <button
+                        onClick={handleApply}
+                        disabled={job.is_expired}
+                        className={`w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 transform hover:scale-105 ${
+                          job.is_expired
+                            ? "bg-gray-400/50 text-gray-600 cursor-not-allowed"
+                            : "bg-gradient-to-r from-blue-400 to-blue-600 text-white hover:shadow-lg"
+                        }`}
+                      >
+                        <Icon icon="mdi:send" className="w-6 h-6" />
+                        Apply Now
+                      </button>
+                      <button
+                        onClick={() => setIsShareModalOpen(true)}
+                        className={`w-full py-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all duration-300 transform hover:scale-105 ${
+                          mode === "dark"
+                            ? "bg-gray-700/50 text-white hover:bg-gray-600/50"
+                            : "bg-gray-200/50 text-[#231812] hover:bg-gray-300/50"
+                        }`}
+                      >
+                        <Icon icon="mdi:share" className="w-6 h-6" />
+                        Share
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

@@ -1,4 +1,5 @@
 import { Icon } from "@iconify/react";
+import ItemActionModal from "./ItemActionModal";
 
 export default function ShareModal({ isOpen, onClose, job, mode, onNotify }) {
   if (!isOpen || !job) return null;
@@ -54,27 +55,20 @@ export default function ShareModal({ isOpen, onClose, job, mode, onNotify }) {
   ];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div
-        className={`p-6 rounded-lg shadow-lg max-w-md w-full ${
-          mode === "dark" ? "bg-gray-800 text-white" : "bg-white text-[#231812]"
-        }`}
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-semibold flex items-center gap-2">
-            <Icon icon="mdi:share-variant" className="w-6 h-6 text-[#f05d23]" />
-            Share This Job
-          </h3>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700"
-          >
-            <Icon icon="mdi:close" className="w-6 h-6" />
-          </button>
+    <ItemActionModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={
+        <div className="flex items-center gap-2">
+          <Icon icon="mdi:share-variant" className="w-6 h-6" />
+          Share This Job
         </div>
-
-        <div className="mb-6">
-          <h4 className="text-lg font-medium mb-2">Share on Social Media</h4>
+      }
+      mode={mode}
+    >
+      <div className="space-y-6">
+        <div>
+          <h4 className="text-lg font-medium mb-4">Share on Social Media</h4>
           <div className="grid grid-cols-2 gap-4">
             {shareOptions.map((option) => (
               <a
@@ -113,6 +107,6 @@ export default function ShareModal({ isOpen, onClose, job, mode, onNotify }) {
           </div>
         )}
       </div>
-    </div>
+    </ItemActionModal>
   );
 }

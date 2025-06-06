@@ -232,7 +232,7 @@ export default function JobForm({ mode, onJobAdded }) {
       borderRadius: "0.5rem",
       boxShadow: "none",
       "&:hover": {
-        borderColor: "#F05D23",
+        borderColor: "blue-400",
       },
     }),
     menu: (provided) => ({
@@ -243,7 +243,7 @@ export default function JobForm({ mode, onJobAdded }) {
     option: (provided, state) => ({
       ...provided,
       backgroundColor: state.isSelected
-        ? "#F05D23"
+        ? "blue-400"
         : mode === "dark"
         ? "#374151"
         : "#F9FAFB",
@@ -253,7 +253,7 @@ export default function JobForm({ mode, onJobAdded }) {
         ? "#F9FAFB"
         : "#231812",
       "&:hover": {
-        backgroundColor: state.isSelected ? "#F05D23" : "#FED7AA",
+        backgroundColor: state.isSelected ? "blue-400" : "#FED7AA",
         color: state.isSelected ? "#FFFFFF" : "#231812",
       },
     }),
@@ -273,39 +273,45 @@ export default function JobForm({ mode, onJobAdded }) {
 
   return (
     <div
-      className={`p-6 rounded-lg shadow-lg mb-8 border-t-4 border-[#f05d23] ${
+      className={`p-8 rounded-2xl shadow-2xl mb-8 backdrop-blur-sm ${
         mode === "dark"
-          ? "bg-gray-800 shadow-gray-900"
-          : "bg-white shadow-gray-300"
-      } transition-shadow duration-300 hover:shadow-xl`}
+          ? "bg-gray-800/95 shadow-gray-900/50"
+          : "bg-white/95 shadow-gray-300/50"
+      } transition-all duration-300 hover:shadow-3xl`}
     >
-      <div className="flex items-center mb-6">
-        <Icon
-          icon="mdi:briefcase-plus"
-          className="w-8 h-8 text-[#f05d23] mr-3"
-        />
+      <div className="flex items-center mb-8">
+        <div className={`p-3 rounded-xl ${
+          mode === "dark" ? "bg-gray-700" : "bg-blue-50"
+        }`}>
+          <Icon
+            icon="mdi:briefcase-plus"
+            className="w-8 h-8 text-blue-400"
+          />
+        </div>
         <h3
-          className={`text-2xl font-bold ${
+          className={`text-2xl font-bold ml-4 ${
             mode === "dark" ? "text-white" : "text-[#231812]"
           }`}
         >
           Add New Job Opening
         </h3>
       </div>
-      <form className="space-y-6">
-        <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
-          <div
-            className="bg-[#f05d23] h-2.5 rounded-full transition-all duration-300"
-            style={{ width: `${(step / totalSteps) * 100}%` }}
-          />
-        </div>
-        <div className="text-center text-lg font-semibold text-gray-700 dark:text-gray-300">
-          {steps[step - 1].name} (Step {step} of {totalSteps})
+      <form className="space-y-8">
+        <div className="relative">
+          <div className="w-full bg-gray-200/50 rounded-full h-2.5 mb-4 overflow-hidden">
+            <div
+              className="bg-gradient-to-r from-blue-400 to-blue-600 h-2.5 rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${(step / totalSteps) * 100}%` }}
+            />
+          </div>
+          <div className="text-center text-lg font-semibold text-gray-700 dark:text-gray-300">
+            {steps[step - 1].name} <span className="text-blue-400">•</span> Step {step} of {totalSteps}
+          </div>
         </div>
 
         {step === 1 && (
-          <div className="space-y-6">
-            <div>
+          <div className="space-y-8">
+            <div className="transform transition-all duration-300 hover:scale-[1.01]">
               <label
                 className={`block text-sm font-medium mb-2 ${
                   mode === "dark" ? "text-gray-300" : "text-[#231812]"
@@ -313,26 +319,26 @@ export default function JobForm({ mode, onJobAdded }) {
               >
                 Job Title <span className="text-red-500">*</span>
               </label>
-              <div className="relative">
+              <div className="relative group">
                 <Icon
                   icon="mdi:format-title"
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400 group-hover:text-blue-500 transition-colors duration-200"
                 />
                 <input
                   type="text"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200 ${
+                  className={`w-full pl-10 pr-4 py-3.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-all duration-200 ${
                     mode === "dark"
-                      ? "bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
-                      : "bg-gray-50 border-gray-300 text-[#231812] hover:bg-gray-100"
+                      ? "bg-gray-700/50 border-gray-600 text-white hover:bg-gray-600/50"
+                      : "bg-gray-50/50 border-gray-200 text-[#231812] hover:bg-gray-100/50"
                   }`}
                   placeholder="e.g., Comms and Projects Specialist"
                   required
                 />
               </div>
             </div>
-            <div>
+            <div className="transform transition-all duration-300 hover:scale-[1.01]">
               <label
                 className={`block text-sm font-medium mb-2 ${
                   mode === "dark" ? "text-gray-300" : "text-[#231812]"
@@ -340,18 +346,18 @@ export default function JobForm({ mode, onJobAdded }) {
               >
                 Employment Type <span className="text-red-500">*</span>
               </label>
-              <div className="relative">
+              <div className="relative group">
                 <Icon
                   icon="mdi:briefcase"
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400 group-hover:text-blue-500 transition-colors duration-200"
                 />
                 <select
                   value={employmentType}
                   onChange={(e) => setEmploymentType(e.target.value)}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200 ${
+                  className={`w-full pl-10 pr-4 py-3.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-all duration-200 appearance-none ${
                     mode === "dark"
-                      ? "bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
-                      : "bg-gray-50 border-gray-300 text-[#231812] hover:bg-gray-100"
+                      ? "bg-gray-700/50 border-gray-600 text-white hover:bg-gray-600/50"
+                      : "bg-gray-50/50 border-gray-200 text-[#231812] hover:bg-gray-100/50"
                   }`}
                   required
                 >
@@ -361,9 +367,13 @@ export default function JobForm({ mode, onJobAdded }) {
                   <option value="temporary">Temporary</option>
                   <option value="intern">Internship</option>
                 </select>
+                <Icon
+                  icon="mdi:chevron-down"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400 pointer-events-none"
+                />
               </div>
             </div>
-            <div>
+            <div className="transform transition-all duration-300 hover:scale-[1.01]">
               <label
                 className={`block text-sm font-medium mb-2 ${
                   mode === "dark" ? "text-gray-300" : "text-[#231812]"
@@ -371,16 +381,20 @@ export default function JobForm({ mode, onJobAdded }) {
               >
                 Job Description (Optional)
               </label>
-              <EditorComponent
-                initialValue={description}
-                onBlur={(newContent) => setDescription(newContent)}
-                mode={mode}
-                holderId="jodit-editor-job-form"
-                className="w-full"
-              />
+              <div className={`border-2 rounded-xl overflow-hidden transition-all duration-200 ${
+                mode === "dark" ? "border-gray-600" : "border-gray-200"
+              }`}>
+                <EditorComponent
+                  initialValue={description}
+                  onBlur={(newContent) => setDescription(newContent)}
+                  mode={mode}
+                  holderId="jodit-editor-job-form"
+                  className="w-full"
+                />
+              </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="transform transition-all duration-300 hover:scale-[1.01]">
                 <label
                   className={`block text-sm font-medium mb-2 ${
                     mode === "dark" ? "text-gray-300" : "text-[#231812]"
@@ -388,29 +402,29 @@ export default function JobForm({ mode, onJobAdded }) {
                 >
                   Upload Job Description (Optional)
                 </label>
-                <div className="relative">
+                <div className="relative group">
                   <Icon
                     icon="mdi:file-upload"
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400 group-hover:text-blue-500 transition-colors duration-200"
                   />
                   <input
                     id="file-upload"
                     type="file"
                     accept=".pdf,.docx"
                     onChange={handleFileChange}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg transition-all duration-200 ${
+                    className={`w-full pl-10 pr-4 py-3.5 border-2 rounded-xl transition-all duration-200 ${
                       mode === "dark"
-                        ? "bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600"
-                        : "bg-gray-50 border-gray-300 text-[#231812] hover:bg-gray-100"
+                        ? "bg-gray-700/50 border-gray-600 text-gray-300 hover:bg-gray-600/50"
+                        : "bg-gray-50/50 border-gray-200 text-[#231812] hover:bg-gray-100/50"
                     }`}
                   />
                 </div>
                 {file && (
                   <div
-                    className={`mt-4 p-4 border rounded-lg shadow-md animate-fade-in ${
+                    className={`mt-4 p-4 border-2 rounded-xl shadow-lg animate-fade-in ${
                       mode === "dark"
-                        ? "bg-gray-800 border-gray-700 text-gray-300"
-                        : "bg-gray-100 border-gray-200 text-gray-600"
+                        ? "bg-gray-800/50 border-gray-700 text-gray-300"
+                        : "bg-gray-100/50 border-gray-200 text-gray-600"
                     }`}
                   >
                     <div className="flex items-center justify-between">
@@ -421,10 +435,10 @@ export default function JobForm({ mode, onJobAdded }) {
                         <button
                           type="button"
                           onClick={handleRemoveFile}
-                          className={`p-2 rounded-full transition-transform duration-200 hover:scale-110 ${
+                          className={`p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
                             mode === "dark"
-                              ? "bg-gray-700 text-red-500 hover:bg-gray-600"
-                              : "bg-gray-200 text-red-500 hover:bg-gray-300"
+                              ? "bg-gray-700/50 text-red-500 hover:bg-gray-600/50"
+                              : "bg-gray-200/50 text-red-500 hover:bg-gray-300/50"
                           }`}
                         >
                           <Icon icon="mdi:trash-can" width={24} height={24} />
@@ -432,10 +446,10 @@ export default function JobForm({ mode, onJobAdded }) {
                         <button
                           type="button"
                           onClick={handleReplaceFile}
-                          className={`p-2 rounded-full transition-transform duration-200 hover:scale-110 ${
+                          className={`p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
                             mode === "dark"
-                              ? "bg-gray-700 text-[#f05d23] hover:bg-gray-600"
-                              : "bg-gray-200 text-[#f05d23] hover:bg-gray-300"
+                              ? "bg-gray-700/50 text-blue-400 hover:bg-gray-600/50"
+                              : "bg-gray-200/50 text-blue-400 hover:bg-gray-300/50"
                           }`}
                         >
                           <Icon icon="mdi:refresh" width={24} height={24} />
@@ -445,7 +459,7 @@ export default function JobForm({ mode, onJobAdded }) {
                   </div>
                 )}
               </div>
-              <div>
+              <div className="transform transition-all duration-300 hover:scale-[1.01]">
                 <label
                   className={`block text-sm font-medium mb-2 ${
                     mode === "dark" ? "text-gray-300" : "text-[#231812]"
@@ -454,22 +468,22 @@ export default function JobForm({ mode, onJobAdded }) {
                   Expiration <span className="text-red-500">*</span>
                 </label>
                 <div
-                  className="relative flex items-center cursor-pointer"
+                  className="relative flex items-center cursor-pointer group"
                   onClick={handleDateClick}
                 >
                   <Icon
                     icon="mdi:calendar"
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400 group-hover:text-blue-500 transition-colors duration-200"
                   />
                   <input
                     type="date"
                     value={expiresOn}
                     onChange={(e) => setExpiresOn(e.target.value)}
                     min={today}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200 ${
+                    className={`w-full pl-10 pr-4 py-3.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-all duration-200 ${
                       mode === "dark"
-                        ? "bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
-                        : "bg-gray-50 border-gray-300 text-[#231812] hover:bg-gray-100"
+                        ? "bg-gray-700/50 border-gray-600 text-white hover:bg-gray-600/50"
+                        : "bg-gray-50/50 border-gray-200 text-[#231812] hover:bg-gray-100/50"
                     }`}
                     required
                   />
@@ -480,8 +494,8 @@ export default function JobForm({ mode, onJobAdded }) {
         )}
 
         {step === 2 && (
-          <div className="space-y-6">
-            <div>
+          <div className="space-y-8">
+            <div className="transform transition-all duration-300 hover:scale-[1.01]">
               <label
                 className={`block text-sm font-medium mb-2 ${
                   mode === "dark" ? "text-gray-300" : "text-[#231812]"
@@ -489,25 +503,25 @@ export default function JobForm({ mode, onJobAdded }) {
               >
                 Department (Optional)
               </label>
-              <div className="relative">
+              <div className="relative group">
                 <Icon
                   icon="mdi:domain"
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400 group-hover:text-blue-500 transition-colors duration-200"
                 />
                 <input
                   type="text"
                   value={department}
                   onChange={(e) => setDepartment(e.target.value)}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200 ${
+                  className={`w-full pl-10 pr-4 py-3.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-all duration-200 ${
                     mode === "dark"
-                      ? "bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
-                      : "bg-gray-50 border-gray-300 text-[#231812] hover:bg-gray-100"
+                      ? "bg-gray-700/50 border-gray-600 text-white hover:bg-gray-600/50"
+                      : "bg-gray-50/50 border-gray-200 text-[#231812] hover:bg-gray-100/50"
                   }`}
                   placeholder="e.g., Business Development"
                 />
               </div>
             </div>
-            <div>
+            <div className="transform transition-all duration-300 hover:scale-[1.01]">
               <label
                 className={`block text-sm font-medium mb-2 ${
                   mode === "dark" ? "text-gray-300" : "text-[#231812]"
@@ -515,18 +529,18 @@ export default function JobForm({ mode, onJobAdded }) {
               >
                 Job Type <span className="text-red-500">*</span>
               </label>
-              <div className="relative">
+              <div className="relative group">
                 <Icon
                   icon="mdi:account-group"
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400 group-hover:text-blue-500 transition-colors duration-200"
                 />
                 <select
                   value={jobType}
                   onChange={(e) => setJobType(e.target.value)}
-                  className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200 ${
+                  className={`w-full pl-10 pr-4 py-3.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-all duration-200 appearance-none ${
                     mode === "dark"
-                      ? "bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
-                      : "bg-gray-50 border-gray-300 text-[#231812] hover:bg-gray-100"
+                      ? "bg-gray-700/50 border-gray-600 text-white hover:bg-gray-600/50"
+                      : "bg-gray-50/50 border-gray-200 text-[#231812] hover:bg-gray-100/50"
                   }`}
                   required
                 >
@@ -536,9 +550,13 @@ export default function JobForm({ mode, onJobAdded }) {
                   <option value="agencies">Agencies</option>
                   <option value="freelancers">Freelancers</option>
                 </select>
+                <Icon
+                  icon="mdi:chevron-down"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400 pointer-events-none"
+                />
               </div>
             </div>
-            <div>
+            <div className="transform transition-all duration-300 hover:scale-[1.01]">
               <label
                 className={`block text-sm font-medium mb-2 ${
                   mode === "dark" ? "text-gray-300" : "text-[#231812]"
@@ -547,46 +565,46 @@ export default function JobForm({ mode, onJobAdded }) {
                 Location <span className="text-red-500">*</span>
               </label>
               <div className="space-y-4">
-                <div className="relative">
+                <div className="relative group">
                   <Icon
                     icon="mdi:map-marker"
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400 group-hover:text-blue-500 transition-colors duration-200"
                   />
                   <input
                     type="text"
                     value={locationCity}
                     onChange={(e) => setLocationCity(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200 ${
+                    className={`w-full pl-10 pr-4 py-3.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-all duration-200 ${
                       mode === "dark"
-                        ? "bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
-                        : "bg-gray-50 border-gray-300 text-[#231812] hover:bg-gray-100"
+                        ? "bg-gray-700/50 border-gray-600 text-white hover:bg-gray-600/50"
+                        : "bg-gray-50/50 border-gray-200 text-[#231812] hover:bg-gray-100/50"
                     }`}
                     placeholder="City (e.g., Nairobi)"
                     required
                   />
                 </div>
-                <div className="relative">
+                <div className="relative group">
                   <Icon
                     icon="mdi:map"
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400 group-hover:text-blue-500 transition-colors duration-200"
                   />
                   <input
                     type="text"
                     value={locationRegion}
                     onChange={(e) => setLocationRegion(e.target.value)}
-                    className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200 ${
+                    className={`w-full pl-10 pr-4 py-3.5 border-2 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/50 transition-all duration-200 ${
                       mode === "dark"
-                        ? "bg-gray-700 border-gray-600 text-white hover:bg-gray-600"
-                        : "bg-gray-50 border-gray-300 text-[#231812] hover:bg-gray-100"
+                        ? "bg-gray-700/50 border-gray-600 text-white hover:bg-gray-600/50"
+                        : "bg-gray-50/50 border-gray-200 text-[#231812] hover:bg-gray-100/50"
                     }`}
                     placeholder="Region (e.g., Nairobi County)"
                     required
                   />
                 </div>
-                <div className="relative">
+                <div className="relative group">
                   <Icon
                     icon="mdi:earth"
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23] z-10"
+                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400 group-hover:text-blue-500 transition-colors duration-200 z-10"
                   />
                   <Select
                     value={
@@ -610,7 +628,7 @@ export default function JobForm({ mode, onJobAdded }) {
                 </div>
               </div>
             </div>
-            <div>
+            <div className="transform transition-all duration-300 hover:scale-[1.01]">
               <label
                 className={`block text-sm font-medium mb-2 ${
                   mode === "dark" ? "text-gray-300" : "text-[#231812]"
@@ -619,15 +637,20 @@ export default function JobForm({ mode, onJobAdded }) {
                 Is the Job Remote?
               </label>
               <div className="relative">
-                <label className="flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={remote}
-                    onChange={(e) => setRemote(e.target.checked)}
-                    className="w-5 h-5 text-[#f05d23] border-gray-300 rounded focus:ring-[#f05d23] mr-2"
-                  />
+                <label className="flex items-center cursor-pointer group">
+                  <div className={`relative w-12 h-6 rounded-full transition-colors duration-200 ${
+                    remote 
+                      ? "bg-blue-400" 
+                      : mode === "dark" 
+                        ? "bg-gray-600" 
+                        : "bg-gray-300"
+                  }`}>
+                    <div className={`absolute left-1 top-1 w-4 h-4 rounded-full bg-white transform transition-transform duration-200 ${
+                      remote ? "translate-x-6" : ""
+                    }`} />
+                  </div>
                   <span
-                    className={`text-sm ${
+                    className={`ml-3 text-sm ${
                       mode === "dark" ? "text-gray-300" : "text-[#231812]"
                     }`}
                   >
@@ -639,17 +662,17 @@ export default function JobForm({ mode, onJobAdded }) {
           </div>
         )}
 
-        <div className="flex justify-between mt-6">
+        <div className="flex justify-between mt-8">
           <button
             type="button"
             onClick={handlePrevious}
             disabled={step === 1}
-            className={`py-2 px-4 rounded-lg flex items-center gap-2 transition-all duration-200 ${
+            className={`py-3 px-6 rounded-xl flex items-center gap-2 transition-all duration-200 ${
               step === 1
-                ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+                ? "bg-gray-400/50 text-gray-600 cursor-not-allowed"
                 : mode === "dark"
-                ? "bg-gray-700 text-white hover:bg-gray-600"
-                : "bg-gray-200 text-[#231812] hover:bg-gray-300"
+                ? "bg-gray-700/50 text-white hover:bg-gray-600/50"
+                : "bg-gray-200/50 text-[#231812] hover:bg-gray-300/50"
             }`}
           >
             <Icon icon="mdi:arrow-left" width={20} height={20} />
@@ -659,7 +682,7 @@ export default function JobForm({ mode, onJobAdded }) {
             <button
               type="button"
               onClick={handleNext}
-              className={`py-2 px-4 bg-[#f05d23] text-white rounded-lg hover:bg-[#d94f1e] transition-all duration-200 flex items-center gap-2`}
+              className="py-3 px-6 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-xl hover:from-blue-500 hover:to-blue-700 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl"
             >
               Next
               <Icon icon="mdi:arrow-right" width={20} height={20} />
@@ -668,7 +691,7 @@ export default function JobForm({ mode, onJobAdded }) {
             <button
               type="button"
               onClick={handleSubmit}
-              className={`py-2 px-4 bg-[#f05d23] text-white rounded-lg hover:bg-[#d94f1e] transition-all duration-200 flex items-center gap-2`}
+              className="py-3 px-6 bg-gradient-to-r from-blue-400 to-blue-600 text-white rounded-xl hover:from-blue-500 hover:to-blue-700 transition-all duration-200 flex items-center gap-2 shadow-lg hover:shadow-xl"
             >
               <Icon icon="mdi:plus" width={20} height={20} />
               Add Job Opening

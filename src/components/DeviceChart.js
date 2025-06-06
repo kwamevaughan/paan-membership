@@ -202,7 +202,7 @@ export default function ModernDeviceChart({ candidates, mode, onFilter }) {
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-2xl bg-[#fef1ce] shadow-lg">
+          <div className="p-3 rounded-2xl bg-blue-400/10 shadow-lg">
             {" "}
             <Icon icon="mdi:desktop-mac" className="w-6 h-6 text-[#4086f7]" />
           </div>

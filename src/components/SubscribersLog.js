@@ -139,7 +139,7 @@ export default function SubscribersLog({
               className={`p-3 rounded-xl shadow-lg ${
                 mode === "dark"
                   ? "bg-indigo-500/20 text-indigo-300"
-                  : "bg-[#fef1ce] text-[#172840]"
+                  : "bg-blue-400/10 text-[#172840]"
               }`}
             >
               <Icon

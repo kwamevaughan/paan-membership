@@ -145,7 +145,7 @@ export default function ModernTimeline({
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
               <div className="relative">
-                <div className="p-3 rounded-2xl bg-[#fef1ce] shadow-lg">
+                <div className="p-3 rounded-2xl bg-blue-400/10 shadow-lg">
                   {" "}
                   {/* Light yellow background */}
                   <Icon

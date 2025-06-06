@@ -531,7 +531,7 @@
         <div className="flex flex-col sm:flex-row justify-between items-start p-4 pb-0 sm:pb-4">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div className="p-3 rounded-2xl bg-[#fef1ce] shadow-lg">
+              <div className="p-3 rounded-2xl bg-blue-400/10 shadow-lg">
                 <Icon icon="mdi:chart-bar" className="w-6 h-6 text-[#4086f7]" />
               </div>
             </div>

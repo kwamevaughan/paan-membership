@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import toast from "react-hot-toast";
 
 export function useCategories(initialCategories = []) {
   const [categories, setCategories] = useState(
@@ -27,14 +26,12 @@ export function useCategories(initialCategories = []) {
 
           if (error) {
             console.error("Supabase error fetching categories:", error);
-            toast.error("Failed to fetch categories.");
             setCategories([]);
           } else {
             setCategories(data || []);
           }
         } catch (err) {
           console.error("Unexpected error fetching categories:", err);
-          toast.error("Unexpected error fetching categories.");
           setCategories([]);
         } finally {
           setIsLoading(false);
@@ -49,46 +46,64 @@ export function useCategories(initialCategories = []) {
 
   const addCategory = async (category) => {
     try {
+      // Ensure only valid columns are included
+      const { id, ...categoryData } = category; // Omit 'id' as it's auto-generated
+      const payload = {
+        name: categoryData.name,
+        job_type: categoryData.job_type || "none", // Default to "none" if not provided
+        is_mandatory: categoryData.is_mandatory || false,
+        description: categoryData.description || null,
+      };
+
       const { data, error } = await supabase
         .from("question_categories")
-        .insert([category])
+        .insert([payload])
         .select()
         .single();
 
       if (error) {
         console.error("Error adding category:", error);
-        toast.error("Failed to add category.");
+        return false;
       } else {
         setCategories((prev) => [data, ...prev]);
-        toast.success("Category added.");
+        return true;
       }
     } catch (err) {
       console.error("Unexpected error adding category:", err);
-      toast.error("Unexpected error adding category.");
+      return false;
     }
   };
 
   const editCategory = async (updated) => {
     try {
+      // Ensure only valid columns are updated
+      const { id, created_at, ...updateData } = updated; // Omit 'id' and 'created_at'
+      const payload = {
+        name: updateData.name,
+        job_type: updateData.job_type || "none", // Default to "none" if not provided
+        is_mandatory: updateData.is_mandatory || false,
+        description: updateData.description || null,
+      };
+
       const { data, error } = await supabase
         .from("question_categories")
-        .update(updated)
+        .update(payload)
         .eq("id", updated.id)
         .select()
         .single();
 
       if (error) {
         console.error("Error updating category:", error);
-        toast.error("Failed to update category.");
+        return false;
       } else {
         setCategories((prev) =>
           prev.map((cat) => (cat.id === updated.id ? data : cat))
         );
-        toast.success("Category updated.");
+        return true;
       }
     } catch (err) {
       console.error("Unexpected error updating category:", err);
-      toast.error("Unexpected error updating category.");
+      return false;
     }
   };
 
@@ -101,14 +116,14 @@ export function useCategories(initialCategories = []) {
 
       if (error) {
         console.error("Error deleting category:", error);
-        toast.error("Failed to delete category.");
+        return false;
       } else {
         setCategories((prev) => prev.filter((cat) => cat.id !== id));
-        toast.success("Category deleted.");
+        return true;
       }
     } catch (err) {
       console.error("Unexpected error deleting category:", err);
-      toast.error("Unexpected error deleting category.");
+      return false;
     }
   };
 

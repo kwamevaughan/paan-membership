@@ -42,7 +42,7 @@ const HRHeader = ({
   return (
     <header
       ref={headerRef}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-20 transition-all duration-300 ${
         mode === "dark" ? "bg-[#101827]" : "bg-transparent"
       }`}
     >

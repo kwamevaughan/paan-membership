@@ -8,6 +8,7 @@ import OpenEndedOptions from "./OpenEndedOptions";
 import NonOpenEndedOptions from "./NonOpenEndedOptions";
 import DependencyFields from "./DependencyFields";
 import { useCountry } from "@/hooks/useCountry";
+import ItemActionModal from "@/components/ItemActionModal";
 
 export default function QuestionForm({
   mode,
@@ -50,12 +51,12 @@ export default function QuestionForm({
     const filteredCategories = categories.filter(
       (cat) => cat.job_type === jobType || !cat.job_type
     );
-    
+
     // Reset category if current category is not valid for new jobType
     if (category && !filteredCategories.some((cat) => cat.id === category)) {
       setCategory("");
     }
-  }, [selectedJobType, jobType, categories, category, question]);
+  }, [selectedJobType, jobType, categories, category]);
 
   useEffect(() => {
     if (isOpen) {
@@ -338,26 +339,11 @@ export default function QuestionForm({
       job_type: jobType,
     };
 
-    console.log(
-      "Submitting questionData:",
-      JSON.stringify(questionData, null, 2)
-    );
     try {
-      console.log(
-        "Calling onSubmit, isEdit:",
-        question && question.id,
-        "questionId:",
-        question?.id
-      );
       const success =
         question && question.id
           ? await onSubmit(question.id, questionData)
           : await onSubmit(questionData);
-      console.log(
-        question && question.id
-          ? "Editing question with ID: " + question.id
-          : "Adding new question"
-      );
       if (success) {
         toast.success(
           question && question.id
@@ -366,48 +352,23 @@ export default function QuestionForm({
         );
         onCancel();
       } else {
-        console.error("Failed to submit question:", questionData);
         toast.error("Failed to save question. Please try again.");
       }
     } catch (error) {
-      console.error("Submission error:", error.message);
       toast.error("An error occurred while saving the question.");
     }
   };
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-[9999]">
-      <div
-        className={`p-6 rounded-lg shadow-lg border-t-4 border-[#f05d23] max-w-3xl w-full mx-4 max-h-[90vh] overflow-y-auto ${
-          mode === "dark" ? "bg-gray-800" : "bg-white"
-        }`}
-      >
-        <div className="flex justify-between items-center mb-4">
-          <h4
-            className={`text-lg font-semibold ${
-              mode === "dark" ? "text-white" : "text-[#231812]"
-            }`}
-          >
-            {question ? "Edit Question" : "Add New Question"}
-          </h4>
-          <div className="relative group">
-            <button
-              type="button"
-              onClick={onCancel}
-              className="text-[#f05d23] font-bold hover:text-gray-700 focus:outline-none p-2 transition-all duration-100 ease-in-out transform hover:scale-105 sticky top-0 z-[10000]"
-              aria-label="Cancel"
-            >
-              <Icon icon="mdi:close" width={30} height={30} />
-            </button>
-            <span className="absolute left-1/2 transform -translate-x-1/2 bottom-full text-xs text-white bg-black rounded px-4 py-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 ease-in-out">
-              Cancel
-            </span>
-          </div>
-        </div>
+    <ItemActionModal
+      isOpen={isOpen}
+      onClose={onCancel}
+      title={question ? "Edit Question" : "Add New Question"}
+      mode={mode}
+    >
+      <div className="relative">        
 
-        <form onSubmit={handleFormSubmit} className="space-y-6">
+        <form onSubmit={handleFormSubmit} className="space-y-6 relative z-10">
           <QuestionTextEditor
             text={text}
             description={description}
@@ -418,7 +379,7 @@ export default function QuestionForm({
 
           <div className="space-y-2">
             <label
-              className={`inline-flex items-center gap-2 cursor-pointer hover:text-[#f05d23] ${
+              className={`inline-flex items-center gap-2 cursor-pointer hover:text-sky-900 transition-all duration-200 ${
                 mode === "dark" ? "text-gray-300" : "text-[#231812]"
               }`}
             >
@@ -442,11 +403,14 @@ export default function QuestionForm({
                 }
                 width={20}
                 height={20}
+                className={`${
+                  mode === "dark" ? "text-amber-400" : "text-sky-600"
+                } transition-all duration-200`}
               />
             </label>
 
             <label
-              className={`inline-flex items-center gap-2 cursor-pointer hover:text-[#f05d23] ${
+              className={`inline-flex items-center gap-2 cursor-pointer hover:text-sky-900 transition-all duration-200 ${
                 mode === "dark" ? "text-gray-300" : "text-[#231812]"
               }`}
             >
@@ -470,11 +434,20 @@ export default function QuestionForm({
                 }
                 width={20}
                 height={20}
+                className={`${
+                  mode === "dark" ? "text-amber-400" : "text-sky-600"
+                } `}
               />
             </label>
           </div>
 
-          <div className="flex flex-col">
+          <div
+            className={`relative p-4 rounded-xl backdrop-blur-sm border transition-all duration-200 hover:shadow-lg ${
+              mode === "dark"
+                ? "bg-blue-500/20 border-blue-400/30 text-blue-300"
+                : "bg-blue-50 border-blue-200 text-gray-700"
+            }`}
+          >
             <label
               htmlFor="job-type-select"
               className={`block text-sm font-medium mb-2 ${
@@ -486,11 +459,11 @@ export default function QuestionForm({
             <select
               value={jobType}
               onChange={(e) => setJobType(e.target.value)}
-              className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition duration-200 ${
+              className={`w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-900 transition-all duration-200 backdrop-blur-sm ${
                 mode === "dark"
-                  ? "bg-gray-700 border-gray-600 text-white"
-                  : "bg-gray-50 border-gray-300 text-[#231812]"
-              }`}
+                  ? "bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-white/10 text-gray-100"
+                  : "bg-gradient-to-br from-white/60 to-gray-50/60 border-white/20 text-[#231812]"
+              } hover:bg-opacity-70`}
               required
               id="job-type-select"
             >
@@ -533,7 +506,13 @@ export default function QuestionForm({
             />
           )}
 
-          <div className="flex flex-col">
+          <div
+            className={`relative p-4 rounded-xl backdrop-blur-sm border transition-all duration-200 hover:shadow-lg ${
+              mode === "dark"
+                ? "bg-blue-500/20 border-blue-400/30 text-blue-300"
+                : "bg-blue-50 border-blue-200 text-gray-700"
+            }`}
+          >
             <label
               htmlFor="category-select"
               className={`block text-sm font-medium mb-2 ${
@@ -545,11 +524,11 @@ export default function QuestionForm({
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition duration-200 ${
+              className={`w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-skly-900 transition-all duration-200 backdrop-blur-sm ${
                 mode === "dark"
-                  ? "bg-gray-700 border-gray-600 text-white"
-                  : "bg-gray-50 border-gray-300 text-[#231812]"
-              }`}
+                  ? "bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-white/10 text-gray-100"
+                  : "bg-gradient-to-br from-white/60 to-gray-50/60 border-white/20 text-[#231812]"
+              } hover:bg-opacity-70`}
               required
               id="category-select"
             >
@@ -580,18 +559,26 @@ export default function QuestionForm({
             mode={mode}
           />
 
-          <div className="flex justify-end gap-4">
+          <div className="flex justify-end gap-4 pt-4">
             <button
               type="button"
               onClick={onCancel}
-              className="text-[#f05d23] hover:text-gray-700 font-semibold p-3 rounded-lg transition-all duration-200 transform hover:scale-105"
+              className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 transform hover:scale-105 ${
+                mode === "dark"
+                  ? "bg-gradient-to-br from-gray-700/80 to-gray-600/80 text-gray-300 hover:bg-gray-600"
+                  : "bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700 hover:bg-gray-300"
+              }`}
               aria-label="Cancel"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="bg-[#f05d23] text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200 transform hover:scale-105"
+              className={`px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 ${
+                mode === "dark"
+                  ? "bg-gradient-to-r from-orange-500/80 to-red-500/80 text-white hover:from-orange-600/80 hover:to-red-600/80"
+                  : "bg-gradient-to-r from-blue-400 to-sky-600 text-white hover:from-blue-600 hover:to-sky-600"
+              }`}
               aria-label="Save question"
             >
               Save
@@ -599,6 +586,6 @@ export default function QuestionForm({
           </div>
         </form>
       </div>
-    </div>
+    </ItemActionModal>
   );
 }

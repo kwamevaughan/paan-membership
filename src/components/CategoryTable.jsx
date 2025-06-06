@@ -1,225 +1,209 @@
-import React, { useState, useMemo } from "react";
+import { useState } from "react";
 import { Icon } from "@iconify/react";
+import ItemActionModal from "@/components/ItemActionModal";
+import toast from "react-hot-toast";
 
 export default function CategoryTable({
   categories,
-  onEdit,
-  onDelete,
-  onAdd,
   mode,
+  onEdit,
+  onAdd,
+  onDelete,
 }) {
-  // Search state
-  const [searchTerm, setSearchTerm] = useState("");
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
 
-  // Sorting state
-  const [sortConfig, setSortConfig] = useState({
-    key: null,
-    direction: "ascending",
-  });
-
-  // Sorting function
-  const sortedCategories = useMemo(() => {
-    if (!Array.isArray(categories)) return [];
-
-    // First, filter based on search term
-    const filteredCategories = categories.filter(
-      (cat) =>
-        cat.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cat.group.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    // Then sort if a sort key is specified
-    if (sortConfig.key) {
-      return [...filteredCategories].sort((a, b) => {
-        if (a[sortConfig.key] < b[sortConfig.key]) {
-          return sortConfig.direction === "ascending" ? -1 : 1;
-        }
-        if (a[sortConfig.key] > b[sortConfig.key]) {
-          return sortConfig.direction === "ascending" ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-
-    return filteredCategories;
-  }, [categories, searchTerm, sortConfig]);
-
-  // Handle sorting
-  const handleSort = (key) => {
-    setSortConfig((prevSort) => {
-      // If sorting by the same column, toggle direction
-      if (prevSort.key === key) {
-        return {
-          key,
-          direction:
-            prevSort.direction === "ascending" ? "descending" : "ascending",
-        };
-      }
-      // If sorting by a new column, default to ascending
-      return {
-        key,
-        direction: "ascending",
-      };
-    });
+  const handleDeleteClick = (category) => {
+    setCategoryToDelete(category);
+    setIsDeleteModalOpen(true);
   };
 
-  // Render sort icon
-  const renderSortIcon = (key) => {
-    if (sortConfig.key !== key) return null;
-    return sortConfig.direction === "ascending" ? (
-      <Icon
-        icon="mdi:arrow-up"
-        className="inline ml-1 text-gray-500"
-        width={16}
-      />
-    ) : (
-      <Icon
-        icon="mdi:arrow-down"
-        className="inline ml-1 text-gray-500"
-        width={16}
-      />
-    );
+  const handleConfirmDelete = async () => {
+    if (categoryToDelete) {
+      const success = await onDelete(categoryToDelete.id);
+      if (success) {
+        toast.success("Category deleted successfully!");
+      } else {
+        toast.error("Failed to delete category.");
+      }
+    }
+    setIsDeleteModalOpen(false);
+    setCategoryToDelete(null);
+  };
+
+  const handleCancelDelete = () => {
+    setIsDeleteModalOpen(false);
+    setCategoryToDelete(null);
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg border border-gray-100 dark:border-gray-700">
-      {/* Search and Header Section */}
-      <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
-        <div className="flex items-center space-x-4 w-full">
-          {/* Search Input */}
-          <div className="relative flex-grow">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Icon
-                icon="mdi:magnify"
-                className="text-gray-400 dark:text-gray-500"
-                width={20}
-              />
-            </div>
-            <input
-              type="text"
-              placeholder="Search categories..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500/50 dark:bg-gray-700 dark:text-white transition-all duration-300"
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm("")}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center"
-              >
-                <Icon
-                  icon="mdi:close-circle"
-                  className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
-                  width={20}
-                />
-              </button>
-            )}
-          </div>
+    <div className="relative">
+      <div
+        className={`absolute -top-2 -right-2 w-12 sm:w-16 h-12 sm:h-16 rounded-full bg-gradient-to-br ${
+          mode === "dark"
+            ? "from-violet-500 to-purple-600"
+            : "from-violet-400 to-purple-500"
+        } opacity-50 z-8`}
+      ></div>
+
+      <div className="relative z-10">
+        <div className="flex justify-between items-center mb-4">
+          <h3
+            className={`text-lg font-semibold ${
+              mode === "dark" ? "text-gray-100" : "text-[#231812]"
+            }`}
+          >
+            Categories
+          </h3>
+          <button
+            onClick={onAdd}
+            className={`px-4 py-2 rounded-lg font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 ${
+              mode === "dark"
+                ? "bg-gradient-to-r from-blue-700/80 to-blue-600/80 text-white hover:from-blue-600/80 hover:to-sky-600/80"
+                : "bg-gradient-to-r from-blue-600 to-sky-500 text-white hover:from-blue-600 hover:to-sky-600"
+            } flex items-center gap-2`}
+            aria-label="Add new category"
+          >
+            <Icon icon="mdi:plus" width={20} />
+            Add Category
+          </button>
         </div>
-      </div>
 
-      {/* Table Container with Scrolling */}
-      <div className="max-h-[500px] overflow-y-auto">
-        <table className="min-w-full table-auto border-collapse">
-          <thead className="sticky top-0 bg-gray-50 dark:bg-gray-700 z-10">
-            <tr className="text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
-              <th
-                className="px-6 py-3 border-b border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                onClick={() => handleSort("name")}
+        <div className="overflow-x-auto">
+          <table
+            className={`min-w-full rounded-xl backdrop-blur-sm border ${
+              mode === "dark"
+                ? "bg-blue-500/20 border-blue-400/30"
+                : "bg-blue-50 border-blue-200"
+            }`}
+          >
+            <thead>
+              <tr
+                className={`${
+                  mode === "dark"
+                    ? "bg-blue-600/30 text-blue-200"
+                    : "bg-blue-100 text-[#231812]"
+                }`}
               >
-                Category Name
-                {renderSortIcon("name")}
-              </th>
-              <th
-                className="px-6 py-3 border-b border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                onClick={() => handleSort("type")}
-              >
-                Category Type
-                {renderSortIcon("type")}
-              </th>
-              <th className="px-6 py-3 text-right border-b border-gray-200 dark:border-gray-600">
-                <span className="sr-only">Actions</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
-            {sortedCategories.length > 0 ? (
-              sortedCategories.map((cat) => (
-                <tr
-                  key={cat.id}
-                  className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200"
-                >
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {cat.name}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="text-sm capitalize text-gray-500 dark:text-gray-400">
-                      {cat.type}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right">
-                    <div className="flex justify-end space-x-2">
-                      {/* Add Button */}
-                      <button
-                        onClick={() => onAdd(cat)}
-                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-green-500 hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-colors"
-                      >
-                        <Icon
-                          icon="mdi:plus-circle"
-                          className="mr-1"
-                          width={16}
-                        />
-                        Add
-                      </button>
-
-                      {/* Edit Button */}
-                      <button
-                        onClick={() => onEdit(cat)}
-                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                      >
-                        <Icon icon="mdi:pencil" className="mr-1" width={16} />
-                        Edit
-                      </button>
-
-                      {/* Delete Button */}
-                      <button
-                        onClick={() => onDelete(cat.id)}
-                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-full shadow-sm text-white bg-red-500 hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
-                      >
-                        <Icon
-                          icon="mdi:trash-can-outline"
-                          className="mr-1"
-                          width={16}
-                        />
-                        Delete
-                      </button>
-                    </div>
+                <th className="py-3 px-4 text-left text-sm font-semibold">
+                  Name
+                </th>
+                <th className="py-3 px-4 text-left text-sm font-semibold">
+                  Job Type
+                </th>
+                <th className="py-3 px-4 text-left text-sm font-semibold">
+                  Mandatory
+                </th>
+                <th className="py-3 px-4 text-left text-sm font-semibold">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {categories.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={4}
+                    className={`py-4 px-4 text-center ${
+                      mode === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    No categories found.
                   </td>
                 </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={3} className="px-6 py-4 text-center">
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    {searchTerm
-                      ? `No categories found matching "${searchTerm}"`
-                      : "No categories found. Create your first category!"}
-                  </div>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+              ) : (
+                categories.map((category) => (
+                  <tr
+                    key={category.id}
+                    className={`border-t ${
+                      mode === "dark"
+                        ? "border-blue-400/20 text-gray-200"
+                        : "border-blue-200 text-[#231812]"
+                    } hover:bg-blue-500/10 transition-colors duration-200`}
+                  >
+                    <td className="py-3 px-4">{category.name}</td>
+                    <td className="py-3 px-4">{category.job_type || "None"}</td>
+                    <td className="py-3 px-4">
+                      {category.is_mandatory ? "Yes" : "No"}
+                    </td>
+                    <td className="py-3 px-4 flex gap-2">
+                      <button
+                        onClick={() => onEdit(category)}
+                        className={`p-2 rounded-lg hover:bg-blue-500/20 transition-all duration-200 ${
+                          mode === "dark" ? "text-amber-400" : "text-amber-600"
+                        }`}
+                        aria-label={`Edit ${category.name}`}
+                      >
+                        <Icon icon="mdi:pencil" width={20} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteClick(category)}
+                        className={`p-2 rounded-lg hover:bg-red-500/20 transition-all duration-200 ${
+                          mode === "dark" ? "text-red-400" : "text-red-600"
+                        }`}
+                        aria-label={`Delete ${category.name}`}
+                      >
+                        <Icon icon="mdi:delete" width={20} />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
 
-      {/* Footer with Category Count */}
-      <div className="px-6 py-3 border-t border-gray-100 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400 flex justify-between items-center">
-        <span>
-          Total Categories: {sortedCategories.length} /{" "}
-          {categories?.length || 0}
-        </span>
+        <ItemActionModal
+          isOpen={isDeleteModalOpen}
+          onClose={handleCancelDelete}
+          title="Confirm Deletion"
+          mode={mode}
+        >
+          <div className="relative">
+            <div
+              className={`absolute top-2 right-2 w-12 sm:w-16 h-12 sm:h-16 rounded-full bg-gradient-to-br ${
+                mode === "dark"
+                  ? "from-violet-500 to-purple-600"
+                  : "from-violet-400 to-purple-500"
+              } opacity-20 z-0`}
+            ></div>
+
+            <div className="relative z-10 p-4">
+              <p
+                className={`text-base ${
+                  mode === "dark" ? "text-gray-200" : "text-[#231812]"
+                }`}
+              >
+                Are you sure you want to delete the category "
+                {categoryToDelete?.name}"?
+              </p>
+              <div className="flex justify-end gap-4 mt-6">
+                <button
+                  onClick={handleCancelDelete}
+                  className={`px-6 py-3 rounded-xl font-medium transition-all duration-200 transform hover:scale-105 ${
+                    mode === "dark"
+                      ? "bg-gradient-to-br from-gray-700/80 to-gray-600/80 text-gray-300 hover:bg-gray-600"
+                      : "bg-gradient-to-br from-gray-100 to-gray-200 text-gray-700 hover:bg-gray-300"
+                  }`}
+                  aria-label="Cancel"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  className={`px-6 py-3 rounded-xl font-medium shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 ${
+                    mode === "dark"
+                      ? "bg-gradient-to-r from-blue-500/80 to-sky-600/80 text-white hover:from-blue-600/80 hover:to-sky-700/80"
+                      : "bg-gradient-to-r from-blue-500 to-sky-600 text-white hover:from-blue-600 hover:to-sky-700"
+                  }`}
+                  aria-label="Delete category"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </ItemActionModal>
       </div>
     </div>
   );

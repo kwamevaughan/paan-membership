@@ -121,7 +121,7 @@ const Header = ({
                 {/* Step Progress Bar */}
                 <div className="absolute top-6 left-0 w-full h-1 bg-gray-200/60 dark:bg-gray-800/60 -z-10"></div>
                 <div
-                  className="absolute top-6 left-0 h-1 bg-gradient-to-r from-[#f25849] to-[#84c1d9] -z-10 transition-all duration-1000 ease-in-out"
+                  className="absolute top-6 left-0 h-1 bg-gradient-to-r from-blue-400 to-sky-900 -z-10 transition-all duration-1000 ease-in-out"
                   style={{
                     width: `${((step - 1) / (steps.length - 1)) * 100}%`,
                   }}
@@ -246,7 +246,7 @@ const Header = ({
           <div className="flex items-center space-x-4">
             <button
               onClick={() => toggleMode()}
-              className={`relative p-3 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f05d23]
+              className={`relative p-3 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400
     ${
       mode === "dark"
         ? "bg-slate-800/90 text-slate-200 hover:bg-slate-700/90"

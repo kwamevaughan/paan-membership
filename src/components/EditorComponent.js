@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
+import { Icon } from "@iconify/react";
 
 // Dynamically import JoditEditor for client-side only
 const JoditEditor = dynamic(
@@ -62,13 +63,18 @@ export default function EditorComponent({
         <button
           type="button"
           onClick={toggleViewMode}
-          className={`text-sm px-3 py-1 rounded-md transition ${
+          className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 transform hover:scale-105 backdrop-blur-sm shadow-lg hover:shadow-xl ${
             mode === "dark"
-              ? "bg-gray-700 text-white"
-              : "bg-gray-100 text-gray-700"
-          } hover:bg-[#f05d23] hover:text-white`}
+              ? "bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-white/10 text-gray-100 hover:from-orange-500/80 hover:to-red-500/80"
+              : "bg-gradient-to-br from-white/60 to-gray-50/60 border-white/20 text-[#231812] hover:from-blue-200 hover:to-blue-400 hover:text-white"
+          }`}
         >
-          Switch to {viewMode === "html" ? "html" : "rich"} View
+          <Icon
+            icon="mdi:code-tags"
+            width={16}
+            height={16}
+          />
+          Switch to {viewMode === "html" ? "Rich Text" : "HTML"} View
         </button>
       </div>
 
@@ -88,7 +94,7 @@ export default function EditorComponent({
             mode === "dark"
               ? "bg-gray-700 text-white border-gray-600"
               : "bg-gray-50 text-[#231812] border-gray-300"
-          } focus:outline-none focus:ring-2 focus:ring-[#f05d23]`}
+          } focus:outline-none focus:ring-2 focus:ring-blue-400`}
         />
       )}
     </div>

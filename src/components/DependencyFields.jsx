@@ -21,7 +21,7 @@ export default function DependencyFields({
         <select
           value={dependsOnQuestionId}
           onChange={(e) => setDependsOnQuestionId(e.target.value)}
-          className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition duration-200 ${
+          className={`w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-900 transition duration-200 ${
             mode === "dark"
               ? "bg-gray-700 border-gray-600 text-white"
               : "bg-gray-50 border-gray-300 text-[#231812]"
@@ -52,7 +52,7 @@ export default function DependencyFields({
             type="text"
             value={dependsOnAnswer}
             onChange={(e) => setDependsOnAnswer(e.target.value)}
-            className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition duration-200 ${
+            className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-900 transition duration-200 ${
               mode === "dark"
                 ? "bg-gray-700 border-gray-600 text-white"
                 : "bg-gray-50 border-gray-300 text-[#231812]"

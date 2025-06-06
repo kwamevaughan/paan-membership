@@ -6,16 +6,17 @@ import { Icon } from "@iconify/react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { useQuestions } from "@/hooks/useQuestions";
+import { useCategories } from "@/hooks/useCategories";
 import QuestionTable from "@/components/QuestionTable";
 import QuestionForm from "@/components/QuestionForm";
 import SimpleFooter from "@/layouts/simpleFooter";
-import CategoryForm from "@/components/CategoryForm";
 import CategoryTable from "@/components/CategoryTable";
+import CategoryForm from "@/components/CategoryForm";
+import ItemActionModal from "@/components/ItemActionModal";
 import toast, { Toaster } from "react-hot-toast";
 import useAuthSession from "@/hooks/useAuthSession";
 import useLogout from "@/hooks/useLogout";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
-
 
 export default function HRInterviewQuestions({
   mode = "light",
@@ -25,6 +26,7 @@ export default function HRInterviewQuestions({
   breadcrumbs,
 }) {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+  const [isCategoryFormOpen, setIsCategoryFormOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState(null);
   const [selectedJobType, setSelectedJobType] = useState("agency");
 
@@ -44,12 +46,11 @@ export default function HRInterviewQuestions({
     handleMouseLeave,
     handleOutsideClick,
   } = useSidebar();
-  
+
   const handleLogout = useLogout();
 
   const {
     questions,
-    categories,
     searchQuery,
     setSearchQuery,
     sortField,
@@ -61,6 +62,14 @@ export default function HRInterviewQuestions({
     moveQuestion,
   } = useQuestions(selectedJobType, initialQuestions, initialCategories);
 
+  const {
+    categories,
+    isLoading: isCategoriesLoading,
+    addCategory,
+    editCategory,
+    deleteCategory,
+  } = useCategories(initialCategories);
+
   const handleMoveQuestion = async (fromIndex, toIndex) => {
     const success = await moveQuestion(fromIndex, toIndex);
     if (!success) {
@@ -69,9 +78,7 @@ export default function HRInterviewQuestions({
   };
 
   const startEditing = (question) => {
-    console.log("startEditing question:", question);
     if (!question.id) {
-      console.error("Question missing ID:", question);
       toast.error("Cannot edit question: Missing question ID.");
       return;
     }
@@ -93,23 +100,53 @@ export default function HRInterviewQuestions({
   };
 
   const handleAddQuestion = () => {
-    console.log(
-      "Opening form for new question, selectedJobType:",
-      selectedJobType
-    );
     setEditingQuestion(null);
     setIsQuestionModalOpen(true);
   };
 
   const handleFormCancel = () => {
-    console.log("Form cancelled, closing modal");
     setIsQuestionModalOpen(false);
     setEditingQuestion(null);
   };
 
+  const handleCategoryFormCancel = () => {
+    setIsCategoryFormOpen(false);
+    setEditingCategory(null);
+  };
+
+  const handleAddCategory = () => {
+    setEditingCategory(null);
+    setIsCategoryFormOpen(true);
+  };
+
+  const handleEditCategory = (category) => {
+    setEditingCategory(category);
+    setIsCategoryFormOpen(true);
+  };
+
+  const handleAddCategorySubmit = async (categoryData) => {
+    try {
+      await addCategory(categoryData);
+      return true;
+    } catch (error) {
+      toast.error("Failed to add category.");
+      return false;
+    }
+  };
+
+  const handleEditCategorySubmit = async (id, categoryData) => {
+    try {
+      await editCategory({ id, ...categoryData });
+      return true;
+    } catch (error) {
+      toast.error("Failed to update category.");
+      return false;
+    }
+  };
+
   const totalQuestions = questions.length;
 
-  const toggleCategoryTable = () => {
+  const toggleCategoryModal = () => {
     setIsCategoryModalOpen(!isCategoryModalOpen);
   };
 
@@ -201,14 +238,14 @@ export default function HRInterviewQuestions({
                 <div className="flex gap-4">
                   <button
                     onClick={handleAddQuestion}
-                    className="px-4 py-2 bg-[#84c1d9] text-white rounded-lg hover:bg-[#6da7c7] flex items-center gap-2 transition duration-200 shadow-md"
+                    className="px-4 py-2 bg-sky-900 text-white rounded-lg hover:bg-sky-800 flex items-center gap-2 transition duration-200 shadow-md"
                   >
                     <Icon icon="mdi:plus" width={20} height={20} />
                     Add Question
                   </button>
                   <button
-                    onClick={toggleCategoryTable}
-                    className="px-4 py-2 bg-[#84c1d9] text-white rounded-lg hover:bg-[#6da7c7] flex items-center gap-2 transition duration-200 shadow-md"
+                    onClick={toggleCategoryModal}
+                    className="px-4 py-2 bg-sky-900 text-white rounded-lg hover:bg-sky-800 flex items-center gap-2 transition duration-200 shadow-md"
                   >
                     <Icon icon="mdi:folder-open" width={20} height={20} />
                     Manage Categories
@@ -234,23 +271,39 @@ export default function HRInterviewQuestions({
                 onCancel={handleFormCancel}
                 isOpen={isQuestionModalOpen}
                 selectedJobType={selectedJobType}
-                isLoading={false}
+                isLoading={isCategoriesLoading}
               />
 
-              {isCategoryModalOpen && (
+              <ItemActionModal
+                isOpen={isCategoryModalOpen}
+                onClose={toggleCategoryModal}
+                title="Manage Categories"
+                mode={mode}
+              >
                 <CategoryTable
                   categories={categories}
                   mode={mode}
-                  onEdit={setEditingCategory}
-                  deleteCategory={(id) => {
-                    console.log("Delete category:", id);
-                  }}
+                  onEdit={handleEditCategory}
+                  onAdd={handleAddCategory}
+                  onDelete={deleteCategory}
                 />
-              )}
+              </ItemActionModal>
+
+              <CategoryForm
+                mode={mode}
+                category={editingCategory}
+                onSubmit={
+                  editingCategory && editingCategory.id
+                    ? handleEditCategorySubmit
+                    : handleAddCategorySubmit
+                }
+                onCancel={handleCategoryFormCancel}
+                isOpen={isCategoryFormOpen}
+              />
 
               <QuestionTable
-                questions={questions}
                 categories={categories}
+                questions={questions}
                 mode={mode}
                 onEdit={startEditing}
                 moveQuestion={handleMoveQuestion}
@@ -269,10 +322,6 @@ export default function HRInterviewQuestions({
 }
 
 export async function getServerSideProps({ req, res }) {
-  console.log(
-    "[HRInterviewQuestions] Starting session check at",
-    new Date().toISOString()
-  );
   try {
     const supabaseServer = createSupabaseServerClient(req, res);
 
@@ -281,15 +330,7 @@ export async function getServerSideProps({ req, res }) {
       error: sessionError,
     } = await supabaseServer.auth.getSession();
 
-    console.log("[HRInterviewQuestions] Session Response:", {
-      session: session ? "present" : null,
-      sessionError: sessionError ? sessionError.message : null,
-    });
-
     if (sessionError || !session) {
-      console.log(
-        "[HRInterviewQuestions] No valid Supabase session, redirecting to login"
-      );
       return {
         redirect: {
           destination: "/hr/login",
@@ -304,16 +345,8 @@ export async function getServerSideProps({ req, res }) {
       .select("id")
       .eq("id", session.user.id)
       .single();
-    console.log("[HRInterviewQuestions] HR User Check:", {
-      hrUser,
-      hrUserError: hrUserError ? hrUserError.message : null,
-    });
 
     if (hrUserError || !hrUser) {
-      console.error(
-        "[HRInterviewQuestions] HR User Error:",
-        hrUserError?.message || "User not in hr_users"
-      );
       await supabaseServer.auth.signOut();
       return {
         redirect: {
@@ -323,7 +356,6 @@ export async function getServerSideProps({ req, res }) {
       };
     }
 
-    console.time("fetchInterviewQuestions");
     const { data: questions, error: questionsError } = await supabaseServer
       .from("interview_questions")
       .select(
@@ -351,14 +383,12 @@ export async function getServerSideProps({ req, res }) {
       },
     };
   } catch (error) {
-    console.error("[HRInterviewQuestions] Error:", error.message);
+    console.error("Server-side error:", error.message);
     return {
       redirect: {
         destination: "/hr/login",
         permanent: false,
       },
     };
-  } finally {
-    console.timeEnd("fetchInterviewQuestions");
   }
 }

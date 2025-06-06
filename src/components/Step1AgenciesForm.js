@@ -146,7 +146,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
   return (
     <div className="animate-fade-in">
       <div
-        className={`rounded-lg px-2 py-2 ${
+        className={`rounded-lg px-2 py-2 border border-blue-100 ${
           mode === "dark" ? "bg-gray-800 text-white" : "bg-white text-[#231812]"
         }`}
       >
@@ -218,7 +218,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                             ? "border-red-500"
                             : "focus:border-blue-500"
                         }`
-                      : `bg-gray-50 text-[#231812] border-gray-300 ${
+                      : `bg-gray-50 text-[#231812] border-blue-300 ${
                           errors.agencyName
                             ? "border-red-500"
                             : "focus:border-blue-500"
@@ -262,7 +262,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                             ? "border-red-500"
                             : "focus:border-blue-400"
                         }`
-                      : `bg-gray-50 text-[#231812] border-gray-300 ${
+                      : `bg-gray-50 text-[#231812] border-blue-300 ${
                           errors.yearEstablished
                             ? "border-red-500"
                             : "focus:border-blue-400"
@@ -295,7 +295,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                         ? "border-red-500"
                         : "focus:border-blue-400"
                     }`
-                  : `bg-gray-50 text-[#231812] border-gray-300 ${
+                  : `bg-gray-50 text-[#231812] border-blue-300 ${
                       errors.headquartersLocation
                         ? "border-red-500"
                         : "focus:border-blue-400"
@@ -362,7 +362,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                           ? "border-red-500"
                           : "focus:border-blue-400"
                       }`
-                    : `bg-gray-50 text-[#231812] border-gray-300 ${
+                    : `bg-gray-50 text-[#231812] border-blue-300 ${
                         errors.registeredOfficeAddress
                           ? "border-red-500"
                           : "focus:border-blue-400"
@@ -394,7 +394,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                         ? "border-red-500"
                         : "focus-within:border-blue-400"
                     }`
-                  : `bg-gray-50 text-[#231812] border-gray-300 ${
+                  : `bg-gray-50 text-[#231812] border-blue-300 ${
                       errors.websiteUrl
                         ? "border-red-500"
                         : "focus-within:border-blue-400"
@@ -460,7 +460,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                             ? "border-red-500"
                             : "focus:border-blue-400"
                         }`
-                      : `bg-gray-50 text-[#231812] border-gray-300 ${
+                      : `bg-gray-50 text-[#231812] border-blue-300 ${
                           errors.primaryContactName
                             ? "border-red-500"
                             : "focus:border-blue-400"
@@ -504,7 +504,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                             ? "border-red-500"
                             : "focus:border-blue-400"
                         }`
-                      : `bg-gray-50 text-[#231812] border-gray-300 ${
+                      : `bg-gray-50 text-[#231812] border-blue-300 ${
                           errors.primaryContactRole
                             ? "border-red-500"
                             : "focus:border-blue-400"
@@ -551,7 +551,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                             ? "border-red-500"
                             : "focus:border-blue-400"
                         }`
-                      : `bg-gray-50 text-[#231812] border-gray-300 ${
+                      : `bg-gray-50 text-[#231812] border-blue-300 ${
                           errors.primaryContactEmail
                             ? "border-red-500"
                             : "focus:border-blue-400"
@@ -598,7 +598,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                             ? "border-red-500"
                             : "focus:border-blue-400"
                         }`
-                      : `bg-gray-50 text-[#231812] border-gray-300 ${
+                      : `bg-gray-50 text-[#231812] border-blue-300 ${
                           errors.primaryContactPhone
                             ? "border-red-500"
                             : "focus:border-blue-400"
@@ -631,7 +631,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                         ? "border-red-500"
                         : "focus-within:border-blue-400"
                     }`
-                  : `bg-gray-50 text-[#231812] border-gray-300 ${
+                  : `bg-gray-50 text-[#231812] border-blue-300 ${
                       errors.primaryContactLinkedin
                         ? "border-red-500"
                         : "focus-within:border-blue-400"
@@ -690,7 +690,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                 className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm bg-gray-100 text-gray-500 cursor-not-allowed ${
                   mode === "dark"
                     ? "bg-gray-600 border-gray-500 text-gray-300"
-                    : "bg-gray-100 border-gray-300 text-gray-500"
+                    : "bg-gray-100 border-blue-300 text-gray-500"
                 }`}
               />
             </div>

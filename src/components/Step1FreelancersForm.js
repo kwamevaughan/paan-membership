@@ -17,7 +17,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
   // Languages and proficiency levels
   const languages = ["English", "French"];
   const proficiencyLevels = ["Fluent", "Intermediate"];
-  const borderColors = ["border-[#172840]", "border-[#172840]"];
+  const borderColors = ["border-blue-300", "border-blue-300"];
 
   useEffect(() => {
     setIsMounted(true);
@@ -247,7 +247,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
                           ? "border-red-500"
                           : "focus:border-blue-400"
                       }`
-                    : `bg-gray-50 text-[#231812] border-gray-300 ${
+                    : `bg-gray-50 text-[#231812] border-blue-300 ${
                         errors.primaryContactName
                           ? "border-red-500"
                           : "focus:border-blue-400"
@@ -291,7 +291,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
                           ? "border-red-500"
                           : "focus:border-blue-400"
                       }`
-                    : `bg-gray-50 text-[#231812] border-gray-300 ${
+                    : `bg-gray-50 text-[#231812] border-blue-300 ${
                         errors.primaryContactEmail
                           ? "border-red-500"
                           : "focus:border-blue-400"
@@ -323,7 +323,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
                         ? "border-red-500"
                         : "focus:border-blue-400"
                     }`
-                  : `bg-gray-50 text-[#231812] border-gray-300 ${
+                  : `bg-gray-50 text-[#231812] border-blue-300 ${
                       errors.countryOfResidence
                         ? "border-red-500"
                         : "focus:border-blue-400"
@@ -396,7 +396,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
                           ? "border-red-500"
                           : "focus:border-blue-400"
                       }`
-                    : `bg-gray-50 text-[#231812] border-gray-300 ${
+                    : `bg-gray-50 text-[#231812] border-blue-300 ${
                         errors.phoneNumber
                           ? "border-red-500"
                           : "focus:border-blue-400"
@@ -470,7 +470,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
                         className={`p-2 border rounded-lg ${
                           mode === "dark"
                             ? "bg-gray-700 text-white border-gray-600 focus:border-blue-600"
-                            : "bg-gray-50 text-[#231812] border-gray-300 focus:border-blue-600"
+                            : "bg-gray-50 text-[#231812] border-blue-300 focus:border-blue-600"
                         } focus:outline-none focus:ring-2 focus:ring-blue-600`}
                       >
                         {proficiencyLevels.map((level) => (
@@ -512,7 +512,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
                 className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm bg-gray-100 text-gray-500 cursor-not-allowed ${
                   mode === "dark"
                     ? "bg-gray-600 border-gray-500 text-gray-300"
-                    : "bg-gray-100 border-gray-300 text-gray-500"
+                    : "bg-gray-100 border-blue-300 text-gray-500"
                 }`}
               />
             </div>

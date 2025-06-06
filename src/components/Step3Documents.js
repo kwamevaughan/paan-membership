@@ -73,6 +73,7 @@ export default function Step3Documents({
   });
 
   const [portfolioLinks, setPortfolioLinks] = useState([{ url: "" }]);
+  const [isEditingPortfolio, setIsEditingPortfolio] = useState(false);
 
   // Format file size in KB or MB
   const formatFileSize = (bytes) => {
@@ -185,21 +186,68 @@ export default function Step3Documents({
     setPortfolioLinks([...portfolioLinks, { url: "" }]);
   };
 
-  // Remove portfolio link field
-  const removePortfolioLink = (index) => {
-    setPortfolioLinks(portfolioLinks.filter((_, i) => i !== index));
-  };
-
   // Update portfolio link
   const updatePortfolioLink = (index, url) => {
-    // Strip out any existing protocol
-    const cleanUrl = url.replace(/^(https?:\/\/)/, '');
+    // Only strip protocol if it's a complete URL
+    const cleanUrl = url.startsWith('http://') || url.startsWith('https://') 
+      ? url.replace(/^(https?:\/\/)/, '')
+      : url;
+    
     const newLinks = [...portfolioLinks];
     newLinks[index].url = cleanUrl;
     setPortfolioLinks(newLinks);
+  };
+
+  // Add URL to form data
+  const addUrlToFormData = (index) => {
+    const url = portfolioLinks[index].url.trim();
+    if (url) {
+      setFormData(prev => ({
+        ...prev,
+        portfolioLinks: [...(prev.portfolioLinks || []), { url }]
+      }));
+      // Clear the input field but keep it visible
+      const newLinks = [...portfolioLinks];
+      newLinks[index].url = "";
+      setPortfolioLinks(newLinks);
+    }
+  };
+
+  // Add all valid URLs to form data
+  const addAllUrlsToFormData = () => {
+    const validUrls = portfolioLinks
+      .map(link => link.url.trim())
+      .filter(url => url !== "");
+    
+    if (validUrls.length > 0) {
+      setFormData(prev => ({
+        ...prev,
+        portfolioLinks: [
+          ...(prev.portfolioLinks || []),
+          ...validUrls.map(url => ({ url }))
+        ]
+      }));
+      // Clear all input fields but keep them visible
+      setPortfolioLinks(portfolioLinks.map(() => ({ url: "" })));
+    }
+  };
+
+  // Check if there are any valid URLs to add
+  const hasValidUrls = () => {
+    return portfolioLinks.some(link => link.url.trim() !== "");
+  };
+
+  // Remove portfolio link field
+  const removePortfolioLink = (index) => {
+    const newLinks = portfolioLinks.filter((_, i) => i !== index);
+    setPortfolioLinks(newLinks);
+  };
+
+  // Remove URL from form data
+  const removeUrlFromFormData = (index) => {
     setFormData(prev => ({
       ...prev,
-      portfolioLinks: newLinks.filter(link => link.url.trim() !== "")
+      portfolioLinks: prev.portfolioLinks.filter((_, i) => i !== index)
     }));
   };
 
@@ -213,6 +261,33 @@ export default function Step3Documents({
       return formData[file.id] ? `(${formatFileSize(formData[file.id].size)})` : '';
     }
     return formData[file.id] ? `(${formatFileSize(formData[file.id].size)})` : '';
+  };
+
+  // Load portfolio links into input fields for editing
+  const startEditingPortfolio = () => {
+    if (formData.portfolioLinks && formData.portfolioLinks.length > 0) {
+      setPortfolioLinks(formData.portfolioLinks.map(link => ({ url: link.url })));
+      setIsEditingPortfolio(true);
+    }
+  };
+
+  // Save edited portfolio links
+  const savePortfolioLinks = () => {
+    const validUrls = portfolioLinks
+      .map(link => link.url.trim())
+      .filter(url => url !== "");
+    
+    setFormData(prev => ({
+      ...prev,
+      portfolioLinks: validUrls.map(url => ({ url }))
+    }));
+    setIsEditingPortfolio(false);
+  };
+
+  // Cancel editing portfolio links
+  const cancelEditingPortfolio = () => {
+    setPortfolioLinks([{ url: "" }]);
+    setIsEditingPortfolio(false);
   };
 
   const bgColor = mode === "dark" ? "bg-gray-800" : "bg-white";
@@ -363,24 +438,80 @@ export default function Step3Documents({
                                 } focus:outline-none focus:ring-2 focus:ring-blue-500`}
                               />
                             </div>
-                            {index > 0 && (
-                              <button
-                                onClick={() => removePortfolioLink(index)}
-                                className="p-2 text-red-500 hover:text-red-700"
-                              >
-                                <Icon icon="mdi:close" className="w-5 h-5" />
-                              </button>
-                            )}
+                            <button
+                              onClick={() => addUrlToFormData(index)}
+                              disabled={!link.url.trim()}
+                              className={`p-2 rounded-lg ${
+                                link.url.trim()
+                                  ? "text-green-500 hover:text-green-700"
+                                  : "text-gray-400 cursor-not-allowed"
+                              }`}
+                            >
+                              <Icon icon="mdi:plus-circle" className="w-5 h-5" />
+                            </button>
+                            <button
+                              onClick={() => removePortfolioLink(index)}
+                              className="p-2 text-red-500 hover:text-red-700"
+                            >
+                              <Icon icon="mdi:close" className="w-5 h-5" />
+                            </button>
                           </div>
                         ))}
-                        <button
-                          onClick={addPortfolioLink}
-                          className="flex items-center text-blue-500 hover:text-blue-700"
-                        >
-                          <Icon icon="mdi:plus" className="w-5 h-5 mr-1" />
-                          Add another link
-                        </button>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={addPortfolioLink}
+                            className="flex items-center text-blue-500 hover:text-blue-700"
+                          >
+                            <Icon icon="mdi:plus" className="w-5 h-5 mr-1" />
+                            Add another link field
+                          </button>
+                          <button
+                            onClick={addAllUrlsToFormData}
+                            disabled={!hasValidUrls()}
+                            className={`flex items-center ${
+                              hasValidUrls()
+                                ? "text-green-500 hover:text-green-700"
+                                : "text-gray-400 cursor-not-allowed"
+                            }`}
+                          >
+                            <Icon icon="mdi:plus-circle-multiple" className="w-5 h-5 mr-1" />
+                            Add all URLs
+                          </button>
+                        </div>
                       </div>
+
+                      {/* Display added URLs */}
+                      {formData.portfolioLinks && formData.portfolioLinks.length > 0 && (
+                        <div className="mt-4">
+                          <h5 className={`font-medium mb-2 ${mode === "dark" ? "text-gray-200" : "text-gray-700"}`}>
+                            Added Links ({formData.portfolioLinks.length})
+                          </h5>
+                          <div className={`space-y-2 p-3 rounded-lg ${
+                            mode === "dark" ? "bg-gray-700/50" : "bg-gray-50"
+                          }`}>
+                            {formData.portfolioLinks.map((link, index) => (
+                              <div key={index} className="flex items-center justify-between">
+                                <a
+                                  href={`https://${link.url}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`text-sm hover:underline ${
+                                    mode === "dark" ? "text-blue-400" : "text-blue-600"
+                                  }`}
+                                >
+                                  {link.url}
+                                </a>
+                                <button
+                                  onClick={() => removeUrlFromFormData(index)}
+                                  className="p-1 text-red-500 hover:text-red-700"
+                                >
+                                  <Icon icon="mdi:close" className="w-4 h-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ) : (
@@ -450,29 +581,107 @@ export default function Step3Documents({
                         {memoizedCompletedFiles.includes(file.id) && getDocumentSummary(file)}
                       </span>
                       {memoizedCompletedFiles.includes(file.id) && (
-                        <button
-                          className="ml-auto text-xs underline text-red-500 hover:text-red-700"
-                          onClick={() => {
-                            if (file.id === "portfolioWork") {
-                              setFormData(prev => ({
-                                ...prev,
-                                [file.id]: null,
-                                portfolioLinks: []
-                              }));
-                            } else {
-                              setFormData(prev => ({ ...prev, [file.id]: null }));
-                            }
-                            setCompletedFiles(prev =>
-                              prev.filter(id => id !== file.id)
-                            );
-                          }}
-                        >
-                          Remove
-                        </button>
+                        <div className="ml-auto flex gap-2">
+                          {file.id === "portfolioWork" && formData.portfolioLinks && formData.portfolioLinks.length > 0 && (
+                            <>
+                              <button
+                                className="text-xs underline text-blue-500 hover:text-blue-700"
+                                onClick={startEditingPortfolio}
+                              >
+                                Edit
+                              </button>
+                              <span className="text-gray-400">|</span>
+                            </>
+                          )}
+                          <button
+                            className="text-xs underline text-red-500 hover:text-red-700"
+                            onClick={() => {
+                              if (file.id === "portfolioWork") {
+                                setFormData(prev => ({
+                                  ...prev,
+                                  [file.id]: null,
+                                  portfolioLinks: []
+                                }));
+                              } else {
+                                setFormData(prev => ({ ...prev, [file.id]: null }));
+                              }
+                              setCompletedFiles(prev =>
+                                prev.filter(id => id !== file.id)
+                              );
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </div>
                       )}
                     </li>
                   ))}
                 </ul>
+              </motion.div>
+            )}
+
+            {/* Portfolio Links Editing Section */}
+            {isEditingPortfolio && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className={`mt-4 p-4 rounded-lg ${
+                  mode === "dark" ? "bg-gray-700" : "bg-gray-100"
+                }`}
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="font-semibold">Edit Portfolio Links</h4>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={savePortfolioLinks}
+                      className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+                    >
+                      Save Changes
+                    </button>
+                    <button
+                      onClick={cancelEditingPortfolio}
+                      className="px-3 py-1 text-sm bg-gray-500 text-white rounded hover:bg-gray-600"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {portfolioLinks.map((link, index) => (
+                    <div key={index} className="flex gap-2">
+                      <div className="flex-1 relative">
+                        <span className={`absolute left-3 top-1/2 -translate-y-1/2 ${mode === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                          https://
+                        </span>
+                        <input
+                          type="text"
+                          value={link.url}
+                          onChange={(e) => updatePortfolioLink(index, e.target.value)}
+                          placeholder="example.com/portfolio"
+                          className={`w-full pl-[4.5rem] pr-3 py-2 rounded-lg border ${
+                            mode === "dark" 
+                              ? "bg-gray-700 border-gray-600 text-white" 
+                              : "bg-white border-gray-300 text-gray-900"
+                          } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                        />
+                      </div>
+                      <button
+                        onClick={() => removePortfolioLink(index)}
+                        className="p-2 text-red-500 hover:text-red-700"
+                      >
+                        <Icon icon="mdi:close" className="w-5 h-5" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={addPortfolioLink}
+                    className="flex items-center text-blue-500 hover:text-blue-700"
+                  >
+                    <Icon icon="mdi:plus" className="w-5 h-5 mr-1" />
+                    Add another link field
+                  </button>
+                </div>
               </motion.div>
             )}
 

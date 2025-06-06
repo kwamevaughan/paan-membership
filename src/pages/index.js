@@ -29,185 +29,249 @@ export default function Agencies({ initialOpenings }) {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col justify-center items-center px-4 sm:px-6">
+    <div className="relative min-h-screen overflow-hidden">
       <SEO
         title="Join PAAN | Pan-African Agency Network"
-        description="Join PAAN, Africa’s leading network of creative and tech agencies. Collaborate, innovate, and grow with top agencies across the continent and diaspora."
+        description="Join PAAN, Africa's leading network of creative and tech agencies. Collaborate, innovate, and grow with top agencies across the continent and diaspora."
         keywords="PAAN, expression of interest, African agencies, creative agencies, tech agencies, marketing agencies, PR agencies, collaboration, innovation, business growth"
       />
 
-      <div className="absolute top-0 left-0 w-full h-full z-0">
+      {/* Enhanced Background with Gradient Overlays */}
+      <div className="absolute inset-0 z-0">
         <iframe
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover scale-105"
           src="https://www.youtube.com/embed/InDtkDgVb1Q?autoplay=1&loop=1&playlist=InDtkDgVb1Q&controls=0&mute=1&showinfo=0&rel=0&modestbranding=1&fs=0"
           frameBorder="0"
           allow="autoplay; fullscreen"
           title="Background Video"
           loading="lazy"
         />
-        <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-black to-transparent opacity-90 z-1"></div>
+        {/* Multi-layer gradient overlay for depth */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+        {/* Animated gradient accent */}
+        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 via-transparent to-blue-500/10 animate-pulse"></div>
       </div>
 
-      <div className="relative max-w-full sm:max-w-3xl mx-auto p-6 sm:p-10 text-center bg-white bg-opacity-90 backdrop-blur-lg shadow-full rounded-lg z-10">
-        <div className="mb-6">
-          <a
-            target="_blank"
-            rel="noopener noreferrer"
-            href="https://paan.africa"
-          >
-            <Image
-              src="/assets/images/logo.svg"
-              alt="PAAN Logo"
-              width={200}
-              height={200}
-              className="mx-auto transform transition duration-300 hover:scale-110"
+      {/* Floating Navigation Elements */}
+      <div className="absolute top-6 right-6 z-20">
+        <Link href="/freelancers">
+          <div className="group flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white hover:bg-white/20 transition-all duration-300 hover:scale-105">
+            <span className="text-sm font-medium">For Freelancers</span>
+            <Icon
+              icon="tabler:arrow-up-right"
+              className="w-4 h-4 group-hover:rotate-45 transition-transform duration-300"
             />
-          </a>
-        </div>
-        <h1 className="text-3xl font-bold text-[#231812] mb-4">
-          Welcome to the <br />
-          Pan-African Agency Network (PAAN)
-        </h1>
-        <p className="text-[#231812] mb-4 text-base">
-          We are an alliance of agencies shaping the future of Africa's
-          communication, marketing, PR, tech, research, digital, and creative
-          industries.
-        </p>
-        <hr className="h-px my-8 bg-[#F05D23] border-0 dark:bg-gray-700" />
-        <p className="text-[#231812] mb-8 text-base">
-          Please fill out the below expression of interest (EOI) to activate
-          membership.
-        </p>
-        <div className="mb-6">
-          <label
-            htmlFor="opening"
-            className="block text-lg font-medium text-[#231812] mb-2"
-            aria-label="Select an Expression of Interest"
-          >
-            Current EOIs <span className="text-red-500">*</span>
-          </label>
-          <select
-            id="opening"
-            value={selectedOpening ? selectedOpening.title : ""}
-            onChange={handleOpeningChange}
-            className="w-full sm:w-3/4 mx-auto p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f05d23] focus:border-[#f05d23] transition-all duration-200 bg-white text-[#231812]"
-          >
-            <option value="" disabled>
-              Select an EOI below
-            </option>
-            {openings.map((opening) => (
-              <option key={opening.id} value={opening.title}>
-                {opening.title}
-              </option>
-            ))}
-          </select>
-          {selectedOpening && (
-            <button
-              onClick={handleProceed}
-              className="bg-[#172840] hover:bg-[#6FA1B7] text-white mt-4 flex items-center mx-auto px-8 py-3 rounded-full font-medium text-sm transition duration-300"
-            >
-              Proceed
-              <Icon
-                icon="tabler:arrow-up-right"
-                width={20}
-                height={20}
-                className="ml-2"
-              />
-            </button>
-          )}
-        </div>
-
-        <Link href="/freelancers" className="">
-          <span className="flex items-center gap-2 font-bold p-4 z-10 transform transition-transform hover:translate-y-[-2px] sm:absolute sm:bottom-0 sm:right-0 sm:flex sm:mt-4 w-full sm:w-auto justify-center">
-            For Freelancers
-            <Image
-              src="/assets/images/single-arrow.png"
-              alt="Arrow"
-              width={20}
-              height={20}
-              className=""
-            />
-          </span>
+          </div>
         </Link>
+      </div>
 
-        <div className="flex justify-center gap-4 text-center md:text-left py-10">
-          <p className="text-2xl font-medium">Collaborate</p>
-          <span className="flex bg-[#F2B706] rounded-full w-8 h-8"></span>
-          <p className="text-2xl font-medium">Innovate</p>
-          <span className="flex bg-[#84C1D9] rounded-full w-8 h-8"></span>
-          <p className="text-2xl font-medium">Dominate</p>
-          <span className="flex bg-[#F25849] rounded-full w-8 h-8"></span>
+      {/* Main Content Container */}
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-4 sm:px-6 py-20">
+        <div className="w-full max-w-4xl">
+          {/* Hero Section with Glassmorphism */}
+          <div className="relative bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 md:p-12 shadow-2xl">
+            {/* Logo with Animation */}
+            <div className="text-center mb-8">
+              <a
+                target="_blank"
+                rel="noopener noreferrer"
+                href="https://paan.africa"
+                className="inline-block group"
+              >
+                <div className="relative bg-white/80 backdrop-blur-xl border border-white/20 rounded-lg p-3 shadow-2xl">
+                  <Image
+                    src="/assets/images/logo.svg"
+                    alt="PAAN Logo"
+                    width={180}
+                    height={180}
+                    className="mx-auto transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-2xl"
+                  />
+                  {/* Glow effect on hover */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500/30 to-blue-500/30 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"></div>
+                </div>
+              </a>
+            </div>
+
+            {/* Enhanced Typography */}
+            <div className="text-center ">
+              <h1 className="text-4xl md:text-4xl font-bold text-white mb-6 leading-tight">
+                Welcome to the{" "}
+                <span className="bg-gradient-to-r from-blue-200 to-sky-600 bg-clip-text text-transparent">
+                  Pan-African
+                </span>{" "}
+                <br className="hidden sm:block" />
+                Agency Network
+              </h1>
+              <p className="text-lg text-gray-200 mb-8 max-w-3xl mx-auto leading-relaxed">
+                An alliance of agencies shaping the future of Africa's
+                communication, marketing, PR, tech, research, digital, and
+                creative industries.
+              </p>
+
+              {/* Animated Divider */}
+              <div className="relative mb-8">
+                <div className="h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent"></div>
+                <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+              </div>
+
+              <p className="text-lg text-gray-300 mb-8">
+                Fill out the expression of interest (EOI) below to activate
+                membership.
+              </p>
+            </div>
+
+            {/* Modern Form Section */}
+            <div className="max-w-2xl mx-auto mb-12">
+              <label
+                htmlFor="opening"
+                className="block text-lg font-semibold text-white mb-4 text-center"
+                aria-label="Select an Expression of Interest"
+              >
+                Current EOIs <span className="text-orange-400">*</span>
+              </label>
+
+              {/* Custom Select with Modern Styling */}
+              <div className="relative mb-6">
+                <select
+                  id="opening"
+                  value={selectedOpening ? selectedOpening.title : ""}
+                  onChange={handleOpeningChange}
+                  className="w-full p-4 bg-white/10 backdrop-blur-md border border-white/30 rounded-2xl text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 appearance-none cursor-pointer hover:bg-white/20"
+                >
+                  <option
+                    value=""
+                    disabled
+                    className="bg-slate-800 text-gray-300"
+                  >
+                    Select an EOI below
+                  </option>
+                  {openings.map((opening) => (
+                    <option
+                      key={opening.id}
+                      value={opening.title}
+                      className="bg-slate-800 text-white"
+                    >
+                      {opening.title}
+                    </option>
+                  ))}
+                </select>
+                <Icon
+                  icon="tabler:chevron-down"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white pointer-events-none transition-transform duration-300"
+                />
+              </div>
+
+              {/* Enhanced CTA Button */}
+              {selectedOpening && (
+                <div className="text-center">
+                  <button
+                    onClick={handleProceed}
+                    className="group relative inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-400 to-sky-900 text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden"
+                  >
+                    {/* Button background animation */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                    <span className="relative z-10">
+                      Proceed to Application
+                    </span>
+                    <Icon
+                      icon="tabler:arrow-up-right"
+                      className="relative z-10 ml-2 w-5 h-5 group-hover:rotate-45 transition-transform duration-300"
+                    />
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Brand Values with Modern Cards */}
+            <div className="flex flex-wrap justify-center gap-6 mb-12">
+              {[
+                {
+                  text: "Collaborate",
+                  color: "from-yellow-400 to-yellow-500",
+                },
+                {
+                  text: "Innovate",
+                  color: "from-blue-400 to-blue-500",
+                },
+                {
+                  text: "Dominate",
+                  color: "from-red-400 to-red-500",
+                },
+              ].map((item, index) => (
+                <div
+                  key={item.text}
+                  className="group flex items-center gap-3 px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl hover:bg-white/20 transition-all duration-300 hover:scale-105"
+                  style={{
+                    animationDelay: `${index * 200}ms`,
+                  }}
+                >
+                  <span className="text-md font-semibold text-white">
+                    {item.text}
+                  </span>
+                  <div
+                    className={`w-4 h-4 bg-gradient-to-r ${item.color} rounded-full flex items-center justify-center shadow-lg`}
+                  ></div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2">
-        <div className="flex space-x-4 sm:space-x-6 p-2 bg-white bg-opacity-50 backdrop-blur-lg shadow-full rounded-lg">
-          <a
-            href="https://x.com/paan_network"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="transform transition duration-300 hover:-translate-y-2 group"
-          >
-            <Icon
-              icon="fa6-brands:square-x-twitter"
-              width={30}
-              height={30}
-              className="text-black"
-            />
-            <span className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-sm text-white bg-black p-2 rounded-lg text-center opacity-0 group-hover:opacity-70 transition-opacity duration-300 w-36 max-w-xs">
-              Follow us on X
-            </span>
-          </a>
-          <a
-            href="https://www.youtube.com/@PAAN-AFRICA"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="transform transition duration-300 hover:-translate-y-2 group"
-          >
-            <Icon
-              icon="mdi:youtube"
-              width={30}
-              height={30}
-              className="text-[#FF0000]"
-            />
-            <span className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-sm text-white bg-black p-2 rounded-lg text-center opacity-0 group-hover:opacity-70 transition-opacity duration-300 w-36 max-w-xs">
-              Subscribe to us on YouTube
-            </span>
-          </a>
-          <a
-            href="https://www.linkedin.com/company/pan-african-agency-network/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="transform transition duration-300 hover:-translate-y-2 group"
-          >
-            <Icon
-              icon="mdi:linkedin"
-              width={30}
-              height={30}
-              className="text-[#0077B5]"
-            />
-            <span className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-sm text-white bg-black p-2 rounded-lg text-center opacity-0 group-hover:opacity-70 transition-opacity duration-300 w-36 max-w-xs">
-              Connect with us on LinkedIn
-            </span>
-          </a>
-          <a
-            href="https://www.facebook.com/panafricanagencynetwork"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="transform transition duration-300 hover:-translate-y-2 group"
-          >
-            <Icon
-              icon="mdi:facebook"
-              width={30}
-              height={30}
-              className="text-[#4267B2]"
-            />
-            <span className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-sm text-white bg-black p-2 rounded-lg text-center opacity-0 group-hover:opacity-70 transition-opacity duration-300 w-36 max-w-xs">
-              Follow us on Facebook
-            </span>
-          </a>
+      {/* Enhanced Social Media Footer */}
+      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20">
+        <div className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl">
+          {[
+            {
+              href: "https://x.com/paan_network",
+              icon: "fa6-brands:square-x-twitter",
+              color: "hover:text-blue-400",
+              label: "Follow us on X",
+            },
+            {
+              href: "https://www.youtube.com/@PAAN-AFRICA",
+              icon: "mdi:youtube",
+              color: "hover:text-red-500",
+              label: "Subscribe on YouTube",
+            },
+            {
+              href: "https://www.linkedin.com/company/pan-african-agency-network/",
+              icon: "mdi:linkedin",
+              color: "hover:text-blue-600",
+              label: "Connect on LinkedIn",
+            },
+            {
+              href: "https://www.facebook.com/panafricanagencynetwork",
+              icon: "mdi:facebook",
+              color: "hover:text-blue-500",
+              label: "Follow on Facebook",
+            },
+          ].map((social) => (
+            <a
+              key={social.href}
+              href={social.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`group relative p-2 text-white ${social.color} transition-all duration-300 hover:scale-110 hover:-translate-y-1 rounded-lg hover:bg-white/10`}
+              aria-label={social.label}
+            >
+              <Icon icon={social.icon} className="w-6 h-6" />
+              {/* Tooltip */}
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black/80 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+                {social.label}
+              </div>
+            </a>
+          ))}
         </div>
       </div>
+
+      {/* Decorative Elements */}
+      <div className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-r from-orange-500/20 to-transparent rounded-full blur-xl animate-pulse"></div>
+      <div
+        className="absolute bottom-32 right-16 w-32 h-32 bg-gradient-to-r from-blue-500/20 to-transparent rounded-full blur-xl animate-pulse"
+        style={{ animationDelay: "1s" }}
+      ></div>
     </div>
   );
 }

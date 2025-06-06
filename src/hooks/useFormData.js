@@ -281,11 +281,26 @@ export const useFormData = (questionCount = 0) => {
         throw new Error(result.error || "Submission failed");
       }
 
-      setSubmissionStatus("success");
+      // Update formData with the reference number
+      setFormData(prev => ({
+        ...prev,
+        referenceNumber: result.referenceNumber || result.reference_number
+      }));
+
+      // Set submission status with the reference number
+      setSubmissionStatus({
+        status: "success",
+        referenceNumber: result.referenceNumber || result.reference_number
+      });
+
       console.log("Submission sent! You'll receive a confirmation email soon.");
+      console.log("Reference Number:", result.referenceNumber || result.reference_number);
       return result;
     } catch (error) {
-      setSubmissionStatus("error");
+      setSubmissionStatus({
+        status: "error",
+        message: error.message
+      });
       console.error("Submission failed:", error.message);
       throw error;
     }

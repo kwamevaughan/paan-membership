@@ -14,9 +14,10 @@ import EmailModal from "@/components/EmailModal";
 import ExportModal from "@/components/ExportModal";
 import useStatusChange from "@/hooks/useStatusChange";
 import { Icon } from "@iconify/react";
-import { fetchHRData } from "../../../utils/hrData";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { supabase } from "@/lib/supabase";
+import { getApplicantsProps } from "utils/getPropsUtils";
+import ItemActionModal from "@/components/ItemActionModal";
 
 export default function HRApplicants({
   mode = "light",
@@ -38,6 +39,8 @@ export default function HRApplicants({
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
   const [emailData, setEmailData] = useState({ subject: "", body: "" });
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [candidateToDelete, setCandidateToDelete] = useState(null);
 
   useAuthSession();
 
@@ -190,50 +193,12 @@ export default function HRApplicants({
   };
 
   const handleDeleteCandidate = async (candidateId) => {
-    const confirmed = await new Promise((resolve) => {
-      toast.custom(
-        (t) => (
-          <div
-            className={`${
-              t.visible ? "animate-enter" : "animate-leave"
-            } max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5`}
-          >
-            <div className="flex-1 w-0 p-4">
-              <p className="text-xl font-medium text-gray-900">
-                Delete Candidate?
-              </p>
-              <p className="mt-2 text-base text-gray-500">
-                Are you sure you want to delete this candidate? This action
-                cannot be undone.
-              </p>
-            </div>
-            <div className="flex border-l border-gray-200">
-              <button
-                onClick={() => {
-                  toast.dismiss(t.id);
-                  resolve(true);
-                }}
-                className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-[#f05d23] hover:text-[#d94f1e] hover:bg-[#ffe0b3] transition-colors"
-              >
-                Yes
-              </button>
-              <button
-                onClick={() => {
-                  toast.dismiss(t.id);
-                  resolve(false);
-                }}
-                className="w-full border border-transparent rounded-none rounded-r-lg p-4 flex items-center justify-center text-sm font-medium text-gray-600 hover:text-gray-500 hover:bg-[#f3f4f6] transition-colors"
-              >
-                No
-              </button>
-            </div>
-          </div>
-        ),
-        { duration: Infinity }
-      );
-    });
+    setCandidateToDelete(candidateId);
+    setIsDeleteModalOpen(true);
+  };
 
-    if (!confirmed) return;
+  const confirmDelete = async () => {
+    if (!candidateToDelete) return;
 
     const loadingToast = toast.loading("Please wait...");
     try {
@@ -243,60 +208,66 @@ export default function HRApplicants({
         .select(
           "company_registration_file_id, portfolio_work_file_id, agency_profile_file_id, tax_registration_file_id"
         )
-        .eq("user_id", candidateId)
-        .single();
+        .eq("user_id", candidateToDelete);
+
       if (fetchError) throw fetchError;
 
-      // Extract file IDs
-      const fileIds = [
-        responseData?.company_registration_file_id,
-        responseData?.portfolio_work_file_id,
-        responseData?.agency_profile_file_id,
-        responseData?.tax_registration_file_id,
-      ].filter((id) => id); // Filter out null/undefined IDs
+      // Extract file IDs from the first response if it exists
+      const fileIds = responseData && responseData.length > 0
+        ? [
+            responseData[0]?.company_registration_file_id,
+            responseData[0]?.portfolio_work_file_id,
+            responseData[0]?.agency_profile_file_id,
+            responseData[0]?.tax_registration_file_id,
+          ].filter((id) => id) // Filter out null/undefined IDs
+        : [];
 
       // Delete responses first to avoid foreign key constraint violation
       const { error: responseError } = await supabase
         .from("responses")
         .delete()
-        .eq("user_id", candidateId);
+        .eq("user_id", candidateToDelete);
       if (responseError) throw responseError;
 
       // Delete candidate from candidates table
       const { error: candidateError } = await supabase
         .from("candidates")
         .delete()
-        .eq("id", candidateId);
+        .eq("id", candidateToDelete);
       if (candidateError) throw candidateError;
 
       // Delete files from Google Drive if they exist
       if (fileIds.length > 0) {
-        const deleteResponse = await fetch("/api/delete-files", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ fileIds }),
-        });
-        const deleteResult = await deleteResponse.json();
-        if (!deleteResponse.ok) {
-          throw new Error(
-            deleteResult.error || "Failed to delete files from Google Drive"
-          );
+        try {
+          const deleteResponse = await fetch("/api/delete-files", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ fileIds }),
+          });
+          
+          if (!deleteResponse.ok) {
+            console.warn("Failed to delete files, but continuing with candidate deletion");
+          }
+        } catch (fileError) {
+          console.warn("Error deleting files:", fileError);
+          // Continue with the deletion process even if file deletion fails
         }
-      } else {
-        console.log("No file IDs found to delete for candidate", candidateId);
       }
 
       // Update state to remove deleted candidate
-      const updatedCandidates = candidates.filter((c) => c.id !== candidateId);
+      const updatedCandidates = candidates.filter((c) => c.id !== candidateToDelete);
       setCandidates(updatedCandidates);
       setFilteredCandidates(updatedCandidates);
-      toast.success("Candidate and associated files deleted successfully!", {
+      toast.success("Candidate deleted successfully!", {
         id: loadingToast,
         icon: "✅",
       });
     } catch (error) {
       console.error("Error deleting candidate:", error);
-      toast.error("Failed to delete candidate or files.", { id: loadingToast });
+      toast.error("Failed to delete candidate.", { id: loadingToast });
+    } finally {
+      setIsDeleteModalOpen(false);
+      setCandidateToDelete(null);
     }
   };
 
@@ -519,92 +490,39 @@ export default function HRApplicants({
         candidates={filteredCandidates}
         mode={mode}
       />
+      <ItemActionModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setCandidateToDelete(null);
+        }}
+        title="Delete Candidate"
+        mode={mode}
+      >
+        <div className="space-y-4">
+          <p className="text-lg">Are you sure you want to delete this candidate? This action cannot be undone.</p>
+          <div className="flex justify-end gap-4">
+            <button
+              onClick={() => {
+                setIsDeleteModalOpen(false);
+                setCandidateToDelete(null);
+              }}
+              className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={confirmDelete}
+              className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </ItemActionModal>
       <SimpleFooter mode={mode} isSidebarOpen={isSidebarOpen} />
     </div>
   );
 }
 
-export async function getServerSideProps({ req, res }) {
-  console.log(
-    "[HRApplicants] Starting session check at",
-    new Date().toISOString()
-  );
-  try {
-    const supabaseServer = createSupabaseServerClient(req, res);
-
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabaseServer.auth.getSession();
-
-    console.log("[HRApplicants] Session Response:", {
-      session: session ? "present" : null,
-      sessionError: sessionError ? sessionError.message : null,
-    });
-
-    if (sessionError || !session) {
-      console.log(
-        "[HRApplicants] No valid Supabase session, redirecting to login"
-      );
-      return {
-        redirect: {
-          destination: "/hr/login",
-          permanent: false,
-        },
-      };
-    }
-
-    // Verify user is in hr_users
-    const { data: hrUser, error: hrUserError } = await supabaseServer
-      .from("hr_users")
-      .select("id")
-      .eq("id", session.user.id)
-      .single();
-    console.log("[HRApplicants] HR User Check:", {
-      hrUser,
-      hrUserError: hrUserError ? hrUserError.message : null,
-    });
-
-    if (hrUserError || !hrUser) {
-      console.error(
-        "[HRApplicants] HR User Error:",
-        hrUserError?.message || "User not in hr_users"
-      );
-      await supabaseServer.auth.signOut();
-      return {
-        redirect: {
-          destination: "/hr/login",
-          permanent: false,
-        },
-      };
-    }
-
-    console.time("fetchHRData");
-    const data = await fetchHRData({
-      supabaseClient: supabaseServer,
-      fetchCandidates: true,
-      fetchQuestions: true,
-    });
-    console.timeEnd("fetchHRData");
-    
-
-    return {
-      props: {
-        initialCandidates: data.initialCandidates || [],
-        initialQuestions: data.initialQuestions || [],
-        breadcrumbs: [
-          { label: "Dashboard", href: "/admin" },
-          { label: "Applicants" },
-        ],
-      },
-    };
-  } catch (error) {
-    console.error("[HRApplicants] Error:", error.message);
-    return {
-      redirect: {
-        destination: "/hr/login",
-        permanent: false,
-      },
-    };
-  }
-}
+export { getApplicantsProps as getServerSideProps };

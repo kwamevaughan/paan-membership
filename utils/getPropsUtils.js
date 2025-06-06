@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
+import { fetchHRData } from "utils/hrData";
 
 export async function withAuth(req, res, options = {}) {
   const { redirectTo = "/hr/login" } = options;
@@ -337,6 +338,47 @@ export async function getInterviewQuestionsProps({ req, res }) {
     };
   } catch (error) {
     console.error("[getInterviewQuestionsProps] Error:", error.message);
+    return {
+      redirect: {
+        destination: "/hr/login",
+        permanent: false,
+      },
+    };
+  }
+}
+
+export async function getApplicantsProps({ req, res }) {
+  console.log("[getApplicantsProps] Starting at", new Date().toISOString());
+
+  // Authenticate and authorize
+  const authResult = await withAuth(req, res);
+  if (authResult.redirect) {
+    return authResult;
+  }
+
+  const { supabaseServer } = authResult;
+
+  try {
+    console.time("fetchHRData");
+    const data = await fetchHRData({
+      supabaseClient: supabaseServer,
+      fetchCandidates: true,
+      fetchQuestions: true,
+    });
+    console.timeEnd("fetchHRData");
+
+    return {
+      props: {
+        initialCandidates: data.initialCandidates || [],
+        initialQuestions: data.initialQuestions || [],
+        breadcrumbs: [
+          { label: "Dashboard", href: "/admin" },
+          { label: "Applicants" },
+        ],
+      },
+    };
+  } catch (error) {
+    console.error("[getApplicantsProps] Error:", error.message);
     return {
       redirect: {
         destination: "/hr/login",

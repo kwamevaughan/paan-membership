@@ -86,7 +86,7 @@ const DraggableQuestion = ({
       </td>
       <td className="p-2 sm:p-4 relative">
         <span
-          className={`inline-block px-2 py-1 rounded-md text-xs font-medium ${
+          className={`inline-block px-2 py-1 rounded-md text-sm font-medium ${
             mode === "dark"
               ? "bg-blue-500/20 border border-blue-400/30 text-blue-300"
               : "bg-blue-50 border border-blue-200 text-gray-700"

@@ -12,11 +12,14 @@ export default function Step2Questions({
   isLoading = false,
   onComplete,
   mode,
+  initialCategoryIndex = 0,
+  initialQuestionIndex = 0,
+  onIndicesChange,
 }) {
   const containerRef = useRef(null);
   const questionRefs = useRef({});
-  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(0);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [currentCategoryIndex, setCurrentCategoryIndex] = useState(initialCategoryIndex);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(initialQuestionIndex);
   const [otherInputs, setOtherInputs] = useState({});
   const [dynamicAnswers, setDynamicAnswers] = useState({});
   const [errorMessages, setErrorMessages] = useState({});
@@ -520,6 +523,13 @@ export default function Step2Questions({
     formData.job_type === "freelancer"
       ? "Submit"
       : "Next";
+
+  // Update parent component when indices change
+  useEffect(() => {
+    if (onIndicesChange) {
+      onIndicesChange(currentCategoryIndex, currentQuestionIndex);
+    }
+  }, [currentCategoryIndex, currentQuestionIndex, onIndicesChange]);
 
   if (validCategories.length === 0 && !isLoading) {
     return (

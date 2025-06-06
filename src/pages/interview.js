@@ -104,6 +104,15 @@ export default function InterviewPage({
     }
   }, []);
 
+  // Add a function to update form data with current indices
+  const updateFormDataWithIndices = useCallback((categoryIndex, questionIndex) => {
+    setFormData(prev => ({
+      ...prev,
+      currentCategoryIndex: categoryIndex,
+      currentQuestionIndex: questionIndex
+    }));
+  }, [setFormData]);
+
   useEffect(() => {
     try {
       const saved = localStorage.getItem(LS_KEY);
@@ -371,6 +380,9 @@ export default function InterviewPage({
       setFormData(sanitizedFormData);
       setTimeout(() => {
         setStep(savedProgress.step);
+        if (savedProgress.step === 2 && savedProgress.currentCategoryIndex !== undefined && savedProgress.currentQuestionIndex !== undefined) {
+          updateFormDataWithIndices(savedProgress.currentCategoryIndex, savedProgress.currentQuestionIndex);
+        }
         toast.success(`Resuming from step ${savedProgress.step}`, {
           icon: "🔄",
         });
@@ -648,6 +660,9 @@ export default function InterviewPage({
                   isLoading={isLoading}
                   onComplete={handleNext}
                   mode={mode}
+                  initialCategoryIndex={formData.currentCategoryIndex}
+                  initialQuestionIndex={formData.currentQuestionIndex}
+                  onIndicesChange={updateFormDataWithIndices}
                 />
               )}
               {step === 3 && formData.job_type === "agency" && (

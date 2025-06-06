@@ -1,5 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
-import { sendEmails } from "../../../utils/emailUtils";
+import { sendStatusEmail } from "../../../utils/emailUtils";
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -12,6 +12,14 @@ export default async function handler(req, res) {
     if (!feedback || !email || !name) {
       return res.status(400).json({ error: "Missing required fields" });
     }
+
+    console.log("Received feedback submission:", {
+      name,
+      email,
+      job_type,
+      reference_number,
+      feedback
+    });
 
     const supabaseServer = createSupabaseServerClient(req, res);
 
@@ -43,24 +51,38 @@ export default async function handler(req, res) {
         console.error("Error fetching email template:", templateError);
         // Continue with success response even if email fails
       } else {
-        const emailData = {
-          feedback,
-          name,
-          email,
-          job_type,
-          reference_number,
-          submitted_at: new Date().toLocaleString(),
-          candidateTemplate: templates.body,
-          candidateSubject: templates.subject,
-          fromEmail: process.env.AGENCY_EMAIL,
-          fromName: "PAAN Agency",
-          toEmail: process.env.SUPPORT_EMAIL,
-          toName: "PAAN Support",
-          replyTo: email,
-          replyToName: name,
+        const formatDate = (date) => {
+          return new Date(date).toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+            timeZoneName: 'short'
+          });
         };
 
-        await sendEmails(emailData);
+        // Create a more meaningful subject line
+        const emailSubject = reference_number 
+          ? `New Feedback Submission - ${reference_number}`
+          : `New Feedback from ${name} - ${job_type || 'General'} Feedback`;
+
+        const emailTemplate = templates.body
+          .replace(/{{name}}/g, name)
+          .replace(/{{email}}/g, email)
+          .replace(/{{job_type}}/g, job_type || "N/A")
+          .replace(/{{reference_number}}/g, reference_number || "N/A")
+          .replace(/{{submitted_at}}/g, formatDate(new Date()))
+          .replace(/{{feedback}}/g, feedback);
+
+        await sendStatusEmail({
+          primaryContactName: "PAAN Support",
+          primaryContactEmail: process.env.SUPPORT_EMAIL,
+          opening: "Feedback Submission",
+          status: "feedback",
+          subject: emailSubject,
+          template: emailTemplate,
+        });
       }
     } catch (emailError) {
       console.error("Error sending feedback email:", emailError);

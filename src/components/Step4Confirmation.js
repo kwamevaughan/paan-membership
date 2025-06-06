@@ -15,6 +15,7 @@ export default function Step4Confirmation({
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+  const [referenceNumber, setReferenceNumber] = useState(formData.reference_number || formData.referenceNumber);
   const isDark = mode === "dark";
   const textColor = isDark ? "text-white" : "text-gray-800";
   const subTextColor = isDark ? "text-gray-300" : "text-gray-600";
@@ -22,6 +23,12 @@ export default function Step4Confirmation({
   const cardBgColor = isDark ? "bg-gray-700" : "bg-gray-50";
 
   const isFreelancer = formData.job_type === "freelancers";
+
+  useEffect(() => {
+    if (submissionStatus?.referenceNumber || submissionStatus?.reference_number) {
+      setReferenceNumber(submissionStatus.referenceNumber || submissionStatus.reference_number);
+    }
+  }, [submissionStatus]);
 
   const handleFeedbackSubmit = async () => {
     if (!feedback.trim()) {
@@ -33,6 +40,14 @@ export default function Step4Confirmation({
     const submitToast = toast.loading("Submitting your feedback...");
     
     try {
+      console.log("Submitting feedback with formData:", {
+        email: formData.primaryContactEmail,
+        name: formData.primaryContactName,
+        job_type: formData.job_type,
+        reference_number: referenceNumber,
+        formData: formData
+      });
+
       const response = await fetch("/api/feedback", {
         method: "POST",
         headers: {
@@ -43,7 +58,7 @@ export default function Step4Confirmation({
           email: formData.primaryContactEmail,
           name: formData.primaryContactName,
           job_type: formData.job_type,
-          reference_number: formData.reference_number,
+          reference_number: referenceNumber,
         }),
       });
 

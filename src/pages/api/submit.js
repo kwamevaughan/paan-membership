@@ -531,6 +531,7 @@ export default async function handler(req, res) {
       message: "Submission received, processing in background",
       agencyName: job_type === "freelancer" ? primaryContactName : agencyName,
       referenceNumber,
+      reference_number: referenceNumber,
     });
   } catch (error) {
     console.error("Submission error:", error.message);

@@ -1,6 +1,7 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Icon } from "@iconify/react";
 import QuestionCard from "./QuestionCard";
+import { toast } from "react-hot-toast";
 
 export default function Step2Questions({
   formData,
@@ -483,14 +484,26 @@ export default function Step2Questions({
     }
     setDynamicAnswers((prev) => ({ ...prev, [qId]: [] }));
     setOtherInputs((prev) => ({ ...prev, [qId]: "" }));
+    setFormData((prev) => {
+      const newAnswers = [...prev.answers];
+      newAnswers[qId - 1] = [];
+      return {
+        ...prev,
+        answers: newAnswers
+      };
+    });
     handleOptionToggle(qId - 1, null, [], question?.is_multi_select || false);
+    
+    const currentQuestionIndex = currentQuestions.findIndex(q => q.id === qId);
     if (currentQuestionIndex < currentQuestions.length - 1) {
-      setCurrentQuestionIndex((prev) => prev + 1);
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
       containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     } else if (currentCategoryIndex < validCategories.length - 1) {
       setCurrentCategoryIndex((prev) => prev + 1);
       setCurrentQuestionIndex(0);
       containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      onComplete();
     }
   };
 

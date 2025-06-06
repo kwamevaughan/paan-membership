@@ -87,7 +87,7 @@ export default function JobDetail({ mode, toggleMode, initialJob, countries }) {
 
     const handleApply = () => {
         if (job && !job.is_expired) {
-            router.push(`/interview?opening=${encodeURIComponent(job.title)}`);
+            router.push(`/interview?opening=${encodeURIComponent(job.title)}&job_type=${encodeURIComponent(job.job_type)}&opening_id=${encodeURIComponent(job.id)}`);
         } else {
             toast.error("This job has expired and is no longer accepting applications.");
         }

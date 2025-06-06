@@ -296,3 +296,52 @@ export async function getFreelancersPageStaticProps() {
     };
   }
 }
+
+export async function getInterviewQuestionsProps({ req, res }) {
+  console.log("[getInterviewQuestionsProps] Starting at", new Date().toISOString());
+
+  // Authenticate and authorize
+  const authResult = await withAuth(req, res);
+  if (authResult.redirect) {
+    return authResult;
+  }
+
+  const { supabaseServer } = authResult;
+
+  try {
+    const { data: questions, error: questionsError } = await supabaseServer
+      .from("interview_questions")
+      .select(
+        "id, text, description, options, is_multi_select, other_option_text, is_open_ended, is_country_select, order, category, max_answers, depends_on_question_id, depends_on_answer, max_words, skippable, text_input_option, text_input_max_answers, structured_answers, has_links, job_type, category:question_categories(name)"
+      )
+      .order("order", { ascending: true });
+
+    if (questionsError) throw questionsError;
+
+    const { data: categories, error: catError } = await supabaseServer
+      .from("question_categories")
+      .select("id, name, job_type, is_mandatory")
+      .order("created_at", { ascending: false });
+
+    if (catError) throw catError;
+
+    return {
+      props: {
+        initialQuestions: questions || [],
+        initialCategories: categories || [],
+        breadcrumbs: [
+          { label: "Dashboard", href: "/admin" },
+          { label: "Interview Questions" },
+        ],
+      },
+    };
+  } catch (error) {
+    console.error("[getInterviewQuestionsProps] Error:", error.message);
+    return {
+      redirect: {
+        destination: "/hr/login",
+        permanent: false,
+      },
+    };
+  }
+}

@@ -16,7 +16,7 @@ import ItemActionModal from "@/components/ItemActionModal";
 import toast, { Toaster } from "react-hot-toast";
 import useAuthSession from "@/hooks/useAuthSession";
 import useLogout from "@/hooks/useLogout";
-import { createSupabaseServerClient } from "@/lib/supabaseServer";
+import { getInterviewQuestionsProps } from "utils/getPropsUtils";
 
 export default function HRInterviewQuestions({
   mode = "light",
@@ -321,74 +321,4 @@ export default function HRInterviewQuestions({
   );
 }
 
-export async function getServerSideProps({ req, res }) {
-  try {
-    const supabaseServer = createSupabaseServerClient(req, res);
-
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabaseServer.auth.getSession();
-
-    if (sessionError || !session) {
-      return {
-        redirect: {
-          destination: "/hr/login",
-          permanent: false,
-        },
-      };
-    }
-
-    // Verify user is in hr_users
-    const { data: hrUser, error: hrUserError } = await supabaseServer
-      .from("hr_users")
-      .select("id")
-      .eq("id", session.user.id)
-      .single();
-
-    if (hrUserError || !hrUser) {
-      await supabaseServer.auth.signOut();
-      return {
-        redirect: {
-          destination: "/hr/login",
-          permanent: false,
-        },
-      };
-    }
-
-    const { data: questions, error: questionsError } = await supabaseServer
-      .from("interview_questions")
-      .select(
-        "id, text, description, options, is_multi_select, other_option_text, is_open_ended, is_country_select, order, category, max_answers, depends_on_question_id, depends_on_answer, max_words, skippable, text_input_option, text_input_max_answers, structured_answers, has_links, job_type, category:question_categories(name)"
-      )
-      .order("order", { ascending: true });
-
-    if (questionsError) throw questionsError;
-
-    const { data: categories, error: catError } = await supabaseServer
-      .from("question_categories")
-      .select("id, name, job_type, is_mandatory")
-      .order("created_at", { ascending: false });
-
-    if (catError) throw catError;
-
-    return {
-      props: {
-        initialQuestions: questions || [],
-        initialCategories: categories || [],
-        breadcrumbs: [
-          { label: "Dashboard", href: "/admin" },
-          { label: "Interview Questions" },
-        ],
-      },
-    };
-  } catch (error) {
-    console.error("Server-side error:", error.message);
-    return {
-      redirect: {
-        destination: "/hr/login",
-        permanent: false,
-      },
-    };
-  }
-}
+export { getInterviewQuestionsProps as getServerSideProps };

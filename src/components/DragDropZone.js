@@ -15,9 +15,9 @@ export default function DragDropZone({
   required, // New prop to indicate mandatory status
 }) {
   const fileTypeDescription = {
-    companyRegistration: "Company Registration",
+    companyRegistration: "Company Registration Certificate",
     agencyProfile: "Agency Company Profile",
-    portfolioWork: "Company Portfolio"
+    portfolioWork: "Portfolio"
   };
 
   const fileTypeIcon = {

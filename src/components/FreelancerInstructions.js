@@ -1,14 +1,16 @@
 import { Icon } from "@iconify/react";
 
-export default function FreelancerInstructions({ mode, setIsInstructionsOpen }) {
+export default function FreelancerInstructions({ mode }) {
   return (
-    <div className="space-y-6">
+    <div
+      className={`space-y-6 p-4 overflow-y-auto border rounded-lg ${
+        mode === "dark" 
+          ? "bg-gray-800/50 border-gray-700" 
+          : "bg-gray-50 border-blue-200"
+      }`}
+    >
       {/* Header Section */}
-      <div
-        className={`flex items-center gap-3 pb-4 border-b ${
-          mode === "dark" ? "border-gray-500" : "border-gray-200"
-        }`}
-      >
+      <div className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-gray-700">
         <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
           <Icon icon="lucide:file-text" className="w-6 h-6 text-white" />
         </div>
@@ -21,141 +23,155 @@ export default function FreelancerInstructions({ mode, setIsInstructionsOpen }) 
               mode === "dark" ? "text-gray-300" : "text-gray-600"
             }`}
           >
-            Submission takes less than 5 minutes
+            Submission takes less than 10 minutes
           </p>
         </div>
       </div>
 
+      {/* Required Documents Section */}
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Icon icon="lucide:check-circle" className="w-5 h-5 text-green-500" />
+          <h4 className={`font-semibold ${mode === "dark" ? "text-gray-100" : "text-gray-900"}`}>Required Documents</h4>
+        </div>
+        <div className="grid gap-3">
+          <div
+            className={`p-3 rounded-lg ${
+              mode === "dark" ? "bg-gray-700/50 border border-gray-600" : "bg-white border border-gray-200"
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <Icon
+                icon="lucide:file-text"
+                className="w-5 h-5 text-blue-500 mt-0.5"
+              />
+              <div>
+                <h5 className={`font-medium mb-1 ${mode === "dark" ? "text-gray-100" : "text-gray-900"}`}>Portfolio</h5>
+                <p
+                  className={`text-sm ${
+                    mode === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Your best work samples or portfolio website
+                </p>
+              </div>
+            </div>
+          </div>
+          <div
+            className={`p-3 rounded-lg ${
+              mode === "dark" ? "bg-gray-700/50 border border-gray-600" : "bg-white border border-gray-200"
+            }`}
+          >
+            <div className="flex items-start gap-3">
+              <Icon
+                icon="lucide:file-text"
+                className="w-5 h-5 text-blue-500 mt-0.5"
+              />
+              <div>
+                <h5 className={`font-medium mb-1 ${mode === "dark" ? "text-gray-100" : "text-gray-900"}`}>Resume/CV</h5>
+                <p
+                  className={`text-sm ${
+                    mode === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Updated professional resume or CV
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Process Information */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 mb-3">
           <Icon icon="lucide:info" className="w-5 h-5 text-blue-500" />
-          <h4
-            className={`font-semibold ${
-              mode === "dark" ? "text-gray-100" : "text-gray-900"
-            }`}
-          >
-            What to Expect
-          </h4>
+          <h4 className={`font-semibold ${mode === "dark" ? "text-gray-100" : "text-gray-900"}`}>Process Information</h4>
         </div>
-
-        <div className="space-y-3">
-          {[
-            {
-              icon: "lucide:clock",
-              text: "Complete registration in approximately 5 minutes",
-              highlight: "5 minutes",
-            },
-            {
-              icon: "lucide:save",
-              text: "Progress automatically saved for same-device resume",
-              highlight: "automatically saved",
-            },
-            {
-              icon: "lucide:check-circle",
-              text: "Ensure all required fields are completed before submission",
-              highlight: "required fields",
-            },
-          ].map((item, index) => (
-            <div key={index} className="flex items-center gap-3">
+        <div
+          className={`p-4 rounded-lg border ${
+            mode === "dark" 
+              ? "bg-blue-500/10 border-blue-400/20" 
+              : "bg-blue-50 border-blue-100"
+          }`}
+        >
+          <ul className="space-y-3">
+            <li className="flex items-start gap-2">
               <Icon
-                icon={item.icon}
-                className="w-4 h-4 text-blue-500 flex-shrink-0"
+                icon="lucide:clock"
+                className="w-5 h-5 text-blue-500 mt-0.5"
               />
               <p
                 className={`text-sm ${
-                  mode === "dark" ? "text-gray-300" : "text-gray-700"
+                  mode === "dark" ? "text-blue-300" : "text-blue-700"
                 }`}
               >
-                {item.text.split(item.highlight).map((part, i) =>
-                  i === 0 ? (
-                    part
-                  ) : (
-                    <span key={i}>
-                      <span
-                        className={`font-semibold ${
-                          mode === "dark" ? "text-blue-400" : "text-blue-600"
-                        }`}
-                      >
-                        {item.highlight}
-                      </span>
-                      {part}
-                    </span>
-                  )
-                )}
+                <strong>Time Estimate:</strong> Complete the form in about 10
+                minutes
               </p>
-            </div>
-          ))}
+            </li>
+            <li className="flex items-start gap-2">
+              <Icon
+                icon="lucide:save"
+                className="w-5 h-5 text-blue-500 mt-0.5"
+              />
+              <p
+                className={`text-sm ${
+                  mode === "dark" ? "text-blue-300" : "text-blue-700"
+                }`}
+              >
+                <strong>Auto-Save:</strong> Your progress is automatically saved
+              </p>
+            </li>
+            <li className="flex items-start gap-2">
+              <Icon
+                icon="lucide:shield-check"
+                className="w-5 h-5 text-blue-500 mt-0.5"
+              />
+              <p
+                className={`text-sm ${
+                  mode === "dark" ? "text-blue-300" : "text-blue-700"
+                }`}
+              >
+                <strong>Secure:</strong> Your information is encrypted and
+                protected
+              </p>
+            </li>
+          </ul>
         </div>
       </div>
 
       {/* Contact Section */}
-      <div
-        className={`p-4 rounded-lg border ${
-          mode === "dark"
-            ? "bg-gray-900/20 border-blue-800"
-            : "bg-gradient-to-r from-blue-50 to-orange-50 border-blue-200"
-        }`}
-      >
-        <div className="flex items-start gap-3">
-          <Icon
-            icon="lucide:help-circle"
-            className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5"
-          />
-          <div>
-            <p
-              className={`text-sm ${
-                mode === "dark" ? "text-gray-300" : "text-gray-700"
-              } mb-2`}
-            >
-              Need assistance? We&apos;re here to help!
-            </p>
+      <div className="space-y-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Icon icon="lucide:help-circle" className="w-5 h-5 text-blue-500" />
+          <h4 className={`font-semibold ${mode === "dark" ? "text-gray-100" : "text-gray-900"}`}>Need Help?</h4>
+        </div>
+        <div
+          className={`p-4 rounded-lg border ${
+            mode === "dark" 
+              ? "bg-gray-700/50 border-gray-600" 
+              : "bg-white border-gray-200"
+          }`}
+        >
+          <p
+            className={`text-sm ${
+              mode === "dark" ? "text-gray-300" : "text-gray-600"
+            }`}
+          >
+            If you need assistance, please contact us at{" "}
             <a
               href="mailto:support@paan.africa"
-              className={`inline-flex items-center gap-2 text-sm font-medium ${
-                mode === "dark"
-                  ? "text-blue-400 hover:text-blue-300"
-                  : "text-blue-600 hover:text-blue-700"
-              } transition-colors`}
+              className={`${
+                mode === "dark" 
+                  ? "text-blue-400 hover:text-blue-300" 
+                  : "text-blue-500 hover:text-blue-600"
+              } underline`}
             >
-              <Icon icon="lucide:mail" className="w-4 h-4" />
               support@paan.africa
             </a>
-          </div>
+          </p>
         </div>
-      </div>
-
-      {/* Action Buttons */}
-      <div
-        className={`flex gap-3 pt-4 border-t ${
-          mode === "dark" ? "border-gray-700" : "border-gray-200"
-        }`}
-      >
-        <button
-          onClick={() => setIsInstructionsOpen(false)}
-          className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-colors ${
-            mode === "dark"
-              ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-          }`}
-        >
-          Close
-        </button>
-        <button
-          onClick={() => {
-            setIsInstructionsOpen(false);
-            // Add logic to proceed to application
-          }}
-          className={`flex-1 px-4 py-2.5 rounded-lg font-medium transition-all flex items-center justify-center gap-2 ${
-            mode === "dark"
-              ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700"
-              : "bg-gradient-to-r from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700"
-          }`}
-        >
-          <span>Start Application</span>
-          <Icon icon="lucide:arrow-right" className="w-4 h-4" />
-        </button>
       </div>
     </div>
   );

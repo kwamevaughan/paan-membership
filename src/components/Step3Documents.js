@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import DragDropZone from "./DragDropZone";
 import { Icon } from "@iconify/react";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
+import DocumentsProgress from "./DocumentsProgress";
 
 export default function Step3Documents({
   formData,
@@ -15,24 +16,37 @@ export default function Step3Documents({
 }) {
   const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB in bytes
 
-  const fileTypes = [
-    {
-      id: "companyRegistration",
-      title: "Company Registration Certificate",
-      description: "Upload your official business registration document",
-    },
-    {
-      id: "agencyProfile",
-      title: "Agency Company Profile",
-      description: "Present your agency's capabilities and team",
-    },
-    {
-      id: "portfolioWork",
-      title: "Company Portfolio",
-      description: "Upload your portfolio file or add links to your online work",
-      isOptional: true,
-    },
-  ];
+  const fileTypes = useMemo(() => {
+    if (formData.job_type === "agency") {
+      return [
+        {
+          id: "companyRegistration",
+          title: "Company Registration Certificate",
+          description: "Upload your official business registration document",
+        },
+        {
+          id: "agencyProfile",
+          title: "Agency Company Profile",
+          description: "Present your agency's capabilities and team",
+        },
+        {
+          id: "portfolioWork",
+          title: "Company Portfolio",
+          description: "Upload your portfolio file or add links to your online work",
+          isOptional: true,
+        },
+      ];
+    } else {
+      // For freelancers
+      return [
+        {
+          id: "portfolioWork",
+          title: "Portfolio",
+          description: "Upload your portfolio file or add links to your online work",
+        },
+      ];
+    }
+  }, [formData.job_type]);
 
   const declarations = [
     {
@@ -78,6 +92,31 @@ export default function Step3Documents({
     }, 0);
   };
 
+  // Compute completed files using useMemo
+  const memoizedCompletedFiles = useMemo(() => {
+    return fileTypes
+      .map((type) => {
+        if (type.id === "portfolioWork") {
+          return (formData[type.id] !== undefined && formData[type.id] !== null) || 
+                 (formData.portfolioLinks && formData.portfolioLinks.length > 0 && 
+                  formData.portfolioLinks.some(link => link.url.trim() !== "")) ? type.id : null;
+        }
+        return (formData[type.id] !== undefined && formData[type.id] !== null) ? type.id : null;
+      })
+      .filter(id => id !== null);
+  }, [formData, fileTypes]);
+
+  // Compute active file index using useMemo
+  const memoizedActiveFileIndex = useMemo(() => {
+    if (memoizedCompletedFiles.length > 0 && memoizedCompletedFiles.length < fileTypes.length) {
+      const firstIncomplete = fileTypes.findIndex(
+        (type) => !memoizedCompletedFiles.includes(type.id)
+      );
+      return firstIncomplete !== -1 ? firstIncomplete : 0;
+    }
+    return 0;
+  }, [memoizedCompletedFiles, fileTypes]);
+
   // Update formData with declaration values
   useEffect(() => {
     setFormData((prev) => ({
@@ -89,9 +128,9 @@ export default function Step3Documents({
   // Move to next file when current one is uploaded
   useEffect(() => {
     if (
-      completedFiles.includes(fileTypes[activeFileIndex].id) &&
+      memoizedCompletedFiles.includes(fileTypes[memoizedActiveFileIndex].id) &&
       !isAnimating &&
-      activeFileIndex < fileTypes.length - 1
+      memoizedActiveFileIndex < fileTypes.length - 1
     ) {
       setIsAnimating(true);
       setTimeout(() => {
@@ -99,33 +138,7 @@ export default function Step3Documents({
         setIsAnimating(false);
       }, 500);
     }
-  }, [completedFiles, activeFileIndex, fileTypes.length]);
-
-  // Track completed files
-  useEffect(() => {
-    const completed = fileTypes
-      .map((type) => {
-        if (type.id === "portfolioWork") {
-          // For portfolio work, consider it complete if either a file is uploaded or there are valid links
-          return (formData[type.id] !== undefined && formData[type.id] !== null) || 
-                 (formData.portfolioLinks && formData.portfolioLinks.length > 0 && 
-                  formData.portfolioLinks.some(link => link.url.trim() !== "")) ? type.id : null;
-        }
-        return (formData[type.id] !== undefined && formData[type.id] !== null) ? type.id : null;
-      })
-      .filter(id => id !== null);
-    setCompletedFiles(completed);
-
-    // Set active file to first incomplete file
-    if (completed.length > 0 && completed.length < fileTypes.length) {
-      const firstIncomplete = fileTypes.findIndex(
-        (type) => !completed.includes(type.id)
-      );
-      if (firstIncomplete !== -1 && firstIncomplete !== activeFileIndex) {
-        setActiveFileIndex(firstIncomplete);
-      }
-    }
-  }, [formData, fileTypes, activeFileIndex]);
+  }, [memoizedCompletedFiles, memoizedActiveFileIndex, fileTypes.length, isAnimating]);
 
   const handleFileUpload = (type, file) => {
     if (file && file.size > MAX_FILE_SIZE) {
@@ -151,8 +164,8 @@ export default function Step3Documents({
 
   const getCompletionStatus = (index) => {
     const fileId = fileTypes[index].id;
-    if (completedFiles.includes(fileId)) return "complete";
-    if (index === activeFileIndex) return "active";
+    if (memoizedCompletedFiles.includes(fileId)) return "complete";
+    if (index === memoizedActiveFileIndex) return "active";
     return "pending";
   };
 
@@ -209,290 +222,305 @@ export default function Step3Documents({
   const checkboxBgColor = mode === "dark" ? "bg-gray-700" : "bg-gray-100";
 
   return (
-    <div className="animate-fade-in max-w-2xl mx-auto">
-      <div
-        className={`shadow-lg rounded-lg p-6 border-t-4 border-blue-400 ${bgColor} ${textColor}`}
-      >
-        <div className="flex items-center justify-center mb-6">
-          <Icon icon="mdi:upload" className="w-8 h-8 text-blue-400 mr-2" />
-          <h2 className="text-3xl font-bold text-center">
-            Submit Your Documents
-          </h2>
+    <div className="animate-fade-in max-w-7xl mx-auto">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Progress Sidebar */}
+        <div className="lg:col-span-1">
+          <DocumentsProgress
+            formData={formData}
+            fileTypes={fileTypes}
+            declarationChecks={declarationChecks}
+            mode={mode}
+          />
         </div>
 
-        {/* Progress Indicators */}
-        <div className="flex justify-between mb-8 relative">
-          <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-300 -translate-y-1/2 z-0"></div>
+        {/* Main Content */}
+        <div className="lg:col-span-2">
+          <div
+            className={`shadow-lg rounded-lg p-6 border-t-4 border-blue-400 ${bgColor} ${textColor}`}
+          >
+            <div className="flex items-center justify-center mb-6">
+              <Icon icon="mdi:upload" className="w-8 h-8 text-blue-400 mr-2" />
+              <h2 className="text-3xl font-bold text-center">
+                Submit Your Documents
+              </h2>
+            </div>
 
-          {fileTypes.map((file, index) => (
-            <div
-              key={file.id}
-              className="z-10 flex flex-col items-center group"
-              onClick={() => !isAnimating && setActiveFileIndex(index)}
-            >
+            {/* Progress Indicators */}
+            <div className="flex justify-between mb-8 relative">
+              <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-300 -translate-y-1/2 z-0"></div>
+
+              {fileTypes.map((file, index) => (
+                <div
+                  key={file.id}
+                  className="z-10 flex flex-col items-center group"
+                  onClick={() => !isAnimating && setActiveFileIndex(index)}
+                >
+                  <motion.div
+                    className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-colors
+                      ${
+                        getCompletionStatus(index) === "complete"
+                          ? "bg-blue-400 text-white"
+                          : getCompletionStatus(index) === "active"
+                          ? "bg-blue-400 text-white"
+                          : `${
+                              mode === "dark" ? "bg-gray-700" : "bg-gray-200"
+                            } ${secondaryTextColor}`
+                      }`}
+                    whileHover={{ scale: 1.1 }}
+                    animate={
+                      getCompletionStatus(index) === "active"
+                        ? { scale: [1, 1.1, 1] }
+                        : {}
+                    }
+                    transition={{
+                      repeat:
+                        getCompletionStatus(index) === "active" ? Infinity : 0,
+                      duration: 2,
+                    }}
+                  >
+                    {getCompletionStatus(index) === "complete" ? (
+                      <Icon icon="mdi:check" className="w-5 h-5" />
+                    ) : (
+                      index + 1
+                    )}
+                  </motion.div>
+                  <span
+                    className={`text-xs mt-1 ${secondaryTextColor} hidden sm:block group-hover:text-blue-400 transition-colors`}
+                  >
+                    {file.title}
+                  </span>
+                  <span className="absolute top-full mt-2 text-xs text-white bg-gray-800 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
+                    Click to edit {file.title}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <AnimatePresence mode="wait">
               <motion.div
-                className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-colors
-                  ${
-                    getCompletionStatus(index) === "complete"
-                      ? "bg-blue-400 text-white"
-                      : getCompletionStatus(index) === "active"
-                      ? "bg-blue-400 text-white"
-                      : `${
-                          mode === "dark" ? "bg-gray-700" : "bg-gray-200"
-                        } ${secondaryTextColor}`
-                  }`}
-                whileHover={{ scale: 1.1 }}
-                animate={
-                  getCompletionStatus(index) === "active"
-                    ? { scale: [1, 1.1, 1] }
-                    : {}
-                }
-                transition={{
-                  repeat:
-                    getCompletionStatus(index) === "active" ? Infinity : 0,
-                  duration: 2,
-                }}
+                key={memoizedActiveFileIndex}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.3 }}
+                className="mb-6"
               >
-                {getCompletionStatus(index) === "complete" ? (
-                  <Icon icon="mdi:check" className="w-5 h-5" />
+                <h3 className="text-xl font-bold mb-2">
+                  {fileTypes[memoizedActiveFileIndex].title}
+                  {fileTypes[memoizedActiveFileIndex].isOptional && (
+                    <span className="text-sm font-normal text-gray-500 ml-2">(Optional)</span>
+                  )}
+                </h3>
+                <p className={`mb-4 ${secondaryTextColor}`}>
+                  {fileTypes[memoizedActiveFileIndex].description}
+                  {!fileTypes[memoizedActiveFileIndex].isOptional && ` (Max size: ${formatFileSize(MAX_FILE_SIZE)})`}
+                </p>
+
+                {fileTypes[memoizedActiveFileIndex].id === "portfolioWork" ? (
+                  <div className="space-y-4">
+                    <div className={`p-4 rounded-lg ${mode === "dark" ? "bg-gray-700" : "bg-gray-100"} mb-4`}>
+                      <p className={`${secondaryTextColor} text-sm`}>
+                        You can either upload a portfolio file or add links to your online work. If you don&apos;t have a portfolio file ready, you can add links to your previous work below.
+                      </p>
+                    </div>
+                    <DragDropZone
+                      key="portfolioWork"
+                      type="portfolioWork"
+                      file={formData.portfolioWork}
+                      isDragging={fileUploadProps.isDraggingPortfolioWork}
+                      uploadProgress={uploadProgress}
+                      isSubmitting={isSubmitting}
+                      setFormData={(prev) =>
+                        handleFileUpload("portfolioWork", prev.portfolioWork)
+                      }
+                      setUploadProgress={setUploadProgress}
+                      mode={mode}
+                      {...fileUploadProps}
+                    />
+                    
+                    <div className="mt-6">
+                      <h4 className="font-semibold mb-3">Add links to your online work</h4>
+                      <p className={`${secondaryTextColor} text-sm mb-4`}>
+                        Add URLs to your previous work, case studies, or any online portfolio. You can add multiple links.
+                      </p>
+                      <div className="space-y-3">
+                        {portfolioLinks.map((link, index) => (
+                          <div key={index} className="flex gap-2">
+                            <div className="flex-1 relative">
+                              <span className={`absolute left-3 top-1/2 -translate-y-1/2 ${mode === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+                                https://
+                              </span>
+                              <input
+                                type="text"
+                                value={link.url}
+                                onChange={(e) => updatePortfolioLink(index, e.target.value)}
+                                placeholder="example.com/portfolio"
+                                className={`w-full pl-[4.5rem] pr-3 py-2 rounded-lg border ${
+                                  mode === "dark" 
+                                    ? "bg-gray-700 border-gray-600 text-white" 
+                                    : "bg-white border-gray-300 text-gray-900"
+                                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                              />
+                            </div>
+                            {index > 0 && (
+                              <button
+                                onClick={() => removePortfolioLink(index)}
+                                className="p-2 text-red-500 hover:text-red-700"
+                              >
+                                <Icon icon="mdi:close" className="w-5 h-5" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                        <button
+                          onClick={addPortfolioLink}
+                          className="flex items-center text-blue-500 hover:text-blue-700"
+                        >
+                          <Icon icon="mdi:plus" className="w-5 h-5 mr-1" />
+                          Add another link
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 ) : (
-                  index + 1
+                  <DragDropZone
+                    key={fileTypes[memoizedActiveFileIndex].id}
+                    type={fileTypes[memoizedActiveFileIndex].id}
+                    file={formData[fileTypes[memoizedActiveFileIndex].id]}
+                    isDragging={
+                      fileUploadProps[
+                        `isDragging${
+                          fileTypes[memoizedActiveFileIndex].id[0].toUpperCase() +
+                          fileTypes[memoizedActiveFileIndex].id.slice(1)
+                        }`
+                      ]
+                    }
+                    uploadProgress={uploadProgress}
+                    isSubmitting={isSubmitting}
+                    setFormData={(prev) =>
+                      handleFileUpload(
+                        fileTypes[memoizedActiveFileIndex].id,
+                        prev[fileTypes[memoizedActiveFileIndex].id]
+                      )
+                    }
+                    setUploadProgress={setUploadProgress}
+                    mode={mode}
+                    required
+                    {...fileUploadProps}
+                  />
                 )}
               </motion.div>
-              <span
-                className={`text-xs mt-1 ${secondaryTextColor} hidden sm:block group-hover:text-blue-400 transition-colors`}
+            </AnimatePresence>
+
+            {/* Document Summary */}
+            {memoizedCompletedFiles.length > 0 && (
+              <motion.div
+                className={`mt-8 p-4 rounded-lg ${
+                  mode === "dark" ? "bg-gray-700" : "bg-gray-100"
+                }`}
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                transition={{ duration: 0.3 }}
               >
-                {file.title}
-              </span>
-              <span className="absolute top-full mt-2 text-xs text-white bg-gray-800 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-10">
-                Click to edit {file.title}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeFileIndex}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-            className="mb-6"
-          >
-            <h3 className="text-xl font-bold mb-2">
-              {fileTypes[activeFileIndex].title}
-              {fileTypes[activeFileIndex].isOptional && (
-                <span className="text-sm font-normal text-gray-500 ml-2">(Optional)</span>
-              )}
-            </h3>
-            <p className={`mb-4 ${secondaryTextColor}`}>
-              {fileTypes[activeFileIndex].description}
-              {!fileTypes[activeFileIndex].isOptional && ` (Max size: ${formatFileSize(MAX_FILE_SIZE)})`}
-            </p>
-
-            {fileTypes[activeFileIndex].id === "portfolioWork" ? (
-              <div className="space-y-4">
-                <div className={`p-4 rounded-lg ${mode === "dark" ? "bg-gray-700" : "bg-gray-100"} mb-4`}>
-                  <p className={`${secondaryTextColor} text-sm`}>
-                    You can either upload a portfolio file or add links to your online work. If you don&apos;t have a portfolio file ready, you can add links to your previous work below.
-                  </p>
-                </div>
-                <DragDropZone
-                  key="portfolioWork"
-                  type="portfolioWork"
-                  file={formData.portfolioWork}
-                  isDragging={fileUploadProps.isDraggingPortfolioWork}
-                  uploadProgress={uploadProgress}
-                  isSubmitting={isSubmitting}
-                  setFormData={(prev) =>
-                    handleFileUpload("portfolioWork", prev.portfolioWork)
-                  }
-                  setUploadProgress={setUploadProgress}
-                  mode={mode}
-                  {...fileUploadProps}
-                />
-                
-                <div className="mt-6">
-                  <h4 className="font-semibold mb-3">Add links to your online work</h4>
-                  <p className={`${secondaryTextColor} text-sm mb-4`}>
-                    Add URLs to your previous work, case studies, or any online portfolio. You can add multiple links.
-                  </p>
-                  <div className="space-y-3">
-                    {portfolioLinks.map((link, index) => (
-                      <div key={index} className="flex gap-2">
-                        <div className="flex-1 relative">
-                          <span className={`absolute left-3 top-1/2 -translate-y-1/2 ${mode === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                            https://
-                          </span>
-                          <input
-                            type="text"
-                            value={link.url}
-                            onChange={(e) => updatePortfolioLink(index, e.target.value)}
-                            placeholder="example.com/portfolio"
-                            className={`w-full pl-[4.5rem] pr-3 py-2 rounded-lg border ${
-                              mode === "dark" 
-                                ? "bg-gray-700 border-gray-600 text-white" 
-                                : "bg-white border-gray-300 text-gray-900"
-                            } focus:outline-none focus:ring-2 focus:ring-blue-500`}
-                          />
-                        </div>
-                        {index > 0 && (
-                          <button
-                            onClick={() => removePortfolioLink(index)}
-                            className="p-2 text-red-500 hover:text-red-700"
-                          >
-                            <Icon icon="mdi:close" className="w-5 h-5" />
-                          </button>
-                        )}
-                      </div>
-                    ))}
-                    <button
-                      onClick={addPortfolioLink}
-                      className="flex items-center text-blue-500 hover:text-blue-700"
-                    >
-                      <Icon icon="mdi:plus" className="w-5 h-5 mr-1" />
-                      Add another link
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <DragDropZone
-                key={fileTypes[activeFileIndex].id}
-                type={fileTypes[activeFileIndex].id}
-                file={formData[fileTypes[activeFileIndex].id]}
-                isDragging={
-                  fileUploadProps[
-                    `isDragging${
-                      fileTypes[activeFileIndex].id[0].toUpperCase() +
-                      fileTypes[activeFileIndex].id.slice(1)
-                    }`
-                  ]
-                }
-                uploadProgress={uploadProgress}
-                isSubmitting={isSubmitting}
-                setFormData={(prev) =>
-                  handleFileUpload(
-                    fileTypes[activeFileIndex].id,
-                    prev[fileTypes[activeFileIndex].id]
-                  )
-                }
-                setUploadProgress={setUploadProgress}
-                mode={mode}
-                required
-                {...fileUploadProps}
-              />
-            )}
-          </motion.div>
-        </AnimatePresence>
-
-        {/* Document Summary */}
-        {completedFiles.length > 0 && (
-          <motion.div
-            className={`mt-8 p-4 rounded-lg ${
-              mode === "dark" ? "bg-gray-700" : "bg-gray-100"
-            }`}
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            transition={{ duration: 0.3 }}
-          >
-            <h4 className="font-semibold mb-2 flex items-center">
-              <Icon
-                icon="mdi:file-document-multiple"
-                className="w-5 h-5 mr-2 text-blue-500"
-              />
-              Uploaded Documents ({completedFiles.length}/{fileTypes.length}) -
-              Total Size: {formatFileSize(getTotalFileSize())}
-            </h4>
-            <ul className="space-y-2">
-              {fileTypes.map((file) => (
-                <li key={file.id} className="flex items-center">
-                  <div
-                    className={`w-4 h-4 rounded-full mr-2 ${
-                      completedFiles.includes(file.id)
-                        ? "bg-blue-400"
-                        : "bg-gray-300"
-                    }`}
-                  ></div>
-                  <span
-                    className={
-                      completedFiles.includes(file.id) ? "" : secondaryTextColor
-                    }
-                  >
-                    {file.title}{" "}
-                    {completedFiles.includes(file.id) && getDocumentSummary(file)}
-                  </span>
-                  {completedFiles.includes(file.id) && (
-                    <button
-                      className="ml-auto text-xs underline text-red-500 hover:text-red-700"
-                      onClick={() => {
-                        if (file.id === "portfolioWork") {
-                          setFormData(prev => ({
-                            ...prev,
-                            [file.id]: null,
-                            portfolioLinks: []
-                          }));
-                        } else {
-                          setFormData(prev => ({ ...prev, [file.id]: null }));
-                        }
-                        setCompletedFiles(prev =>
-                          prev.filter(id => id !== file.id)
-                        );
-                      }}
-                    >
-                      Remove
-                    </button>
-                  )}
-                </li>
-              ))}
-            </ul>
-          </motion.div>
-        )}
-
-        {/* Declaration Checkboxes */}
-        <motion.div
-          className={`mt-8 p-4 rounded-lg ${checkboxBgColor}`}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <h4 className="font-bold mb-3 flex items-center">
-            <Icon
-              icon="mdi:clipboard-check"
-              className="w-5 h-5 mr-2 text-blue-500"
-            />
-            Declaration
-          </h4>
-
-          <div className="space-y-3">
-            {declarations.map((declaration) => (
-              <div key={declaration.id} className="flex items-start">
-                <div className="flex items-center h-5">
-                  <input
-                    id={declaration.id}
-                    type="checkbox"
-                    className="w-4 h-4 border-gray-300 rounded text-[#f05d23] focus:ring-[#f05d23]"
-                    checked={declarationChecks[declaration.id]}
-                    onChange={() => handleDeclarationChange(declaration.id)}
+                <h4 className="font-semibold mb-2 flex items-center">
+                  <Icon
+                    icon="mdi:file-document-multiple"
+                    className="w-5 h-5 mr-2 text-blue-500"
                   />
-                </div>
-                <label
-                  htmlFor={declaration.id}
-                  className={`ml-2 text-sm ${secondaryTextColor} cursor-pointer hover:text-[#f05d23] transition-colors`}
-                >
-                  {declaration.text}
-                </label>
-              </div>
-            ))}
-          </div>
+                  Uploaded Documents ({memoizedCompletedFiles.length}/{fileTypes.length}) -
+                  Total Size: {formatFileSize(getTotalFileSize())}
+                </h4>
+                <ul className="space-y-2">
+                  {fileTypes.map((file) => (
+                    <li key={file.id} className="flex items-center">
+                      <div
+                        className={`w-4 h-4 rounded-full mr-2 ${
+                          memoizedCompletedFiles.includes(file.id)
+                            ? "bg-blue-400"
+                            : "bg-gray-300"
+                        }`}
+                      ></div>
+                      <span
+                        className={
+                          memoizedCompletedFiles.includes(file.id) ? "" : secondaryTextColor
+                        }
+                      >
+                        {file.title}{" "}
+                        {memoizedCompletedFiles.includes(file.id) && getDocumentSummary(file)}
+                      </span>
+                      {memoizedCompletedFiles.includes(file.id) && (
+                        <button
+                          className="ml-auto text-xs underline text-red-500 hover:text-red-700"
+                          onClick={() => {
+                            if (file.id === "portfolioWork") {
+                              setFormData(prev => ({
+                                ...prev,
+                                [file.id]: null,
+                                portfolioLinks: []
+                              }));
+                            } else {
+                              setFormData(prev => ({ ...prev, [file.id]: null }));
+                            }
+                            setCompletedFiles(prev =>
+                              prev.filter(id => id !== file.id)
+                            );
+                          }}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
+            )}
 
-          {!areAllDeclarationsChecked() && (
-            <p className="text-red-500 text-xs mt-2 italic">
-              * All declarations must be checked before submitting
-            </p>
-          )}
-        </motion.div>
+            {/* Declaration Checkboxes */}
+            <motion.div
+              className={`mt-8 p-4 rounded-lg ${checkboxBgColor}`}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <h4 className="font-bold mb-3 flex items-center">
+                <Icon
+                  icon="mdi:clipboard-check"
+                  className="w-5 h-5 mr-2 text-blue-500"
+                />
+                Declaration
+              </h4>
+
+              <div className="space-y-3">
+                {declarations.map((declaration) => (
+                  <div key={declaration.id} className="flex items-start">
+                    <div className="flex items-center h-5">
+                      <input
+                        id={declaration.id}
+                        type="checkbox"
+                        className="w-4 h-4 border-gray-300 rounded text-[#f05d23] focus:ring-[#f05d23]"
+                        checked={declarationChecks[declaration.id]}
+                        onChange={() => handleDeclarationChange(declaration.id)}
+                      />
+                    </div>
+                    <label
+                      htmlFor={declaration.id}
+                      className={`ml-2 text-sm ${secondaryTextColor} cursor-pointer hover:text-[#f05d23] transition-colors`}
+                    >
+                      {declaration.text}
+                    </label>
+                  </div>
+                ))}
+              </div>
+
+              {!areAllDeclarationsChecked() && (
+                <p className="text-red-500 text-xs mt-2 italic">
+                  * All declarations must be checked before submitting
+                </p>
+              )}
+            </motion.div>
+          </div>
+        </div>
       </div>
     </div>
   );

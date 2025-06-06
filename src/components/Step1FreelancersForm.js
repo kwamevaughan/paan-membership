@@ -162,12 +162,12 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
   };
 
   return (
-    <div className="animate-fade-in max-w-2xl mx-auto">
+    <div className="animate-fade-in mx-auto">
       <div
-        className={`px-4 py-4 ${
+        className={`px-4 py-4 rounded-xl ${
           mode === "dark"
             ? "bg-gradient-to-r from-gray-800 to-gray-900 border-gray-700"
-            : "bg-gradient-to-r from-gray-50 to-white border-gray-100"
+            : "bg-gradient-to-r from-gray-50 to-white border border-blue-100"
         }`}
       >
         <div className="flex items-center justify-between mb-6">
@@ -199,7 +199,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
             </div>
           </div>
 
-          <button
+          {/* <button
             onClick={() => setIsInstructionsOpen(true)}
             className={`group flex items-center px-5 py-3 rounded-xl font-medium transition-all duration-300 border-2 hover:scale-[1.02] active:scale-[0.98] ${
               mode === "dark"
@@ -213,10 +213,10 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
               className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300"
             />
             Instructions
-          </button>
+          </button> */}
         </div>
 
-        <div className="space-y-6 max-h-[50vh] overflow-y-auto">
+        <div className="space-y-6 max-h-[65vh] overflow-y-auto">
           <h3 className="text-lg font-bold">Personal information</h3>
 
           {/* Full Name */}
@@ -240,17 +240,17 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
                 onChange={handleInputChange}
                 placeholder="e.g., John Doe"
                 required
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200 ${
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200 ${
                   mode === "dark"
                     ? `bg-gray-700 text-white border-gray-600 ${
                         errors.primaryContactName
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-400"
                       }`
                     : `bg-gray-50 text-[#231812] border-gray-300 ${
                         errors.primaryContactName
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-400"
                       }`
                 }`}
               />
@@ -284,17 +284,17 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
                 onChange={handleInputChange}
                 placeholder="e.g., john.doe@example.com"
                 required
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition-all duration-200 ${
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-200 ${
                   mode === "dark"
                     ? `bg-gray-700 text-white border-gray-600 ${
                         errors.primaryContactEmail
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-400"
                       }`
                     : `bg-gray-50 text-[#231812] border-gray-300 ${
                         errors.primaryContactEmail
                           ? "border-red-500"
-                          : "focus:border-[#f05d23]"
+                          : "focus:border-blue-400"
                       }`
                 }`}
               />
@@ -321,12 +321,12 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
                   ? `bg-gray-700 text-white border-gray-600 ${
                       errors.countryOfResidence
                         ? "border-red-500"
-                        : "focus:border-[#f05d23]"
+                        : "focus:border-blue-400"
                     }`
                   : `bg-gray-50 text-[#231812] border-gray-300 ${
                       errors.countryOfResidence
                         ? "border-red-500"
-                        : "focus:border-[#f05d23]"
+                        : "focus:border-blue-400"
                     }`
               }`}
             >
@@ -439,9 +439,9 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
                         borderColors[idx % borderColors.length]
                       } ${
                         isSelected
-                          ? "bg-[#172840] border-[#172840] text-white shadow-md"
+                          ? "bg-blue-100 border-blue-200 shadow-md"
                           : mode === "dark"
-                          ? "bg-gray-700 text-white hover:bg-gray-600 hover:border-[#d94f1e]"
+                          ? "bg-gray-700 text-white hover:bg-gray-600 hover:border-blue-400"
                           : "bg-gray-50 text-[#231812] hover:bg-gray-100 hover:border-blue-400"
                       }`}
                     >
@@ -469,9 +469,9 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
                         }
                         className={`p-2 border rounded-lg ${
                           mode === "dark"
-                            ? "bg-gray-700 text-white border-gray-600 focus:border-[#f05d23]"
-                            : "bg-gray-50 text-[#231812] border-gray-300 focus:border-[#f05d23]"
-                        } focus:outline-none focus:ring-2 focus:ring-[#f05d23]`}
+                            ? "bg-gray-700 text-white border-gray-600 focus:border-blue-600"
+                            : "bg-gray-50 text-[#231812] border-gray-300 focus:border-blue-600"
+                        } focus:outline-none focus:ring-2 focus:ring-blue-600`}
                       >
                         {proficiencyLevels.map((level) => (
                           <option key={level} value={level}>
@@ -518,7 +518,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
             </div>
             {!formData.opening && (
               <div className="text-center mt-2">
-                <Link href="/freelancers" className="text-[#f05d23] underline">
+                <Link href="/freelancers" className="text-blue-400 underline">
                   Click here to return to the freelancers page
                 </Link>
               </div>

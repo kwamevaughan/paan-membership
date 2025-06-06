@@ -4,13 +4,9 @@ import Link from "next/link";
 import Select from "react-select";
 import { useFormValidation } from "@/hooks/useFormValidation";
 import { useCountry } from "@/hooks/useCountry";
-import ItemActionModal from "./ItemActionModal";
-import AgencyInstructions from "./AgencyInstructions";
 
 export default function Step1AgenciesForm({ formData, handleChange, mode }) {
   const [isMounted, setIsMounted] = useState(false);
-  const [isInstructionsOpen, setIsInstructionsOpen] = useState(false);
-
   const { countryOptions, getDialCode, loading } = useCountry();
   const { errors, validateField, validateForm } = useFormValidation();
 
@@ -148,7 +144,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
   };
 
   return (
-    <div className="animate-fade-in max-w-2xl mx-auto">
+    <div className="animate-fade-in">
       <div
         className={`rounded-lg px-2 py-2 ${
           mode === "dark" ? "bg-gray-800 text-white" : "bg-white text-[#231812]"
@@ -161,56 +157,35 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
               : "bg-gradient-to-r from-gray-50 to-white border-gray-100"
           }`}
         >
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <div
-                className={`p-3 rounded-xl ${
-                  mode === "dark"
-                    ? "bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-400/30"
-                    : "bg-gradient-to-br from-blue-100 to-purple-100 border border-blue-200"
-                }`}
-              >
-                <Icon
-                  icon="mdi:handshake"
-                  className={`w-6 h-6 ${
-                    mode === "dark" ? "text-blue-400" : "text-blue-600"
-                  }`}
-                />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold mb-1">
-                  Let&apos;s Get Started
-                </h2>
-                <p
-                  className={`text-sm leading-relaxed ${
-                    mode === "dark" ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Complete this Expression of Interest form to begin your
-                  journey.
-                </p>
-              </div>
-            </div>
-
-            <button
-              onClick={() => setIsInstructionsOpen(true)}
-              className={`group flex items-center px-5 py-3 rounded-xl font-medium transition-all duration-300 border-2 hover:scale-[1.02] active:scale-[0.98] ${
+          <div className="flex items-center gap-4 mb-6">
+            <div
+              className={`p-3 rounded-xl ${
                 mode === "dark"
-                  ? "border-blue-400/30 bg-blue-900/30 text-blue-300 hover:bg-blue-800/40 hover:border-blue-400/50"
-                  : "border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-300 shadow-sm hover:shadow-md"
+                  ? "bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-400/30"
+                  : "bg-gradient-to-br from-blue-100 to-purple-100 border border-blue-200"
               }`}
-              aria-label="View application instructions"
             >
               <Icon
-                icon="solar:question-circle-bold-duotone"
-                className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform duration-300"
+                icon="mdi:handshake"
+                className={`w-6 h-6 ${
+                  mode === "dark" ? "text-blue-400" : "text-blue-600"
+                }`}
               />
-              Instructions
-            </button>
+            </div>
+            <div>
+              <h2 className="text-xl font-bold mb-1">Let&apos;s Get Started</h2>
+              <p
+                className={`text-sm leading-relaxed ${
+                  mode === "dark" ? "text-gray-300" : "text-gray-700"
+                }`}
+              >
+                Complete this Expression of Interest form to begin your journey.
+              </p>
+            </div>
           </div>
         </div>
 
-        <div className="space-y-6 max-h-[50vh] overflow-y-auto">
+        <div className="space-y-6 max-h-[60vh] overflow-y-auto">
           <h3 className="text-lg font-bold">Agency Details</h3>
 
           {/* Agency Name and Year Established (Already on Same Row) */}
@@ -729,18 +704,6 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
           </div>
         </div>
       </div>
-
-      <ItemActionModal
-        isOpen={isInstructionsOpen}
-        onClose={() => setIsInstructionsOpen(false)}
-        title="Application Instructions"
-        mode={mode}
-      >
-        <AgencyInstructions
-          mode={mode}
-          setIsInstructionsOpen={setIsInstructionsOpen}
-        />
-      </ItemActionModal>
     </div>
   );
 }

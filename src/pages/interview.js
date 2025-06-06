@@ -18,6 +18,9 @@ import { supabase } from "@/lib/supabase";
 import Head from "next/head";
 import { useCategories } from "@/hooks/useCategories";
 import ItemActionModal from "@/components/ItemActionModal";
+import QuestionsProgress from "@/components/QuestionsProgress";
+import FreelancerInstructions from "@/components/FreelancerInstructions";
+import AgencyInstructions from "@/components/AgencyInstructions";
 
 export default function InterviewPage({
   mode,
@@ -53,9 +56,15 @@ export default function InterviewPage({
 
   // Initialize formData with server-side props
   useEffect(() => {
+    const normalizedJobType = job_type?.toLowerCase() === "agencies" 
+      ? "agency" 
+      : job_type?.toLowerCase() === "freelancers" || job_type?.toLowerCase() === "freelancer"
+        ? "freelancer"
+        : "freelancer"; // Default to freelancer
+
     setFormData((prev) => ({
       ...prev,
-      job_type: prev.job_type || job_type || "freelancer",
+      job_type: prev.job_type || normalizedJobType,
       opening: prev.opening || opening || "",
       opening_id: prev.opening_id || opening_id || "",
     }));
@@ -242,7 +251,7 @@ export default function InterviewPage({
             icon: "✅",
           });
           setSubmissionStatus({ ...submissionStatus, status: "success" });
-          setStep(3);
+          setStep(4);
         } catch (error) {
           toast.error(`Submission failed: ${error.message}`, {
             id: submitToast,
@@ -626,7 +635,7 @@ export default function InterviewPage({
           />
         </div>
 
-        <div className="max-w-3xl w-full mx-auto p-6 py-10 relative z-20">
+        <div className="max-w-7xl w-full mx-auto p-6 py-10 relative z-20">
           <MovingDotBorder mode={mode}>
             <div
               className={`rounded-[calc(1rem-4px)] p-6 ${
@@ -634,36 +643,65 @@ export default function InterviewPage({
               }`}
             >
               {step === 1 && (
-                <>
-                  {formData.job_type === "freelancer" ? (
-                    <Step1FreelancersForm
-                      formData={formData}
-                      handleChange={handleChange}
-                      mode={mode}
-                    />
-                  ) : (
-                    <Step1AgenciesForm
-                      formData={formData}
-                      handleChange={handleChange}
-                      mode={mode}
-                    />
-                  )}
-                </>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Instructions Sidebar */}
+                  <div className="lg:col-span-1">
+                    {formData.job_type === "freelancer" ? (
+                      <FreelancerInstructions mode={mode} />
+                    ) : (
+                      <AgencyInstructions mode={mode} />
+                    )}
+                  </div>
+                  
+                  {/* Form Content */}
+                  <div className="lg:col-span-2">
+                    {formData.job_type === "freelancer" ? (
+                      <Step1FreelancersForm
+                        formData={formData}
+                        handleChange={handleChange}
+                        mode={mode}
+                      />
+                    ) : (
+                      <Step1AgenciesForm
+                        formData={formData}
+                        handleChange={handleChange}
+                        mode={mode}
+                      />
+                    )}
+                  </div>
+                </div>
               )}
               {step === 2 && (
-                <Step2Questions
-                  formData={formData}
-                  setFormData={setFormData}
-                  handleOptionToggle={handleOptionToggle}
-                  questions={questions}
-                  categories={categories || []}
-                  isLoading={isLoading}
-                  onComplete={handleNext}
-                  mode={mode}
-                  initialCategoryIndex={formData.currentCategoryIndex}
-                  initialQuestionIndex={formData.currentQuestionIndex}
-                  onIndicesChange={updateFormDataWithIndices}
-                />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  {/* Progress Sidebar */}
+                  <div className="lg:col-span-1">
+                    <QuestionsProgress
+                      currentCategoryIndex={formData.currentCategoryIndex}
+                      currentQuestionIndex={formData.currentQuestionIndex}
+                      categories={categories}
+                      questions={questions}
+                      mode={mode}
+                      formData={formData}
+                    />
+                  </div>
+                  
+                  {/* Questions Form */}
+                  <div className="lg:col-span-2">
+                    <Step2Questions
+                      formData={formData}
+                      setFormData={setFormData}
+                      handleOptionToggle={handleOptionToggle}
+                      questions={questions}
+                      categories={categories || []}
+                      isLoading={isLoading}
+                      onComplete={handleNext}
+                      mode={mode}
+                      initialCategoryIndex={formData.currentCategoryIndex}
+                      initialQuestionIndex={formData.currentQuestionIndex}
+                      onIndicesChange={updateFormDataWithIndices}
+                    />
+                  </div>
+                </div>
               )}
               {step === 3 && formData.job_type === "agency" && (
                 <Step3Documents
@@ -674,14 +712,7 @@ export default function InterviewPage({
                   {...fileUploadProps}
                 />
               )}
-              {step === 4 && formData.job_type === "agency" && (
-                <Step4Confirmation
-                  formData={formData}
-                  submissionStatus={submissionStatus}
-                  mode={mode}
-                />
-              )}
-              {step === 3 && formData.job_type === "freelancer" && (
+              {step === 4 && (
                 <Step4Confirmation
                   formData={formData}
                   submissionStatus={submissionStatus}
@@ -712,7 +743,7 @@ export default function InterviewPage({
                     disabled={isSubmitting}
                     className={`flex items-center justify-center px-4 py-2 bg-[#172840] text-white rounded-lg hover:bg-sky-900 disabled:bg-gray-300 disabled:text-gray-600 transition-all duration-200 shadow-md`}
                   >
-                    {step === 3 && formData.workingPortfolio === "agency" ? (
+                    {step === 3 && formData.job_type === "agency" ? (
                       <>
                         Upload & Submit
                         <Icon icon="chevron-right" className="ml-2 h-4 w-4" />

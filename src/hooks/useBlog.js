@@ -141,23 +141,26 @@ export const useBlog = () => {
         throw new Error("Not authenticated");
       }
 
-      const { category_id, tag_ids, ...blogData } = formData;
+      const { category_id, tag_ids, id, ...blogData } = formData;
 
       // Start a transaction
       const { data: blog, error: blogError } = await supabase
         .from("blogs")
         .upsert({
           ...blogData,
+          id: id || undefined, // Only include id if it exists (for updates)
           updated_at: new Date().toISOString(),
-          created_at: formData.id ? undefined : new Date().toISOString(),
+          created_at: id ? undefined : new Date().toISOString(),
         })
         .select()
         .single();
 
       if (blogError) throw blogError;
 
-      // Handle tags
-      if (tag_ids && tag_ids.length > 0) {
+      // Handle tags - ensure tag_ids is an array
+      const tagIdsArray = Array.isArray(tag_ids) ? tag_ids : [];
+      
+      if (tagIdsArray.length > 0) {
         // Delete existing tags
         await supabase
           .from("blog_post_tags")
@@ -165,7 +168,7 @@ export const useBlog = () => {
           .eq("blog_id", blog.id);
 
         // Insert new tags
-        const tagInserts = tag_ids.map(tag_id => ({
+        const tagInserts = tagIdsArray.map(tag_id => ({
           blog_id: blog.id,
           tag_id: tag_id
         }));

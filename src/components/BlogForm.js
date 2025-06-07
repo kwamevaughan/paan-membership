@@ -1,7 +1,12 @@
 import { useState, useEffect } from "react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.snow.css";
-import { ItemActionModal } from "./ItemActionModal";
+import dynamic from "next/dynamic";
+import ItemActionModal from "./ItemActionModal";
+
+// Dynamically import EditorComponent for client-side only
+const EditorComponent = dynamic(() => import("./EditorComponent"), {
+  ssr: false,
+  loading: () => <p>Loading editor...</p>,
+});
 
 export default function BlogForm({
   showForm,
@@ -16,7 +21,6 @@ export default function BlogForm({
   tags,
 }) {
   const [editorContent, setEditorContent] = useState("");
-  const [editor, setEditor] = useState(null);
 
   useEffect(() => {
     if (formData.article_body) {
@@ -47,44 +51,6 @@ export default function BlogForm({
       .replace(/(^-|-$)/g, "");
     handleInputChange({ target: { name: "slug", value: slug } });
   };
-
-  const toolbarOptions = [
-    ["bold", "italic", "underline", "strike"],
-    ["blockquote", "code-block"],
-    [{ header: 1 }, { header: 2 }],
-    [{ list: "ordered" }, { list: "bullet" }],
-    [{ script: "sub" }, { script: "super" }],
-    [{ indent: "-1" }, { indent: "+1" }],
-    [{ direction: "rtl" }],
-    [{ size: ["small", false, "large", "huge"] }],
-    [{ header: [1, 2, 3, 4, 5, 6, false] }],
-    [{ color: [] }, { background: [] }],
-    [{ font: [] }],
-    [{ align: [] }],
-    ["clean"],
-    ["link", "image"],
-  ];
-
-  const formats = [
-    "bold",
-    "italic",
-    "underline",
-    "strike",
-    "blockquote",
-    "code-block",
-    "header",
-    "list",
-    "script",
-    "indent",
-    "direction",
-    "size",
-    "color",
-    "background",
-    "font",
-    "align",
-    "link",
-    "image",
-  ];
 
   return (
     <ItemActionModal
@@ -232,20 +198,16 @@ export default function BlogForm({
           >
             Content
           </label>
-          <div
-            className={`mt-1 ${
-              mode === "dark" ? "bg-gray-700" : "bg-white"
-            } rounded-md`}
-          >
-            <ReactQuill
-              theme="snow"
-              value={editorContent}
-              onChange={handleEditorChange}
-              modules={{ toolbar: toolbarOptions }}
-              formats={formats}
-              className={`h-64 ${
-                mode === "dark" ? "text-white" : "text-gray-900"
-              }`}
+          <div className={`mt-1 border-2 rounded-xl overflow-hidden transition-all duration-200 ${
+            mode === "dark" ? "border-gray-600" : "border-gray-200"
+          }`}>
+            <EditorComponent
+              initialValue={formData.article_body}
+              onBlur={handleEditorChange}
+              mode={mode}
+              holderId="jodit-editor-blog-form"
+              className="w-full"
+              height="300"
             />
           </div>
         </div>

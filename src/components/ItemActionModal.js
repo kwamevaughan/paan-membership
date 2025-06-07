@@ -9,8 +9,14 @@ export default function ItemActionModal({
 }) {
   if (!isOpen) return null;
 
+  const handleClose = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onClose();
+  };
+
   return (
-    <div className="fixed inset-0 z-[50] overflow-y-auto">
+    <div className="fixed inset-0 z-[50] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
       {/* Enhanced Glassmorphic Background */}
       <div
         className={`fixed inset-0 transition-all duration-500 backdrop-blur-sm
@@ -19,7 +25,7 @@ export default function ItemActionModal({
               ? "bg-gradient-to-br from-slate-900/20 via-blue-900/10 to-blue-900/20"
               : "bg-gradient-to-br from-white/20 via-blue-50/30 to-blue-50/20"
           }`}
-        onClick={onClose}
+        onClick={handleClose}
         style={{
           backgroundImage: `
             radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
@@ -30,7 +36,7 @@ export default function ItemActionModal({
       />
 
       {/* Modal Content */}
-      <div className="flex min-h-full items-center justify-center p-4">
+      <div className="flex min-h-full items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
         <div
           className={`relative w-full max-w-2xl rounded-3xl transform transition-all duration-500 max-h-[85vh] overflow-hidden
             shadow-2xl shadow-black/20
@@ -41,13 +47,14 @@ export default function ItemActionModal({
             } 
             backdrop-blur-lg`}
           style={{
-            backdropFilter: "blur(12px) saturate(180%)", // Reduce blur here
-            WebkitBackdropFilter: "blur(12px) saturate(180%)", // Reduce blur here
+            backdropFilter: "blur(12px) saturate(180%)",
+            WebkitBackdropFilter: "blur(12px) saturate(180%)",
             background:
               mode === "dark"
                 ? "linear-gradient(135deg, rgba(15, 23, 42, 0.4) 0%, rgba(30, 41, 59, 0.3) 100%)"
                 : "linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 1) 100%)",
           }}
+          onClick={(e) => e.stopPropagation()}
         >
           {/* Premium Header with Gradient Overlay */}
           <div
@@ -55,7 +62,7 @@ export default function ItemActionModal({
             style={{
               background:
                 "linear-gradient(135deg, rgba(37, 99, 235, 0.8) 0%, rgba(59, 130, 246, 0.8) 50%, rgba(96, 165, 250, 0.8) 100%)",
-              backdropFilter: "blur(8px)", // Reduce blur here
+              backdropFilter: "blur(8px)",
             }}
           >
             {/* Animated Background Elements */}
@@ -69,10 +76,11 @@ export default function ItemActionModal({
                 {title}
               </h2>
               <button
-                onClick={onClose}
+                type="button"
+                onClick={handleClose}
                 className="group p-3 rounded-2xl transition-all duration-300 hover:bg-white/20 hover:scale-110 active:scale-95"
                 style={{
-                  backdropFilter: "blur(4px)", // Reduce blur here
+                  backdropFilter: "blur(4px)",
                   background: "rgba(255, 255, 255, 0.1)",
                 }}
               >
@@ -93,6 +101,7 @@ export default function ItemActionModal({
                   ? "linear-gradient(180deg, rgba(15, 23, 42, 0.1) 0%, rgba(30, 41, 59, 0.05) 100%)"
                   : "linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)",
             }}
+            onClick={(e) => e.stopPropagation()}
           >
             {/* Content wrapper with subtle inner glow */}
             <div

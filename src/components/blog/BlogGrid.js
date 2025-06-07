@@ -72,6 +72,22 @@ export default function BlogGrid({
     }
   };
 
+  const handleEditBlog = (blog) => {
+    console.log('BlogGrid handleEditBlog called with blog:', blog);
+    const blogToEdit = {
+      ...blog,
+      category_id: blog.category?.id,
+      tags: blog.tags?.map(t => ({
+        tag: {
+          id: t.tag.id,
+          name: t.tag.name
+        }
+      })) || []
+    };
+    console.log('BlogGrid calling handleEditClick with:', blogToEdit);
+    handleEditClick(blogToEdit);
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -263,7 +279,10 @@ export default function BlogGrid({
 
                   <div className="flex items-center space-x-2">
                     <button
-                      onClick={() => handleEditClick(blog)}
+                      onClick={() => {
+                        console.log('Edit button clicked for blog:', blog);
+                        handleEditBlog(blog);
+                      }}
                       className={`p-2 rounded-lg ${
                         mode === "dark"
                           ? "text-gray-400 hover:text-white hover:bg-gray-700"
@@ -406,7 +425,10 @@ export default function BlogGrid({
 
                     <div className="flex items-center space-x-2">
                       <button
-                        onClick={() => handleEditClick(blog)}
+                        onClick={() => {
+                          console.log('Edit button clicked for blog:', blog);
+                          handleEditBlog(blog);
+                        }}
                         className={`p-2 rounded-lg ${
                           mode === "dark"
                             ? "text-gray-400 hover:text-white hover:bg-gray-700"

@@ -453,10 +453,11 @@ export async function getAdminBlogProps({ req, res }) {
 
   try {
     // Fetch blogs with their categories and tags
-    const { data: blogsData, error: blogsError } = await supabaseServer
+    const { data: blogs, error: blogsError } = await supabaseServer
       .from("blogs")
       .select(`
         *,
+        author_details:hr_users(name, username),
         category:blog_categories(name),
         tags:blog_post_tags(
           tag:blog_tags(name)
@@ -465,12 +466,27 @@ export async function getAdminBlogProps({ req, res }) {
       .order("created_at", { ascending: false });
 
     if (blogsError) {
-      console.error(
-        "[getAdminBlogProps] Blogs Error:",
-        blogsError.message
-      );
-      throw new Error(`Failed to fetch blogs: ${blogsError.message}`);
+      console.error("Error fetching blogs:", blogsError);
+      return {
+        props: {
+          initialBlogs: [],
+          categories: [],
+          tags: [],
+          breadcrumbs: [
+            { name: "Home", href: "/admin" },
+            { name: "Blog", href: "/admin/blog" },
+          ],
+          hrUser: null,
+        },
+      };
     }
+
+    const transformedBlogs = blogs.map((blog) => ({
+      ...blog,
+      article_category: blog.category?.name || null,
+      article_tags: blog.tags?.map((t) => t.tag.name) || [],
+      author: blog.author_details?.name || blog.author_details?.username || "PAAN Admin"
+    }));
 
     // Fetch all categories
     const { data: categoriesData, error: categoriesError } = await supabaseServer
@@ -514,13 +530,6 @@ export async function getAdminBlogProps({ req, res }) {
       );
       throw new Error(`Failed to fetch HR user: ${hrUserError.message}`);
     }
-
-    // Transform blogs data to include category name and tag names
-    const transformedBlogs = blogsData.map(blog => ({
-      ...blog,
-      article_category: blog.category?.name || null,
-      article_tags: blog.tags?.map(t => t.tag.name) || []
-    }));
 
     return {
       props: {

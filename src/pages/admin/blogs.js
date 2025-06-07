@@ -36,6 +36,7 @@ export default function AdminBlog({
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedTags, setSelectedTags] = useState([]);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [editingBlogId, setEditingBlogId] = useState(null);
   const itemsPerPage = 12;
   useAuthSession();
 
@@ -67,6 +68,9 @@ export default function AdminBlog({
     handleEdit,
     handleDelete,
     handleSubmit,
+    fetchBlogs,
+    editorContent,
+    setEditorContent
   } = useBlog();
 
   const {
@@ -151,63 +155,57 @@ export default function AdminBlog({
   }, [selectedCategory, selectedTags, filterTerm, debouncedFilterUpdate]);
 
   const handleCreateBlog = () => {
-    setFormData({
-      id: null,
-      article_name: "",
-      article_body: "",
-      article_category: "General",
-      article_tags: [],
-      article_image: "",
-      meta_title: "",
-      meta_description: "",
-      meta_keywords: "",
-      slug: "",
-      is_published: false,
-    });
+    console.log('handleCreateBlog called');
+    setEditingBlogId(null);
     setShowForm(true);
   };
 
   const handleEditClick = async (blog) => {
-    setFormData(blog);
+    console.log('handleEditClick called with blog:', blog);
+    setEditingBlogId(blog.id);
     setShowForm(true);
   };
 
-  const handleFormSubmit = async (e) => {
+  const handleCancel = () => {
+    console.log('handleCancel called');
+    setShowForm(false);
+    setEditingBlogId(null);
+  };
+
+  const handleFormSubmit = async (e, updatedFormData) => {
+    console.log("handleFormSubmit called with formData:", updatedFormData);
     e.preventDefault();
-    const success = await handleSubmit(e);
+    const success = await handleSubmit(e, updatedFormData);
     if (success) {
+      await fetchBlogs();
       setShowForm(false);
+      setEditingBlogId(null);
       setFormData({
         id: null,
         article_name: "",
         article_body: "",
-        article_category: "General",
-        article_tags: [],
+        category_id: null,
+        tag_ids: [],
         article_image: "",
         meta_title: "",
         meta_description: "",
         meta_keywords: "",
         slug: "",
         is_published: false,
+        is_draft: true,
+        publish_date: null,
+        author: "",
+        title: "",
+        description: "",
+        keywords: [],
+        featured_image_url: "",
+        featured_image_upload: null,
+        featured_image_library: null,
+        content: "",
+        publish_option: "draft",
+        scheduled_date: null,
       });
     }
-  };
-
-  const handleCancel = () => {
-    setShowForm(false);
-    setFormData({
-      id: null,
-      article_name: "",
-      article_body: "",
-      article_category: "General",
-      article_tags: [],
-      article_image: "",
-      meta_title: "",
-      meta_description: "",
-      meta_keywords: "",
-      slug: "",
-      is_published: false,
-    });
   };
 
   const confirmDelete = () => {
@@ -461,15 +459,17 @@ export default function AdminBlog({
         <BlogForm
           showForm={showForm}
           mode={mode}
+          blogId={editingBlogId}
           formData={formData}
           handleInputChange={handleInputChange}
           handleSubmit={handleFormSubmit}
           handleCancel={handleCancel}
           loading={loading}
-          isEditing={!!formData.id}
+          isEditing={!!editingBlogId}
           categories={categories}
           tags={tags}
           hrUser={hrUser}
+          fetchBlogs={fetchBlogs}
         />
 
         <ItemActionModal

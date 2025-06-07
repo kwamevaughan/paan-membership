@@ -47,7 +47,7 @@ export default async function handler(req, res) {
       });
     }
 
-    console.log(`Fetched files for path ${path}:`, data);
+    // console.log(`Fetched files for path ${path}:`, data);
     res.status(200).json(data);
   } catch (error) {
     console.error("List files error:", error);

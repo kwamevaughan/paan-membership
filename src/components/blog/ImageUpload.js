@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+// ImageUpload.jsx
+import { useState } from "react";
 import { Icon } from "@iconify/react";
 import { IKContext, IKUpload } from "imagekitio-react";
 import toast from "react-hot-toast";
@@ -17,16 +18,6 @@ export default function ImageUpload({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
 
-  useEffect(() => {
-    console.log("ImageUpload state:", {
-      imageSource,
-      showMediaLibrary,
-      hasUploadedImage: !!uploadedImage,
-      hasFormImage: !!formData.article_image,
-    });
-  }, [imageSource, showMediaLibrary, uploadedImage, formData.article_image]);
-
-  // Authenticator function
   const authenticator = async () => {
     try {
       const endpoint =
@@ -35,7 +26,7 @@ export default function ImageUpload({
           : "http://localhost:3000/api/imagekit/auth";
       const response = await fetch(endpoint, {
         method: "GET",
-        credentials: "include", // Include cookies for Supabase session
+        credentials: "include",
       });
       if (!response.ok) {
         const errorText = await response.text();
@@ -47,7 +38,6 @@ export default function ImageUpload({
       if (!data.signature || !data.token || !data.expire) {
         throw new Error("Invalid auth parameters received");
       }
-      console.log("Authenticator success:", data);
       return {
         signature: data.signature,
         token: data.token,
@@ -69,10 +59,19 @@ export default function ImageUpload({
     setUploading(false);
     setUploadProgress(100);
     setUploadedImage(res);
+
+    const imageUrl = res.url;
+    console.log("ImageUpload onUploadSuccess - Setting image URL:", imageUrl);
+
     handleInputChange({
       target: {
-        name: "article_image",
-        value: res.url,
+        name: "multiple",
+        value: {
+          article_image: imageUrl,
+          featured_image_url: imageUrl,
+          featured_image_upload: imageUrl,
+          featured_image_library: "",
+        },
       },
     });
     toast.success("Image uploaded successfully");
@@ -92,20 +91,22 @@ export default function ImageUpload({
   };
 
   const handleMediaSelect = (selectedImage) => {
-    console.log("Media selected:", selectedImage);
+    const imageUrl = selectedImage.url;
+    console.log("ImageUpload handleMediaSelect - Setting image URL:", imageUrl);
+
     handleInputChange({
       target: {
-        name: "article_image",
-        value: selectedImage.url,
+        name: "multiple",
+        value: {
+          article_image: imageUrl,
+          featured_image_url: imageUrl,
+          featured_image_library: imageUrl,
+          featured_image_upload: "",
+        },
       },
     });
     setShowMediaLibrary(false);
     toast.success("Image selected successfully");
-  };
-
-  const handleOpenMediaLibrary = () => {
-    console.log("Opening media library...");
-    setShowMediaLibrary(true);
   };
 
   return (
@@ -224,14 +225,14 @@ export default function ImageUpload({
       {imageSource === "library" && (
         <button
           type="button"
-          onClick={handleOpenMediaLibrary}
+          onClick={() => setShowMediaLibrary(true)}
           className={`w-full px-4 py-2 rounded-xl border ${
             mode === "dark"
               ? "bg-gray-800 border-gray-700 text-gray-100 hover:bg-gray-700"
               : "bg-white border-gray-300 text-gray-900 hover:bg-gray-50"
           } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
         >
-          <Icon icon="heroicons:photo-library" className="w-5 h-5 inline-block mr-2" />
+          <Icon icon="heroicons:photo" className="w-5 h-5 inline-block mr-2" />
           Browse Image Library
         </button>
       )}
@@ -254,4 +255,4 @@ export default function ImageUpload({
       />
     </div>
   );
-} 
+}

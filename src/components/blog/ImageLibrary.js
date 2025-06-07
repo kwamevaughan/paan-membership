@@ -32,7 +32,6 @@ export default function ImageLibrary({ isOpen, onClose, onSelect, mode }) {
         );
       }
       const data = await response.json();
-      console.log(`Fetched files for path ${path}:`, data);
       setFiles(data);
       if (data.length === 0) {
         toast.warn("No images found in /Blog");
@@ -66,7 +65,6 @@ export default function ImageLibrary({ isOpen, onClose, onSelect, mode }) {
         );
       }
       const data = await response.json();
-      console.log("Delete success:", data);
       setFiles(files.filter((file) => !fileIds.includes(file.fileId)));
       setSelectedFiles(new Set());
       setShowDeleteConfirm(false);

@@ -55,9 +55,9 @@ export const sidebarNav = [
         label: "Market Intel",
       },
       {
-        href: "/admin/blog",
+        href: "/admin/blogs",
         icon: "mdi:post-outline",
-        label: "Blog",
+        label: "Blog Posts",
       },
       {
         href: "/admin/events",

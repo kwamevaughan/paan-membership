@@ -25,9 +25,9 @@ export default function AdminUpdates({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [updateToDelete, setUpdateToDelete] = useState(null);
   const [memberCount, setMemberCount] = useState(0);
-  const [viewMode, setViewMode] = useState("list");
+  const [viewMode, setViewMode] = useState("grid");
   const [page, setPage] = useState(1);
-  const itemsPerPage = 9;
+  const itemsPerPage = 6;
   useAuthSession();
 
   const {
@@ -217,9 +217,27 @@ export default function AdminUpdates({
                         PAAN Updates
                       </h1>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 max-w-2xl">
-                      Stay informed with the latest news, events, and strategic initiatives from PAAN.
-                    </p>
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-600 dark:text-gray-300 max-w-2xl">
+                        Manage and distribute important announcements, member spotlights, and strategic initiatives. Create targeted updates for specific membership tiers and track member engagement.
+                      </p>
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Icon icon="heroicons:document-text" className="w-4 h-4 text-blue-500" />
+                          <span className="text-gray-600 dark:text-gray-300">
+                            {updates.length} total updates
+                          </span>
+                        </div>
+                        {updates.length > 0 && (
+                          <div className="flex items-center gap-2">
+                            <Icon icon="heroicons:clock" className="w-4 h-4 text-purple-500" />
+                            <span className="text-gray-600 dark:text-gray-300">
+                              Last published {new Date(updates[0].created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                   <div className="mt-6 md:mt-0 flex items-center gap-4">
                     <button

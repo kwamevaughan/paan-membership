@@ -29,7 +29,7 @@ const SimpleFooter = ({ mode, isSidebarOpen }) => {
   }, []);
 
   return (
-    <div className="fixed bottom-2 right-4 left-4 z-20 flex justify-center">
+    <div className=" relative z-20 flex justify-center">
       <footer
         className={`
           ${
@@ -44,7 +44,7 @@ const SimpleFooter = ({ mode, isSidebarOpen }) => {
             sidebarHidden
               ? "md:ml-0"
               : isSidebarOpen
-              ? "md:ml-[204px]"
+              ? "md:ml-[0]"
               : "md:ml-[84px]"
           }
         `}

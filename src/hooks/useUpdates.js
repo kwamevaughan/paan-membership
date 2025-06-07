@@ -151,7 +151,7 @@ export function useUpdates(initialUpdates = []) {
       cta_text: update.cta_text || "",
       cta_url: update.cta_url || "",
       tier_restriction: update.tier_restriction,
-      tags: update.tags ? update.tags.join(", ") : "",
+      tags: Array.isArray(update.tags) ? update.tags.join(", ") : update.tags || "",
       notify_members: false,
     });
   };
@@ -206,8 +206,21 @@ export function useUpdates(initialUpdates = []) {
     fetchUpdates();
   }, []);
 
+  // Filter updates based on search query and category
+  const filteredUpdates = updates.filter((update) => {
+    const matchesSearch = searchQuery
+      ? update.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        update.description.toLowerCase().includes(searchQuery.toLowerCase())
+      : true;
+
+    const matchesCategory =
+      selectedCategory === "All" || update.category === selectedCategory;
+
+    return matchesSearch && matchesCategory;
+  });
+
   return {
-    updates,
+    updates: filteredUpdates,
     formData,
     loading,
     searchQuery,

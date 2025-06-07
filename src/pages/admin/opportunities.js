@@ -8,6 +8,7 @@ import OpportunityGrid from "@/components/OpportunityGrid";
 import ItemActionModal from "@/components/ItemActionModal";
 import InterestedUsersModal from "@/components/InterestedUsersModal";
 import OpportunityForm from "@/components/OpportunityForm";
+import ViewToggle from "@/components/ViewToggle";
 import useSidebar from "@/hooks/useSidebar";
 import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
@@ -29,6 +30,7 @@ export default function AdminBusinessOpportunities({
   const [filterProjectType, setFilterProjectType] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [sortOrder, setSortOrder] = useState("deadline");
+  const [viewMode, setViewMode] = useState("grid");
 
   useAuthSession();
 
@@ -116,7 +118,7 @@ export default function AdminBusinessOpportunities({
 
   return (
     <div
-      className={`min-h-screen flex flex-col font-sans antialiased ${
+      className={`min-h-screen flex flex-col antialiased ${
         mode === "dark"
           ? "bg-gray-950 text-gray-100"
           : "bg-gray-100 text-gray-900"
@@ -171,27 +173,59 @@ export default function AdminBusinessOpportunities({
           }}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
-              <div>
-                <h1 className="text-3xl font-semibold">
-                  Business Opportunities
-                </h1>
-                <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                  Discover and manage opportunities for agencies and freelancers
-                </p>
-              </div>
-              <div className="mt-4 md:mt-0 flex space-x-4">
-                <button
-                  onClick={() => modalActions.openModal()}
-                  className={`inline-flex items-center px-4 py-2.5 text-sm font-medium rounded-lg shadow-md transition-all duration-300 focus:ring-2 focus:ring-offset-2 ${
-                    mode === "dark"
-                      ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 focus:ring-blue-400"
-                      : "bg-gradient-to-r from-blue-500 to-indigo-500 text-white hover:from-blue-600 hover:to-indigo-600 focus:ring-blue-500"
-                  }`}
+            <div className="relative group">
+              <div
+                className={`absolute inset-0 rounded-2xl backdrop-blur-xl ${
+                  mode === "dark"
+                    ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60"
+                    : "bg-gradient-to-br from-white/80 via-white/20 to-white/80"
+                } border ${
+                  mode === "dark" ? "border-white/10" : "border-white/20"
+                } shadow-2xl group-hover:shadow-lg transition-all duration-500`}
+              ></div>
+              <div className="relative p-8 rounded-2xl mb-10">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      
+                      <h1 className="text-2xl font-bold ">
+                        Business Opportunities
+                      </h1>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 max-w-2xl">
+                      Discover and manage opportunities for agencies and freelancers. Create new opportunities, track applications, and manage your talent pool.
+                    </p>
+                  </div>
+                  <div className="mt-6 md:mt-0">
+                    <button
+                      onClick={() => modalActions.openModal()}
+                      className={`inline-flex items-center px-6 py-3 text-sm font-medium rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 focus:ring-2 focus:ring-offset-2 ${
+                        mode === "dark"
+                          ? "bg-gradient-to-r from-blue-400 to-blue-500 text-white hover:from-blue-600 hover:to-blue-600 focus:ring-blue-400 shadow-blue-500/20"
+                          : "bg-gradient-to-r from-blue-400 to-blue-700 text-white hover:from-blue-600 hover:to-blue-600 focus:ring-blue-500 shadow-blue-500/20"
+                      }`}
+                    >
+                      <Icon icon="heroicons:plus" className="w-5 h-5 mr-2" />
+                      New Opportunity
+                    </button>
+                  </div>
+                </div>
+                <div
+                  className={`absolute top-2 right-2 w-12 sm:w-16 h-12 sm:h-16 opacity-10`}
                 >
-                  <Icon icon="heroicons:plus" className="w-5 h-5 mr-2" />
-                  New Opportunity
-                </button>
+                  
+                </div>
+                <div
+                  className={`absolute bottom-0 left-0 right-0 h-1 ${
+                    mode === "dark"
+                      ? "bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500"
+                      : "bg-gradient-to-r from-[#3c82f6] to-[#dbe9fe]"
+                  }`}
+                ></div>
+                
+                <div
+                  className={`absolute -bottom-1 -left-1 w-2 sm:w-3 h-2 sm:h-3 bg-[#f3584a] rounded-full opacity-40 animate-pulse delay-1000`}
+                ></div>
               </div>
             </div>
 
@@ -213,33 +247,49 @@ export default function AdminBusinessOpportunities({
                       : "bg-white border-gray-200"
                   }`}
                 >
-                  <OpportunityFilters
-                    filterTerm={filterTerm}
-                    setFilterTerm={setFilterTerm}
-                    filterType={filterType}
-                    setFilterType={setFilterType}
-                    filterJobType={filterJobType}
-                    setFilterJobType={setFilterJobType}
-                    filterProjectType={filterProjectType}
-                    setFilterProjectType={setFilterProjectType}
-                    showFilters={showFilters}
-                    setShowFilters={setShowFilters}
-                    sortOrder={sortOrder}
-                    setSortOrder={setSortOrder}
-                    mode={mode}
-                    loading={loading}
-                    opportunities={sortedOpportunities}
-                    onOpenUsersModal={modalActions.openUsersModal}
-                  />
+                  <div className="p-6">
+                    <div className="mb-8 flex flex-col sm:flex-row gap-4">
+                      <div className="flex-1 flex items-center gap-4">
+                        <input
+                          type="text"
+                          value={filterTerm}
+                          onChange={(e) => setFilterTerm(e.target.value)}
+                          placeholder="Search opportunities..."
+                          className={`w-full px-4 py-3 rounded-xl shadow-lg ${
+                            mode === "dark"
+                              ? "bg-gray-800 text-white border-gray-600"
+                              : "bg-white text-gray-900 border-gray-200"
+                          } focus:ring-2 focus:ring-indigo-500 transition-all duration-200 backdrop-blur-sm`}
+                        />
+                        <ViewToggle viewMode={viewMode} setViewMode={setViewMode} mode={mode} />
+                      </div>
+                      <div className="w-full sm:w-48">
+                        <select
+                          value={filterType}
+                          onChange={(e) => setFilterType(e.target.value)}
+                          className={`w-full px-4 py-3 rounded-xl shadow-lg ${
+                            mode === "dark"
+                              ? "bg-gray-800 text-white border-gray-600"
+                              : "bg-white text-gray-900 border-gray-200"
+                          } focus:ring-2 focus:ring-indigo-500 transition-all duration-200 backdrop-blur-sm`}
+                        >
+                          <option value="all">All Types</option>
+                          <option value="job">Jobs</option>
+                          <option value="project">Projects</option>
+                        </select>
+                      </div>
+                    </div>
 
-                  <OpportunityGrid
-                    opportunities={opportunities}
-                    loading={loading}
-                    mode={mode}
-                    onEdit={modalActions.openModal}
-                    onDelete={openDeleteModal}
-                    onViewUsers={modalActions.openUsersModal}
-                  />
+                    <OpportunityGrid
+                      opportunities={opportunities}
+                      loading={loading}
+                      mode={mode}
+                      onEdit={modalActions.openModal}
+                      onDelete={openDeleteModal}
+                      onViewUsers={modalActions.openUsersModal}
+                      viewMode={viewMode}
+                    />
+                  </div>
                   <div
                     className={`absolute top-2 right-2 w-12 sm:w-16 h-12 sm:h-16 opacity-10`}
                   >

@@ -23,7 +23,7 @@ const Search = ({ mode }) => {
         } placeholder:font-bold transition-colors duration-200`}
       />
       <Icon
-        icon="gis:search-coord"
+        icon="material-symbols:search-rounded"
         className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-6 w-6 ${
           mode === "dark" ? "text-gray-400" : "text-indigo-800"
         }`}

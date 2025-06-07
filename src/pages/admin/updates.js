@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import toast, { Toaster } from "react-hot-toast";
 import { Icon } from "@iconify/react";
-import { motion } from "framer-motion";
 import HRSidebar from "@/layouts/hrSidebar";
 import HRHeader from "@/layouts/hrHeader";
 import useSidebar from "@/hooks/useSidebar";
@@ -11,6 +10,9 @@ import useAuthSession from "@/hooks/useAuthSession";
 import { useUpdates } from "@/hooks/useUpdates";
 import SimpleFooter from "@/layouts/simpleFooter";
 import UpdatesForm from "@/components/UpdatesForm";
+import ItemActionModal from "@/components/ItemActionModal";
+import UpdatesList from "@/components/updates/UpdatesList";
+import UpdatesFilters from "@/components/updates/UpdatesFilters";
 import { getAdminUpdatesProps } from "utils/getPropsUtils";
 
 export default function AdminUpdates({
@@ -20,6 +22,12 @@ export default function AdminUpdates({
   breadcrumbs,
 }) {
   const [showForm, setShowForm] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [updateToDelete, setUpdateToDelete] = useState(null);
+  const [memberCount, setMemberCount] = useState(0);
+  const [viewMode, setViewMode] = useState("list");
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 9;
   useAuthSession();
 
   const {
@@ -81,19 +89,80 @@ export default function AdminUpdates({
       category: "Governance",
       cta_text: "",
       cta_url: "",
-      tier_restriction: "All",
+      tier_restriction: "Associate Member",
       tags: "",
     });
   };
 
+  const openDeleteModal = (id) => {
+    setUpdateToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setUpdateToDelete(null);
+  };
+
+  const confirmDelete = () => {
+    if (updateToDelete) {
+      handleDelete(updateToDelete);
+      closeDeleteModal();
+    }
+  };
+
+  const fetchMemberCount = async (tier) => {
+    try {
+      const response = await fetch(`/api/members/count?tier=${encodeURIComponent(tier)}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch member count');
+      }
+      const data = await response.json();
+      setMemberCount(data.count);
+    } catch (error) {
+      console.error('Error fetching member count:', error);
+      setMemberCount(0);
+    }
+  };
+
+  useEffect(() => {
+    if (formData.tier_restriction) {
+      fetchMemberCount(formData.tier_restriction);
+    }
+  }, [formData.tier_restriction]);
+
+  const handleFormSubmit = async (e) => {
+    await handleSubmit(e, () => {
+      setShowForm(false);
+      handleCancel();
+    });
+  };
+
+  const loadMore = () => {
+    setPage(prev => prev + 1);
+  };
+
   return (
     <div
-      className={`min-h-screen flex flex-col bg-gradient-to-br ${
+      className={`min-h-screen flex flex-col antialiased ${
         mode === "dark"
-          ? "from-gray-900 via-indigo-950 to-purple-950"
-          : "from-indigo-100 via-purple-100 to-pink-100"
-      } overflow-hidden`}
+          ? "bg-gray-950 text-gray-100"
+          : "bg-gray-100 text-gray-900"
+      } transition-colors duration-300`}
     >
+      <Toaster
+        toastOptions={{
+          className:
+            mode === "dark"
+              ? "bg-gray-800 text-gray-100 border-gray-700"
+              : "bg-white text-gray-900 border-gray-200",
+          style: {
+            borderRadius: "8px",
+            padding: "12px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }}
+      />
       <HRHeader
         toggleSidebar={toggleSidebar}
         isSidebarOpen={isSidebarOpen}
@@ -105,7 +174,7 @@ export default function AdminUpdates({
         pageDescription="Manage PAAN news, events, and strategic announcements."
         breadcrumbs={breadcrumbs}
       />
-      <div className="flex flex-1 relative">
+      <div className="flex flex-1">
         <HRSidebar
           isSidebarOpen={isSidebarOpen}
           mode={mode}
@@ -120,254 +189,143 @@ export default function AdminUpdates({
           handleOutsideClick={handleOutsideClick}
         />
         <div
-          className={`flex-1 transition-all duration-300 overflow-auto ${
-            showForm ? "backdrop-blur-md" : ""
-          }`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "md:ml-64" : "md:ml-20"
+          } ${sidebarState.hidden ? "ml-0" : ""}`}
           style={{
             marginLeft: sidebarState.hidden
               ? "0px"
               : `${84 + (isSidebarOpen ? 120 : 0) + sidebarState.offset}px`,
           }}
         >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <motion.div
-              initial={{ opacity: 0, y: -50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8 }}
-              className="text-center mb-12"
-            >
-              <h1
-                className={`text-5xl font-extrabold ${
-                  mode === "dark" ? "text-white" : "text-gray-900"
-                } bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent`}
-              >
-                PAAN Updates
-              </h1>
-              <p
-                className={`mt-4 text-lg ${
-                  mode === "dark" ? "text-gray-300" : "text-gray-600"
-                } max-w-2xl mx-auto`}
-              >
-                Stay informed with the latest news, events, and strategic
-                initiatives from PAAN.
-              </p>
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={handleCreateUpdate}
-                className={`mt-6 px-6 py-3 rounded-xl ${
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="relative group">
+              <div
+                className={`absolute inset-0 rounded-2xl backdrop-blur-xl ${
                   mode === "dark"
-                    ? "bg-gradient-to-r from-indigo-700 to-purple-700 text-white"
-                    : "bg-gradient-to-r from-indigo-600 to-indigo-600 text-white"
-                } shadow-lg:hover:shadow-xl transition-all duration-200`}
-              >
-                <Icon icon="heroicons:plus" className="w-5 h-5 mr-2 inline" />
-                Create New Update
-              </motion.button>
-            </motion.div>
-
-            <div className="mb-8 flex flex-col sm:flex-row gap-4">
-              <div className="flex-1">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  placeholder="Search updates..."
-                  className={`w-full px-4 py-3 rounded-xl ${
-                    mode === "dark"
-                      ? "bg-gray-800 text-white border-gray-600"
-                      : "bg-white text-gray-900 border-gray-200"
-                  } focus:ring-2 focus:ring-indigo-500 transition-all duration-200 backdrop-blur-sm`}
-                />
-              </div>
-              <div className="w-full sm:w-48">
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => handleCategoryFilter(e.target.value)}
-                  className={`w-full px-4 py-3 rounded-xl ${
-                    mode === "dark"
-                      ? "bg-gray-800 text-white border-gray-600"
-                      : "bg-white text-gray-900 border-gray-200"
-                  } focus:ring-2 focus:ring-indigo-500 transition-all duration-200 backdrop-blur-sm`}
+                    ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60"
+                    : "bg-gradient-to-br from-white/80 via-white/20 to-white/80"
+                } border ${
+                  mode === "dark" ? "border-white/10" : "border-white/20"
+                } shadow-2xl group-hover:shadow-lg transition-all duration-500`}
+              ></div>
+              <div className="relative p-8 rounded-2xl mb-10">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <h1 className="text-2xl font-bold">
+                        PAAN Updates
+                      </h1>
+                    </div>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 max-w-2xl">
+                      Stay informed with the latest news, events, and strategic initiatives from PAAN.
+                    </p>
+                  </div>
+                  <div className="mt-6 md:mt-0 flex items-center gap-4">
+                    <button
+                      onClick={handleCreateUpdate}
+                      className={`inline-flex items-center px-6 py-3 text-sm font-medium rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 focus:ring-2 focus:ring-offset-2 ${
+                        mode === "dark"
+                          ? "bg-gradient-to-r from-blue-400 to-blue-500 text-white hover:from-blue-600 hover:to-blue-600 focus:ring-blue-400 shadow-blue-500/20"
+                          : "bg-gradient-to-r from-blue-400 to-blue-700 text-white hover:from-blue-600 hover:to-blue-600 focus:ring-blue-500 shadow-blue-500/20"
+                      }`}
+                    >
+                      <Icon icon="heroicons:plus" className="w-5 h-5 mr-2" />
+                      New Update
+                    </button>
+                  </div>
+                </div>
+                <div
+                  className={`absolute top-2 right-2 w-12 sm:w-16 h-12 sm:h-16 opacity-10`}
                 >
-                  {categories.map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-                </select>
+                  <div
+                    className={`w-full h-full rounded-full bg-gradient-to-br ${
+                      mode === "dark"
+                        ? "from-blue-400 to-blue-500"
+                        : "from-blue-400 to-blue-500"
+                    }`}
+                  ></div>
+                </div>
+                <div
+                  className={`absolute bottom-0 left-0 right-0 h-1 ${
+                    mode === "dark"
+                      ? "bg-gradient-to-r from-blue-400 via-blue-500 to-blue-500"
+                      : "bg-gradient-to-r from-[#3c82f6] to-[#dbe9fe]"
+                  }`}
+                ></div>
+                <div
+                  className={`absolute -bottom-1 -left-1 w-2 sm:w-3 h-2 sm:h-3 bg-[#f3584a] rounded-full opacity-40 animate-pulse delay-1000`}
+                ></div>
               </div>
             </div>
 
-            {loading ? (
-              <div className="text-center">
-                <Icon
-                  icon="heroicons:arrow-path"
-                  className="w-6 h-6 animate-spin mx-auto text-indigo-500"
-                />
-                <p
-                  className={`mt-2 ${
-                    mode === "dark" ? "text-gray-300" : "text-gray-600"
+            <div className="space-y-8">
+              <div className="relative group">
+                <div
+                  className={`absolute inset-0 rounded-2xl backdrop-blur-xl ${
+                    mode === "dark"
+                      ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60"
+                      : "bg-gradient-to-br from-white/80 via-white/20 to-white/80"
+                  } border ${
+                    mode === "dark" ? "border-white/10" : "border-white/20"
+                  } shadow-2xl group-hover:shadow-lg transition-all duration-500`}
+                ></div>
+                <div
+                  className={`relative rounded-2xl overflow-hidden shadow-lg border ${
+                    mode === "dark"
+                      ? "bg-gray-900 border-gray-800"
+                      : "bg-white border-gray-200"
                   }`}
                 >
-                  Loading updates...
-                </p>
-              </div>
-            ) : updates.length === 0 ? (
-              <div className="text-center">
-                <p
-                  className={`text-lg ${
-                    mode === "dark" ? "text-gray-300" : "text-gray-600"
+                  <div className="p-6">
+                    <UpdatesFilters
+                      searchQuery={searchQuery}
+                      onSearch={handleSearch}
+                      selectedCategory={selectedCategory}
+                      onCategoryChange={handleCategoryFilter}
+                      categories={categories}
+                      viewMode={viewMode}
+                      setViewMode={setViewMode}
+                      mode={mode}
+                    />
+
+                    <UpdatesList
+                      updates={updates}
+                      loading={loading}
+                      mode={mode}
+                      viewMode={viewMode}
+                      onEdit={(update) => {
+                        handleEdit(update);
+                        setShowForm(true);
+                      }}
+                      onDelete={openDeleteModal}
+                      page={page}
+                      itemsPerPage={itemsPerPage}
+                      onLoadMore={loadMore}
+                    />
+                  </div>
+                </div>
+                <div
+                  className={`absolute bottom-0 left-0 right-0 h-1 ${
+                    mode === "dark"
+                      ? "bg-gradient-to-r from-blue-400 via-blue-500 to-blue-500"
+                      : "bg-gradient-to-r from-[#3c82f6] to-[#dbe9fe]"
                   }`}
-                >
-                  No updates found. Create one to get started!
-                </p>
+                ></div>
+                <div
+                  className={`absolute -top-1 sm:-top-2 -right-1 sm:-right-2 w-3 sm:w-4 h-3 sm:h-4 bg-[#85c2da] rounded-full opacity-60`}
+                ></div>
+                <div
+                  className={`absolute -bottom-1 -left-1 w-2 sm:w-3 h-2 sm:h-3 bg-[#f3584a] rounded-full opacity-40 animate-pulse delay-1000`}
+                ></div>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {updates.map((update) => (
-                  <motion.div
-                    key={update.id}
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.5 }}
-                    className={`p-5 rounded-xl shadow-lg border ${
-                      mode === "dark"
-                        ? "bg-gray-800/70 border-gray-700/50"
-                        : "bg-white/90 border-gray-200/50"
-                    } backdrop-blur-lg hover:shadow-xl transition-all duration-200`}
-                  >
-                    <div className="flex justify-between items-start">
-                      <h3
-                        className={`text-xl font-semibold ${
-                          mode === "dark" ? "text-white" : "text-gray-900"
-                        } line-clamp-2`}
-                      >
-                        {update.title}
-                      </h3>
-                      <div className="flex gap-2 flex-wrap">
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full ${
-                            mode === "dark"
-                              ? "bg-indigo-700 text-white"
-                              : "bg-indigo-100 text-indigo-800"
-                          }`}
-                        >
-                          {update.category}
-                        </span>
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full ${
-                            mode === "dark"
-                              ? "bg-purple-700 text-white"
-                              : "bg-purple-100 text-purple-800"
-                          }`}
-                        >
-                          {update.tier_restriction}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {update.tags && update.tags.length > 0 ? (
-                        update.tags.map((tag, index) => (
-                          <span
-                            key={index}
-                            className={`text-xs px-2 py-1 rounded-full ${
-                              mode === "dark"
-                                ? "bg-green-700 text-white"
-                                : "bg-green-100 text-green-800"
-                            }`}
-                          >
-                            {tag}
-                          </span>
-                        ))
-                      ) : (
-                        <span
-                          className={`text-xs px-2 py-1 rounded-full ${
-                            mode === "dark"
-                              ? "bg-gray-700 text-gray-300"
-                              : "bg-gray-200 text-gray-600"
-                          }`}
-                        >
-                          No Tags
-                        </span>
-                      )}
-                    </div>
-                    <p
-                      className={`mt-2 text-sm ${
-                        mode === "dark" ? "text-gray-300" : "text-gray-600"
-                      } line-clamp-3`}
-                    >
-                      {update.description || "No description provided."}
-                    </p>
-                    {update.cta_text && update.cta_url && (
-                      <a
-                        href={update.cta_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`mt-4 inline-block px-4 py-2 rounded-lg ${
-                          mode === "dark"
-                            ? "bg-gradient-to-r from-indigo-600 to-purple-600 text-white"
-                            : "bg-gradient-to-r from-indigo-500 to-purple-500 text-white"
-                        } hover:shadow-lg transition-all duration-200`}
-                      >
-                        {update.cta_text}
-                      </a>
-                    )}
-                    <div className="mt-4 flex justify-between items-center">
-                      <p
-                        className={`text-xs ${
-                          mode === "dark" ? "text-gray-400" : "text-gray-500"
-                        }`}
-                      >
-                        {new Date(update.created_at).toLocaleDateString(
-                          "en-US",
-                          {
-                            month: "2-digit",
-                            day: "2-digit",
-                            year: "numeric",
-                          }
-                        )}
-                      </p>
-                      <div className="flex gap-2">
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => {
-                            handleEdit(update);
-                            setShowForm(true);
-                          }}
-                          className={`p-2 rounded-full ${
-                            mode === "dark" ? "bg-gray-700" : "bg-gray-200"
-                          } hover:bg-gray-600 transition-all duration-200`}
-                        >
-                          <Icon icon="heroicons:pencil" className="w-4 h-4" />
-                        </motion.button>
-                        <motion.button
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                          onClick={() => handleDelete(update.id)}
-                          className={`p-2 rounded-full ${
-                            mode === "dark" ? "bg-red-700" : "bg-red-200"
-                          } hover:bg-red-600 transition-all duration-200`}
-                        >
-                          <Icon icon="heroicons:trash" className="w-4 h-4" />
-                        </motion.button>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
+            </div>
           </div>
           <SimpleFooter mode={mode} isSidebarOpen={isSidebarOpen} />
         </div>
 
         {showForm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+          <div
             className={`fixed inset-0 bg-black/30 backdrop-blur-md z-40`}
           />
         )}
@@ -377,13 +335,58 @@ export default function AdminUpdates({
           mode={mode}
           formData={formData}
           handleInputChange={handleInputChange}
-          handleSubmit={handleSubmit}
+          handleSubmit={handleFormSubmit}
           handleCancel={handleCancel}
           loading={loading}
           categories={formCategories}
+          memberCount={memberCount}
         />
+
+        <ItemActionModal
+          isOpen={isDeleteModalOpen}
+          onClose={closeDeleteModal}
+          title="Confirm Deletion"
+          mode={mode}
+        >
+          <div className="space-y-6">
+            <p
+              className={`text-sm ${
+                mode === "dark" ? "text-gray-300" : "text-gray-600"
+              }`}
+            >
+              Are you sure you want to delete the update{" "}
+              <strong>
+                &quot;
+                {updates.find((update) => update.id === updateToDelete)?.title || ""}
+                &quot;
+              </strong>
+              ? This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={closeDeleteModal}
+                className={`px-6 py-3 text-sm font-medium rounded-xl border transition-all duration-200 flex items-center shadow-sm ${
+                  mode === "dark"
+                    ? "border-gray-600 text-gray-200 bg-gray-800 hover:bg-gray-700"
+                    : "border-gray-200 text-gray-700 bg-white hover:bg-gray-50"
+                }`}
+              >
+                <Icon icon="heroicons:x-mark" className="h-4 w-4 mr-2" />
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className={`px-6 py-3 text-sm font-medium rounded-xl text-white bg-red-600 hover:bg-red-700 transition-all duration-200 flex items-center shadow-sm ${
+                  mode === "dark" ? "shadow-white/10" : "shadow-gray-200"
+                }`}
+              >
+                <Icon icon="heroicons:trash" className="h-4 w-4 mr-2" />
+                Delete
+              </button>
+            </div>
+          </div>
+        </ItemActionModal>
       </div>
-      <Toaster />
     </div>
   );
 }

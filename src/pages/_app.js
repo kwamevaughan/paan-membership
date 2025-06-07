@@ -9,6 +9,8 @@ import { sidebarNav } from "@/data/nav";
 const questrial = Questrial({
   weight: "400",
   subsets: ["latin"],
+  display: "swap",
+  variable: "--font-questrial",
 });
 
 function MyApp({ Component, pageProps }) {
@@ -123,7 +125,7 @@ function MyApp({ Component, pageProps }) {
   })();
 
   return (
-    <div className={`${mode === "dark" ? "dark" : ""} ${questrial.className}`}>
+    <div className={`${mode === "dark" ? "dark" : ""} ${questrial.variable} font-sans`}>
       <Toaster position="top-center" reverseOrder={false} />
       <Component
         {...pageProps}

@@ -8,10 +8,17 @@
     --font-questrial: "Questrial", sans-serif;
 }
 
+@layer base {
+    html {
+        font-family: var(--font-questrial), system-ui, sans-serif;
+    }
+}
+
 body {
     transition: background-color 0.3s ease, color 0.3s ease;
     background-color: #fafafa;
     font-size: 15px;
+    font-family: var(--font-questrial), system-ui, sans-serif;
 }
 
 .font-orange {

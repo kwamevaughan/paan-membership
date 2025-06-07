@@ -10,6 +10,14 @@ export async function sendStatusEmail({
   subject,
   template,
 }) {
+  console.log('Starting sendStatusEmail with:', {
+    primaryContactName,
+    primaryContactEmail,
+    opening,
+    status,
+    subject,
+    templateLength: template?.length
+  });
 
   if (!primaryContactEmail) {
     throw new Error("Primary contact email is required");
@@ -18,6 +26,18 @@ export async function sendStatusEmail({
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(primaryContactEmail)) {
     throw new Error("Invalid email address");
+  }
+  
+  // Log email configuration (without sensitive data)
+  console.log('Email configuration:', {
+    host: process.env.EMAIL_HOST,
+    port: process.env.EMAIL_PORT,
+    secure: process.env.EMAIL_SECURE,
+    user: process.env.EMAIL_USER ? '***' : undefined
+  });
+
+  if (!process.env.EMAIL_HOST || !process.env.EMAIL_PORT || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    throw new Error("Missing email configuration. Please check environment variables.");
   }
   
   const transporter = nodemailer.createTransport({
@@ -33,16 +53,22 @@ export async function sendStatusEmail({
   const emailSubject = subject || "Application Status Update";
   const html = template;
 
-  await transporter.sendMail({
-    from: `"Pan-African Agency Network (PAAN)" <${process.env.EMAIL_USER}>`,
-    to: primaryContactEmail,
-    subject: emailSubject,
-    html,
-  });
+  try {
+    const info = await transporter.sendMail({
+      from: `"Pan-African Agency Network (PAAN)" <${process.env.EMAIL_USER}>`,
+      to: primaryContactEmail,
+      subject: emailSubject,
+      html,
+    });
 
-  console.log(
-    `Status email (${status}) sent to ${primaryContactEmail} with subject: ${emailSubject}`
-  );
+    console.log(
+      `Status email (${status}) sent to ${primaryContactEmail} with subject: ${emailSubject}`,
+      'Message ID:', info.messageId
+    );
+  } catch (error) {
+    console.error('Failed to send email:', error);
+    throw error;
+  }
 }
 
 export async function sendEmails({

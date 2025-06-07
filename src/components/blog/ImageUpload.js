@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import { IKContext, IKUpload } from "imagekitio-react";
 import toast from "react-hot-toast";
+import ImageLibrary from "./ImageLibrary";
 
 export default function ImageUpload({
   mode,
@@ -9,12 +10,55 @@ export default function ImageUpload({
   setImageSource,
   formData,
   handleInputChange,
-  authenticator,
   uploadedImage,
   setUploadedImage,
 }) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [showMediaLibrary, setShowMediaLibrary] = useState(false);
+
+  useEffect(() => {
+    console.log("ImageUpload state:", {
+      imageSource,
+      showMediaLibrary,
+      hasUploadedImage: !!uploadedImage,
+      hasFormImage: !!formData.article_image,
+    });
+  }, [imageSource, showMediaLibrary, uploadedImage, formData.article_image]);
+
+  // Authenticator function
+  const authenticator = async () => {
+    try {
+      const endpoint =
+        process.env.NODE_ENV === "production"
+          ? "https://membership.paan.africa/api/imagekit/auth"
+          : "http://localhost:3000/api/imagekit/auth";
+      const response = await fetch(endpoint, {
+        method: "GET",
+        credentials: "include", // Include cookies for Supabase session
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Failed to fetch auth parameters: ${response.status} ${errorText}`
+        );
+      }
+      const data = await response.json();
+      if (!data.signature || !data.token || !data.expire) {
+        throw new Error("Invalid auth parameters received");
+      }
+      console.log("Authenticator success:", data);
+      return {
+        signature: data.signature,
+        token: data.token,
+        expire: data.expire,
+      };
+    } catch (error) {
+      console.error("Authenticator error:", error);
+      toast.error(`Authentication failed: ${error.message}`);
+      throw error;
+    }
+  };
 
   const onUploadStart = () => {
     setUploading(true);
@@ -22,35 +66,46 @@ export default function ImageUpload({
   };
 
   const onUploadSuccess = (res) => {
-    try {
-      const fileUrl = `${process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}${res.filePath}`;
-      handleInputChange({
-        target: {
-          name: "article_image",
-          value: fileUrl,
-        },
-      });
-      setUploadedImage(fileUrl);
-      toast.success("Image uploaded successfully");
-    } catch (error) {
-      console.error("Upload success handling error:", error);
-      toast.error("Failed to process uploaded image");
-    } finally {
-      setUploading(false);
-    }
+    setUploading(false);
+    setUploadProgress(100);
+    setUploadedImage(res);
+    handleInputChange({
+      target: {
+        name: "article_image",
+        value: res.url,
+      },
+    });
+    toast.success("Image uploaded successfully");
   };
 
   const onUploadError = (error) => {
-    console.error("Upload error:", error);
-    toast.error(`Failed to upload image: ${error.message || "Unknown error"}`);
     setUploading(false);
+    console.error("Upload error:", error);
+    toast.error("Failed to upload image");
   };
 
   const onUploadProgress = (progressEvent) => {
     const progress = Math.round(
-      (progressEvent.loaded / progressEvent.total) * 100
+      (progressEvent.loaded * 100) / progressEvent.total
     );
     setUploadProgress(progress);
+  };
+
+  const handleMediaSelect = (selectedImage) => {
+    console.log("Media selected:", selectedImage);
+    handleInputChange({
+      target: {
+        name: "article_image",
+        value: selectedImage.url,
+      },
+    });
+    setShowMediaLibrary(false);
+    toast.success("Image selected successfully");
+  };
+
+  const handleOpenMediaLibrary = () => {
+    console.log("Opening media library...");
+    setShowMediaLibrary(true);
   };
 
   return (
@@ -59,89 +114,86 @@ export default function ImageUpload({
         <label className="flex items-center gap-2">
           <input
             type="radio"
-            name="imageSource"
             value="url"
             checked={imageSource === "url"}
             onChange={(e) => setImageSource(e.target.value)}
             className={`w-4 h-4 ${
-              mode === "dark"
-                ? "bg-gray-700 border-gray-600"
-                : "bg-white border-gray-300"
+              mode === "dark" ? "text-blue-500" : "text-blue-600"
             }`}
           />
-          <span className={`text-sm ${
-            mode === "dark" ? "text-gray-300" : "text-gray-700"
-          }`}>External URL</span>
+          <span
+            className={`text-sm ${
+              mode === "dark" ? "text-gray-300" : "text-gray-700"
+            }`}
+          >
+            Image URL
+          </span>
         </label>
         <label className="flex items-center gap-2">
           <input
             type="radio"
-            name="imageSource"
             value="upload"
             checked={imageSource === "upload"}
             onChange={(e) => setImageSource(e.target.value)}
             className={`w-4 h-4 ${
-              mode === "dark"
-                ? "bg-gray-700 border-gray-600"
-                : "bg-white border-gray-300"
+              mode === "dark" ? "text-blue-500" : "text-blue-600"
             }`}
           />
-          <span className={`text-sm ${
-            mode === "dark" ? "text-gray-300" : "text-gray-700"
-          }`}>Upload Image</span>
+          <span
+            className={`text-sm ${
+              mode === "dark" ? "text-gray-300" : "text-gray-700"
+            }`}
+          >
+            Upload Image
+          </span>
         </label>
         <label className="flex items-center gap-2">
           <input
             type="radio"
-            name="imageSource"
             value="library"
             checked={imageSource === "library"}
             onChange={(e) => setImageSource(e.target.value)}
             className={`w-4 h-4 ${
-              mode === "dark"
-                ? "bg-gray-700 border-gray-600"
-                : "bg-white border-gray-300"
+              mode === "dark" ? "text-blue-500" : "text-blue-600"
             }`}
           />
-          <span className={`text-sm ${
-            mode === "dark" ? "text-gray-300" : "text-gray-700"
-          }`}>Choose from Library</span>
+          <span
+            className={`text-sm ${
+              mode === "dark" ? "text-gray-300" : "text-gray-700"
+            }`}
+          >
+            Choose from Library
+          </span>
         </label>
       </div>
 
-      {imageSource === "url" ? (
+      {imageSource === "url" && (
         <input
           type="url"
           name="article_image"
-          value={formData.article_image}
+          value={formData.article_image || ""}
           onChange={handleInputChange}
-          className={`w-full px-4 py-3 rounded-xl ${
+          className={`w-full px-4 py-2 rounded-xl border ${
             mode === "dark"
-              ? "bg-gray-800/80 text-white border-gray-700/50"
-              : "bg-white/80 text-gray-900 border-gray-200/50"
-          } focus:ring-2 focus:ring-indigo-500 backdrop-blur-sm`}
-          placeholder="https://example.com/image.jpg"
+              ? "bg-gray-800 border-gray-700 text-gray-100"
+              : "bg-white border-gray-300 text-gray-900"
+          } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+          placeholder="Enter image URL"
         />
-      ) : imageSource === "upload" ? (
-        <IKContext
-          publicKey={process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY}
-          urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}
-          authenticationEndpoint={
-            process.env.NODE_ENV === "production"
-              ? "https://membership.paan.africa/api/imagekit/auth"
-              : "http://localhost:3000/api/imagekit/auth"
-          }
-          authenticator={authenticator}
-          onError={(err) => {
-            console.error("ImageKit context error:", err);
-            toast.error(
-              `Failed to initialize image upload: ${
-                err.message || "Unknown error"
-              }`
-            );
-          }}
-        >
-          <div className="space-y-4">
+      )}
+
+      {imageSource === "upload" && (
+        <div className="space-y-4">
+          <IKContext
+            publicKey={process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY}
+            urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}
+            authenticationEndpoint={
+              process.env.NODE_ENV === "production"
+                ? "https://membership.paan.africa/api/imagekit/auth"
+                : "http://localhost:3000/api/imagekit/auth"
+            }
+            authenticator={authenticator}
+          >
             <IKUpload
               fileName="blog-image.jpg"
               useUniqueFileName={true}
@@ -151,56 +203,55 @@ export default function ImageUpload({
               onSuccess={onUploadSuccess}
               onError={onUploadError}
               accept="image/*"
-              className={`w-full px-4 py-3 rounded-xl ${
+              className={`w-full px-4 py-2 rounded-xl border ${
                 mode === "dark"
-                  ? "bg-gray-800/80 text-white border-gray-700/50"
-                  : "bg-white/80 text-gray-900 border-gray-200/50"
-              } focus:ring-2 focus:ring-indigo-500 backdrop-blur-sm`}
+                  ? "bg-gray-800 border-gray-700 text-gray-100"
+                  : "bg-white border-gray-300 text-gray-900"
+              } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
             />
-            {uploading && (
-              <div className="w-full bg-gray-200 rounded-full h-2.5">
-                <div
-                  className="bg-blue-600 h-2.5 rounded-full"
-                  style={{ width: `${uploadProgress}%` }}
-                ></div>
-              </div>
-            )}
-            {uploadedImage && (
-              <div className="mt-2">
-                <img
-                  src={uploadedImage}
-                  alt="Uploaded"
-                  className="max-h-40 rounded-lg object-cover"
-                />
-              </div>
-            )}
-          </div>
-        </IKContext>
-      ) : (
-        <div className="space-y-4">
-          <button
-            type="button"
-            onClick={() => setShowMediaLibrary(true)}
-            className={`w-full px-4 py-3 rounded-xl ${
-              mode === "dark"
-                ? "bg-gray-800/80 text-white border-gray-700/50 hover:bg-gray-700/80"
-                : "bg-white/80 text-gray-900 border-gray-200/50 hover:bg-gray-50/80"
-            } focus:ring-2 focus:ring-indigo-500 backdrop-blur-sm flex items-center justify-center gap-2`}
-          >
-            <Icon icon="heroicons:photo-library" className="w-5 h-5" />
-            Browse Image Library
-          </button>
-          {formData.article_image && (
-            <div className="mt-2">
-              <img
-                src={formData.article_image}
-                alt="Selected"
-                className="max-h-40 rounded-lg object-cover"
-              />
+          </IKContext>
+          {uploading && (
+            <div className="w-full bg-gray-200 rounded-full h-2.5">
+              <div
+                className="bg-blue-600 h-2.5 rounded-full"
+                style={{ width: `${uploadProgress}%` }}
+              ></div>
             </div>
           )}
         </div>
       )}
+
+      {imageSource === "library" && (
+        <button
+          type="button"
+          onClick={handleOpenMediaLibrary}
+          className={`w-full px-4 py-2 rounded-xl border ${
+            mode === "dark"
+              ? "bg-gray-800 border-gray-700 text-gray-100 hover:bg-gray-700"
+              : "bg-white border-gray-300 text-gray-900 hover:bg-gray-50"
+          } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+        >
+          <Icon icon="heroicons:photo-library" className="w-5 h-5 inline-block mr-2" />
+          Browse Image Library
+        </button>
+      )}
+
+      {(formData.article_image || uploadedImage) && (
+        <div className="mt-4">
+          <img
+            src={uploadedImage?.url || formData.article_image}
+            alt="Preview"
+            className="w-full h-48 object-cover rounded-xl"
+          />
+        </div>
+      )}
+
+      <ImageLibrary
+        isOpen={showMediaLibrary}
+        onClose={() => setShowMediaLibrary(false)}
+        onSelect={handleMediaSelect}
+        mode={mode}
+      />
     </div>
   );
 } 

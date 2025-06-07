@@ -29,29 +29,6 @@ export default function BlogForm({ mode, blogId, showForm, handleCancel }) {
 
   const [imageSource, setImageSource] = useState("url");
   const [uploadedImage, setUploadedImage] = useState(null);
-  const [showMediaLibrary, setShowMediaLibrary] = useState(false);
-
-  const authenticator = async () => {
-    try {
-      const response = await fetch("/api/imagekit/auth");
-      const data = await response.json();
-      return data;
-    } catch (error) {
-      console.error("Authentication error:", error);
-      throw error;
-    }
-  };
-
-  const handleMediaSelect = (selectedImage) => {
-    handleInputChange({
-      target: {
-        name: "article_image",
-        value: selectedImage.url,
-      },
-    });
-    setShowMediaLibrary(false);
-    toast.success("Image selected successfully");
-  };
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -86,10 +63,8 @@ export default function BlogForm({ mode, blogId, showForm, handleCancel }) {
             setImageSource={setImageSource}
             formData={formData}
             handleInputChange={handleInputChange}
-            authenticator={authenticator}
             uploadedImage={uploadedImage}
             setUploadedImage={setUploadedImage}
-            setShowMediaLibrary={setShowMediaLibrary}
           />
         </div>
 
@@ -126,14 +101,6 @@ export default function BlogForm({ mode, blogId, showForm, handleCancel }) {
             {loading ? "Saving..." : blogId ? "Update Blog" : "Create Blog"}
           </button>
         </div>
-
-        <ImageLibrary
-          isOpen={showMediaLibrary}
-          onClose={() => setShowMediaLibrary(false)}
-          onSelect={handleMediaSelect}
-          mode={mode}
-          authenticator={authenticator}
-        />
       </form>
     </ItemActionModal>
   );

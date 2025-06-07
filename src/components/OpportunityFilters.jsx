@@ -20,7 +20,7 @@ export default function AdvancedFilters({
   
   // Type-specific props
   type = "opportunity", // 'opportunity' or 'update'
-  opportunities = [], // opportunities or updates
+  items = [], // opportunities or updates
   
   // Opportunity-specific props
   filterType,
@@ -39,16 +39,19 @@ export default function AdvancedFilters({
   selectedCategory,
   onCategoryChange,
   categories = [],
+  selectedTier,
+  onTierChange,
+  tiers = [],
 }) {
   const [projectTypes, setProjectTypes] = useState([]);
   const [selectedItemId, setSelectedItemId] = useState("");
 
   useEffect(() => {
-    if (type === "opportunity" && opportunities.length > 0) {
-      const types = [...new Set(opportunities.map((item) => item.project_type))].filter(Boolean);
+    if (type === "opportunity" && items.length > 0) {
+      const types = [...new Set(items.map((item) => item.project_type))].filter(Boolean);
       setProjectTypes(types);
     }
-  }, [opportunities, type]);
+  }, [items, type]);
 
   const handleViewInterestedUsers = () => {
     if (!selectedItemId) {
@@ -118,7 +121,7 @@ export default function AdvancedFilters({
                   aria-label="Select an item"
                 >
                   <option value="">Select {type === "opportunity" ? "Opportunity" : "Update"}</option>
-                  {opportunities.map((item) => (
+                  {items.map((item) => (
                     <option key={item.id} value={item.id}>
                       {item.title}
                     </option>
@@ -460,6 +463,44 @@ export default function AdvancedFilters({
                       {categories.map((category) => (
                         <option key={category} value={category}>
                           {category}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
+                      <Icon
+                        icon="heroicons:chevron-down"
+                        className="h-4 w-4"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tier Filter for Updates */}
+                <div>
+                  <label
+                    htmlFor="filter-tier"
+                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+                  >
+                    Filter by Tier
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="filter-tier"
+                      value={selectedTier}
+                      onChange={(e) => onTierChange(e.target.value)}
+                      disabled={loading}
+                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
+                        mode === "dark"
+                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
+                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
+                      aria-label="Filter by tier"
+                    >
+                      <option value="all">All Tiers</option>
+                      {tiers.map((tier) => (
+                        <option key={tier} value={tier}>
+                          {tier}
                         </option>
                       ))}
                     </select>

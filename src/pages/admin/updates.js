@@ -30,6 +30,8 @@ export default function AdminUpdates({
   const [showFilters, setShowFilters] = useState(false);
   const [filterTerm, setFilterTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("newest");
+  const [selectedCategory, setSelectedCategory] = useState("all");
+  const [selectedTier, setSelectedTier] = useState("all");
   const itemsPerPage = 6;
   useAuthSession();
 
@@ -56,7 +58,7 @@ export default function AdminUpdates({
     handleDelete,
     handleSearch,
     handleCategoryFilter,
-    selectedCategory,
+    selectedCategory: existingSelectedCategory,
     searchQuery,
   } = useUpdates(initialUpdates);
   const router = useRouter();
@@ -70,6 +72,15 @@ export default function AdminUpdates({
     "Events",
     "Strategic Direction",
   ];
+
+  const tiers = [
+    "All",
+    "Associate Member",
+    "Full Member",
+    "Premium Member",
+    "Enterprise Member",
+  ];
+
   const formCategories = [
     "Governance",
     "Member Spotlights",
@@ -78,6 +89,13 @@ export default function AdminUpdates({
     "Events",
     "Strategic Direction",
   ];
+
+  // Filter updates based on selected category and tier
+  const filteredUpdates = updates.filter(update => {
+    const matchesCategory = selectedCategory === "all" || update.category === selectedCategory;
+    const matchesTier = selectedTier === "all" || update.tier_restriction === selectedTier;
+    return matchesCategory && matchesTier;
+  });
 
   const handleCreateUpdate = () => {
     setShowForm(true);
@@ -313,12 +331,17 @@ export default function AdminUpdates({
                       setShowFilters={setShowFilters}
                       items={updates}
                       selectedCategory={selectedCategory}
-                      onCategoryChange={handleCategoryFilter}
+                      onCategoryChange={setSelectedCategory}
                       categories={categories}
+                      selectedTier={selectedTier}
+                      onTierChange={setSelectedTier}
+                      tiers={tiers}
                     />
 
+                    <div className="mt-8">
+
                     <UpdatesList
-                      updates={updates}
+                      updates={filteredUpdates}
                       loading={loading}
                       mode={mode}
                       viewMode={viewMode}
@@ -330,7 +353,14 @@ export default function AdminUpdates({
                       page={page}
                       itemsPerPage={itemsPerPage}
                       onLoadMore={loadMore}
-                    />
+                      selectedCategory={selectedCategory}
+                      onCategoryChange={setSelectedCategory}
+                      categories={categories}
+                      selectedTier={selectedTier}
+                      onTierChange={setSelectedTier}
+                      tiers={tiers}
+                      />
+                      </div>
                   </div>
                 </div>
                 <div

@@ -107,7 +107,7 @@ export default function OpportunityGrid({
 
   if (viewMode === "table") {
     return (
-      <div className="p-8">
+      <div className="px-6 py-10">
         {selectedItems.length > 0 && (
           <div className={`mb-4 p-4 rounded-lg flex items-center justify-between ${
             mode === "dark" ? "bg-gray-800" : "bg-gray-100"
@@ -316,7 +316,7 @@ export default function OpportunityGrid({
   }
 
   return (
-    <div className="p-8">
+    <div className="px-6 py-10">
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
         {paginatedOpportunities.map((opp) => {
           const tierColors = getTierBadgeColor(opp.tier_restriction || "N/A", mode);

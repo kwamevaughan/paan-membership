@@ -195,11 +195,17 @@ export default function AdminBusinessOpportunities({
                     </div>
                     <div className="space-y-2">
                       <p className="text-sm text-gray-600 dark:text-gray-300 max-w-2xl">
-                        Manage and distribute business opportunities, freelance gigs, and project collaborations. Create targeted opportunities for specific membership tiers and track member engagement.
+                        Manage and distribute business opportunities, freelance
+                        gigs, and project collaborations. Create targeted
+                        opportunities for specific membership tiers and track
+                        member engagement.
                       </p>
                       <div className="flex items-center gap-4 text-sm flex-wrap">
                         <div className="flex items-center gap-2">
-                          <Icon icon="heroicons:briefcase" className="w-4 h-4 text-blue-500" />
+                          <Icon
+                            icon="heroicons:briefcase"
+                            className="w-4 h-4 text-blue-500"
+                          />
                           <span className="text-gray-600 dark:text-gray-300">
                             {opportunities.length} total opportunities
                           </span>
@@ -207,21 +213,51 @@ export default function AdminBusinessOpportunities({
                         {opportunities.length > 0 && (
                           <>
                             <div className="flex items-center gap-2">
-                              <Icon icon="heroicons:user-group" className="w-4 h-4 text-purple-500" />
+                              <Icon
+                                icon="heroicons:user-group"
+                                className="w-4 h-4 text-purple-500"
+                              />
                               <span className="text-gray-600 dark:text-gray-300">
-                                {opportunities.filter(opp => opp.job_type === "Freelancer").length} freelance gigs
+                                {
+                                  opportunities.filter(
+                                    (opp) => opp.job_type === "Freelancer"
+                                  ).length
+                                }{" "}
+                                freelance gigs
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Icon icon="heroicons:building-office" className="w-4 h-4 text-green-500" />
+                              <Icon
+                                icon="heroicons:building-office"
+                                className="w-4 h-4 text-green-500"
+                              />
                               <span className="text-gray-600 dark:text-gray-300">
-                                {opportunities.filter(opp => opp.job_type === "Agency").length} agency opportunities
+                                {
+                                  opportunities.filter(
+                                    (opp) => opp.job_type === "Agency"
+                                  ).length
+                                }{" "}
+                                agency opportunities
                               </span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <Icon icon="heroicons:clock" className="w-4 h-4 text-orange-500" />
+                              <Icon
+                                icon="heroicons:clock"
+                                className="w-4 h-4 text-orange-500"
+                              />
                               <span className="text-gray-600 dark:text-gray-300">
-                                Last posted {new Date(Math.max(...opportunities.map(opp => new Date(opp.created_at)))).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                Last published{" "}
+                                {new Date(
+                                  Math.max(
+                                    ...opportunities.map(
+                                      (opp) => new Date(opp.created_at)
+                                    )
+                                  )
+                                ).toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                })}
                               </span>
                             </div>
                           </>
@@ -245,9 +281,7 @@ export default function AdminBusinessOpportunities({
                 </div>
                 <div
                   className={`absolute top-2 right-2 w-12 sm:w-16 h-12 sm:h-16 opacity-10`}
-                >
-                  
-                </div>
+                ></div>
                 <div
                   className={`absolute bottom-0 left-0 right-0 h-1 ${
                     mode === "dark"
@@ -255,7 +289,7 @@ export default function AdminBusinessOpportunities({
                       : "bg-gradient-to-r from-[#3c82f6] to-[#dbe9fe]"
                   }`}
                 ></div>
-                
+
                 <div
                   className={`absolute -bottom-1 -left-1 w-2 sm:w-3 h-2 sm:h-3 bg-[#f3584a] rounded-full opacity-40 animate-pulse delay-1000`}
                 ></div>
@@ -281,8 +315,6 @@ export default function AdminBusinessOpportunities({
                   }`}
                 >
                   <div className="">
-                    
-
                     <OpportunityFilters
                       filterTerm={filterTerm}
                       setFilterTerm={setFilterTerm}
@@ -309,7 +341,7 @@ export default function AdminBusinessOpportunities({
                     />
 
                     <OpportunityGrid
-                      opportunities={opportunities}
+                      opportunities={sortedOpportunities}
                       loading={loading}
                       mode={mode}
                       onEdit={modalActions.openModal}

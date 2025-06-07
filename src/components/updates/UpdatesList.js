@@ -13,6 +13,12 @@ export default function UpdatesList({
   page,
   itemsPerPage = 9,
   onLoadMore,
+  selectedCategory,
+  onCategoryChange,
+  categories = [],
+  selectedTier,
+  onTierChange,
+  tiers = [],
 }) {
   const [isUsersModalOpen, setIsUsersModalOpen] = useState(false);
   const [selectedUpdate, setSelectedUpdate] = useState(null);
@@ -223,6 +229,7 @@ export default function UpdatesList({
                   <th className="px-6 py-4 text-left text-sm font-semibold">Title</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Description</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Category</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold">Tier</th>
                   <th className="px-6 py-4 text-left text-sm font-semibold">Published</th>
                   <th className="px-6 py-4 text-right text-sm font-semibold">Actions</th>
                 </tr>
@@ -264,6 +271,15 @@ export default function UpdatesList({
                           : "bg-blue-100 text-blue-700"
                       }`}>
                         {update.category}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
+                        mode === "dark"
+                          ? "bg-purple-900/50 text-purple-300"
+                          : "bg-purple-100 text-purple-700"
+                      }`}>
+                        {update.tier_restriction}
                       </span>
                     </td>
                     <td className="px-6 py-4">

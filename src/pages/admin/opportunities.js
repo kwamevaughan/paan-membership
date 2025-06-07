@@ -3,7 +3,7 @@ import toast, { Toaster } from "react-hot-toast";
 import HRHeader from "@/layouts/hrHeader";
 import HRSidebar from "@/layouts/hrSidebar";
 import SimpleFooter from "@/layouts/simpleFooter";
-import OpportunityFilters from "@/components/OpportunityFilters";
+import AdvancedFilters from "@/components/AdvancedFilters";
 import OpportunityGrid from "@/components/OpportunityGrid";
 import ItemActionModal from "@/components/ItemActionModal";
 import InterestedUsersModal from "@/components/InterestedUsersModal";
@@ -29,7 +29,7 @@ export default function AdminBusinessOpportunities({
   const [filterJobType, setFilterJobType] = useState("all");
   const [filterProjectType, setFilterProjectType] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
-  const [sortOrder, setSortOrder] = useState("deadline");
+  const [sortOrder, setSortOrder] = useState("newest");
   const [viewMode, setViewMode] = useState("grid");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterApplications, setFilterApplications] = useState("all");
@@ -315,7 +315,7 @@ export default function AdminBusinessOpportunities({
                   }`}
                 >
                   <div className="">
-                    <OpportunityFilters
+                    <AdvancedFilters
                       filterTerm={filterTerm}
                       setFilterTerm={setFilterTerm}
                       setFilterType={setFilterType}

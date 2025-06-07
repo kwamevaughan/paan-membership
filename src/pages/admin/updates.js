@@ -12,7 +12,7 @@ import SimpleFooter from "@/layouts/simpleFooter";
 import UpdatesForm from "@/components/UpdatesForm";
 import ItemActionModal from "@/components/ItemActionModal";
 import UpdatesList from "@/components/updates/UpdatesList";
-import AdvancedFilters from "@/components/OpportunityFilters";
+import AdvancedFilters from "@/components/AdvancedFilters";
 import { getAdminUpdatesProps } from "utils/getPropsUtils";
 
 export default function AdminUpdates({
@@ -32,6 +32,7 @@ export default function AdminUpdates({
   const [sortOrder, setSortOrder] = useState("newest");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedTier, setSelectedTier] = useState("all");
+  const [selectedTags, setSelectedTags] = useState([]);
   const itemsPerPage = 6;
   useAuthSession();
 
@@ -64,7 +65,7 @@ export default function AdminUpdates({
   const router = useRouter();
 
   const categories = [
-    "All",
+    "all",
     "Governance",
     "Member Spotlights",
     "Global Partnerships",
@@ -74,7 +75,7 @@ export default function AdminUpdates({
   ];
 
   const tiers = [
-    "All",
+    "all",
     "Associate Member",
     "Full Member",
     "Premium Member",
@@ -90,11 +91,16 @@ export default function AdminUpdates({
     "Strategic Direction",
   ];
 
-  // Filter updates based on selected category and tier
+  // Filter updates based on selected category, tier, and tags
   const filteredUpdates = updates.filter(update => {
+    const matchesSearch = filterTerm === "" || 
+      update.title.toLowerCase().includes(filterTerm.toLowerCase()) ||
+      update.description?.toLowerCase().includes(filterTerm.toLowerCase());
     const matchesCategory = selectedCategory === "all" || update.category === selectedCategory;
     const matchesTier = selectedTier === "all" || update.tier_restriction === selectedTier;
-    return matchesCategory && matchesTier;
+    const updateTags = update.tags ? (Array.isArray(update.tags) ? update.tags : update.tags.split(',').map(tag => tag.trim())) : [];
+    const matchesTags = selectedTags.length === 0 || selectedTags.some(tag => updateTags.includes(tag));
+    return matchesSearch && matchesCategory && matchesTier && matchesTags;
   });
 
   const handleCreateUpdate = () => {
@@ -336,6 +342,8 @@ export default function AdminUpdates({
                       selectedTier={selectedTier}
                       onTierChange={setSelectedTier}
                       tiers={tiers}
+                      selectedTags={selectedTags}
+                      onTagsChange={setSelectedTags}
                     />
 
                     <div className="mt-8">

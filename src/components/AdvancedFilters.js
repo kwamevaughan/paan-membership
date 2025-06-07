@@ -19,8 +19,8 @@ export default function AdvancedFilters({
   setShowFilters,
   
   // Type-specific props
-  type = "opportunity", // 'opportunity' or 'update'
-  items = [], // opportunities or updates
+  type = "opportunity", // 'opportunity', 'update', or 'market-intel'
+  items = [], // opportunities, updates, or market intel items
   
   // Opportunity-specific props
   filterType,
@@ -42,9 +42,89 @@ export default function AdvancedFilters({
   selectedTier,
   onTierChange,
   tiers = [],
+  selectedTags,
+  onTagsChange,
+
+  // Market Intel specific props
+  selectedType,
+  onTypeChange,
+  types = [],
+  selectedRegion,
+  onRegionChange,
+  regions = [],
+  onResetFilters,
 }) {
   const [projectTypes, setProjectTypes] = useState([]);
-  const [selectedItemId, setSelectedItemId] = useState("");
+
+  // Add function to check if any filters are active
+  const hasActiveFilters = () => {
+    // Check if search term is not empty
+    if (filterTerm && filterTerm.trim() !== "") return true;
+    
+    // Check if any filter is not at its default value
+    const defaultValues = {
+      filterType: "all",
+      filterJobType: "all",
+      filterProjectType: "all",
+      filterStatus: "all",
+      filterApplications: "all",
+      sortOrder: "newest",
+      selectedTags: []
+    };
+
+    // For opportunity type
+    if (type === "opportunity") {
+      if (filterType?.toLowerCase() !== defaultValues.filterType) return true;
+      if (filterJobType?.toLowerCase() !== defaultValues.filterJobType) return true;
+      if (filterProjectType?.toLowerCase() !== defaultValues.filterProjectType) return true;
+      if (filterStatus?.toLowerCase() !== defaultValues.filterStatus) return true;
+      if (filterApplications?.toLowerCase() !== defaultValues.filterApplications) return true;
+      if (sortOrder !== defaultValues.sortOrder) return true;
+    }
+    // For update type
+    else if (type === "update") {
+      if (selectedCategory?.toLowerCase() !== "all") return true;
+      if (selectedTier?.toLowerCase() !== "all") return true;
+      if (sortOrder !== defaultValues.sortOrder) return true;
+      if (selectedTags?.length > 0) return true;
+    }
+    // For market intel type
+    else if (type === "market-intel") {
+      if (selectedCategory?.toLowerCase() !== "all") return true;
+      if (selectedTier?.toLowerCase() !== "all") return true;
+      if (selectedType?.toLowerCase() !== "all") return true;
+      if (selectedRegion?.toLowerCase() !== "all") return true;
+      if (sortOrder !== defaultValues.sortOrder) return true;
+    }
+
+    return false;
+  };
+
+  // Add reset filters function
+  const resetFilters = () => {
+    setFilterTerm("");
+    setSortOrder("newest");
+    
+    if (type === "opportunity") {
+      setFilterType("all");
+      setFilterJobType("all");
+      setFilterProjectType("all");
+      setFilterStatus("all");
+      setFilterApplications("all");
+    }
+    else if (type === "update") {
+      onCategoryChange("all");
+      onTierChange("all");
+      onTagsChange([]);
+    }
+    else if (type === "market-intel") {
+      onCategoryChange("all");
+      onTierChange("all");
+      onTypeChange("all");
+      onRegionChange("all");
+      if (onResetFilters) onResetFilters();
+    }
+  };
 
   useEffect(() => {
     if (type === "opportunity" && items.length > 0) {
@@ -52,20 +132,6 @@ export default function AdvancedFilters({
       setProjectTypes(types);
     }
   }, [items, type]);
-
-  const handleViewInterestedUsers = () => {
-    if (!selectedItemId) {
-      toast.error("Please select an item to view interested users.", {
-        style: {
-          background: mode === "dark" ? "#1F2937" : "#FFFFFF",
-          color: mode === "dark" ? "#F3F4F6" : "#111827",
-          border: `1px solid ${mode === "dark" ? "#374151" : "#E5E7EB"}`,
-        },
-      });
-      return;
-    }
-    onOpenUsersModal(selectedItemId);
-  };
 
   return (
     <div className="p-6 dark:bg-gray-900 rounded-xl shadow-lg hover:shadow-md transition-all duration-300">
@@ -89,7 +155,7 @@ export default function AdvancedFilters({
                 ? "border-gray-700 bg-gray-800 text-white placeholder-gray-400 focus:ring-blue-600 focus:border-blue-600"
                 : "border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
             } disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none shadow-sm`}
-            placeholder={`Search ${type === "opportunity" ? "opportunities" : "updates"}...`}
+            placeholder={`Search ${type === "opportunity" ? "opportunities" : type === "update" ? "updates" : "market-intel items"}...`}
           />
           {loading && (
             <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
@@ -104,58 +170,26 @@ export default function AdvancedFilters({
 
         {/* Controls */}
         <div className="flex flex-wrap items-center gap-3 z-10">
-          {type === "opportunity" && (
-            <>
-              {/* Item Selector */}
-              <div className="relative">
-                <select
-                  id="select-item"
-                  value={selectedItemId}
-                  onChange={(e) => setSelectedItemId(e.target.value)}
-                  disabled={loading}
-                  className={`appearance-none w-48 px-4 py-3 text-sm font-medium border rounded-lg transition-all duration-200 ${
-                    mode === "dark"
-                      ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
-                      : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                  } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
-                  aria-label="Select an item"
-                >
-                  <option value="">Select {type === "opportunity" ? "Opportunity" : "Update"}</option>
-                  {items.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.title}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-400">
-                  <Icon
-                    icon="heroicons:chevron-down"
-                    className="h-4 w-4"
-                    aria-hidden="true"
-                  />
-                </div>
-              </div>
-
-              {/* Interested Users Button */}
-              <button
-                onClick={handleViewInterestedUsers}
-                disabled={loading || !selectedItemId}
-                className={`inline-flex items-center space-x-1.5 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
-                  selectedItemId
-                    ? "bg-green-100 text-green-800 border-green-300 dark:bg-green-900/50 dark:text-green-200 dark:border-green-800"
-                    : "bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
-                } hover:bg-green-200 dark:hover:bg-green-800/70 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm`}
-                aria-label="View interested users"
-                title={!selectedItemId ? "Select an item first" : ""}
-              >
-                <Icon
-                  icon="mdi:account-group"
-                  className="w-5 h-5"
-                  aria-hidden="true"
-                />
-                <span>Interested Users</span>
-              </button>
-            </>
+          {/* Reset Filters Button - Only show when filters are active */}
+          {hasActiveFilters() && (
+            <button
+              onClick={resetFilters}
+              disabled={loading}
+              className={`inline-flex items-center space-x-1.5 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
+                mode === "dark"
+                  ? "bg-gray-800 text-gray-200 border-gray-700 hover:bg-gray-700"
+                  : "bg-gray-50 text-gray-700 border-gray-200 hover:bg-gray-100"
+              } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm`}
+              aria-label="Reset filters"
+              title="Reset all filters to default values"
+            >
+              <Icon
+                icon="heroicons:arrow-path"
+                className="w-5 h-5"
+                aria-hidden="true"
+              />
+              <span>Reset Filters</span>
+            </button>
           )}
 
           {/* Filter Toggle */}
@@ -423,7 +457,7 @@ export default function AdvancedFilters({
                   </div>
                 </div>
               </>
-            ) : (
+            ) : type === "update" ? (
               <>
                 {/* Category Filter for Updates */}
                 <div>
@@ -460,7 +494,8 @@ export default function AdvancedFilters({
                       } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
                       aria-label="Filter by category"
                     >
-                      {categories.map((category) => (
+                      <option value="all">All Categories</option>
+                      {categories.filter(category => category !== "all").map((category) => (
                         <option key={category} value={category}>
                           {category}
                         </option>
@@ -469,9 +504,100 @@ export default function AdvancedFilters({
                     <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
                       <Icon
                         icon="heroicons:chevron-down"
-                        className="h-4 w-4"
+                        className="h-4 h-4"
                         aria-hidden="true"
                       />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tags Filter for Updates */}
+                <div>
+                  <label
+                    htmlFor="filter-tags"
+                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+                  >
+                    Filter by Tags
+                    <div className="inline-block ml-1">
+                      <div className="relative">
+                        <div className="peer">
+                          <Icon
+                            icon="heroicons:information-circle"
+                            className="w-4 h-4 inline text-gray-400 cursor-help"
+                          />
+                        </div>
+                        <div className="invisible peer-hover:visible opacity-0 peer-hover:opacity-100 transition-all duration-200 absolute z-10 p-2 text-xs text-gray-200 bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap border border-gray-700/50 pointer-events-none">
+                          Filter updates based on their tags
+                          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800/80"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </label>
+                  <div className="relative">
+                    <div
+                      className={`w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
+                        mode === "dark"
+                          ? "border-gray-700 bg-gray-800 text-white focus-within:ring-blue-600 focus-within:border-blue-600"
+                          : "border-gray-200 bg-gray-50 text-gray-900 focus-within:ring-blue-500 focus-within:border-blue-500"
+                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm min-h-[100px]`}
+                    >
+                      {/* Selected Tags */}
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {selectedTags.map((tag) => (
+                          <span
+                            key={tag}
+                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                              mode === "dark"
+                                ? "bg-blue-900/50 text-blue-200"
+                                : "bg-blue-100 text-blue-700"
+                            }`}
+                          >
+                            {tag}
+                            <button
+                              onClick={() => onTagsChange(selectedTags.filter(t => t !== tag))}
+                              className="ml-1.5 hover:text-red-500 focus:outline-none"
+                            >
+                              <Icon icon="heroicons:x-mark" className="w-3 h-3" />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Tag Selection */}
+                      <div className="flex flex-wrap gap-2">
+                        {items.reduce((tags, item) => {
+                          const itemTags = item.tags ? (Array.isArray(item.tags) ? item.tags : item.tags.split(',').map(tag => tag.trim())) : [];
+                          itemTags.forEach(tag => {
+                            if (!tags.includes(tag)) tags.push(tag);
+                          });
+                          return tags;
+                        }, []).map((tag) => (
+                          <button
+                            key={tag}
+                            onClick={() => {
+                              if (selectedTags.includes(tag)) {
+                                onTagsChange(selectedTags.filter(t => t !== tag));
+                              } else {
+                                onTagsChange([...selectedTags, tag]);
+                              }
+                            }}
+                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium transition-colors duration-200 ${
+                              selectedTags.includes(tag)
+                                ? mode === "dark"
+                                  ? "bg-blue-600 text-white"
+                                  : "bg-blue-500 text-white"
+                                : mode === "dark"
+                                ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                            }`}
+                          >
+                            {tag}
+                            {selectedTags.includes(tag) && (
+                              <Icon icon="heroicons:check" className="w-3 h-3 ml-1" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -498,7 +624,7 @@ export default function AdvancedFilters({
                       aria-label="Filter by tier"
                     >
                       <option value="all">All Tiers</option>
-                      {tiers.map((tier) => (
+                      {tiers.filter(tier => tier !== "all").map((tier) => (
                         <option key={tier} value={tier}>
                           {tier}
                         </option>
@@ -514,7 +640,158 @@ export default function AdvancedFilters({
                   </div>
                 </div>
               </>
-            )}
+            ) : type === "market-intel" ? (
+              <>
+                {/* Category Filter */}
+                <div>
+                  <label
+                    htmlFor="filter-category"
+                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+                  >
+                    Filter by Category
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="filter-category"
+                      value={selectedCategory}
+                      onChange={(e) => onCategoryChange(e.target.value)}
+                      disabled={loading}
+                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
+                        mode === "dark"
+                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
+                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
+                      aria-label="Filter by category"
+                    >
+                      <option value="all">All Categories</option>
+                      {categories.filter(category => category !== "all").map((category) => (
+                        <option key={category} value={category}>
+                          {category}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
+                      <Icon
+                        icon="heroicons:chevron-down"
+                        className="h-4 h-4"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Type Filter */}
+                <div>
+                  <label
+                    htmlFor="filter-type"
+                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+                  >
+                    Filter by Type
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="filter-type"
+                      value={selectedType}
+                      onChange={(e) => onTypeChange(e.target.value)}
+                      disabled={loading}
+                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
+                        mode === "dark"
+                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
+                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
+                      aria-label="Filter by type"
+                    >
+                      {types.filter(type => type !== "all").map((type) => (
+                        <option key={type} value={type}>
+                          {type}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
+                      <Icon
+                        icon="heroicons:chevron-down"
+                        className="h-4 h-4"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Region Filter */}
+                <div>
+                  <label
+                    htmlFor="filter-region"
+                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+                  >
+                    Filter by Region
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="filter-region"
+                      value={selectedRegion}
+                      onChange={(e) => onRegionChange(e.target.value)}
+                      disabled={loading}
+                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
+                        mode === "dark"
+                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
+                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
+                      aria-label="Filter by region"
+                    >
+                      {regions.filter(region => region !== "all").map((region) => (
+                        <option key={region} value={region}>
+                          {region}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
+                      <Icon
+                        icon="heroicons:chevron-down"
+                        className="h-4 h-4"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tier Filter */}
+                <div>
+                  <label
+                    htmlFor="filter-tier"
+                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+                  >
+                    Filter by Tier
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="filter-tier"
+                      value={selectedTier}
+                      onChange={(e) => onTierChange(e.target.value)}
+                      disabled={loading}
+                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
+                        mode === "dark"
+                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
+                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
+                      aria-label="Filter by tier"
+                    >
+                      {tiers.filter(tier => tier !== "all").map((tier) => (
+                        <option key={tier} value={tier}>
+                          {tier}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
+                      <Icon
+                        icon="heroicons:chevron-down"
+                        className="h-4 h-4"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : null}
 
             {/* Sort Order Filter (Common) */}
             <div>
@@ -523,20 +800,6 @@ export default function AdvancedFilters({
                 className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
               >
                 Sort By
-                <div className="inline-block ml-1">
-                  <div className="relative">
-                    <div className="peer">
-                      <Icon
-                        icon="heroicons:information-circle"
-                        className="w-4 h-4 inline text-gray-400 cursor-help"
-                      />
-                    </div>
-                    <div className="invisible peer-hover:visible opacity-0 peer-hover:opacity-100 transition-all duration-200 absolute z-10 p-2 text-xs text-gray-200 bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap border border-gray-700/50 pointer-events-none">
-                      Sort {type === "opportunity" ? "opportunities" : "updates"} by different criteria
-                      <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800/80"></div>
-                    </div>
-                  </div>
-                </div>
               </label>
               <div className="relative">
                 <select
@@ -553,17 +816,11 @@ export default function AdvancedFilters({
                 >
                   <option value="newest">Newest First</option>
                   <option value="oldest">Oldest First</option>
-                  {type === "opportunity" && (
-                    <>
-                      <option value="deadline">Deadline</option>
-                      <option value="applications">Most Applications</option>
-                    </>
-                  )}
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
                   <Icon
                     icon="heroicons:chevron-down"
-                    className="h-4 w-4"
+                    className="h-4 h-4"
                     aria-hidden="true"
                   />
                 </div>

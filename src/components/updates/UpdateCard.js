@@ -41,7 +41,13 @@ export default function UpdateCard({ update, mode, onEdit, onDelete, viewMode = 
             </div>
             <div className="flex items-center gap-1">
               <Icon icon="heroicons:user-group" className="w-4 h-4" />
-              <span>{update.tier_restriction}</span>
+              <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                mode === "dark" 
+                  ? "bg-gray-700 text-gray-300" 
+                  : "bg-gray-100 text-gray-600"
+              }`}>
+                {update.tier_restriction || "N/A"}
+              </span>
             </div>
           </div>
         </div>
@@ -144,7 +150,13 @@ export default function UpdateCard({ update, mode, onEdit, onDelete, viewMode = 
           </div>
           <div className="flex items-center gap-1">
             <Icon icon="heroicons:user-group" className="w-4 h-4" />
-            <span>{update.tier_restriction}</span>
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+              mode === "dark" 
+                ? "bg-gray-700 text-gray-300" 
+                : "bg-gray-100 text-gray-600"
+            }`}>
+              {update.tier_restriction || "N/A"}
+            </span>
           </div>
         </div>
       </div>

@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/router";
 import toast, { Toaster } from "react-hot-toast";
+import { Icon } from "@iconify/react";
 import HRSidebar from "@/layouts/hrSidebar";
 import HRHeader from "@/layouts/hrHeader";
 import useSidebar from "@/hooks/useSidebar";
@@ -8,127 +9,293 @@ import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useMarketIntel } from "@/hooks/useMarketIntel";
 import SimpleFooter from "@/layouts/simpleFooter";
-import { createSupabaseServerClient } from "@/lib/supabaseServer";
-import MarketIntelHeader from "@/components/market-intel/MarketIntelHeader";
-import MarketIntelControls from "@/components/market-intel/MarketIntelControls";
-import MarketIntelForm from "@/components/market-intel/MarketIntelForm";
+import MarketIntelForm from "@/components/MarketIntelForm";
 import MarketIntelGrid from "@/components/market-intel/MarketIntelGrid";
+import AdvancedFilters from "@/components/AdvancedFilters";
+import ItemActionModal from "@/components/ItemActionModal";
+import useModals from "@/hooks/useModals";
+import { getAdminMarketIntelProps } from "utils/getPropsUtils";
+import { debounce } from "lodash";
+import { motion } from "framer-motion";
 
 export default function AdminMarketIntel({
   mode = "light",
   toggleMode,
-  initialCandidates,
+  initialMarketIntel,
+  breadcrumbs,
 }) {
-  const [isEditing, setIsEditing] = useState(false);
   const [showForm, setShowForm] = useState(false);
-  const [selectedFeedback, setSelectedFeedback] = useState(null);
+  const [viewMode, setViewMode] = useState("grid");
+  const [page, setPage] = useState(1);
+  const [showFilters, setShowFilters] = useState(true);
+  const [filterTerm, setFilterTerm] = useState("");
+  const [sortOrder, setSortOrder] = useState("newest");
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedTier, setSelectedTier] = useState("All");
+  const [selectedType, setSelectedType] = useState("All");
+  const [selectedRegion, setSelectedRegion] = useState("All");
   const [selectedIds, setSelectedIds] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
+  const [selectedDownloadable, setSelectedDownloadable] = useState("all");
+  const [selectedDateRange, setSelectedDateRange] = useState("all");
+  const [selectedRating, setSelectedRating] = useState("all");
+  const [selectedFeedbackCount, setSelectedFeedbackCount] = useState("all");
+  const itemsPerPage = 12;
   useAuthSession();
 
-const {
-  isSidebarOpen,
-  toggleSidebar,
-  sidebarState,
-  updateDragOffset,
-  isMobile,
-  isHovering,
-  handleMouseEnter,
-  handleMouseLeave,
-  handleOutsideClick,
-} = useSidebar();
+  const {
+    isSidebarOpen,
+    toggleSidebar,
+    sidebarState,
+    updateDragOffset,
+    isMobile,
+    isHovering,
+    handleMouseEnter,
+    handleMouseLeave,
+    handleOutsideClick,
+  } = useSidebar();
   
   const handleLogout = useLogout();
+
   const {
     marketIntel,
     formData,
+    setFormData,
     loading,
     sortBy,
+    setSortBy,
     filters,
+    updateFilters,
+    handleSearch,
     handleInputChange,
-    handleSubmit,
     handleEdit,
     handleDelete,
-    resetForm,
-    updateSort,
-    updateFilters,
-  } = useMarketIntel(initialCandidates);
+    handleSubmit,
+    getPDFUrl,
+  } = useMarketIntel();
+
+  const {
+    isModalOpen,
+    isUsersModalOpen,
+    isDeleteModalOpen,
+    selectedItemId,
+    isEditing,
+    editingId,
+    itemToDelete,
+    modalActions,
+  } = useModals({
+    handleEdit,
+    handleSubmit,
+    resetForm: () => {
+      handleEdit({
+        id: null,
+        title: "",
+        description: "",
+        category: "Governance",
+        cta_text: "",
+        cta_url: "",
+        tier_restriction: "Associate Member",
+        tags: "",
+      });
+    },
+  });
 
   const router = useRouter();
 
-  const handleEditClick = (intel) => {
-    handleEdit(intel);
-    setIsEditing(true);
+  const types = [
+    "All",
+    "Report",
+    "Analysis",
+    "Regional Insight",
+    "Data Visualization",
+  ];
+
+  const categories = [
+    "Governance",
+    "Technology",
+    "Finance",
+    "Healthcare",
+    "Education",
+    "Energy",
+    "Transportation",
+    "Manufacturing",
+    "Retail",
+    "Other"
+  ];
+
+  const regions = [
+    "All",
+    "Global",
+    "North America",
+    "South America",
+    "Europe",
+    "Asia Pacific",
+    "Middle East",
+    "Africa",
+  ];
+
+  const tiers = [
+    "All",
+    "Associate Member",
+    "Full Member",
+    "Premium Member",
+    "Enterprise Member",
+  ];
+
+  const resetFilters = () => {
+    setSelectedCategory("All");
+    setSelectedTier("All");
+    setSelectedType("All");
+    setSelectedRegion("All");
+    setFilterTerm("");
+    setSortOrder("newest");
+    updateFilters({
+      category: "All",
+      tier: "All",
+      type: "All",
+      region: "All",
+      search: "",
+    });
+  };
+
+  const isInitialMount = useRef(true);
+  const filterUpdateTimeout = useRef(null);
+
+  // Optimized filter update with debounce
+  const debouncedFilterUpdate = useCallback(
+    (filters) => {
+      if (filterUpdateTimeout.current) {
+        clearTimeout(filterUpdateTimeout.current);
+      }
+      
+      filterUpdateTimeout.current = setTimeout(() => {
+        updateFilters(filters);
+      }, 300);
+    },
+    [updateFilters]
+  );
+
+  // Update filters when selections change
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    const newFilters = {
+      tier: selectedTier,
+      region: selectedRegion,
+      type: selectedType,
+      search: filterTerm,
+    };
+    debouncedFilterUpdate(newFilters);
+
+    return () => {
+      if (filterUpdateTimeout.current) {
+        clearTimeout(filterUpdateTimeout.current);
+      }
+    };
+  }, [selectedTier, selectedRegion, selectedType, filterTerm, debouncedFilterUpdate]);
+
+  const handleCreateIntel = () => {
+    setFormData({
+      id: null,
+      title: "",
+      description: "",
+      tier_restriction: "Associate Member",
+      url: "",
+      icon_url: "",
+      region: "Global",
+      type: "Report",
+      downloadable: false,
+      chart_data: "",
+      file_path: "",
+    });
     setShowForm(true);
   };
 
+  const handleEditClick = async (intel) => {
+    setFormData(intel);
+    setShowForm(true);
+  };
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    const success = await handleSubmit(e);
+    if (success) {
+      setShowForm(false);
+      setFormData({
+        id: null,
+        title: "",
+        description: "",
+        tier_restriction: "Associate Member",
+        url: "",
+        icon_url: "",
+        region: "Global",
+        type: "Report",
+        downloadable: false,
+        chart_data: "",
+        file_path: "",
+      });
+    }
+  };
+
   const handleCancel = () => {
-    resetForm();
-    setIsEditing(false);
     setShowForm(false);
+    setFormData({
+      id: null,
+      title: "",
+      description: "",
+      tier_restriction: "Associate Member",
+      url: "",
+      icon_url: "",
+      region: "Global",
+      type: "Report",
+      downloadable: false,
+      chart_data: "",
+      file_path: "",
+    });
+  };
+
+  const confirmDelete = () => {
+    if (itemToDelete) {
+      handleDelete(itemToDelete.id);
+      modalActions.closeDeleteModal();
+    }
+  };
+
+  const loadMore = () => {
+    setPage(prev => prev + 1);
+  };
+
+  const handleDeleteClick = async (id) => {
+    const success = await handleDelete(id);
+    if (success) {
+      setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
+    }
   };
 
   const handleViewFeedback = (intel) => {
-    setSelectedFeedback(intel.feedback);
+    // View feedback logic here
   };
-
-  const handleBulkDelete = async () => {
-    if (selectedIds.length === 0) {
-      toast.error("Select at least one entry to delete");
-      return;
-    }
-    const confirmed = window.confirm(
-      `Are you sure you want to delete ${selectedIds.length} selected market intel entries?`
-    );
-    if (!confirmed) return;
-    try {
-      for (const id of selectedIds) {
-        await handleDelete(id);
-      }
-      setSelectedIds([]);
-      toast.success("Selected entries deleted");
-    } catch (err) {
-      toast.error("Failed to delete entries");
-    }
-  };
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      const formElement = document.querySelector(".market-intel-form");
-      if (formElement && !formElement.contains(event.target)) {
-        handleCancel();
-      }
-    };
-    if (showForm) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showForm]);
 
   return (
     <div
-      className={`min-h-screen flex flex-col ${
+      className={`min-h-screen flex flex-col antialiased ${
         mode === "dark"
-          ? "bg-gradient-to-br from-gray-900 to-gray-800"
-          : "bg-gradient-to-br from-gray-100 to-gray-200"
-      } overflow-hidden`}
+          ? "bg-gray-950 text-gray-100"
+          : "bg-gray-100 text-gray-900"
+      } transition-colors duration-300`}
     >
       <Toaster
-        position="top-center"
         toastOptions={{
-          className: `!${
+          className:
             mode === "dark"
-              ? "bg-gray-800 text-gray-200"
-              : "bg-white text-gray-800"
-          }`,
+              ? "bg-gray-800 text-gray-100 border-gray-700"
+              : "bg-white text-gray-900 border-gray-200",
           style: {
             borderRadius: "8px",
             padding: "12px",
-            boxShadow: "0 4px 12px rgba(0, 0, 0, 0.1)",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
           },
         }}
       />
@@ -139,18 +306,14 @@ const {
         mode={mode}
         toggleMode={toggleMode}
         onLogout={handleLogout}
-        pageName="Admin Market Intel"
-        pageDescription="Manage market intelligence reports, insights, and resources."
-        breadcrumbs={[
-          { label: "Dashboard", href: "/admin" },
-          { label: "Market Intel" },
-        ]}
+        pageName="Market Intel"
+        pageDescription="Manage market intelligence reports, analyses, and data visualizations."
+        breadcrumbs={breadcrumbs}
       />
-      <div className="flex flex-1 relative">
+      <div className="flex flex-1">
         <HRSidebar
           isSidebarOpen={isSidebarOpen}
           mode={mode}
-          toggleMode={toggleMode}
           toggleSidebar={toggleSidebar}
           onLogout={handleLogout}
           setDragOffset={updateDragOffset}
@@ -162,139 +325,267 @@ const {
           handleOutsideClick={handleOutsideClick}
         />
         <div
-          className={`flex-1 transition-all duration-300 overflow-auto`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "md:ml-64" : "md:ml-20"
+          } ${sidebarState.hidden ? "ml-0" : ""}`}
           style={{
             marginLeft: sidebarState.hidden
               ? "0px"
               : `${84 + (isSidebarOpen ? 120 : 0) + sidebarState.offset}px`,
           }}
         >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <MarketIntelHeader
-              mode={mode}
-              pageName="Admin Market Intel"
-              pageDescription="Curate cutting-edge market intelligence, regional insights, and interactive visualizations for members."
-              breadcrumbs={[
-                { label: "Dashboard", href: "/admin" },
-                { label: "Market Intel" },
-              ]}
-            />
-            <MarketIntelControls
-              mode={mode}
-              filters={filters}
-              sortBy={sortBy}
-              updateFilters={updateFilters}
-              updateSort={updateSort}
-              marketIntel={marketIntel}
-              selectedIds={selectedIds}
-              handleBulkDelete={handleBulkDelete}
-              setShowForm={setShowForm}
-              showForm={showForm}
-              loading={loading}
-            />
-            <MarketIntelForm
-              mode={mode}
-              formData={formData}
-              handleInputChange={handleInputChange}
-              handleSubmit={handleSubmit}
-              handleCancel={handleCancel}
-              isEditing={isEditing}
-              showForm={showForm}
-              className="market-intel-form"
-            />
-            <MarketIntelGrid
-              mode={mode}
-              marketIntel={marketIntel}
-              loading={loading}
-              selectedIds={selectedIds}
-              setSelectedIds={setSelectedIds}
-              handleEditClick={handleEditClick}
-              handleDelete={handleDelete}
-              handleViewFeedback={handleViewFeedback}
-              candidates={initialCandidates}
-              currentPage={currentPage}
-              setCurrentPage={setCurrentPage}
-              itemsPerPage={itemsPerPage}
-            />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="relative group">
+              <div
+                className={`absolute inset-0 rounded-2xl backdrop-blur-xl ${
+                  mode === "dark"
+                    ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60"
+                    : "bg-gradient-to-br from-white/80 via-white/20 to-white/80"
+                } border ${
+                  mode === "dark" ? "border-white/10" : "border-white/20"
+                } shadow-2xl group-hover:shadow-lg transition-all duration-500`}
+              ></div>
+              <div className="relative p-8 rounded-2xl mb-10">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <h1 className="text-2xl font-bold">
+                        Market Intelligence
+                      </h1>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-600 dark:text-gray-300 max-w-2xl">
+                        Manage market intelligence reports, analyses, and data visualizations. Create targeted content for specific membership tiers and track member engagement.
+                      </p>
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Icon icon="heroicons:document-text" className="w-4 h-4 text-blue-500" />
+                          <span className="text-gray-600 dark:text-gray-300">
+                            {marketIntel.length} total reports
+                          </span>
+                        </div>
+                        {marketIntel.length > 0 && (
+                          <div className="flex items-center gap-2">
+                            <Icon icon="heroicons:clock" className="w-4 h-4 text-purple-500" />
+                            <span className="text-gray-600 dark:text-gray-300">
+                              Last published {new Date(marketIntel[0].created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-6 md:mt-0 flex items-center gap-4">
+                    <button
+                      onClick={handleCreateIntel}
+                      className={`inline-flex items-center px-6 py-3 text-sm font-medium rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 focus:ring-2 focus:ring-offset-2 ${
+                        mode === "dark"
+                          ? "bg-gradient-to-r from-blue-400 to-blue-500 text-white hover:from-blue-600 hover:to-blue-600 focus:ring-blue-400 shadow-blue-500/20"
+                          : "bg-gradient-to-r from-blue-400 to-blue-700 text-white hover:from-blue-600 hover:to-blue-600 focus:ring-blue-500 shadow-blue-500/20"
+                      }`}
+                    >
+                      <Icon icon="heroicons:plus" className="w-5 h-5 mr-2" />
+                      New Report
+                    </button>
+                  </div>
+                </div>
+                <div
+                  className={`absolute top-2 right-2 w-12 sm:w-16 h-12 sm:h-16 opacity-10`}
+                >
+                  <div
+                    className={`w-full h-full rounded-full bg-gradient-to-br ${
+                      mode === "dark"
+                        ? "from-blue-400 to-blue-500"
+                        : "from-blue-400 to-blue-500"
+                    }`}
+                  ></div>
+                </div>
+                <div
+                  className={`absolute bottom-0 left-0 right-0 h-1 ${
+                    mode === "dark"
+                      ? "bg-gradient-to-r from-blue-400 via-blue-500 to-blue-500"
+                      : "bg-gradient-to-r from-[#3c82f6] to-[#dbe9fe]"
+                  }`}
+                ></div>
+                <div
+                  className={`absolute -bottom-1 -left-1 w-2 sm:w-3 h-2 sm:h-3 bg-[#f3584a] rounded-full opacity-40 animate-pulse delay-1000`}
+                ></div>
+              </div>
+            </div>
+
+            <div className="space-y-8">
+              <div className="relative group">
+                <div
+                  className={`absolute inset-0 rounded-2xl backdrop-blur-xl ${
+                    mode === "dark"
+                      ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60"
+                    : "bg-gradient-to-br from-white/80 via-white/20 to-white/80"
+                  } border ${
+                    mode === "dark" ? "border-white/10" : "border-white/20"
+                  } shadow-2xl group-hover:shadow-lg transition-all duration-500`}
+                ></div>
+                <div
+                  className={`relative rounded-2xl overflow-hidden shadow-lg border ${
+                    mode === "dark"
+                      ? "bg-gray-900 border-gray-800"
+                    : "bg-white border-gray-200"
+                  }`}
+                >
+                  <div className="p-6">
+                    <AdvancedFilters
+                      type="market-intel"
+                      mode={mode}
+                      loading={loading}
+                      viewMode={viewMode}
+                      setViewMode={setViewMode}
+                      filterTerm={filterTerm}
+                      setFilterTerm={(value) => {
+                        setFilterTerm(value);
+                        updateFilters({ search: value });
+                      }}
+                      sortOrder={sortOrder}
+                      setSortOrder={setSortOrder}
+                      showFilters={showFilters}
+                      setShowFilters={setShowFilters}
+                      items={marketIntel}
+                      selectedCategory={selectedCategory}
+                      onCategoryChange={(value) => {
+                        setSelectedCategory(value);
+                        updateFilters({ category: value });
+                      }}
+                      categories={categories}
+                      selectedType={selectedType}
+                      onTypeChange={(value) => {
+                        setSelectedType(value);
+                        updateFilters({ type: value });
+                      }}
+                      types={types}
+                      selectedRegion={selectedRegion}
+                      onRegionChange={(value) => {
+                        setSelectedRegion(value);
+                        updateFilters({ region: value });
+                      }}
+                      regions={regions}
+                      selectedTier={selectedTier}
+                      onTierChange={(value) => {
+                        setSelectedTier(value);
+                        updateFilters({ tier: value });
+                      }}
+                      tiers={tiers}
+                      onResetFilters={resetFilters}
+                    />
+
+                    <div className="mt-8">
+                      <MarketIntelGrid
+                        marketIntel={marketIntel}
+                        loading={loading}
+                        selectedIds={selectedIds}
+                        setSelectedIds={setSelectedIds}
+                        handleEditClick={handleEditClick}
+                        handleDelete={handleDeleteClick}
+                        handleViewFeedback={handleViewFeedback}
+                        currentPage={page}
+                        setCurrentPage={setPage}
+                        itemsPerPage={itemsPerPage}
+                        viewMode={viewMode}
+                        setViewMode={setViewMode}
+                        filterTerm={filterTerm}
+                        selectedCategory={selectedCategory}
+                        selectedTier={selectedTier}
+                        selectedType={selectedType}
+                        selectedRegion={selectedRegion}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div
+                  className={`absolute bottom-0 left-0 right-0 h-1 ${
+                    mode === "dark"
+                      ? "bg-gradient-to-r from-blue-400 via-blue-500 to-blue-500"
+                    : "bg-gradient-to-r from-[#3c82f6] to-[#dbe9fe]"
+                  }`}
+                ></div>
+                <div
+                  className={`absolute -top-1 sm:-top-2 -right-1 sm:-right-2 w-3 sm:w-4 h-3 sm:h-4 bg-[#85c2da] rounded-full opacity-60`}
+                ></div>
+                <div
+                  className={`absolute -bottom-1 -left-1 w-2 sm:w-3 h-2 sm:h-3 bg-[#f3584a] rounded-full opacity-40 animate-pulse delay-1000`}
+                ></div>
+              </div>
+            </div>
           </div>
           <SimpleFooter mode={mode} isSidebarOpen={isSidebarOpen} />
         </div>
+
+        {isModalOpen && (
+          <div
+            className={`fixed inset-0 bg-black/30 backdrop-blur-md z-40`}
+          />
+        )}
+
+        <MarketIntelForm
+          showForm={showForm}
+          mode={mode}
+          formData={formData}
+          handleInputChange={handleInputChange}
+          handleSubmit={handleFormSubmit}
+          handleCancel={handleCancel}
+          loading={loading}
+          isEditing={!!formData.id}
+          categories={categories}
+          memberCount={0}
+          getPDFUrl={getPDFUrl}
+        />
+
+        <ItemActionModal
+          isOpen={isDeleteModalOpen}
+          onClose={modalActions.closeDeleteModal}
+          title="Confirm Deletion"
+          mode={mode}
+        >
+          <div className="space-y-6">
+            <p
+              className={`text-sm ${
+                mode === "dark" ? "text-gray-300" : "text-gray-600"
+              }`}
+            >
+              Are you sure you want to delete the report{" "}
+              <strong>
+                &quot;
+                {itemToDelete?.title || ""}
+                &quot;
+              </strong>
+              ? This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={modalActions.closeDeleteModal}
+                className={`px-6 py-3 text-sm font-medium rounded-xl border transition-all duration-200 flex items-center shadow-sm ${
+                  mode === "dark"
+                    ? "border-gray-600 text-gray-200 bg-gray-800 hover:bg-gray-700"
+                    : "border-gray-200 text-gray-700 bg-white hover:bg-gray-50"
+                }`}
+              >
+                <Icon icon="heroicons:x-mark" className="h-4 w-4 mr-2" />
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className={`px-6 py-3 text-sm font-medium rounded-xl text-white bg-red-600 hover:bg-red-700 transition-all duration-200 flex items-center shadow-sm ${
+                  mode === "dark" ? "shadow-white/10" : "shadow-gray-200"
+                }`}
+              >
+                <Icon icon="heroicons:trash" className="h-4 w-4 mr-2" />
+                Delete
+              </button>
+            </div>
+          </div>
+        </ItemActionModal>
       </div>
     </div>
   );
 }
 
 export async function getServerSideProps({ req, res }) {
-  try {
-    const supabaseServer = createSupabaseServerClient(req, res);
-
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabaseServer.auth.getSession();
-
-    if (sessionError || !session) {
-      return {
-        redirect: {
-          destination: "/hr/login",
-          permanent: false,
-        },
-      };
-    }
-
-    const { data: hrUser, error: hrUserError } = await supabaseServer
-      .from("hr_users")
-      .select("id")
-      .eq("id", session.user.id)
-      .single();
-
-    if (hrUserError || !hrUser) {
-      console.error(
-        "[AdminMarketIntel] HR User Error:",
-        hrUserError?.message || "User not in hr_users"
-      );
-      await supabaseServer.auth.signOut();
-      return {
-        redirect: {
-          destination: "/hr/login",
-          permanent: false,
-        },
-      };
-    }
-
-    // Fetch candidates
-    const { data: candidatesData, error: candidatesError } =
-      await supabaseServer
-        .from("candidates")
-        .select("id, auth_user_id, primaryContactName");
-
-    if (candidatesError) {
-      console.error(
-        "[AdminMarketIntel] Candidates Error:",
-        candidatesError.message
-      );
-      throw new Error(`Failed to fetch candidates: ${candidatesError.message}`);
-    }
-
-    const candidatesMap = candidatesData.reduce((acc, candidate) => {
-      if (candidate.auth_user_id) {
-        acc[candidate.auth_user_id] = candidate.primaryContactName || "Unknown";
-      }
-      return acc;
-    }, {});
-
-    return {
-      props: {
-        initialCandidates: candidatesMap,
-      },
-    };
-  } catch (error) {
-    console.error("[AdminMarketIntel] Error:", error.message);
-    return {
-      redirect: {
-        destination: "/hr/login",
-        permanent: false,
-      },
-    };
-  }
+  return await getAdminMarketIntelProps({ req, res });
 }

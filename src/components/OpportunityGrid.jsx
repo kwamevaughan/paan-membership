@@ -448,7 +448,7 @@ export default function OpportunityGrid({
                     <Icon icon="mdi:account-group" className="w-4 h-4" />
                   </button>
                   <button
-                    onClick={() => onEdit(true, opp)}
+                    onClick={() => onEdit(opp)}
                     className="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition"
                     title="Edit opportunity"
                   >

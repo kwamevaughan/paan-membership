@@ -3,16 +3,17 @@ import { useState } from "react";
 export default function useModals({ handleEdit, handleSubmit, resetForm }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isUsersModalOpen, setIsUsersModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [selectedOpportunityId, setSelectedOpportunityId] = useState(null);
+  const [itemToDelete, setItemToDelete] = useState(null);
 
-  const openModal = (editMode = false, opp = null) => {
-    if (editMode && opp) {
-      
-      handleEdit(opp);
+  const openModal = (editMode = false, item = null) => {
+    if (editMode && item) {
+      handleEdit(item);
       setIsEditing(true);
-      setEditingId(opp.id);
+      setEditingId(item.id);
     } else {
       setIsEditing(false);
       setEditingId(null);
@@ -28,12 +29,12 @@ export default function useModals({ handleEdit, handleSubmit, resetForm }) {
     resetForm();
   };
 
-  const openUsersModal = (opportunityId) => {
-    if (!opportunityId) {
-      console.error("[useModals] No opportunity ID provided");
+  const openUsersModal = (itemId) => {
+    if (!itemId) {
+      console.error("[useModals] No item ID provided");
       return;
     }
-    setSelectedOpportunityId(opportunityId);
+    setSelectedOpportunityId(itemId);
     setIsUsersModalOpen(true);
   };
 
@@ -42,23 +43,37 @@ export default function useModals({ handleEdit, handleSubmit, resetForm }) {
     setSelectedOpportunityId(null);
   };
 
-  const submitForm = (e, id) => {
+  const openDeleteModal = (item) => {
+    setItemToDelete(item);
+    setIsDeleteModalOpen(true);
+  };
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+    setItemToDelete(null);
+  };
+
+  const submitForm = (e) => {
     e.preventDefault();
-    handleSubmit(e, id);
+    handleSubmit(e, editingId);
     closeModal();
   };
 
   return {
     isModalOpen,
     isUsersModalOpen,
+    isDeleteModalOpen,
     selectedOpportunityId,
     isEditing,
     editingId,
+    itemToDelete,
     modalActions: {
       openModal,
       closeModal,
       openUsersModal,
       closeUsersModal,
+      openDeleteModal,
+      closeDeleteModal,
       submitForm,
     },
   };

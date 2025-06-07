@@ -387,3 +387,55 @@ export async function getApplicantsProps({ req, res }) {
     };
   }
 }
+
+export async function getAdminMarketIntelProps({ req, res }) {
+  console.log("[getAdminMarketIntelProps] Starting at", new Date().toISOString());
+
+  // Authenticate and authorize
+  const authResult = await withAuth(req, res);
+  if (authResult.redirect) {
+    return authResult;
+  }
+
+  const { supabaseServer } = authResult;
+
+  try {
+    // Fetch candidates
+    const { data: candidatesData, error: candidatesError } = await supabaseServer
+      .from("candidates")
+      .select("id, auth_user_id, primaryContactName");
+
+    if (candidatesError) {
+      console.error(
+        "[getAdminMarketIntelProps] Candidates Error:",
+        candidatesError.message
+      );
+      throw new Error(`Failed to fetch candidates: ${candidatesError.message}`);
+    }
+
+    const candidatesMap = candidatesData.reduce((acc, candidate) => {
+      if (candidate.auth_user_id) {
+        acc[candidate.auth_user_id] = candidate.primaryContactName || "Unknown";
+      }
+      return acc;
+    }, {});
+
+    return {
+      props: {
+        initialCandidates: candidatesMap,
+        breadcrumbs: [
+          { label: "HR Dashboard", href: "/hr/dashboard" },
+          { label: "Market Intel" },
+        ],
+      },
+    };
+  } catch (error) {
+    console.error("[getAdminMarketIntelProps] Error:", error.message);
+    return {
+      redirect: {
+        destination: "/hr/login",
+        permanent: false,
+      },
+    };
+  }
+}

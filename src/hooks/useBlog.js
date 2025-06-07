@@ -9,14 +9,16 @@ export const useBlog = () => {
     id: null,
     article_name: "",
     article_body: "",
-    article_category: "General",
-    article_tags: [],
+    category_id: null,
+    tag_ids: [],
     article_image: "",
     meta_title: "",
     meta_description: "",
     meta_keywords: "",
     slug: "",
     is_published: false,
+    is_draft: false,
+    publish_date: null,
   });
   const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState("newest");
@@ -37,13 +39,26 @@ export const useBlog = () => {
 
       const { data, error } = await supabase
         .from("blogs")
-        .select("*")
+        .select(`
+          *,
+          category:blog_categories(name),
+          tags:blog_post_tags(
+            tag:blog_tags(name)
+          )
+        `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      setBlogs(data || []);
-      setFilteredBlogs(data || []);
+      // Transform the data to include category name and tag names
+      const transformedData = data.map(blog => ({
+        ...blog,
+        article_category: blog.category?.name || null,
+        article_tags: blog.tags?.map(t => t.tag.name) || []
+      }));
+
+      setBlogs(transformedData || []);
+      setFilteredBlogs(transformedData || []);
     } catch (error) {
       console.error("Error fetching blogs:", error);
       toast.error("Failed to fetch blog posts");
@@ -126,29 +141,43 @@ export const useBlog = () => {
         throw new Error("Not authenticated");
       }
 
-      const blogData = {
-        ...formData,
-        updated_at: new Date().toISOString(),
-      };
+      const { category_id, tag_ids, ...blogData } = formData;
 
-      if (formData.id) {
-        // Update existing blog
-        const { error } = await supabase
-          .from("blogs")
-          .update(blogData)
-          .eq("id", formData.id);
+      // Start a transaction
+      const { data: blog, error: blogError } = await supabase
+        .from("blogs")
+        .upsert({
+          ...blogData,
+          updated_at: new Date().toISOString(),
+          created_at: formData.id ? undefined : new Date().toISOString(),
+        })
+        .select()
+        .single();
 
-        if (error) throw error;
-        toast.success("Blog post updated successfully");
-      } else {
-        // Create new blog
-        blogData.created_at = new Date().toISOString();
-        const { error } = await supabase.from("blogs").insert([blogData]);
+      if (blogError) throw blogError;
 
-        if (error) throw error;
-        toast.success("Blog post created successfully");
+      // Handle tags
+      if (tag_ids && tag_ids.length > 0) {
+        // Delete existing tags
+        await supabase
+          .from("blog_post_tags")
+          .delete()
+          .eq("blog_id", blog.id);
+
+        // Insert new tags
+        const tagInserts = tag_ids.map(tag_id => ({
+          blog_id: blog.id,
+          tag_id: tag_id
+        }));
+
+        const { error: tagError } = await supabase
+          .from("blog_post_tags")
+          .insert(tagInserts);
+
+        if (tagError) throw tagError;
       }
 
+      toast.success(formData.id ? "Blog post updated successfully" : "Blog post created successfully");
       await fetchBlogs();
       return true;
     } catch (error) {
@@ -169,6 +198,7 @@ export const useBlog = () => {
         throw new Error("Not authenticated");
       }
 
+      // Delete blog post (cascade will handle blog_post_tags)
       const { error } = await supabase.from("blogs").delete().eq("id", id);
 
       if (error) throw error;
@@ -186,7 +216,12 @@ export const useBlog = () => {
   };
 
   const handleEdit = (blog) => {
-    setFormData(blog);
+    // Transform the blog data to match the form structure
+    setFormData({
+      ...blog,
+      category_id: blog.category_id,
+      tag_ids: blog.tags?.map(t => t.tag_id) || []
+    });
   };
 
   const updateFilters = (newFilters) => {

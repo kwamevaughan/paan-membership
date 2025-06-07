@@ -180,8 +180,8 @@ export default function BlogForm({
             Category *
           </label>
           <select
-            name="article_category"
-            value={formData.article_category}
+            name="category_id"
+            value={formData.category_id}
             onChange={handleInputChange}
             required
             className={`w-full px-4 py-3 rounded-xl ${
@@ -192,8 +192,8 @@ export default function BlogForm({
           >
             <option value="">Select a category</option>
             {categories.map((category) => (
-              <option key={category} value={category}>
-                {category}
+              <option key={category.id} value={category.id}>
+                {category.name}
               </option>
             ))}
           </select>
@@ -208,9 +208,9 @@ export default function BlogForm({
             Tags
           </label>
           <select
-            name="article_tags"
+            name="tag_ids"
             multiple
-            value={formData.article_tags}
+            value={formData.tag_ids || []}
             onChange={handleInputChange}
             className={`w-full px-4 py-3 rounded-xl ${
               mode === "dark"
@@ -219,8 +219,8 @@ export default function BlogForm({
             } focus:ring-2 focus:ring-indigo-500 backdrop-blur-sm h-24`}
           >
             {tags.map((tag) => (
-              <option key={tag} value={tag}>
-                {tag}
+              <option key={tag.id} value={tag.id}>
+                {tag.name}
               </option>
             ))}
           </select>
@@ -415,27 +415,103 @@ export default function BlogForm({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            name="is_published"
-            id="is_published"
-            checked={formData.is_published}
-            onChange={handleInputChange}
-            className={`w-4 h-4 rounded ${
-              mode === "dark"
-                ? "bg-gray-700 border-gray-600"
-                : "bg-white border-gray-300"
-            }`}
-          />
-          <label
-            htmlFor="is_published"
-            className={`text-sm font-medium ${
-              mode === "dark" ? "text-gray-300" : "text-gray-700"
+        <div className="space-y-4">
+          <h3
+            className={`text-lg font-medium ${
+              mode === "dark" ? "text-gray-200" : "text-gray-900"
             }`}
           >
-            Publish immediately
-          </label>
+            Publishing Options
+          </h3>
+
+          <div className="space-y-4">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                name="is_draft"
+                id="is_draft"
+                checked={formData.is_draft}
+                onChange={handleInputChange}
+                className={`w-4 h-4 rounded ${
+                  mode === "dark"
+                    ? "bg-gray-700 border-gray-600"
+                    : "bg-white border-gray-300"
+                }`}
+              />
+              <label
+                htmlFor="is_draft"
+                className={`text-sm font-medium ${
+                  mode === "dark" ? "text-gray-300" : "text-gray-700"
+                }`}
+              >
+                Save as Draft
+              </label>
+            </div>
+
+            {!formData.is_draft && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    name="is_published"
+                    id="is_published"
+                    checked={formData.is_published}
+                    onChange={handleInputChange}
+                    className={`w-4 h-4 rounded ${
+                      mode === "dark"
+                        ? "bg-gray-700 border-gray-600"
+                        : "bg-white border-gray-300"
+                    }`}
+                  />
+                  <label
+                    htmlFor="is_published"
+                    className={`text-sm font-medium ${
+                      mode === "dark" ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    Publish immediately
+                  </label>
+                </div>
+
+                {!formData.is_published && (
+                  <div>
+                    <label
+                      className={`block text-sm font-medium ${
+                        mode === "dark" ? "text-gray-300" : "text-gray-700"
+                      } mb-2`}
+                    >
+                      Schedule Publication Date
+                    </label>
+                    <input
+                      type="datetime-local"
+                      name="publish_date"
+                      value={formData.publish_date || ""}
+                      onChange={handleInputChange}
+                      min={new Date().toISOString().slice(0, 16)}
+                      className={`w-full px-4 py-3 rounded-xl ${
+                        mode === "dark"
+                          ? "bg-gray-800/80 text-white border-gray-700/50"
+                          : "bg-white/80 text-gray-900 border-gray-200/50"
+                      } focus:ring-2 focus:ring-indigo-500 backdrop-blur-sm`}
+                    />
+                    <p className={`mt-1 text-xs ${
+                      mode === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}>
+                      Leave empty to keep as draft
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {formData.is_draft && (
+              <div className={`text-sm ${
+                mode === "dark" ? "text-gray-400" : "text-gray-500"
+              }`}>
+                Draft posts are only visible to administrators and can be edited before publishing.
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="flex gap-4">
@@ -459,7 +535,7 @@ export default function BlogForm({
             ) : (
               <>
                 <Icon icon="heroicons:check" className="w-5 h-5 mr-2" />
-                {isEditing ? "Update" : "Create"}
+                {formData.is_draft ? "Save Draft" : isEditing ? "Update" : "Create"}
               </>
             )}
           </button>

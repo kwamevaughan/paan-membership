@@ -452,10 +452,16 @@ export async function getAdminBlogProps({ req, res }) {
   const { supabaseServer, session } = authResult;
 
   try {
-    // Fetch blogs
+    // Fetch blogs with their categories and tags
     const { data: blogsData, error: blogsError } = await supabaseServer
       .from("blogs")
-      .select("*")
+      .select(`
+        *,
+        category:blog_categories(name),
+        tags:blog_post_tags(
+          tag:blog_tags(name)
+        )
+      `)
       .order("created_at", { ascending: false });
 
     if (blogsError) {
@@ -466,9 +472,33 @@ export async function getAdminBlogProps({ req, res }) {
       throw new Error(`Failed to fetch blogs: ${blogsError.message}`);
     }
 
-    // Get unique categories and tags
-    const categories = [...new Set(blogsData.map(blog => blog.article_category))].filter(Boolean);
-    const tags = [...new Set(blogsData.flatMap(blog => blog.article_tags || []))].filter(Boolean);
+    // Fetch all categories
+    const { data: categoriesData, error: categoriesError } = await supabaseServer
+      .from("blog_categories")
+      .select("id, name, slug")
+      .order("name");
+
+    if (categoriesError) {
+      console.error(
+        "[getAdminBlogProps] Categories Error:",
+        categoriesError.message
+      );
+      throw new Error(`Failed to fetch categories: ${categoriesError.message}`);
+    }
+
+    // Fetch all tags
+    const { data: tagsData, error: tagsError } = await supabaseServer
+      .from("blog_tags")
+      .select("id, name, slug")
+      .order("name");
+
+    if (tagsError) {
+      console.error(
+        "[getAdminBlogProps] Tags Error:",
+        tagsError.message
+      );
+      throw new Error(`Failed to fetch tags: ${tagsError.message}`);
+    }
 
     // Fetch hr user data
     const { data: hrUser, error: hrUserError } = await supabaseServer
@@ -485,11 +515,18 @@ export async function getAdminBlogProps({ req, res }) {
       throw new Error(`Failed to fetch HR user: ${hrUserError.message}`);
     }
 
+    // Transform blogs data to include category name and tag names
+    const transformedBlogs = blogsData.map(blog => ({
+      ...blog,
+      article_category: blog.category?.name || null,
+      article_tags: blog.tags?.map(t => t.tag.name) || []
+    }));
+
     return {
       props: {
-        initialBlogs: blogsData || [],
-        categories: ["All", ...categories],
-        tags: tags,
+        initialBlogs: transformedBlogs || [],
+        categories: categoriesData || [],
+        tags: tagsData || [],
         hrUser: hrUser,
         breadcrumbs: [
           { label: "Dashboard", href: "/admin" },

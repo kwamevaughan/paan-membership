@@ -57,72 +57,58 @@ export default function AdvancedFilters({
   const [projectTypes, setProjectTypes] = useState([]);
 
   // Add function to check if any filters are active
-  const hasActiveFilters = () => {
-    // Check if search term is not empty
-    if (filterTerm && filterTerm.trim() !== "") return true;
-    
-    // Check if any filter is not at its default value
-    const defaultValues = {
-      filterType: "all",
-      filterJobType: "all",
-      filterProjectType: "all",
-      filterStatus: "all",
-      filterApplications: "all",
-      sortOrder: "newest",
-      selectedTags: []
-    };
-
-    // For opportunity type
+  const hasActiveFilters = (type, filters) => {
     if (type === "opportunity") {
-      if (filterType?.toLowerCase() !== defaultValues.filterType) return true;
-      if (filterJobType?.toLowerCase() !== defaultValues.filterJobType) return true;
-      if (filterProjectType?.toLowerCase() !== defaultValues.filterProjectType) return true;
-      if (filterStatus?.toLowerCase() !== defaultValues.filterStatus) return true;
-      if (filterApplications?.toLowerCase() !== defaultValues.filterApplications) return true;
-      if (sortOrder !== defaultValues.sortOrder) return true;
+      return (
+        filters.filterTerm !== "" ||
+        filters.filterType !== "all" ||
+        filters.filterJobType !== "all" ||
+        filters.filterProjectType !== "all" ||
+        filters.filterStatus !== "all" ||
+        filters.filterApplications !== "all" ||
+        filters.sortOrder !== "newest"
+      );
+    } else if (type === "update") {
+      return (
+        filters.filterTerm !== "" ||
+        filters.selectedCategory !== "All" ||
+        filters.selectedTier !== "All" ||
+        filters.sortOrder !== "newest"
+      );
+    } else if (type === "blog") {
+      return (
+        filters.filterTerm !== "" ||
+        filters.selectedCategory !== "All" ||
+        filters.selectedTags.length > 0 ||
+        filters.sortOrder !== "newest"
+      );
     }
-    // For update type
-    else if (type === "update") {
-      if (selectedCategory?.toLowerCase() !== "all") return true;
-      if (selectedTier?.toLowerCase() !== "all") return true;
-      if (sortOrder !== defaultValues.sortOrder) return true;
-      if (selectedTags?.length > 0) return true;
-    }
-    // For market intel type
-    else if (type === "market-intel") {
-      if (selectedCategory?.toLowerCase() !== "all") return true;
-      if (selectedTier?.toLowerCase() !== "all") return true;
-      if (selectedType?.toLowerCase() !== "all") return true;
-      if (selectedRegion?.toLowerCase() !== "all") return true;
-      if (sortOrder !== defaultValues.sortOrder) return true;
-    }
-
     return false;
   };
 
   // Add reset filters function
-  const resetFilters = () => {
-    setFilterTerm("");
-    setSortOrder("newest");
-    
+  const resetFilters = (type, filters, onResetFilters) => {
     if (type === "opportunity") {
-      setFilterType("all");
-      setFilterJobType("all");
-      setFilterProjectType("all");
-      setFilterStatus("all");
-      setFilterApplications("all");
+      filters.setFilterTerm("");
+      filters.setFilterType("all");
+      filters.setFilterJobType("all");
+      filters.setFilterProjectType("all");
+      filters.setFilterStatus("all");
+      filters.setFilterApplications("all");
+      filters.setSortOrder("newest");
+    } else if (type === "update") {
+      filters.setFilterTerm("");
+      filters.setSelectedCategory("All");
+      filters.setSelectedTier("All");
+      filters.setSortOrder("newest");
+    } else if (type === "blog") {
+      filters.setFilterTerm("");
+      filters.setSelectedCategory("All");
+      filters.setSelectedTags([]);
+      filters.setSortOrder("newest");
     }
-    else if (type === "update") {
-      onCategoryChange("all");
-      onTierChange("all");
-      onTagsChange([]);
-    }
-    else if (type === "market-intel") {
-      onCategoryChange("all");
-      onTierChange("all");
-      onTypeChange("all");
-      onRegionChange("all");
-      if (onResetFilters) onResetFilters();
+    if (onResetFilters) {
+      onResetFilters();
     }
   };
 
@@ -132,6 +118,31 @@ export default function AdvancedFilters({
       setProjectTypes(types);
     }
   }, [items, type]);
+
+  const filters = {
+    filterTerm,
+    setFilterTerm,
+    filterType,
+    setFilterType,
+    filterJobType,
+    setFilterJobType,
+    filterProjectType,
+    setFilterProjectType,
+    filterStatus,
+    setFilterStatus,
+    filterApplications,
+    setFilterApplications,
+    selectedCategory,
+    setSelectedCategory: onCategoryChange,
+    selectedTier,
+    setSelectedTier: onTierChange,
+    selectedTags,
+    setSelectedTags: onTagsChange,
+    sortOrder,
+    setSortOrder,
+  };
+
+  const hasFilters = hasActiveFilters(type, filters);
 
   return (
     <div className="p-6 dark:bg-gray-900 rounded-xl shadow-lg hover:shadow-md transition-all duration-300">
@@ -155,7 +166,7 @@ export default function AdvancedFilters({
                 ? "border-gray-700 bg-gray-800 text-white placeholder-gray-400 focus:ring-blue-600 focus:border-blue-600"
                 : "border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
             } disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none shadow-sm`}
-            placeholder={`Search ${type === "opportunity" ? "opportunities" : type === "update" ? "updates" : "market-intel items"}...`}
+            placeholder={`Search ${type === "opportunity" ? "opportunities" : type === "update" ? "updates" : "blog posts"}...`}
           />
           {loading && (
             <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
@@ -171,9 +182,9 @@ export default function AdvancedFilters({
         {/* Controls */}
         <div className="flex flex-wrap items-center gap-3 z-10">
           {/* Reset Filters Button - Only show when filters are active */}
-          {hasActiveFilters() && (
+          {hasFilters && (
             <button
-              onClick={resetFilters}
+              onClick={() => resetFilters(type, filters, onResetFilters)}
               disabled={loading}
               className={`inline-flex items-center space-x-1.5 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200 ${
                 mode === "dark"

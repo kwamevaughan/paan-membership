@@ -439,3 +439,55 @@ export async function getAdminMarketIntelProps({ req, res }) {
     };
   }
 }
+
+export async function getAdminBlogProps({ req, res }) {
+  console.log("[getAdminBlogProps] Starting at", new Date().toISOString());
+
+  // Authenticate and authorize
+  const authResult = await withAuth(req, res);
+  if (authResult.redirect) {
+    return authResult;
+  }
+
+  const { supabaseServer } = authResult;
+
+  try {
+    // Fetch blogs
+    const { data: blogsData, error: blogsError } = await supabaseServer
+      .from("blogs")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (blogsError) {
+      console.error(
+        "[getAdminBlogProps] Blogs Error:",
+        blogsError.message
+      );
+      throw new Error(`Failed to fetch blogs: ${blogsError.message}`);
+    }
+
+    // Get unique categories and tags
+    const categories = [...new Set(blogsData.map(blog => blog.article_category))].filter(Boolean);
+    const tags = [...new Set(blogsData.flatMap(blog => blog.article_tags || []))].filter(Boolean);
+
+    return {
+      props: {
+        initialBlogs: blogsData || [],
+        categories: ["All", ...categories],
+        tags: tags,
+        breadcrumbs: [
+          { label: "Dashboard", href: "/admin" },
+          { label: "Blog" },
+        ],
+      },
+    };
+  } catch (error) {
+    console.error("[getAdminBlogProps] Error:", error.message);
+    return {
+      redirect: {
+        destination: "/hr/login",
+        permanent: false,
+      },
+    };
+  }
+}

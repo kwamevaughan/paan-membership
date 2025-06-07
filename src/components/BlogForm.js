@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import ItemActionModal from "./ItemActionModal";
 import { Icon } from "@iconify/react";
+import ImageKit from "imagekit-javascript";
 
 // Dynamically import EditorComponent for client-side only
 const EditorComponent = dynamic(() => import("./EditorComponent"), {
@@ -15,13 +16,17 @@ export default function BlogForm({
   formData,
   handleInputChange,
   handleSubmit,
-  onCancel,
+  handleCancel,
   loading,
   isEditing,
   categories,
   tags,
+  hrUser,
 }) {
   const [editorContent, setEditorContent] = useState("");
+  const [imageSource, setImageSource] = useState(formData.article_image ? "url" : "upload");
+  const [uploadedImage, setUploadedImage] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     if (formData.article_body) {
@@ -53,14 +58,45 @@ export default function BlogForm({
     handleInputChange({ target: { name: "slug", value: slug } });
   };
 
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    try {
+      const imagekit = new ImageKit({
+        publicKey: process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY,
+        urlEndpoint: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT,
+        authenticationEndpoint: "/api/imagekit/auth",
+      });
+
+      const result = await imagekit.upload({
+        file,
+        fileName: `${Date.now()}-${file.name}`,
+        folder: "Blog",
+      });
+
+      setUploadedImage(result.url);
+      handleInputChange({ target: { name: "article_image", value: result.url } });
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      toast.error("Failed to upload image. Please try again.");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <ItemActionModal
       isOpen={showForm}
-      onClose={onCancel}
+      onClose={handleCancel}
       title={isEditing ? "Edit Blog Post" : "Create New Blog Post"}
       mode={mode}
     >
-      <form onSubmit={(e) => handleSubmit(e, onCancel)} className="space-y-6">
+      <form
+        onSubmit={handleSubmit}
+        className="space-y-6"
+      >
         <div>
           <label
             className={`block text-sm font-medium ${
@@ -81,6 +117,27 @@ export default function BlogForm({
                 : "bg-white/80 text-gray-900 border-gray-200/50"
             } focus:ring-2 focus:ring-indigo-500 backdrop-blur-sm`}
             placeholder="Enter blog title"
+          />
+        </div>
+
+        <div>
+          <label
+            className={`block text-sm font-medium ${
+              mode === "dark" ? "text-gray-300" : "text-gray-700"
+            } mb-2`}
+          >
+            Author *
+          </label>
+          <input
+            type="text"
+            name="author"
+            value={hrUser?.name || "Unknown Author"}
+            readOnly
+            className={`w-full px-4 py-3 rounded-xl ${
+              mode === "dark"
+                ? "bg-gray-800/80 text-white border-gray-700/50"
+                : "bg-white/80 text-gray-900 border-gray-200/50"
+            } focus:ring-2 focus:ring-indigo-500 backdrop-blur-sm`}
           />
         </div>
 
@@ -168,20 +225,89 @@ export default function BlogForm({
               mode === "dark" ? "text-gray-300" : "text-gray-700"
             } mb-2`}
           >
-            Featured Image URL
+            Featured Image
           </label>
-          <input
-            type="url"
-            name="article_image"
-            value={formData.article_image}
-            onChange={handleInputChange}
-            className={`w-full px-4 py-3 rounded-xl ${
-              mode === "dark"
-                ? "bg-gray-800/80 text-white border-gray-700/50"
-                : "bg-white/80 text-gray-900 border-gray-200/50"
-            } focus:ring-2 focus:ring-indigo-500 backdrop-blur-sm`}
-            placeholder="https://example.com/image.jpg"
-          />
+          <div className="space-y-4">
+            <div className="flex gap-4">
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="imageSource"
+                  value="url"
+                  checked={imageSource === "url"}
+                  onChange={(e) => setImageSource(e.target.value)}
+                  className={`w-4 h-4 ${
+                    mode === "dark"
+                      ? "bg-gray-700 border-gray-600"
+                      : "bg-white border-gray-300"
+                  }`}
+                />
+                <span className={`text-sm ${
+                  mode === "dark" ? "text-gray-300" : "text-gray-700"
+                }`}>External URL</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="radio"
+                  name="imageSource"
+                  value="upload"
+                  checked={imageSource === "upload"}
+                  onChange={(e) => setImageSource(e.target.value)}
+                  className={`w-4 h-4 ${
+                    mode === "dark"
+                      ? "bg-gray-700 border-gray-600"
+                      : "bg-white border-gray-300"
+                  }`}
+                />
+                <span className={`text-sm ${
+                  mode === "dark" ? "text-gray-300" : "text-gray-700"
+                }`}>Upload Image</span>
+              </label>
+            </div>
+
+            {imageSource === "url" ? (
+              <input
+                type="url"
+                name="article_image"
+                value={formData.article_image}
+                onChange={handleInputChange}
+                className={`w-full px-4 py-3 rounded-xl ${
+                  mode === "dark"
+                    ? "bg-gray-800/80 text-white border-gray-700/50"
+                    : "bg-white/80 text-gray-900 border-gray-200/50"
+                } focus:ring-2 focus:ring-indigo-500 backdrop-blur-sm`}
+                placeholder="https://example.com/image.jpg"
+              />
+            ) : (
+              <div className="space-y-2">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className={`w-full px-4 py-3 rounded-xl ${
+                    mode === "dark"
+                      ? "bg-gray-800/80 text-white border-gray-700/50"
+                      : "bg-white/80 text-gray-900 border-gray-200/50"
+                  } focus:ring-2 focus:ring-indigo-500 backdrop-blur-sm`}
+                />
+                {uploading && (
+                  <div className="flex items-center gap-2 text-sm text-blue-500">
+                    <Icon icon="heroicons:arrow-path" className="w-4 h-4 animate-spin" />
+                    Uploading...
+                  </div>
+                )}
+                {uploadedImage && (
+                  <div className="mt-2">
+                    <img
+                      src={uploadedImage}
+                      alt="Uploaded"
+                      className="max-h-40 rounded-lg object-cover"
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
 
         <div>
@@ -332,7 +458,7 @@ export default function BlogForm({
           </button>
           <button
             type="button"
-            onClick={onCancel}
+            onClick={handleCancel}
             className={`flex-1 px-6 py-3 rounded-xl ${
               mode === "dark"
                 ? "bg-gray-800 text-white"

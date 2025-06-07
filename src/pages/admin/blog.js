@@ -468,6 +468,7 @@ export default function AdminBlog({
           isEditing={!!formData.id}
           categories={categories}
           tags={tags}
+          hrUser={hrUser}
         />
 
         <ItemActionModal

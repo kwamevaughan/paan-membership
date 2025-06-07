@@ -449,7 +449,7 @@ export async function getAdminBlogProps({ req, res }) {
     return authResult;
   }
 
-  const { supabaseServer } = authResult;
+  const { supabaseServer, session } = authResult;
 
   try {
     // Fetch blogs
@@ -470,11 +470,27 @@ export async function getAdminBlogProps({ req, res }) {
     const categories = [...new Set(blogsData.map(blog => blog.article_category))].filter(Boolean);
     const tags = [...new Set(blogsData.flatMap(blog => blog.article_tags || []))].filter(Boolean);
 
+    // Fetch hr user data
+    const { data: hrUser, error: hrUserError } = await supabaseServer
+      .from("hr_users")
+      .select("id, name, username")
+      .eq("id", session.user.id)
+      .single();
+
+    if (hrUserError) {
+      console.error(
+        "[getAdminBlogProps] HR User Error:",
+        hrUserError.message
+      );
+      throw new Error(`Failed to fetch HR user: ${hrUserError.message}`);
+    }
+
     return {
       props: {
         initialBlogs: blogsData || [],
         categories: ["All", ...categories],
         tags: tags,
+        hrUser: hrUser,
         breadcrumbs: [
           { label: "Dashboard", href: "/admin" },
           { label: "Blog" },

@@ -25,6 +25,7 @@ export default function AdminBlog({
   categories,
   tags,
   breadcrumbs,
+  hrUser,
 }) {
   const [showForm, setShowForm] = useState(false);
   const [viewMode, setViewMode] = useState("grid");

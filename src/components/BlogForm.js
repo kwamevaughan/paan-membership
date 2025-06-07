@@ -44,6 +44,13 @@ export default function BlogForm({
     }
   }, [formData.article_name]);
 
+  // Set author when component mounts or hrUser changes
+  useEffect(() => {
+    if (hrUser?.name) {
+      handleInputChange({ target: { name: "author", value: hrUser.name } });
+    }
+  }, [hrUser]);
+
   const handleEditorChange = (content) => {
     setEditorContent(content);
     handleInputChange({ target: { name: "article_body", value: content } });
@@ -131,7 +138,7 @@ export default function BlogForm({
           <input
             type="text"
             name="author"
-            value={hrUser?.name || "Unknown Author"}
+            value={formData.author || hrUser?.name || "Unknown Author"}
             readOnly
             className={`w-full px-4 py-3 rounded-xl ${
               mode === "dark"

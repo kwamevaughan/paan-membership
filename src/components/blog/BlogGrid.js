@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import BlogCard from "./BlogCard";
+import ItemActionModal from "../ItemActionModal";
 
 export default function BlogGrid({
   blogs,
@@ -21,6 +23,8 @@ export default function BlogGrid({
   mode = "light",
 }) {
   const [hoveredId, setHoveredId] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [blogToDelete, setBlogToDelete] = useState(null);
 
   const filteredBlogs = blogs.filter((blog) => {
     const matchesSearch =
@@ -53,6 +57,19 @@ export default function BlogGrid({
       month: "long",
       day: "numeric",
     });
+  };
+
+  const handleDeleteClick = (blog) => {
+    setBlogToDelete(blog);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (blogToDelete) {
+      handleDelete(blogToDelete.id);
+      setIsDeleteModalOpen(false);
+      setBlogToDelete(null);
+    }
   };
 
   if (loading) {
@@ -256,7 +273,7 @@ export default function BlogGrid({
                       <Icon icon="heroicons:pencil-square" className="w-5 h-5" />
                     </button>
                     <button
-                      onClick={() => handleDelete(blog.id)}
+                      onClick={() => handleDeleteClick(blog)}
                       className={`p-2 rounded-lg ${
                         mode === "dark"
                           ? "text-gray-400 hover:text-red-400 hover:bg-gray-700"
@@ -402,7 +419,7 @@ export default function BlogGrid({
                         />
                       </button>
                       <button
-                        onClick={() => handleDelete(blog.id)}
+                        onClick={() => handleDeleteClick(blog)}
                         className={`p-2 rounded-lg ${
                           mode === "dark"
                             ? "text-gray-400 hover:text-red-400 hover:bg-gray-700"
@@ -434,6 +451,54 @@ export default function BlogGrid({
           </button>
         </div>
       )}
+
+      {/* Delete Confirmation Modal */}
+      <ItemActionModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setBlogToDelete(null);
+        }}
+        title="Confirm Deletion"
+        mode={mode}
+      >
+        <div className="space-y-6">
+          <p
+            className={`text-sm ${
+              mode === "dark" ? "text-gray-300" : "text-gray-600"
+            }`}
+          >
+            Are you sure you want to delete the blog post{" "}
+            <strong>&quot;{blogToDelete?.article_name}&quot;</strong>? This action cannot be
+            undone.
+          </p>
+          <div className="flex justify-end space-x-4">
+            <button
+              onClick={() => {
+                setIsDeleteModalOpen(false);
+                setBlogToDelete(null);
+              }}
+              className={`px-6 py-3 text-sm font-medium rounded-xl border transition-all duration-200 flex items-center shadow-sm ${
+                mode === "dark"
+                  ? "border-gray-600 text-gray-200 bg-gray-800 hover:bg-gray-700"
+                  : "border-gray-200 text-gray-700 bg-white hover:bg-gray-50"
+              }`}
+            >
+              <Icon icon="heroicons:x-mark" className="h-4 w-4 mr-2" />
+              Cancel
+            </button>
+            <button
+              onClick={confirmDelete}
+              className={`px-6 py-3 text-sm font-medium rounded-xl text-white bg-red-600 hover:bg-red-700 transition-all duration-200 flex items-center shadow-sm ${
+                mode === "dark" ? "shadow-white/10" : "shadow-gray-200"
+              }`}
+            >
+              <Icon icon="heroicons:trash" className="h-4 w-4 mr-2" />
+              Delete
+            </button>
+          </div>
+        </div>
+      </ItemActionModal>
     </div>
   );
 } 

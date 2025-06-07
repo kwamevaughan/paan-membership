@@ -10,9 +10,9 @@ export default function BlogFormFields({
   mode,
   formData,
   handleInputChange,
-  categories,
-  tags,
-  selectedTags,
+  categories = [],
+  tags = [],
+  selectedTags = [],
   handleTagSelect,
   handleTagRemove,
   editorContent,
@@ -22,7 +22,6 @@ export default function BlogFormFields({
     <div className="space-y-6">
       <div>
         <label
-          htmlFor="title"
           className={`block text-sm font-medium mb-2 ${
             mode === "dark" ? "text-gray-300" : "text-gray-700"
           }`}
@@ -31,22 +30,20 @@ export default function BlogFormFields({
         </label>
         <input
           type="text"
-          id="title"
-          name="title"
-          value={formData.title}
+          name="article_name"
+          value={formData.article_name || ""}
           onChange={handleInputChange}
-          className={`w-full px-4 py-3 rounded-xl ${
+          className={`w-full px-4 py-2 rounded-xl border ${
             mode === "dark"
-              ? "bg-gray-800/80 text-white border-gray-700/50"
-              : "bg-white/80 text-gray-900 border-gray-200/50"
-          } focus:ring-2 focus:ring-indigo-500 backdrop-blur-sm`}
+              ? "bg-gray-800 border-gray-700 text-gray-100"
+              : "bg-white border-gray-300 text-gray-900"
+          } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
           placeholder="Enter blog title"
         />
       </div>
 
       <div>
         <label
-          htmlFor="category"
           className={`block text-sm font-medium mb-2 ${
             mode === "dark" ? "text-gray-300" : "text-gray-700"
           }`}
@@ -54,19 +51,18 @@ export default function BlogFormFields({
           Category
         </label>
         <select
-          id="category"
-          name="category_id"
-          value={formData.category_id}
+          name="article_category"
+          value={formData.article_category || ""}
           onChange={handleInputChange}
-          className={`w-full px-4 py-3 rounded-xl ${
+          className={`w-full px-4 py-2 rounded-xl border ${
             mode === "dark"
-              ? "bg-gray-800/80 text-white border-gray-700/50"
-              : "bg-white/80 text-gray-900 border-gray-200/50"
-          } focus:ring-2 focus:ring-indigo-500 backdrop-blur-sm`}
+              ? "bg-gray-800 border-gray-700 text-gray-100"
+              : "bg-white border-gray-300 text-gray-900"
+          } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
         >
           <option value="">Select a category</option>
           {categories.map((category) => (
-            <option key={category.id} value={category.id}>
+            <option key={category.id} value={category.name}>
               {category.name}
             </option>
           ))}
@@ -81,61 +77,50 @@ export default function BlogFormFields({
         >
           Tags
         </label>
-        <div className="space-y-4">
-          <div
-            className={`flex flex-wrap gap-2 p-3 rounded-xl ${
-              mode === "dark"
-                ? "bg-gray-800/80 border-gray-700/50"
-                : "bg-white/80 border-gray-200/50"
-            } min-h-[42px]`}
-          >
-            {selectedTags.map((tag) => (
-              <span
-                key={tag.id}
-                className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm ${
-                  mode === "dark"
-                    ? "bg-gray-700 text-white"
-                    : "bg-gray-100 text-gray-900"
-                }`}
+        <div className="flex flex-wrap gap-2 mb-2">
+          {selectedTags.map((tag) => (
+            <span
+              key={tag}
+              className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${
+                mode === "dark"
+                  ? "bg-blue-900 text-blue-100"
+                  : "bg-blue-100 text-blue-800"
+              }`}
+            >
+              {tag}
+              <button
+                type="button"
+                onClick={() => handleTagRemove(tag)}
+                className="ml-2 hover:text-red-500"
               >
-                {tag.name}
-                <button
-                  type="button"
-                  onClick={() => handleTagRemove(tag.id)}
-                  className="hover:text-red-500"
-                >
-                  <Icon icon="heroicons:x-mark" className="w-4 h-4" />
-                </button>
-              </span>
-            ))}
-          </div>
-          <select
-            value=""
-            onChange={(e) => {
-              const tag = tags.find((t) => t.id === parseInt(e.target.value));
-              if (tag) handleTagSelect(tag);
-            }}
-            className={`w-full px-4 py-3 rounded-xl ${
-              mode === "dark"
-                ? "bg-gray-800/80 text-white border-gray-700/50"
-                : "bg-white/80 text-gray-900 border-gray-200/50"
-            } focus:ring-2 focus:ring-indigo-500 backdrop-blur-sm`}
-          >
-            <option value="">Add a tag</option>
-            {tags
-              .filter((tag) => !selectedTags.some((t) => t.id === tag.id))
-              .map((tag) => (
-                <option key={tag.id} value={tag.id}>
-                  {tag.name}
-                </option>
-              ))}
-          </select>
+                <Icon icon="heroicons:x-mark" className="w-4 h-4" />
+              </button>
+            </span>
+          ))}
         </div>
+        <select
+          name="tags"
+          onChange={(e) => handleTagSelect(e.target.value)}
+          value=""
+          className={`w-full px-4 py-2 rounded-xl border ${
+            mode === "dark"
+              ? "bg-gray-800 border-gray-700 text-gray-100"
+              : "bg-white border-gray-300 text-gray-900"
+          } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+        >
+          <option value="">Select tags</option>
+          {tags
+            .filter((tag) => !selectedTags.includes(tag.name))
+            .map((tag) => (
+              <option key={tag.id} value={tag.name}>
+                {tag.name}
+              </option>
+            ))}
+        </select>
       </div>
 
       <div>
         <label
-          htmlFor="content"
           className={`block text-sm font-medium mb-2 ${
             mode === "dark" ? "text-gray-300" : "text-gray-700"
           }`}
@@ -143,16 +128,19 @@ export default function BlogFormFields({
           Content
         </label>
         <div
-          className={`rounded-xl overflow-hidden ${
+          className={`rounded-xl border ${
             mode === "dark"
-              ? "bg-gray-800/80 border-gray-700/50"
-              : "bg-white/80 border-gray-200/50"
+              ? "bg-gray-800 border-gray-700"
+              : "bg-white border-gray-300"
           }`}
         >
           <EditorComponent
-            content={editorContent}
-            onChange={setEditorContent}
+            initialValue={editorContent || ""}
+            onBlur={(newContent) => setEditorContent(newContent)}
             mode={mode}
+            holderId="jodit-editor-blog-form"
+            className="w-full"
+            height="300"
           />
         </div>
       </div>

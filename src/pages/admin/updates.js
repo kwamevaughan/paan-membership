@@ -12,7 +12,7 @@ import SimpleFooter from "@/layouts/simpleFooter";
 import UpdatesForm from "@/components/UpdatesForm";
 import ItemActionModal from "@/components/ItemActionModal";
 import UpdatesList from "@/components/updates/UpdatesList";
-import UpdatesFilters from "@/components/updates/UpdatesFilters";
+import AdvancedFilters from "@/components/OpportunityFilters";
 import { getAdminUpdatesProps } from "utils/getPropsUtils";
 
 export default function AdminUpdates({
@@ -27,6 +27,9 @@ export default function AdminUpdates({
   const [memberCount, setMemberCount] = useState(0);
   const [viewMode, setViewMode] = useState("grid");
   const [page, setPage] = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterTerm, setFilterTerm] = useState("");
+  const [sortOrder, setSortOrder] = useState("newest");
   const itemsPerPage = 6;
   useAuthSession();
 
@@ -296,15 +299,22 @@ export default function AdminUpdates({
                   }`}
                 >
                   <div className="p-6">
-                    <UpdatesFilters
-                      searchQuery={searchQuery}
-                      onSearch={handleSearch}
+                    <AdvancedFilters
+                      type="update"
+                      mode={mode}
+                      loading={loading}
+                      viewMode={viewMode}
+                      setViewMode={setViewMode}
+                      filterTerm={filterTerm}
+                      setFilterTerm={setFilterTerm}
+                      sortOrder={sortOrder}
+                      setSortOrder={setSortOrder}
+                      showFilters={showFilters}
+                      setShowFilters={setShowFilters}
+                      items={updates}
                       selectedCategory={selectedCategory}
                       onCategoryChange={handleCategoryFilter}
                       categories={categories}
-                      viewMode={viewMode}
-                      setViewMode={setViewMode}
-                      mode={mode}
                     />
 
                     <UpdatesList

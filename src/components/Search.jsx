@@ -20,7 +20,7 @@ const Search = ({ mode }) => {
           mode === "dark"
             ? "bg-transparent text-white placeholder-white" // Dark mode with white placeholder
             : "bg-transparent text-black placeholder-black" // Light mode with black placeholder
-        } placeholder:font-bold transition-colors duration-200`}
+        } placeholder:font-medium transition-colors duration-200`}
       />
       <Icon
         icon="material-symbols:search-rounded"

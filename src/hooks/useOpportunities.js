@@ -25,11 +25,14 @@ export const useOpportunities = () => {
   const fetchOpportunities = async () => {
     try {
       setLoading(true);
+      console.log("[useOpportunities] Starting to fetch opportunities...");
+      
       const {
         data: { user },
         error: userError,
       } = await supabase.auth.getUser();
       if (userError || !user) throw new Error("User not authenticated");
+      console.log("[useOpportunities] User authenticated:", user.id);
 
       const { data: hrUser, error: hrError } = await supabase
         .from("hr_users")
@@ -37,6 +40,7 @@ export const useOpportunities = () => {
         .eq("id", user.id)
         .single();
       if (hrError || !hrUser) throw new Error("User not authorized");
+      console.log("[useOpportunities] HR user authorized:", hrUser.id);
 
       const { data: opportunitiesData, error: opportunitiesError } =
         await supabase
@@ -47,8 +51,8 @@ export const useOpportunities = () => {
           .order("created_at", { ascending: false });
 
       if (opportunitiesError) throw opportunitiesError;
+      console.log("[useOpportunities] Opportunities fetched:", opportunitiesData?.length || 0);
 
-      
       setOpportunities(opportunitiesData || []);
     } catch (error) {
       console.error("[useOpportunities] Error fetching opportunities:", error);
@@ -238,10 +242,13 @@ export const useOpportunities = () => {
     });
   };
 
+  // Fetch opportunities when the component mounts
   useEffect(() => {
     fetchOpportunities();
+  }, []);
 
-    // Real-time subscription for opportunities
+  // Real-time subscription for opportunities
+  useEffect(() => {
     const opportunitiesSubscription = supabase
       .channel("business_opportunities")
       .on(

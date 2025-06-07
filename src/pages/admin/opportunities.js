@@ -31,6 +31,8 @@ export default function AdminBusinessOpportunities({
   const [showFilters, setShowFilters] = useState(false);
   const [sortOrder, setSortOrder] = useState("deadline");
   const [viewMode, setViewMode] = useState("grid");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterApplications, setFilterApplications] = useState("all");
 
   useAuthSession();
 
@@ -187,14 +189,45 @@ export default function AdminBusinessOpportunities({
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between">
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
-                      
-                      <h1 className="text-2xl font-bold ">
+                      <h1 className="text-2xl font-bold">
                         Business Opportunities
                       </h1>
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 max-w-2xl">
-                      Discover and manage opportunities for agencies and freelancers. Create new opportunities, track applications, and manage your talent pool.
-                    </p>
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-600 dark:text-gray-300 max-w-2xl">
+                        Manage and distribute business opportunities, freelance gigs, and project collaborations. Create targeted opportunities for specific membership tiers and track member engagement.
+                      </p>
+                      <div className="flex items-center gap-4 text-sm flex-wrap">
+                        <div className="flex items-center gap-2">
+                          <Icon icon="heroicons:briefcase" className="w-4 h-4 text-blue-500" />
+                          <span className="text-gray-600 dark:text-gray-300">
+                            {opportunities.length} total opportunities
+                          </span>
+                        </div>
+                        {opportunities.length > 0 && (
+                          <>
+                            <div className="flex items-center gap-2">
+                              <Icon icon="heroicons:user-group" className="w-4 h-4 text-purple-500" />
+                              <span className="text-gray-600 dark:text-gray-300">
+                                {opportunities.filter(opp => opp.job_type === "Freelancer").length} freelance gigs
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Icon icon="heroicons:building-office" className="w-4 h-4 text-green-500" />
+                              <span className="text-gray-600 dark:text-gray-300">
+                                {opportunities.filter(opp => opp.job_type === "Agency").length} agency opportunities
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Icon icon="heroicons:clock" className="w-4 h-4 text-orange-500" />
+                              <span className="text-gray-600 dark:text-gray-300">
+                                Last posted {new Date(Math.max(...opportunities.map(opp => new Date(opp.created_at)))).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                              </span>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    </div>
                   </div>
                   <div className="mt-6 md:mt-0">
                     <button
@@ -247,38 +280,33 @@ export default function AdminBusinessOpportunities({
                       : "bg-white border-gray-200"
                   }`}
                 >
-                  <div className="p-6">
-                    <div className="mb-8 flex flex-col sm:flex-row gap-4">
-                      <div className="flex-1 flex items-center gap-4">
-                        <input
-                          type="text"
-                          value={filterTerm}
-                          onChange={(e) => setFilterTerm(e.target.value)}
-                          placeholder="Search opportunities..."
-                          className={`w-full px-4 py-3 rounded-xl shadow-lg ${
-                            mode === "dark"
-                              ? "bg-gray-800 text-white border-gray-600"
-                              : "bg-white text-gray-900 border-gray-200"
-                          } focus:ring-2 focus:ring-indigo-500 transition-all duration-200 backdrop-blur-sm`}
-                        />
-                        <ViewToggle viewMode={viewMode} setViewMode={setViewMode} mode={mode} />
-                      </div>
-                      <div className="w-full sm:w-48">
-                        <select
-                          value={filterType}
-                          onChange={(e) => setFilterType(e.target.value)}
-                          className={`w-full px-4 py-3 rounded-xl shadow-lg ${
-                            mode === "dark"
-                              ? "bg-gray-800 text-white border-gray-600"
-                              : "bg-white text-gray-900 border-gray-200"
-                          } focus:ring-2 focus:ring-indigo-500 transition-all duration-200 backdrop-blur-sm`}
-                        >
-                          <option value="all">All Types</option>
-                          <option value="job">Jobs</option>
-                          <option value="project">Projects</option>
-                        </select>
-                      </div>
-                    </div>
+                  <div className="">
+                    
+
+                    <OpportunityFilters
+                      filterTerm={filterTerm}
+                      setFilterTerm={setFilterTerm}
+                      setFilterType={setFilterType}
+                      filterType={filterType}
+                      setFilterJobType={setFilterJobType}
+                      filterJobType={filterJobType}
+                      setFilterProjectType={setFilterProjectType}
+                      filterProjectType={filterProjectType}
+                      setShowFilters={setShowFilters}
+                      showFilters={showFilters}
+                      sortOrder={sortOrder}
+                      setSortOrder={setSortOrder}
+                      mode={mode}
+                      loading={loading}
+                      opportunities={opportunities}
+                      onOpenUsersModal={modalActions.openUsersModal}
+                      filterStatus={filterStatus}
+                      setFilterStatus={setFilterStatus}
+                      filterApplications={filterApplications}
+                      setFilterApplications={setFilterApplications}
+                      viewMode={viewMode}
+                      setViewMode={setViewMode}
+                    />
 
                     <OpportunityGrid
                       opportunities={opportunities}
@@ -291,7 +319,7 @@ export default function AdminBusinessOpportunities({
                     />
                   </div>
                   <div
-                    className={`absolute top-2 right-2 w-12 sm:w-16 h-12 sm:h-16 opacity-10`}
+                    className={`absolute top-2 right-2 w-12 sm:w-16 h-12 sm:h-16 opacity-10 z-0`}
                   >
                     <div
                       className={`w-full h-full rounded-full bg-gradient-to-br ${

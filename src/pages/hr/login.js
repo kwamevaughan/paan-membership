@@ -1,4 +1,4 @@
-// pages/hr/login.js
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { Icon } from "@iconify/react";
@@ -11,7 +11,7 @@ import Link from "next/link";
 
 export default function HRLogin() {
   const [email, setEmail] = useState("");
-  const [showPasswordField, setShowPasswordField] = useState(false);
+  const [showPasswordField, setShowPasswordField] = useState(true);
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [captchaVerified, setCaptchaVerified] = useState(false);

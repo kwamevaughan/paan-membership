@@ -42,6 +42,8 @@ export const useBlog = (blogId) => {
     category: "All",
     tags: [],
     search: "",
+    status: "",
+    sort: "newest"
   });
 
   const fetchHRUser = async () => {
@@ -171,7 +173,16 @@ export const useBlog = (blogId) => {
       );
     }
 
-    switch (sortBy) {
+    if (filters.status) {
+      filtered = filtered.filter((blog) => {
+        if (filters.status === "published") return blog.is_published;
+        if (filters.status === "draft") return blog.is_draft;
+        if (filters.status === "scheduled") return blog.publish_date && !blog.is_published;
+        return true;
+      });
+    }
+
+    switch (filters.sort) {
       case "newest":
         filtered.sort(
           (a, b) => new Date(b.created_at) - new Date(a.created_at)
@@ -188,12 +199,15 @@ export const useBlog = (blogId) => {
       case "za":
         filtered.sort((a, b) => b.article_name.localeCompare(a.article_name));
         break;
+      case "category":
+        filtered.sort((a, b) => (a.article_category || "").localeCompare(b.article_category || ""));
+        break;
       default:
         break;
     }
 
     setFilteredBlogs(filtered);
-  }, [blogs, filters, sortBy]);
+  }, [blogs, filters]);
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;

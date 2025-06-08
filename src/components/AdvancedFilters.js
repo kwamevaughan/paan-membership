@@ -53,42 +53,79 @@ export default function AdvancedFilters({
   onRegionChange,
   regions = [],
   onResetFilters,
+
+  // Blog-specific props
+  selectedStatus,
+  onStatusChange,
+  selectedAuthor,
+  onAuthorChange,
+  authors = [],
+  dateRange,
+  onDateRangeChange,
+  tags = [],
 }) {
   const [projectTypes, setProjectTypes] = useState([]);
 
   // Add function to check if any filters are active
-  const hasActiveFilters = (type, filters) => {
+  const hasActiveFilters = (type) => {
     if (type === "opportunity") {
       return (
-        filters.filterTerm !== "" ||
-        filters.filterType !== "all" ||
-        filters.filterJobType !== "all" ||
-        filters.filterProjectType !== "all" ||
-        filters.filterStatus !== "all" ||
-        filters.filterApplications !== "all" ||
-        filters.sortOrder !== "newest"
+        filterTerm !== "" ||
+        filterType !== "all" ||
+        filterJobType !== "all" ||
+        filterProjectType !== "all" ||
+        filterStatus !== "all" ||
+        filterApplications !== "all" ||
+        sortOrder !== "newest"
       );
     } else if (type === "update") {
       return (
-        filters.filterTerm !== "" ||
-        filters.selectedCategory !== "All" ||
-        filters.selectedTier !== "All" ||
-        filters.sortOrder !== "newest"
+        filterTerm !== "" ||
+        selectedCategory !== "All" ||
+        selectedTier !== "All" ||
+        sortOrder !== "newest"
       );
     } else if (type === "blog") {
-      return (
-        filters.filterTerm !== "" ||
-        filters.selectedCategory !== "All" ||
-        filters.selectedTags.length > 0 ||
-        filters.sortOrder !== "newest"
-      );
+      // Check if any filter is active
+      const hasActiveFilter = 
+        (filterTerm && filterTerm.trim() !== "") ||
+        (selectedCategory && selectedCategory !== "All") ||
+        (selectedTags && selectedTags.length > 0) ||
+        (selectedStatus && selectedStatus !== "") ||
+        (selectedAuthor && selectedAuthor !== "") ||
+        (dateRange && (dateRange.start || dateRange.end)) ||
+        (sortOrder && sortOrder !== "newest");
+
+      return hasActiveFilter;
     }
     return false;
   };
 
+  // Add useEffect to log filter state for debugging
+  useEffect(() => {
+    console.log('Filter State:', {
+      filterTerm,
+      selectedCategory,
+      selectedTags,
+      selectedStatus,
+      selectedAuthor,
+      dateRange,
+      sortOrder,
+      hasActiveFilters: hasActiveFilters(type)
+    });
+  }, [filterTerm, selectedCategory, selectedTags, selectedStatus, selectedAuthor, dateRange, sortOrder, type]);
+
   // Add reset filters function
   const resetFilters = (type, filters, onResetFilters) => {
-    if (type === "opportunity") {
+    if (type === "blog") {
+      // Reset blog-specific filters using props directly
+      onStatusChange?.("");
+      onAuthorChange?.("");
+      onDateRangeChange?.({ start: null, end: null });
+      onCategoryChange?.("");
+      onTagsChange?.([]);
+      if (onResetFilters) onResetFilters();
+    } else if (type === "opportunity") {
       filters.setFilterTerm("");
       filters.setFilterType("all");
       filters.setFilterJobType("all");
@@ -101,11 +138,12 @@ export default function AdvancedFilters({
       filters.setSelectedCategory("All");
       filters.setSelectedTier("All");
       filters.setSortOrder("newest");
-    } else if (type === "blog") {
+    } else if (type === "market-intel") {
       filters.setFilterTerm("");
       filters.setSelectedCategory("All");
-      filters.setSelectedTags([]);
-      filters.setSortOrder("newest");
+      filters.setSelectedType("All");
+      filters.setSelectedRegion("All");
+      filters.setSelectedTier("All");
     }
     if (onResetFilters) {
       onResetFilters();
@@ -142,7 +180,7 @@ export default function AdvancedFilters({
     setSortOrder,
   };
 
-  const hasFilters = hasActiveFilters(type, filters);
+  const hasFilters = hasActiveFilters(type);
 
   return (
     <div className="p-6 dark:bg-gray-900 rounded-xl shadow-lg hover:shadow-md transition-all duration-300">
@@ -322,26 +360,12 @@ export default function AdvancedFilters({
                     className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
                   >
                     Filter by Status
-                    <div className="inline-block ml-1">
-                      <div className="relative">
-                        <div className="peer">
-                          <Icon
-                            icon="heroicons:information-circle"
-                            className="w-4 h-4 inline text-gray-400 cursor-help"
-                          />
-                        </div>
-                        <div className="invisible peer-hover:visible opacity-0 peer-hover:opacity-100 transition-all duration-200 absolute z-10 p-2 text-xs text-gray-200 bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap border border-gray-700/50 pointer-events-none">
-                          Filter opportunities based on their current status (active or expired)
-                          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800/80"></div>
-                        </div>
-                      </div>
-                    </div>
                   </label>
                   <div className="relative">
                     <select
                       id="filter-status"
-                      value={filterStatus}
-                      onChange={(e) => setFilterStatus(e.target.value)}
+                      value={selectedStatus}
+                      onChange={(e) => onStatusChange?.(e.target.value)}
                       disabled={loading}
                       className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
                         mode === "dark"
@@ -350,14 +374,15 @@ export default function AdvancedFilters({
                       } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
                       aria-label="Filter by status"
                     >
-                      <option value="all">All Status</option>
-                      <option value="active">Active</option>
-                      <option value="expired">Expired</option>
+                      <option value="">All Status</option>
+                      <option value="published">Published</option>
+                      <option value="draft">Draft</option>
+                      <option value="scheduled">Scheduled</option>
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
                       <Icon
                         icon="heroicons:chevron-down"
-                        className="h-4 w-4"
+                        className="h-4 h-4"
                         aria-hidden="true"
                       />
                     </div>
@@ -800,6 +825,220 @@ export default function AdvancedFilters({
                       />
                     </div>
                   </div>
+                </div>
+              </>
+            ) : type === "blog" ? (
+              <>
+                {/* Category Filter */}
+                <div>
+                  <label
+                    htmlFor="filter-category"
+                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+                  >
+                    Filter by Category
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="filter-category"
+                      value={selectedCategory}
+                      onChange={(e) => onCategoryChange(e.target.value)}
+                      disabled={loading}
+                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
+                        mode === "dark"
+                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
+                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
+                      aria-label="Filter by category"
+                    >
+                      <option value="All">All Categories</option>
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.name}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
+                      <Icon
+                        icon="heroicons:chevron-down"
+                        className="h-4 h-4"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status Filter */}
+                <div>
+                  <label
+                    htmlFor="filter-status"
+                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+                  >
+                    Filter by Status
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="filter-status"
+                      value={selectedStatus}
+                      onChange={(e) => onStatusChange?.(e.target.value)}
+                      disabled={loading}
+                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
+                        mode === "dark"
+                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
+                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
+                      aria-label="Filter by status"
+                    >
+                      <option value="">All Status</option>
+                      <option value="published">Published</option>
+                      <option value="draft">Draft</option>
+                      <option value="scheduled">Scheduled</option>
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
+                      <Icon
+                        icon="heroicons:chevron-down"
+                        className="h-4 h-4"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Author Filter */}
+                <div>
+                  <label
+                    htmlFor="filter-author"
+                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+                  >
+                    Filter by Author
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="filter-author"
+                      value={selectedAuthor}
+                      onChange={(e) => onAuthorChange(e.target.value)}
+                      disabled={loading}
+                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
+                        mode === "dark"
+                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
+                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
+                      aria-label="Filter by author"
+                    >
+                      <option value="all">All Authors</option>
+                      {authors.map((author) => (
+                        <option key={author.id} value={author.id}>
+                          {author.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
+                      <Icon
+                        icon="heroicons:chevron-down"
+                        className="h-4 h-4"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Date Range Filter */}
+                <div>
+                  <label
+                    htmlFor="filter-date-range"
+                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+                  >
+                    Filter by Date Range
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="date"
+                      value={dateRange?.start || ""}
+                      onChange={(e) => onDateRangeChange({ ...dateRange, start: e.target.value })}
+                      className={`flex-1 px-4 py-2 rounded-xl border ${
+                        mode === "dark"
+                          ? "bg-gray-800 border-gray-700 text-gray-100"
+                          : "bg-white border-gray-300 text-gray-900"
+                      } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                    />
+                    <input
+                      type="date"
+                      value={dateRange?.end || ""}
+                      onChange={(e) => onDateRangeChange({ ...dateRange, end: e.target.value })}
+                      className={`flex-1 px-4 py-2 rounded-xl border ${
+                        mode === "dark"
+                          ? "bg-gray-800 border-gray-700 text-gray-100"
+                          : "bg-white border-gray-300 text-gray-900"
+                      } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                    />
+                  </div>
+                </div>
+
+                {/* Tags Filter */}
+                <div>
+                  <label
+                    htmlFor="filter-tags"
+                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+                  >
+                    Filter by Tags
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="filter-tags"
+                      value=""
+                      onChange={(e) => {
+                        const selectedTag = tags.find(tag => tag.id === e.target.value);
+                        if (selectedTag && !selectedTags.includes(selectedTag.name)) {
+                          onTagsChange?.([...selectedTags, selectedTag.name]);
+                        }
+                      }}
+                      disabled={loading}
+                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
+                        mode === "dark"
+                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
+                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
+                      aria-label="Filter by tags"
+                    >
+                      <option value="">Select a tag</option>
+                      {tags.map((tag) => (
+                        <option key={tag.id} value={tag.id}>
+                          {tag.name}
+                        </option>
+                      ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
+                      <Icon
+                        icon="heroicons:chevron-down"
+                        className="h-4 h-4"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  </div>
+                  {selectedTags.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {selectedTags.map((tagName) => (
+                        <span
+                          key={tagName}
+                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                            mode === "dark"
+                              ? "bg-gray-700 text-gray-200"
+                              : "bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {tagName}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              onTagsChange?.(selectedTags.filter(t => t !== tagName));
+                            }}
+                            className="hover:text-red-500"
+                          >
+                            <Icon icon="heroicons:x-mark" className="h-3 w-3" />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </>
             ) : null}

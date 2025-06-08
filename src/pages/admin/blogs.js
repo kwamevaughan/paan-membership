@@ -30,11 +30,12 @@ export default function AdminBlog({
   const [showForm, setShowForm] = useState(false);
   const [viewMode, setViewMode] = useState("grid");
   const [page, setPage] = useState(1);
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
   const [filterTerm, setFilterTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("newest");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedTags, setSelectedTags] = useState([]);
+  const [selectedStatus, setSelectedStatus] = useState("");
   const [selectedIds, setSelectedIds] = useState([]);
   const [editingBlogId, setEditingBlogId] = useState(null);
   const itemsPerPage = 12;
@@ -392,7 +393,10 @@ export default function AdminBlog({
                         updateFilters({ search: value });
                       }}
                       sortOrder={sortOrder}
-                      setSortOrder={setSortOrder}
+                      setSortOrder={(value) => {
+                        setSortOrder(value);
+                        updateFilters({ sort: value });
+                      }}
                       showFilters={showFilters}
                       setShowFilters={setShowFilters}
                       items={blogs}
@@ -408,7 +412,25 @@ export default function AdminBlog({
                         updateFilters({ tags: value });
                       }}
                       tags={tags}
-                      onResetFilters={resetFilters}
+                      selectedStatus={selectedStatus}
+                      onStatusChange={(value) => {
+                        setSelectedStatus(value);
+                        updateFilters({ status: value });
+                      }}
+                      onResetFilters={() => {
+                        setSelectedStatus("");
+                        setSelectedCategory("All");
+                        setSelectedTags([]);
+                        setFilterTerm("");
+                        setSortOrder("newest");
+                        updateFilters({
+                          status: "",
+                          category: "All",
+                          tags: [],
+                          search: "",
+                          sort: "newest"
+                        });
+                      }}
                     />
 
                     <div className="mt-8">

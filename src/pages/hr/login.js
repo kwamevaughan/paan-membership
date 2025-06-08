@@ -134,9 +134,9 @@ export default function HRLogin() {
         localStorage.removeItem("hr_remembered_email");
       }
 
-      console.log("[HRLogin] Attempting redirect to /hr-overview");
+      console.log("[HRLogin] Attempting redirect to /hr/overview");
       toast.success("Login successful! Redirecting...", { icon: "✅" });
-      await router.push("/hr-overview").catch((err) => {
+      await router.push("/hr/overview").catch((err) => {
         console.error("[HRLogin] Redirect error:", err);
         toast.error("Failed to redirect. Please navigate manually.", {
           icon: "❌",

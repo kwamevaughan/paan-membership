@@ -79,7 +79,8 @@ export default function ImageUpload({
   };
 
   const handleMediaSelect = (selectedImage) => {
-    const imageUrl = selectedImage.url || selectedImage;
+    // selectedImage is now the entire file object
+    const imageUrl = selectedImage.url;
     console.log("ImageUpload handleMediaSelect - Setting image URL:", imageUrl);
 
     handleInputChange({

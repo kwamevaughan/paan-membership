@@ -291,68 +291,67 @@ export default function BlogForm({
     }
   };
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const loadingToast = toast.loading('Uploading image...');
-      try {
-        // Create a preview URL for the selected image
-        const previewUrl = URL.createObjectURL(file);
-        setUploadedImage(previewUrl);
-        
-        // Get authentication token for ImageKit
-        const response = await fetch('/api/imagekit/auth');
-        if (!response.ok) throw new Error('Failed to get upload token');
-        const authData = await response.json();
-        
-        if (!authData?.token) throw new Error('Failed to get upload token');
+  const handleImageUpload = async (file) => {
+    if (!file) return;
+    
+    const loadingToast = toast.loading('Uploading image...');
+    try {
+      // Create a preview URL for the selected image
+      const previewUrl = URL.createObjectURL(file);
+      setUploadedImage(previewUrl);
+      
+      // Get authentication token for ImageKit
+      const response = await fetch('/api/imagekit/auth');
+      if (!response.ok) throw new Error('Failed to get upload token');
+      const authData = await response.json();
+      
+      if (!authData?.token) throw new Error('Failed to get upload token');
 
-        // Create form data for upload
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('fileName', file.name);
-        formData.append('token', authData.token);
-        formData.append('signature', authData.signature);
-        formData.append('expire', authData.expire);
-        formData.append('publicKey', authData.publicKey);
-        formData.append('folder', '/Blog');
+      // Create form data for upload
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('fileName', file.name);
+      formData.append('token', authData.token);
+      formData.append('signature', authData.signature);
+      formData.append('expire', authData.expire);
+      formData.append('publicKey', authData.publicKey);
+      formData.append('folder', '/Blog');
 
-        // Upload to ImageKit
-        const uploadResponse = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
-          method: 'POST',
-          body: formData,
-        });
+      // Upload to ImageKit
+      const uploadResponse = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
+        method: 'POST',
+        body: formData,
+      });
 
-        if (!uploadResponse.ok) throw new Error('Upload failed');
+      if (!uploadResponse.ok) throw new Error('Upload failed');
 
-        const uploadData = await uploadResponse.json();
-        
-        // Update form data with the uploaded image URL
-        handleInputChange({
-          target: {
-            name: 'multiple',
-            value: {
-              featured_image_upload: uploadData.url,
-              article_image: uploadData.url,
-              featured_image_url: uploadData.url
-            }
+      const uploadData = await uploadResponse.json();
+      
+      // Update form data with the uploaded image URL
+      handleInputChange({
+        target: {
+          name: 'multiple',
+          value: {
+            featured_image_upload: uploadData.url,
+            article_image: uploadData.url,
+            featured_image_url: uploadData.url
           }
-        });
+        }
+      });
 
-        // Clean up the blob URL
-        URL.revokeObjectURL(previewUrl);
-        
-        // Show success message
-        toast.success('Image uploaded successfully', {
-          id: loadingToast,
-        });
-      } catch (error) {
-        console.error('Error uploading image:', error);
-        toast.error('Failed to upload image', {
-          id: loadingToast,
-        });
-        setUploadedImage(null);
-      }
+      // Clean up the blob URL
+      URL.revokeObjectURL(previewUrl);
+      
+      // Show success message
+      toast.success('Image uploaded successfully', {
+        id: loadingToast,
+      });
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      toast.error('Failed to upload image', {
+        id: loadingToast,
+      });
+      setUploadedImage(null);
     }
   };
 
@@ -464,7 +463,10 @@ export default function BlogForm({
                   <input
                     type="file"
                     accept="image/*"
-                    onChange={handleImageUpload}
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      handleImageUpload(file);
+                    }}
                     className="hidden"
                     ref={fileInputRef}
                   />
@@ -715,6 +717,8 @@ export default function BlogForm({
           setShowImageLibrary(false);
         }}
         mode={mode}
+        onUpload={handleImageUpload}
+        uploading={loading}
       />
     </>
   );

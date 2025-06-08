@@ -203,7 +203,7 @@ export default function BlogGrid({
               <div className="p-6">
                 <div className="flex items-center gap-2 mb-3">
                   <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                    className={`px-3 py-1 rounded-full text-xs capitalize font-normal ${
                       mode === "dark"
                         ? "bg-gray-700 text-gray-300"
                         : "bg-gray-100 text-gray-700"
@@ -216,7 +216,8 @@ export default function BlogGrid({
                       mode === "dark" ? "text-gray-400" : "text-gray-500"
                     }`}
                   >
-                    Last Updated: {formatDate(blog.updated_at || blog.created_at)}
+                    <strong>Last Updated:</strong>{" "}
+                    {formatDate(blog.updated_at || blog.created_at)}
                   </span>
                 </div>
 
@@ -268,10 +269,7 @@ export default function BlogGrid({
                       </span>
                     ) : blog.publish_date ? (
                       <span className="flex items-center text-blue-500">
-                        <Icon
-                          icon="heroicons:clock"
-                          className="w-4 h-4 mr-1"
-                        />
+                        <Icon icon="heroicons:clock" className="w-4 h-4 mr-1" />
                         Scheduled
                       </span>
                     ) : (
@@ -288,7 +286,7 @@ export default function BlogGrid({
                   <div className="flex items-center space-x-2">
                     <button
                       onClick={() => {
-                        console.log('Edit button clicked for blog:', blog);
+                        console.log("Edit button clicked for blog:", blog);
                         handleEditBlog(blog);
                       }}
                       className={`p-2 rounded-lg ${
@@ -297,7 +295,10 @@ export default function BlogGrid({
                           : "text-gray-500 hover:text-gray-900 hover:bg-gray-100"
                       }`}
                     >
-                      <Icon icon="heroicons:pencil-square" className="w-5 h-5" />
+                      <Icon
+                        icon="heroicons:pencil-square"
+                        className="w-5 h-5"
+                      />
                     </button>
                     <button
                       onClick={() => handleDeleteClick(blog)}
@@ -370,7 +371,8 @@ export default function BlogGrid({
                         mode === "dark" ? "text-gray-400" : "text-gray-500"
                       }`}
                     >
-                      Last Updated: {formatDate(blog.updated_at || blog.created_at)}
+                      Last Updated:{" "}
+                      {formatDate(blog.updated_at || blog.created_at)}
                     </span>
                   </div>
 
@@ -442,7 +444,7 @@ export default function BlogGrid({
                     <div className="flex items-center space-x-2">
                       <button
                         onClick={() => {
-                          console.log('Edit button clicked for blog:', blog);
+                          console.log("Edit button clicked for blog:", blog);
                           handleEditBlog(blog);
                         }}
                         className={`p-2 rounded-lg ${
@@ -507,8 +509,8 @@ export default function BlogGrid({
             }`}
           >
             Are you sure you want to delete the blog post{" "}
-            <strong>&quot;{blogToDelete?.article_name}&quot;</strong>? This action cannot be
-            undone.
+            <strong>&quot;{blogToDelete?.article_name}&quot;</strong>? This
+            action cannot be undone.
           </p>
           <div className="flex justify-end space-x-4">
             <button

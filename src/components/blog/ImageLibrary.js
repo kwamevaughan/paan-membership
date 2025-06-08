@@ -14,6 +14,10 @@ export default function ImageLibrary({
   const [files, setFiles] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [sortBy, setSortBy] = useState("newest"); // newest, oldest, name
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [imageToDelete, setImageToDelete] = useState(null);
 
   const fetchFiles = async () => {
     try {
@@ -45,18 +49,108 @@ export default function ImageLibrary({
     if (!file || !onUpload) return;
 
     try {
+      setLoading(true);
+      console.log("Starting file upload:", file.name);
+      
       await onUpload(file);
-      fetchFiles(); // Refresh the list
+      
+      // Refresh the list after successful upload
+      await fetchFiles();
+      
+      toast.success("Image uploaded successfully");
     } catch (error) {
       console.error("Upload failed:", error);
       toast.error(`Failed to upload image: ${error.message}`);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleImageSelect = (file) => {
     if (onSelect) {
-      onSelect(file.url);
+      onSelect(file);
     }
+  };
+
+  const handleDeleteClick = (file) => {
+    setImageToDelete(file);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!imageToDelete) return;
+
+    try {
+      console.log("Attempting to delete file:", imageToDelete);
+      
+      const response = await fetch("/api/imagekit/delete-files", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          fileIds: [imageToDelete.fileId],
+        }),
+      });
+
+      const data = await response.json();
+      console.log("Delete response:", data);
+
+      if (!response.ok) {
+        throw new Error(data.error || data.details || "Failed to delete image");
+      }
+
+      // Remove the deleted file from the local state immediately
+      setFiles(prevFiles => prevFiles.filter(file => file.fileId !== imageToDelete.fileId));
+      
+      toast.success("Image deleted successfully");
+      
+      // Refresh the file list from the server
+      await fetchFiles();
+    } catch (error) {
+      console.error("Delete failed:", {
+        error: error.message,
+        file: imageToDelete,
+        stack: error.stack
+      });
+      toast.error(error.message || "Failed to delete image");
+    } finally {
+      setShowDeleteConfirm(false);
+      setImageToDelete(null);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setShowDeleteConfirm(false);
+    setImageToDelete(null);
+  };
+
+  const getSortedFiles = () => {
+    let sortedFiles = [...files];
+
+    // Apply search filter
+    if (searchTerm) {
+      sortedFiles = sortedFiles.filter(file =>
+        file.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Apply sorting
+    switch (sortBy) {
+      case "newest":
+        sortedFiles.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        break;
+      case "oldest":
+        sortedFiles.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+        break;
+      case "name":
+        sortedFiles.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      default:
+        break;
+    }
+
+    return sortedFiles;
   };
 
   return (
@@ -93,48 +187,94 @@ export default function ImageLibrary({
         </div>
 
         <div className="p-6">
-          {/* Upload Section */}
-          <div className="mb-6">
-            <label
-              className={`block text-sm font-medium mb-2 ${
-                mode === "dark" ? "text-gray-300" : "text-gray-700"
-              }`}
-            >
-              Upload New Image
-            </label>
-            <div className="flex items-center gap-4">
-              <label
-                className={`flex-1 px-4 py-2 rounded-xl border-2 border-dashed cursor-pointer transition-colors ${
+          {/* Controls Section */}
+          <div className="mb-6 space-y-4">
+            {/* Search and Sort Controls */}
+            <div className="flex flex-wrap gap-4">
+              <div className="flex-1 min-w-[200px]">
+                <input
+                  type="text"
+                  placeholder="Search images..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className={`w-full px-4 py-2 rounded-xl border ${
+                    mode === "dark"
+                      ? "bg-gray-800 border-gray-700 text-gray-100"
+                      : "bg-white border-gray-300 text-gray-900"
+                  } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                />
+              </div>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className={`px-4 py-2 rounded-xl border ${
                   mode === "dark"
-                    ? "border-gray-700 hover:border-gray-600"
-                    : "border-gray-300 hover:border-gray-400"
+                    ? "bg-gray-800 border-gray-700 text-gray-100"
+                    : "bg-white border-gray-300 text-gray-900"
+                } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+              >
+                <option value="newest">Newest First</option>
+                <option value="oldest">Oldest First</option>
+                <option value="name">Name</option>
+              </select>
+              <button
+                onClick={() => fetchFiles()}
+                disabled={loading}
+                className={`px-4 py-2 rounded-xl border flex items-center gap-2 ${
+                  mode === "dark"
+                    ? "bg-gray-800 border-gray-700 text-gray-100 hover:bg-gray-700"
+                    : "bg-white border-gray-300 text-gray-900 hover:bg-gray-50"
+                } focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <Icon 
+                  icon="heroicons:arrow-path" 
+                  className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} 
+                />
+                Refresh
+              </button>
+            </div>
+
+            {/* Upload Section */}
+            <div>
+              <label
+                className={`block text-sm font-medium mb-2 ${
+                  mode === "dark" ? "text-gray-300" : "text-gray-700"
                 }`}
               >
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  disabled={uploading}
-                />
-                <div className="flex items-center justify-center gap-2">
-                  <Icon
-                    icon="heroicons:arrow-up-tray"
-                    className={`w-5 h-5 ${
-                      mode === "dark" ? "text-gray-400" : "text-gray-500"
-                    }`}
-                  />
-                  <span
-                    className={`text-sm ${
-                      mode === "dark" ? "text-gray-400" : "text-gray-500"
-                    }`}
-                  >
-                    {uploading
-                      ? "Uploading..."
-                      : "Choose file or drag and drop"}
-                  </span>
-                </div>
+                Upload New Image
               </label>
+              <div className="flex items-center gap-4">
+                <label
+                  className={`flex-1 px-4 py-2 rounded-xl border-2 border-dashed cursor-pointer transition-colors ${
+                    mode === "dark"
+                      ? "border-gray-700 hover:border-gray-600"
+                      : "border-gray-300 hover:border-gray-400"
+                  }`}
+                >
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                    disabled={uploading}
+                  />
+                  <div className="flex items-center justify-center gap-2">
+                    <Icon
+                      icon="heroicons:arrow-up-tray"
+                      className={`w-5 h-5 ${
+                        mode === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    />
+                    <span
+                      className={`text-sm ${
+                        mode === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    >
+                      {uploading ? "Uploading..." : "Choose file or drag and drop"}
+                    </span>
+                  </div>
+                </label>
+              </div>
             </div>
           </div>
 
@@ -144,16 +284,18 @@ export default function ImageLibrary({
               <div className="col-span-full flex justify-center py-8">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
               </div>
-            ) : files.length === 0 ? (
+            ) : getSortedFiles().length === 0 ? (
               <div
                 className={`col-span-full text-center py-8 ${
                   mode === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               >
-                No images found. Try uploading a new image above.
+                {searchTerm
+                  ? "No images found matching your search."
+                  : "No images found. Try uploading a new image above."}
               </div>
             ) : (
-              files.map((file) => (
+              getSortedFiles().map((file) => (
                 <div
                   key={file.fileId}
                   className={`relative group rounded-xl overflow-hidden border-2 cursor-pointer transition-all ${
@@ -161,7 +303,6 @@ export default function ImageLibrary({
                       ? "border-gray-700 hover:border-blue-500"
                       : "border-gray-200 hover:border-blue-500"
                   }`}
-                  onClick={() => handleImageSelect(file)}
                 >
                   <div className="w-full h-48">
                     <Image
@@ -176,10 +317,26 @@ export default function ImageLibrary({
                       mode === "dark" ? "text-white" : "text-white"
                     }`}
                   >
-                    <Icon
-                      icon="heroicons:plus"
-                      className="w-8 h-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                    />
+                    <div className="flex gap-2">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleImageSelect(file);
+                        }}
+                        className="p-2 rounded-full bg-blue-500 hover:bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Icon icon="heroicons:plus" className="w-5 h-5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteClick(file);
+                        }}
+                        className="p-2 rounded-full bg-red-500 hover:bg-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <Icon icon="heroicons:trash" className="w-5 h-5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))
@@ -187,6 +344,45 @@ export default function ImageLibrary({
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center">
+          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={handleDeleteCancel}></div>
+          <div className={`relative p-6 rounded-xl shadow-xl ${
+            mode === "dark" ? "bg-gray-900" : "bg-white"
+          }`}>
+            <h3 className={`text-lg font-semibold mb-4 ${
+              mode === "dark" ? "text-white" : "text-gray-900"
+            }`}>
+              Delete Image
+            </h3>
+            <p className={`mb-6 ${
+              mode === "dark" ? "text-gray-300" : "text-gray-600"
+            }`}>
+              Are you sure you want to delete this image? This action cannot be undone.
+            </p>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={handleDeleteCancel}
+                className={`px-4 py-2 rounded-lg ${
+                  mode === "dark"
+                    ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
+                    : "bg-gray-100 text-gray-900 hover:bg-gray-200"
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteConfirm}
+                className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

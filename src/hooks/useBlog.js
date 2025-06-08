@@ -198,6 +198,7 @@ export const useBlog = (blogId) => {
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     console.log("useBlog handleInputChange called with:", { name, value });
+    
     if (name === "multiple") {
       setFormData((prev) => {
         const updated = {
@@ -219,6 +220,19 @@ export const useBlog = (blogId) => {
           slug: slug,
         };
         console.log("useBlog handleInputChange - Updated formData:", updated);
+        return updated;
+      });
+    } else if (name === "featured_image_url") {
+      // Handle external image URL
+      setFormData((prev) => {
+        const updated = {
+          ...prev,
+          [name]: value,
+          article_image: value, // Update article_image with the external URL
+          featured_image_upload: "", // Clear upload field
+          featured_image_library: "", // Clear library field
+        };
+        console.log("useBlog handleInputChange - Updated formData with external URL:", updated);
         return updated;
       });
     } else {
@@ -298,8 +312,16 @@ export const useBlog = (blogId) => {
         }
       }
 
-      const finalImageUrl =
-        featured_image_upload || featured_image_library || article_image || "";
+      // Updated image URL selection logic
+      let finalImageUrl = "";
+      if (featured_image_url && featured_image_url.startsWith('http')) {
+        // If it's an external URL, use it directly
+        finalImageUrl = featured_image_url;
+      } else {
+        // Otherwise, use the uploaded or library image
+        finalImageUrl = featured_image_upload || featured_image_library || article_image || "";
+      }
+      
       console.log("useBlog handleSubmit - Final image URL:", finalImageUrl);
 
       // Ensure meta_keywords are properly handled

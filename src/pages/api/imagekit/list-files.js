@@ -1,4 +1,3 @@
-// pages/api/imagekit/list-files.js
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 
 export default async function handler(req, res) {
@@ -21,7 +20,7 @@ export default async function handler(req, res) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
-    const { path } = req.query;
+    const { path = "/Blog" } = req.query;
     if (!path) {
       return res.status(400).json({ error: "Path is required" });
     }
@@ -39,18 +38,33 @@ export default async function handler(req, res) {
     );
 
     const data = await response.json();
+    console.log("ImageKit API response:", {
+      path,
+      status: response.status,
+      statusText: response.statusText,
+      data,
+    });
+
     if (!response.ok) {
-      console.error("ImageKit API error:", data);
+      console.error("ImageKit API error:", {
+        status: response.status,
+        statusText: response.statusText,
+        data,
+      });
       return res.status(response.status).json({
         error: data.message || "Failed to fetch files",
         details: data,
       });
     }
 
-    // console.log(`Fetched files for path ${path}:`, data);
+    // Return the array directly
+    console.log(`Fetched ${data.length} files for path ${path}`);
     res.status(200).json(data);
   } catch (error) {
-    console.error("List files error:", error);
+    console.error("List files error:", {
+      message: error.message,
+      stack: error.stack,
+    });
     res
       .status(500)
       .json({ error: "Internal server error", details: error.message });

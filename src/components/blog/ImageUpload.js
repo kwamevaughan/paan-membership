@@ -1,7 +1,5 @@
-// ImageUpload.jsx
 import { useState } from "react";
 import { Icon } from "@iconify/react";
-import { IKContext, IKUpload } from "imagekitio-react";
 import toast from "react-hot-toast";
 import ImageLibrary from "./ImageLibrary";
 
@@ -18,80 +16,70 @@ export default function ImageUpload({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showMediaLibrary, setShowMediaLibrary] = useState(false);
 
-  const authenticator = async () => {
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
     try {
-      const endpoint =
-        process.env.NODE_ENV === "production"
-          ? "https://membership.paan.africa/api/imagekit/auth"
-          : "http://localhost:3000/api/imagekit/auth";
-      const response = await fetch(endpoint, {
-        method: "GET",
-        credentials: "include",
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Failed to fetch auth parameters: ${response.status} ${errorText}`
-        );
-      }
-      const data = await response.json();
-      if (!data.signature || !data.token || !data.expire) {
-        throw new Error("Invalid auth parameters received");
-      }
-      return {
-        signature: data.signature,
-        token: data.token,
-        expire: data.expire,
+      setUploading(true);
+      setUploadProgress(0);
+      console.log("Upload started with file:", file.name);
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const xhr = new XMLHttpRequest();
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const progress = Math.round((event.loaded * 100) / event.total);
+          setUploadProgress(progress);
+        }
       };
+
+      const response = await new Promise((resolve, reject) => {
+        xhr.open("POST", "/api/imagekit/upload-file", true);
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(JSON.parse(xhr.responseText));
+          } else {
+            reject(new Error(`Upload failed with status ${xhr.status}`));
+          }
+        };
+        xhr.onerror = () => reject(new Error("Network error"));
+        xhr.send(formData);
+      });
+
+      console.log("Upload success:", {
+        fileId: response.fileId,
+        name: response.name,
+        url: response.url,
+        filePath: response.filePath,
+      });
+
+      setUploadedImage(response);
+      const imageUrl = response.url;
+      handleInputChange({
+        target: {
+          name: "multiple",
+          value: {
+            article_image: imageUrl,
+            featured_image_url: imageUrl,
+            featured_image_upload: imageUrl,
+            featured_image_library: "",
+          },
+        },
+      });
+      toast.success("Image uploaded successfully");
     } catch (error) {
-      console.error("Authenticator error:", error);
-      toast.error(`Authentication failed: ${error.message}`);
-      throw error;
+      console.error("Upload error:", error);
+      toast.error(`Failed to upload image: ${error.message}`);
+    } finally {
+      setUploading(false);
     }
   };
 
-  const onUploadStart = () => {
-    setUploading(true);
-    setUploadProgress(0);
-  };
-
-  const onUploadSuccess = (res) => {
-    setUploading(false);
-    setUploadProgress(100);
-    setUploadedImage(res);
-
-    const imageUrl = res.url;
-    console.log("ImageUpload onUploadSuccess - Setting image URL:", imageUrl);
-
-    handleInputChange({
-      target: {
-        name: "multiple",
-        value: {
-          article_image: imageUrl,
-          featured_image_url: imageUrl,
-          featured_image_upload: imageUrl,
-          featured_image_library: "",
-        },
-      },
-    });
-    toast.success("Image uploaded successfully");
-  };
-
-  const onUploadError = (error) => {
-    setUploading(false);
-    console.error("Upload error:", error);
-    toast.error("Failed to upload image");
-  };
-
-  const onUploadProgress = (progressEvent) => {
-    const progress = Math.round(
-      (progressEvent.loaded * 100) / progressEvent.total
-    );
-    setUploadProgress(progress);
-  };
-
   const handleMediaSelect = (selectedImage) => {
-    const imageUrl = selectedImage.url;
+    const imageUrl = selectedImage.url || selectedImage;
     console.log("ImageUpload handleMediaSelect - Setting image URL:", imageUrl);
 
     handleInputChange({
@@ -185,32 +173,36 @@ export default function ImageUpload({
 
       {imageSource === "upload" && (
         <div className="space-y-4">
-          <IKContext
-            publicKey={process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY}
-            urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}
-            authenticationEndpoint={
-              process.env.NODE_ENV === "production"
-                ? "https://membership.paan.africa/api/imagekit/auth"
-                : "http://localhost:3000/api/imagekit/auth"
-            }
-            authenticator={authenticator}
+          <label
+            className={`w-full px-4 py-2 rounded-xl border ${
+              mode === "dark"
+                ? "bg-gray-800 border-gray-700 text-gray-100"
+                : "bg-white border-gray-300 text-gray-900"
+            } focus:ring-2 focus:ring-blue-500 focus:border-transparent cursor-pointer`}
           >
-            <IKUpload
-              fileName="blog-image.jpg"
-              useUniqueFileName={true}
-              folder="/Blog"
-              onUploadStart={onUploadStart}
-              onUploadProgress={onUploadProgress}
-              onSuccess={onUploadSuccess}
-              onError={onUploadError}
+            <input
+              type="file"
               accept="image/*"
-              className={`w-full px-4 py-2 rounded-xl border ${
-                mode === "dark"
-                  ? "bg-gray-800 border-gray-700 text-gray-100"
-                  : "bg-white border-gray-300 text-gray-900"
-              } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+              onChange={handleFileUpload}
+              className="hidden"
+              disabled={uploading}
             />
-          </IKContext>
+            <div className="flex items-center justify-center gap-2">
+              <Icon
+                icon="heroicons:arrow-up-tray"
+                className={`w-5 h-5 ${
+                  mode === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              />
+              <span
+                className={`text-sm ${
+                  mode === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
+                {uploading ? "Uploading..." : "Choose file or drag and drop"}
+              </span>
+            </div>
+          </label>
           {uploading && (
             <div className="w-full bg-gray-200 rounded-full h-2.5">
               <div

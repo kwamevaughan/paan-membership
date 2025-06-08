@@ -37,6 +37,7 @@ export default async function handler(req, res) {
       currentTime: new Date(now).toISOString(),
       expireUnix: expire,
       expireDate: new Date(expire * 1000).toISOString(),
+      folder: "/Blog", // Log intended folder
     });
 
     const signature = createHmac("sha1", privateKey)

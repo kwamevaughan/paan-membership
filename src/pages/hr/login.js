@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { Icon } from "@iconify/react";
@@ -81,11 +80,9 @@ export default function HRLogin() {
         return;
       }
 
-      // Log cookies
       const cookies = getBrowserCookies();
       console.log("[HRLogin] Browser cookies after login:", cookies);
 
-      // Verify session
       const {
         data: { session: currentSession },
         error: sessionError,
@@ -103,7 +100,6 @@ export default function HRLogin() {
         return;
       }
 
-      // Verify user in hr_users
       console.log("[HRLogin] Checking hr_users for user ID:", user.id);
       const { data: hrUser, error: hrError } = await supabase
         .from("hr_users")
@@ -138,9 +134,9 @@ export default function HRLogin() {
         localStorage.removeItem("hr_remembered_email");
       }
 
-      console.log("[HRLogin] Attempting redirect to /hr/overview");
+      console.log("[HRLogin] Attempting redirect to /hr-overview");
       toast.success("Login successful! Redirecting...", { icon: "✅" });
-      await router.push("/hr/overview").catch((err) => {
+      await router.push("/hr-overview").catch((err) => {
         console.error("[HRLogin] Redirect error:", err);
         toast.error("Failed to redirect. Please navigate manually.", {
           icon: "❌",
@@ -207,156 +203,269 @@ export default function HRLogin() {
   };
 
   return (
-    <div className="min-h-screen flex pt-14 flex-col bg-gradient-to-br from-gray-50 via-gray-100 to-[#f05d23] bg-opacity-50">
-      <div className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-8 transform transition-all duration-500 hover:shadow-2xl">
-          <div className="mb-8 text-center">
-            <Image
-              src="/assets/images/logo.svg"
-              alt="PAAN Logo"
-              width={200}
-              height={150}
-              className="mx-auto animate-fade-in"
-            />
-            <p className="mt-6 text-base text-gray-600">
-              Welcome to PAAN Member Management Dashboard
-            </p>
-          </div>
+    <div className="relative min-h-screen overflow-hidden">
+      {/* Background with Video and Gradient Overlays */}
+      <div className="absolute inset-0 z-0">
+        <iframe
+          className="w-full h-full object-cover scale-105"
+          src="https://www.youtube.com/embed/InDtkDgVb1Q?autoplay=1&loop=1&playlist=InDtkDgVb1Q&controls=0&mute=1&showinfo=0&rel=0&modestbranding=1&fs=0"
+          frameBorder="0"
+          allow="autoplay; fullscreen"
+          title="Background Video"
+          loading="lazy"
+        />
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 via-transparent to-blue-500/10 animate-pulse"></div>
+      </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="relative">
-              <label className="block text-sm font-medium text-[#231812] mb-1">
-                E-mail
-              </label>
-              <div className="flex items-center">
-                <Icon
-                  icon="mdi:email-outline"
-                  className="absolute left-3 text-[#231812] h-5 w-5"
-                />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-3 py-3 bg-gray-50 border border-gray-300 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-[#f05d23] focus:border-transparent transition-all duration-200 text-[#231812] placeholder-gray-400"
-                  placeholder="Enter GCG email"
-                  required
-                />
+      {/* Decorative Elements */}
+      <div className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-r from-orange-500/20 to-transparent rounded-full blur-xl animate-pulse"></div>
+      <div
+        className="absolute bottom-32 right-16 w-32 h-32 bg-gradient-to-r from-blue-500/20 to-transparent rounded-full blur-xl animate-pulse"
+        style={{ animationDelay: "1s" }}
+      ></div>
+
+      {/* Main Content Container */}
+      <div className="relative z-10 min-h-screen flex items-center justify-center px-4 sm:px-6 py-20">
+        <div className="w-full max-w-xl">
+          {/* Glassmorphism Card */}
+          <div className="relative bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-8 shadow-2xl">
+            {/* Logo with Animation */}
+            <div className="text-center mb-8">
+              <a
+                target="_blank"
+                rel="noopener noreferrer"
+                href="https://paan.africa"
+                className="inline-block group"
+              >
+                <div className="relative bg-white/80 backdrop-blur-xl border border-white/20 rounded-lg p-3 shadow-2xl">
+                  <Image
+                    src="/assets/images/logo.svg"
+                    alt="PAAN Logo"
+                    width={180}
+                    height={180}
+                    className="mx-auto transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-2xl"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500/30 to-blue-500/30 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"></div>
+                </div>
+              </a>
+            </div>
+
+            {/* Enhanced Typography */}
+            <div className="text-center mb-8">
+              <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
+                Welcome to{" "}
+                <span className="bg-gradient-to-r from-blue-200 to-sky-600 bg-clip-text text-transparent">
+                  PAAN
+                </span>{" "}
+                Dashboard
+              </h1>
+              <p className="text-lg text-gray-200 mb-6 max-w-md mx-auto leading-relaxed">
+                Access the Pan-African Agency Network Member Management
+                Dashboard
+              </p>
+              <div className="relative mb-6">
+                <div className="h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent"></div>
+                <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
               </div>
             </div>
 
-            {showPasswordField && (
-              <div className="relative animate-fade-in">
-                <label className="block text-sm font-medium text-[#231812] mb-1">
-                  Password
+            {/* Form Section */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="relative">
+                <label className="block text-sm font-medium text-white mb-1">
+                  E-mail
                 </label>
-                <div className="flex items-center relative">
+                <div className="flex items-center">
                   <Icon
-                    icon="mdi:lock-outline"
-                    className="absolute left-3 text-[#231812] h-5 w-5"
+                    icon="mdi:email-outline"
+                    className="absolute left-3 text-white h-5 w-5"
                   />
                   <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-3 bg-gray-50 border border-gray-300 rounded-lg shadow-inner focus:outline-none focus:ring-2 focus:ring-[#f05d23] focus:border-transparent transition-all duration-200 text-[#231812] placeholder-gray-400"
-                    placeholder="Enter your password"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="w-full pl-10 pr-3 py-3 bg-white/10 backdrop-blur-md border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 text-white placeholder-gray-300 hover:bg-white/20"
+                    placeholder="Enter GCG email"
                     required
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 text-[#231812] hover:text-[#f05d23] focus:outline-none transition-colors"
-                  >
+                </div>
+              </div>
+
+              {showPasswordField && (
+                <div className="relative animate-fade-in">
+                  <label className="block text-sm font-medium text-white mb-1">
+                    Password
+                  </label>
+                  <div className="flex items-center relative">
                     <Icon
-                      icon={showPassword ? "mdi:eye-off" : "mdi:eye"}
-                      className="h-5 w-5"
+                      icon="mdi:lock-outline"
+                      className="absolute left-3 text-white h-5 w-5"
+                    />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-10 pr-10 py-3 bg-white/10 backdrop-blur-md border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 text-white placeholder-gray-300 hover:bg-white/20"
+                      placeholder="Enter your password"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 text-white hover:text-blue-400 focus:outline-none transition-colors"
+                    >
+                      <Icon
+                        icon={showPassword ? "mdi:eye-off" : "mdi:eye"}
+                        className="h-5 w-5"
+                      />
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {showPasswordField && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center text-sm text-white">
+                      <input
+                        type="checkbox"
+                        checked={rememberMe}
+                        onChange={(e) => setRememberMe(e.target.checked)}
+                        className="mr-2 h-4 w-4 text-blue-400 focus:ring-blue-400 border-white/30 rounded bg-white/10"
+                      />
+                      Remember me
+                    </label>
+                  </div>
+
+                  <div className="flex justify-center">
+                    <ReCAPTCHA
+                      sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
+                      onChange={(value) => {
+                        console.log("[HRLogin] ReCAPTCHA verified:", !!value);
+                        setCaptchaVerified(!!value);
+                      }}
+                      className="transform scale-90 origin-center"
+                      theme="dark"
+                    />
+                  </div>
+                </>
+              )}
+
+              {showPasswordField ? (
+                <div className="flex justify-between gap-4">
+                  <button
+                    type="submit"
+                    className="group relative flex-1 py-3 px-4 bg-gradient-to-r from-blue-400 to-sky-600 text-white font-semibold rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden flex items-center justify-center gap-2"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                    <span className="relative z-10">Sign In</span>
+                    <Icon
+                      icon="mdi:login"
+                      className="relative z-10 h-5 w-5 group-hover:rotate-45 transition-transform duration-300"
                     />
                   </button>
-                </div>
-              </div>
-            )}
-
-            {showPasswordField && (
-              <>
-                <div className="flex items-center justify-between">
-                  <label className="flex items-center text-sm text-[#231812]">
-                    <input
-                      type="checkbox"
-                      checked={rememberMe}
-                      onChange={(e) => setRememberMe(e.target.checked)}
-                      className="mr-2 h-4 w-4 text-[#f05d23] focus:ring-[#f05d23] border-gray-300 rounded"
+                  <Link
+                    href="/"
+                    className="group relative flex-1 py-3 px-4 bg-gradient-to-r from-gray-700 to-gray-900 text-white font-semibold rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden flex items-center justify-center gap-2"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-gray-900 to-gray-700 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                    <span className="relative z-10">Return</span>
+                    <Icon
+                      icon="mdi:arrow-left"
+                      className="relative z-10 h-5 w-5 group-hover:rotate-45 transition-transform duration-300"
                     />
-                    Remember me
-                  </label>
+                  </Link>
                 </div>
-
-                <div className="flex justify-center">
-                  <ReCAPTCHA
-                    sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY}
-                    onChange={(value) => {
-                      console.log("[HRLogin] ReCAPTCHA verified:", !!value);
-                      setCaptchaVerified(!!value);
-                    }}
-                    className="transform scale-90 origin-center"
-                  />
-                </div>
-              </>
-            )}
-
-            {showPasswordField ? (
-              <div className="flex justify-between gap-4">
+              ) : (
                 <button
                   type="submit"
-                  className="flex-1 py-3 px-4 bg-[#f05d23] text-white font-semibold rounded-lg shadow-md hover:bg-[#d94f1e] hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-[#f05d23] focus:ring-offset-2 transition-all duration-300 flex items-center justify-center gap-2"
+                  className="group relative w-full py-3 px-4 bg-gradient-to-r from-blue-400 to-sky-600 text-white font-semibold rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden flex items-center justify-center gap-2"
                 >
-                  <Icon icon="mdi:login" className="h-5 w-5" />
-                  Sign In
+                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                  <span className="relative z-10">Send Magic Link</span>
+                  <Icon
+                    icon="mdi:email-fast"
+                    className="relative z-10 h-5 w-5 group-hover:rotate-45 transition-transform duration-300"
+                  />
                 </button>
-                <Link
-                  href="/"
-                  className="flex-1 py-3 px-4 bg-[#231812] text-white font-semibold rounded-lg shadow-md hover:bg-[#4a2e24] hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-[#231812] focus:ring-offset-2 transition-all duration-300 flex items-center justify-center gap-2"
+              )}
+
+              <div className="text-center">
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordField(!showPasswordField)}
+                  className="text-base text-blue-400 hover:text-blue-300 transition-colors"
                 >
-                  <Icon icon="mdi:arrow-left" className="h-5 w-5" />
-                  Return
-                </Link>
+                  {showPasswordField
+                    ? "Sign in using magic link"
+                    : "Sign in using password"}
+                </button>
               </div>
-            ) : (
-              <button
-                type="submit"
-                className="w-full py-3 px-4 bg-[#f05d23] text-white font-semibold rounded-lg shadow-md hover:bg-[#d94f1e] hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-[#f05d23] focus:ring-offset-2 transition-all duration-300 flex items-center justify-center gap-2"
-              >
-                <Icon icon="mdi:email-fast" className="h-5 w-5" />
-                Send me a magic link
-              </button>
-            )}
+            </form>
 
-            <div className="text-center">
-              <button
-                type="button"
-                onClick={() => setShowPasswordField(!showPasswordField)}
-                className="text-base text-[#f05d23] hover:text-[#d94f1e] transition-colors"
+            <p className="mt-6 text-center text-xs text-gray-300">
+              Powered by{" "}
+              <a
+                href="https://paan.africa"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-400 font-medium hover:text-blue-300 transition-colors"
               >
-                {showPasswordField
-                  ? "Sign in using magic link"
-                  : "Sign in using password"}
-              </button>
-            </div>
-          </form>
-
-          <p className="mt-6 text-center text-xs text-gray-500">
-            Powered by{" "}
-            <a
-              href="https://paan.africa"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#f05d23] font-medium hover:text-[#d94f1e] transition-colors"
-            >
-              Pan-African Agency Network (PAAN)
-            </a>
-          </p>
+                Pan-African Agency Network (PAAN)
+              </a>
+            </p>
+          </div>
         </div>
       </div>
-      <Footer mode={mode} isSidebarOpen={false} />
+
+      {/* Social Media Footer */}
+      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 z-20">
+        <div className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-md border border-white/20 rounded-2xl shadow-xl">
+          {[
+            {
+              href: "https://x.com/paan_network",
+              icon: "fa6-brands:square-x-twitter",
+              color: "hover:text-blue-400",
+              label: "Follow us on X",
+            },
+            {
+              href: "https://www.youtube.com/@PAAN-AFRICA",
+              icon: "mdi:youtube",
+              color: "hover:text-red-500",
+              label: "Subscribe on YouTube",
+            },
+            {
+              href: "https://www.linkedin.com/company/pan-african-agency-network/",
+              icon: "mdi:linkedin",
+              color: "hover:text-blue-600",
+              label: "Connect on LinkedIn",
+            },
+            {
+              href: "https://www.facebook.com/panafricanagencynetwork",
+              icon: "mdi:facebook",
+              color: "hover:text-blue-500",
+              label: "Follow on Facebook",
+            },
+          ].map((social) => (
+            <a
+              key={social.href}
+              href={social.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`group relative p-2 text-white ${social.color} transition-all duration-300 hover:scale-110 hover:-translate-y-1 rounded-lg hover:bg-white/10`}
+              aria-label={social.label}
+            >
+              <Icon icon={social.icon} className="w-6 h-6" />
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-black/80 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap pointer-events-none">
+                {social.label}
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+
       <Toaster />
     </div>
   );

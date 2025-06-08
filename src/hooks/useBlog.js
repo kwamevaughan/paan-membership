@@ -34,6 +34,7 @@ export const useBlog = (blogId) => {
     content: "",
     publish_option: "draft",
     scheduled_date: null,
+    focus_keyword: "",
   });
   const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState("newest");
@@ -272,6 +273,8 @@ export const useBlog = (blogId) => {
         featured_image_upload,
         featured_image_library,
         content,
+        article_tags,
+        focus_keyword,
         ...rest
       } = dataToUse;
 
@@ -299,14 +302,21 @@ export const useBlog = (blogId) => {
         featured_image_upload || featured_image_library || article_image || "";
       console.log("useBlog handleSubmit - Final image URL:", finalImageUrl);
 
+      // Ensure meta_keywords are properly handled
+      const finalMetaKeywords = meta_keywords || (keywords ? keywords.join(", ") : "");
+
+      // Get the final content from editor or form data
+      const finalContent = editorContent || content || article_body || "";
+      console.log("useBlog handleSubmit - Final content:", finalContent);
+
       const blogToUpsert = {
         id: id || undefined,
         article_name,
-        article_body: editorContent,
+        article_body: finalContent,
         article_image: finalImageUrl,
-        meta_title,
-        meta_description,
-        meta_keywords,
+        meta_title: title || article_name,
+        meta_description: description || "",
+        meta_keywords: finalMetaKeywords,
         slug,
         is_published,
         is_draft,
@@ -314,10 +324,13 @@ export const useBlog = (blogId) => {
         author: user.id,
         category_id,
         article_category,
+        article_tags: article_tags || [],
+        focus_keyword: focus_keyword || "",
         updated_at: new Date().toISOString(),
         created_at: id ? undefined : new Date().toISOString(),
       };
 
+      // Remove any undefined or null values
       Object.keys(blogToUpsert).forEach((key) => {
         if (blogToUpsert[key] === undefined || blogToUpsert[key] === null) {
           delete blogToUpsert[key];
@@ -405,27 +418,43 @@ export const useBlog = (blogId) => {
   const handleEdit = (blog) => {
     console.log("useBlog handleEdit called with blog:", blog);
 
+    // Get article tags from blog_post_tags if available
+    const articleTags = blog.blog_post_tags?.map(t => t.tag.name) || [];
+
+    // Parse meta_keywords into an array if it exists
+    const keywordsArray = blog.meta_keywords 
+      ? blog.meta_keywords.split(',').map(k => k.trim()).filter(k => k)
+      : [];
+
+    // Format the publish_date to datetime-local input format if it exists
+    const formattedPublishDate = blog.publish_date 
+      ? new Date(blog.publish_date).toISOString().slice(0, 16)
+      : null;
+
     const transformedData = {
       ...blog,
       category_id: blog.category_id,
       tag_ids: blog.tags?.map((t) => t.tag.id) || [],
+      article_tags: articleTags,
       author: blog.author || hrUser?.name || hrUser?.username || "PAAN Admin",
       publish_option: blog.is_published
         ? "publish"
         : blog.publish_date
         ? "schedule"
         : "draft",
-      scheduled_date: blog.publish_date,
+      scheduled_date: formattedPublishDate,
+      publish_date: formattedPublishDate,
       title: blog.meta_title || "",
       description: blog.meta_description || "",
-      keywords: blog.meta_keywords
-        ? blog.meta_keywords.split(",").map((k) => k.trim())
-        : [],
+      keywords: keywordsArray,
+      meta_keywords: blog.meta_keywords || "",
       article_image: blog.article_image || "",
       featured_image_url: blog.article_image || "",
       featured_image_upload: "",
       featured_image_library: blog.article_image || "",
       content: blog.article_body || "",
+      article_body: blog.article_body || "",
+      focus_keyword: blog.focus_keyword || "",
     };
 
     console.log("useBlog handleEdit transformed data:", transformedData);

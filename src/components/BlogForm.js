@@ -1,5 +1,5 @@
 // BlogForm.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import { useBlog } from "../hooks/useBlog";
 import { useAuth } from "../hooks/useAuth";
@@ -36,7 +36,7 @@ export default function BlogForm({
     handleEdit,
   } = useBlog(blogId);
 
-  const [imageSource, setImageSource] = useState("url");
+  const [imageSource, setImageSource] = useState("upload");
   const [uploadedImage, setUploadedImage] = useState(null);
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [showAddTag, setShowAddTag] = useState(false);
@@ -44,7 +44,8 @@ export default function BlogForm({
   const [newTagName, setNewTagName] = useState("");
   const [modalLoading, setModalLoading] = useState(false);
   const [selectedTags, setSelectedTags] = useState([]);
-  const fileInputRef = React.useRef(null);
+  const fileInputRef = useRef(null);
+  const [showImageLibrary, setShowImageLibrary] = useState(false);
 
   // Reset form when showForm changes
   useEffect(() => {
@@ -76,7 +77,7 @@ export default function BlogForm({
         scheduled_date: null,
       });
       setEditorContent("");
-      setImageSource("url");
+      setImageSource("upload");
       setUploadedImage(null);
       setSelectedTags([]);
     }
@@ -186,7 +187,7 @@ export default function BlogForm({
     try {
       console.log("BlogForm onSubmit - Initial formData:", formData);
 
-      // Construct updated formData with the correct image URL
+      // Construct updated formData with the correct image URL and editor content
       const imageUrl =
         formData.featured_image_upload ||
         formData.featured_image_library ||
@@ -200,6 +201,8 @@ export default function BlogForm({
           imageSource === "library"
             ? imageUrl
             : formData.featured_image_library,
+        article_body: editorContent || formData.article_body || "",
+        content: editorContent || formData.content || "",
       };
 
       console.log("BlogForm onSubmit - Updated formData:", updatedFormData);
@@ -304,11 +307,20 @@ export default function BlogForm({
   };
 
   const handleRemoveImage = () => {
+    // Clear all image-related fields
+    handleInputChange({
+      target: {
+        name: 'multiple',
+        value: {
+          article_image: "",
+          featured_image_url: "",
+          featured_image_upload: "",
+          featured_image_library: ""
+        }
+      }
+    });
     setUploadedImage(null);
-    setFormData((prev) => ({
-      ...prev,
-      featured_image_upload: null,
-    }));
+    setImageSource("upload"); // Reset to upload tab
   };
 
   return (
@@ -367,6 +379,21 @@ export default function BlogForm({
                 </button>
                 <button
                   type="button"
+                  onClick={() => setImageSource("url")}
+                  className={`flex-1 px-4 py-2 rounded-xl border ${
+                    imageSource === "url"
+                      ? mode === "dark"
+                        ? "bg-blue-900/30 border-blue-700"
+                        : "bg-blue-50 border-blue-200"
+                      : mode === "dark"
+                      ? "bg-gray-800 border-gray-700"
+                      : "bg-white border-gray-200"
+                  }`}
+                >
+                  External URL
+                </button>
+                <button
+                  type="button"
                   onClick={() => setImageSource("library")}
                   className={`flex-1 px-4 py-2 rounded-xl border ${
                     imageSource === "library"
@@ -378,7 +405,7 @@ export default function BlogForm({
                       : "bg-white border-gray-200"
                   }`}
                 >
-                  Image Library
+                  Media Library
                 </button>
               </div>
 
@@ -402,6 +429,23 @@ export default function BlogForm({
                   >
                     Choose File
                   </button>
+                </div>
+              )}
+
+              {imageSource === "url" && (
+                <div>
+                  <input
+                    type="text"
+                    name="featured_image_url"
+                    value={formData.featured_image_url || ""}
+                    onChange={handleInputChange}
+                    className={`w-full px-4 py-2 rounded-xl border ${
+                      mode === "dark"
+                        ? "bg-gray-800 border-gray-700 text-gray-100"
+                        : "bg-white border-gray-300 text-gray-900"
+                    } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                    placeholder="Enter image URL"
+                  />
                 </div>
               )}
 
@@ -438,78 +482,6 @@ export default function BlogForm({
                   </button>
                 </div>
               )}
-            </div>
-          </div>
-
-          {/* Publishing Options */}
-          <div className="space-y-4">
-            <h3
-              className={`text-lg font-medium ${
-                mode === "dark" ? "text-gray-200" : "text-gray-900"
-              }`}
-            >
-              Publishing Options
-            </h3>
-            <div>
-              <label
-                className={`block text-sm font-medium ${
-                  mode === "dark" ? "text-gray-300" : "text-gray-700"
-                }`}
-              >
-                Publish Date
-              </label>
-              <input
-                type="datetime-local"
-                value={formData.publish_date || ""}
-                onChange={handleInputChange}
-                className={`w-full px-4 py-2 rounded-xl border ${
-                  mode === "dark"
-                    ? "bg-gray-800 border-gray-700 text-gray-100"
-                    : "bg-white border-gray-300 text-gray-900"
-                } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-              />
-            </div>
-            <div>
-              <label
-                className={`block text-sm font-medium ${
-                  mode === "dark" ? "text-gray-300" : "text-gray-700"
-                }`}
-              >
-                Publish Option
-              </label>
-              <select
-                name="publish_option"
-                value={formData.publish_option || "draft"}
-                onChange={handleInputChange}
-                className={`w-full px-4 py-2 rounded-xl border ${
-                  mode === "dark"
-                    ? "bg-gray-800 border-gray-700 text-gray-100"
-                    : "bg-white border-gray-300 text-gray-900"
-                } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-              >
-                <option value="draft">Draft</option>
-                <option value="scheduled">Scheduled</option>
-                <option value="published">Published</option>
-              </select>
-            </div>
-            <div>
-              <label
-                className={`block text-sm font-medium ${
-                  mode === "dark" ? "text-gray-300" : "text-gray-700"
-                }`}
-              >
-                Scheduled Date
-              </label>
-              <input
-                type="datetime-local"
-                value={formData.scheduled_date || ""}
-                onChange={handleInputChange}
-                className={`w-full px-4 py-2 rounded-xl border ${
-                  mode === "dark"
-                    ? "bg-gray-800 border-gray-700 text-gray-100"
-                    : "bg-white border-gray-300 text-gray-900"
-                } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-              />
             </div>
           </div>
 
@@ -673,6 +645,27 @@ export default function BlogForm({
           </div>
         </form>
       </ItemActionModal>
+
+      {/* Add Image Library Modal */}
+      <ImageLibrary
+        isOpen={showImageLibrary}
+        onClose={() => setShowImageLibrary(false)}
+        onSelect={(selectedImage) => {
+          handleInputChange({
+            target: {
+              name: 'multiple',
+              value: {
+                article_image: selectedImage.url,
+                featured_image_url: selectedImage.url,
+                featured_image_library: selectedImage.url,
+                featured_image_upload: '',
+              },
+            },
+          });
+          setShowImageLibrary(false);
+        }}
+        mode={mode}
+      />
     </>
   );
 }

@@ -216,7 +216,7 @@ export default function BlogGrid({
                       mode === "dark" ? "text-gray-400" : "text-gray-500"
                     }`}
                   >
-                    {formatDate(blog.created_at)}
+                    Last Updated: {formatDate(blog.updated_at || blog.created_at)}
                   </span>
                 </div>
 
@@ -266,10 +266,18 @@ export default function BlogGrid({
                         />
                         Published
                       </span>
+                    ) : blog.publish_date ? (
+                      <span className="flex items-center text-blue-500">
+                        <Icon
+                          icon="heroicons:clock"
+                          className="w-4 h-4 mr-1"
+                        />
+                        Scheduled
+                      </span>
                     ) : (
                       <span className="flex items-center text-yellow-500">
                         <Icon
-                          icon="heroicons:clock"
+                          icon="heroicons:document-text"
                           className="w-4 h-4 mr-1"
                         />
                         Draft
@@ -362,7 +370,7 @@ export default function BlogGrid({
                         mode === "dark" ? "text-gray-400" : "text-gray-500"
                       }`}
                     >
-                      {formatDate(blog.created_at)}
+                      Last Updated: {formatDate(blog.updated_at || blog.created_at)}
                     </span>
                   </div>
 
@@ -412,10 +420,18 @@ export default function BlogGrid({
                           />
                           Published
                         </span>
+                      ) : blog.publish_date ? (
+                        <span className="flex items-center text-blue-500">
+                          <Icon
+                            icon="heroicons:clock"
+                            className="w-4 h-4 mr-1"
+                          />
+                          Scheduled
+                        </span>
                       ) : (
                         <span className="flex items-center text-yellow-500">
                           <Icon
-                            icon="heroicons:clock"
+                            icon="heroicons:document-text"
                             className="w-4 h-4 mr-1"
                           />
                           Draft

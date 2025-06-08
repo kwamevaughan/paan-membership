@@ -63,6 +63,23 @@ const getEditorConfig = (mode, height, placeholder) => ({
     fullsize: { icon: 'expand' },
     print: { icon: 'print' },
     about: { icon: 'info' }
+  },
+  editHTMLDocumentMode: false,
+  askBeforePasteHTML: false,
+  askBeforePasteFromWord: false,
+  defaultActionOnPaste: "insert_only_text",
+  enterMode: "br",
+  useArabicTextDirection: false,
+  direction: "ltr",
+  language: "en",
+  showCharsCounter: true,
+  showWordsCounter: true,
+  showXPathInStatusbar: false,
+  saveModeOnBlur: true,
+  triggerChangeEvent: true,
+  enableDragAndDropFileToEditor: false,
+  uploader: {
+    insertImageAsBase64URI: true
   }
 });
 
@@ -107,6 +124,7 @@ RawTextEditor.displayName = 'RawTextEditor';
 export default function EditorComponent({
   initialValue = "",
   onBlur,
+  onChange,
   mode = "light",
   defaultView = "html",
   placeholder = "Enter text here",
@@ -131,6 +149,13 @@ export default function EditorComponent({
     }
   }, [initialValue]);
 
+  const handleEditorChange = useCallback((newContent) => {
+    if (newContent !== content) {
+      setContent(newContent);
+      onChange?.(newContent);
+    }
+  }, [content, onChange]);
+
   const handleEditorBlur = useCallback((newContent) => {
     if (newContent !== content) {
       setContent(newContent);
@@ -141,8 +166,9 @@ export default function EditorComponent({
   const handleRawTextChange = useCallback((e) => {
     const newContent = e.target.value;
     setContent(newContent);
+    onChange?.(newContent);
     onBlur?.(newContent);
-  }, [onBlur]);
+  }, [onChange, onBlur]);
 
   const toggleViewMode = useCallback(() => {
     setViewMode((prev) => (prev === "rich" ? "html" : "rich"));
@@ -164,6 +190,8 @@ export default function EditorComponent({
           value={content}
           config={config.current}
           onBlur={handleEditorBlur}
+          onChange={handleEditorChange}
+          tabIndex={1}
         />
       ) : (
         <RawTextEditor

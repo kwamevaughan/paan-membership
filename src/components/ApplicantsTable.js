@@ -157,11 +157,11 @@ const handleColumnResize = (e, columnKey) => {
         />
       );
     return sortDirection === "asc" ? (
-      <Icon icon="heroicons:arrow-up" className="w-4 h-4 ml-1 text-[#f05d23]" />
+      <Icon icon="heroicons:arrow-up" className="w-4 h-4 ml-1 text-blue-400" />
     ) : (
       <Icon
         icon="heroicons:arrow-down"
-        className="w-4 h-4 ml-1 text-[#f05d23]"
+        className="w-4 h-4 ml-1 text-blue-400"
       />
     );
   };
@@ -204,12 +204,12 @@ const handleColumnResize = (e, columnKey) => {
 
       {/* Toolbar */}
       <div
-        className={`flex flex-col sm:flex-row justify-between items-center p-5 gap-4 border-b ${borderColor} ${secondaryBg} backdrop-blur-md`}
+        className={`flex flex-col sm:flex-row justify-between items-center p-5 gap-4 border-b ${borderColor} ${secondaryBg} backdrop-blur-md relative z-[100]`}
       >
         <div className="flex items-center gap-4">
           <h2 className={`text-2xl font-semibold ${textColor}`}>Applicants</h2>
           <span
-            className={`bg-[#f05d23] text-white px-3 py-1 text-sm rounded-full font-medium shadow-md animate-pulse`}
+            className={`bg-blue-400 text-white px-3 py-1 text-sm rounded-full font-medium shadow-md`}
           >
             {totalItems}
           </span>
@@ -252,10 +252,10 @@ const handleColumnResize = (e, columnKey) => {
       </div>
 
       {/* Table Container */}
-      <div className="max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-[#f05d23]/80 scrollbar-track-gray-200/50">
+      <div className="max-h-[600px] overflow-y-auto scrollbar-thin scrollbar-thumb-[#f05d23]/80 scrollbar-track-gray-200/50 relative">
         <table className="w-full border-collapse">
           {/* Table Header */}
-          <thead className="sticky top-0 z-10">
+          <thead className="sticky top-0 ">
             <tr
               className={`${secondaryBg} border-b ${borderColor} backdrop-blur-md`}
             >
@@ -406,7 +406,7 @@ const handleColumnResize = (e, columnKey) => {
                         href={candidate.primaryContactLinkedin}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-[#f05d23] hover:text-[#f28c5e] transition-all duration-200 flex items-center gap-1.5"
+                        className="text-blue-400 hover:text-blue-500 transition-all duration-200 flex items-center gap-1.5"
                       >
                         <Icon icon="mdi:linkedin" className="w-5 h-5" />
                         Profile

@@ -44,7 +44,7 @@ export default function ItemActionModal({
             ${
               mode === "dark"
                 ? "bg-gray-900 text-white border border-white/10"
-                : "bg-white/90 text-gray-900 border border-white/20"
+                : "bg-white/20 text-gray-900 border border-white/20"
             } 
             backdrop-blur-xl`}
           style={{
@@ -92,7 +92,7 @@ export default function ItemActionModal({
           {/* Content Area with Subtle Glass Effect */}
           <div
             className={`p-8 overflow-y-auto max-h-[calc(85vh-120px)] ${
-              mode === "dark" ? "bg-gray-900/45" : "bg-white/50"
+              mode === "dark" ? "bg-gray-900/45" : "bg-white/10"
             }`}
             style={{
               backdropFilter: "blur(8px)",

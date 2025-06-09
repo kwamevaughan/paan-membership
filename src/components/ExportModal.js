@@ -169,7 +169,7 @@ export default function ExportModal({ isOpen, onClose, candidates, mode }) {
                     mode === "dark" ? "bg-gray-800 text-white" : "bg-white text-[#231812]"
                 }`}
             >
-                <div className="bg-gradient-to-r from-[#f05d23] to-[#d94f1e] rounded-t-xl p-4 flex items-center justify-between">
+                <div className="bg-gradient-to-r from-blue-400 to-blue-600 rounded-t-xl p-4 flex items-center justify-between">
                     <div className="flex items-center">
                         <Icon icon="mdi:export" className="w-8 h-8 text-white mr-3" />
                         <h2 className="text-2xl font-bold text-white">Export Applicants</h2>
@@ -178,10 +178,10 @@ export default function ExportModal({ isOpen, onClose, candidates, mode }) {
                         onClick={onClose}
                         className="text-white hover:text-gray-200 transition duration-200"
                     >
-                        <Icon icon="mdi:close" width={24} height={24} />
+                        <Icon icon="mdi:close" width={24} height={24} />  
                     </button>
                 </div>
-                <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-[#f05d23] scrollbar-track-gray-200 relative">
+                <div className="flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-blue-400 scrollbar-track-gray-200 relative">
                     <div className="p-6 space-y-6">
                         <div>
                             <div className="flex justify-between items-center mb-2">
@@ -199,8 +199,8 @@ export default function ExportModal({ isOpen, onClose, candidates, mode }) {
                                         onClick={handleSelectAll}
                                         className={`text-xs px-2 py-1 rounded-full ${
                                             mode === "dark"
-                                                ? "bg-gray-700 text-[#f05d23] hover:bg-gray-600"
-                                                : "bg-gray-200 text-[#f05d23] hover:bg-gray-300"
+                                                ? "bg-gray-700 text-blue-400 hover:bg-gray-600"
+                                                : "bg-gray-200 text-blue-400 hover:bg-gray-300"
                                         }`}
                                     >
                                         All
@@ -209,8 +209,8 @@ export default function ExportModal({ isOpen, onClose, candidates, mode }) {
                                         onClick={handleSelectNone}
                                         className={`text-xs px-2 py-1 rounded-full ${
                                             mode === "dark"
-                                                ? "bg-gray-700 text-[#f05d23] hover:bg-gray-600"
-                                                : "bg-gray-200 text-[#f05d23] hover:bg-gray-300"
+                                                ? "bg-gray-700 text-blue-400 hover:bg-gray-600"
+                                                : "bg-gray-200 text-blue-400 hover:bg-gray-300"
                                         }`}
                                     >
                                         None
@@ -250,7 +250,7 @@ export default function ExportModal({ isOpen, onClose, candidates, mode }) {
                             <select
                                 value={exportFormat}
                                 onChange={(e) => setExportFormat(e.target.value)}
-                                className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] text-sm ${
+                                className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm ${
                                     mode === "dark"
                                         ? "bg-gray-700 border-gray-600 text-white"
                                         : "bg-gray-50 border-gray-300 text-[#231812]"
@@ -273,7 +273,7 @@ export default function ExportModal({ isOpen, onClose, candidates, mode }) {
                             <select
                                 value={previewRows}
                                 onChange={(e) => setPreviewRows(Number(e.target.value))}
-                                className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] text-sm ${
+                                className={`w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm ${
                                     mode === "dark"
                                         ? "bg-gray-700 border-gray-600 text-white"
                                         : "bg-gray-50 border-gray-300 text-[#231812]"
@@ -317,8 +317,8 @@ export default function ExportModal({ isOpen, onClose, candidates, mode }) {
                                 onClick={handleExportClick}
                                 className={`px-6 py-2 rounded-full flex items-center gap-2 transition duration-200 shadow-md hover:shadow-lg ${
                                     mode === "dark"
-                                        ? "bg-[#f05d23] text-white hover:bg-[#d94f1e]"
-                                        : "bg-[#f05d23] text-white hover:bg-[#d94f1e]"
+                                        ? "bg-blue-400 text-white hover:bg-blue-500"
+                                        : "bg-blue-400 text-white hover:bg-blue-500"
                                 }`}
                             >
                                 <Icon icon="mdi:download" width={20} height={20} />
@@ -329,8 +329,8 @@ export default function ExportModal({ isOpen, onClose, candidates, mode }) {
                                 onClick={exportPDF}
                                 className={`px-6 py-2 rounded-full flex items-center gap-2 transition duration-200 shadow-md hover:shadow-lg ${
                                     mode === "dark"
-                                        ? "bg-[#f05d23] text-white hover:bg-[#d94f1e]"
-                                        : "bg-[#f05d23] text-white hover:bg-[#d94f1e]"
+                                        ? "bg-blue-400 text-white hover:bg-blue-500"
+                                        : "bg-blue-400 text-white hover:bg-blue-500"
                                 }`}
                             >
                                 <Icon icon="mdi:download" width={20} height={20} />

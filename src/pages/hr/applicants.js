@@ -500,14 +500,17 @@ export default function HRApplicants({
         mode={mode}
       >
         <div className="space-y-4">
-          <p className="text-lg">Are you sure you want to delete this candidate? This action cannot be undone.</p>
+          <p className="text-lg">
+            Are you sure you want to delete this candidate? This action cannot
+            be undone.
+          </p>
           <div className="flex justify-end gap-4">
             <button
               onClick={() => {
                 setIsDeleteModalOpen(false);
                 setCandidateToDelete(null);
               }}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+              className="px-4 py-2 bg-gray-400 text-white rounded-lg hover:bg-gray-700 transition-colors"
             >
               Cancel
             </button>

@@ -20,10 +20,10 @@ export default function ColumnSelector({ allColumns, visibleColumns, setVisibleC
     return (
         <div className="relative group">
             <button
-                className={`px-4 py-2 rounded-full flex items-center gap-2 transition duration-200 shadow-md ${
+                className={`px-4 py-2 rounded-lg flex items-center gap-2 transition duration-200 shadow-md ${
                     mode === "dark"
-                        ? "bg-gray-700 text-[#f05d23] hover:bg-gray-600"
-                        : "bg-gray-200 text-[#f05d23] hover:bg-gray-300"
+                        ? "bg-gray-700 hover:bg-gray-600"
+                        : "bg-gray-200 hover:bg-gray-300"
                 }`}
             >
                 <Icon icon="mdi:table-column" width={20} height={20} />
@@ -32,7 +32,7 @@ export default function ColumnSelector({ allColumns, visibleColumns, setVisibleC
             <div
                 className={`absolute right-0 top-full mt-0 w-48 hidden group-hover:flex flex-col ${
                     mode === "dark" ? "bg-gray-800 text-gray-300" : "bg-white text-black"
-                } rounded-lg shadow-lg z-50 border ${mode === "dark" ? "border-gray-700" : "border-gray-200"}`}
+                } rounded-lg shadow-lg z-[200] border ${mode === "dark" ? "border-gray-700" : "border-gray-200"}`}
             >
                 {allColumns.map((col) => (
                     <label
@@ -43,7 +43,7 @@ export default function ColumnSelector({ allColumns, visibleColumns, setVisibleC
                             type="checkbox"
                             checked={visibleColumns[col.key]}
                             onChange={() => handleToggleColumn(col.key)}
-                            className="h-4 w-4 text-[#f05d23] border-gray-300 rounded focus:ring-[#f05d23]"
+                            className="h-4 w-4 text-blue-400 border-gray-300 rounded focus:ring-blue-400"
                         />
                         <span className={`text-sm ${mode === "dark" ? "text-gray-300" : "text-[#231812]"}`}>
                             {col.label}

@@ -28,7 +28,7 @@ export default function QuestionCard({
   handleTextInputChange,
 }) {
   const { countryOptions } = useCountry();
-  const inputStyles = `w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] transition ${
+  const inputStyles = `w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-800 transition ${
     mode === "dark"
       ? "bg-gray-700 border-gray-600 text-white"
       : "bg-gray-50 border-gray-300 text-[#231812]"
@@ -312,7 +312,7 @@ export default function QuestionCard({
         : "#D1D5DB",
       color: mode === "dark" ? "#FFFFFF" : "#231812",
       minHeight: "40px",
-      "&:hover": { borderColor: "#F05D23" },
+      "&:hover": { borderColor: "#4B5563" },
       boxShadow: "none",
     }),
     menu: (provided) => ({
@@ -323,7 +323,7 @@ export default function QuestionCard({
     option: (provided, state) => ({
       ...provided,
       backgroundColor: state.isSelected
-        ? "#F05D23"
+        ? "#4B5563"
         : state.isFocused
         ? mode === "dark"
           ? "#4B5563"
@@ -340,7 +340,7 @@ export default function QuestionCard({
     }),
     multiValue: (provided) => ({
       ...provided,
-      backgroundColor: "#F05D23",
+      backgroundColor: "#4B5563",
     }),
     multiValueLabel: (provided) => ({
       ...provided,
@@ -374,35 +374,37 @@ export default function QuestionCard({
 
   return (
     <div
-      className={` rounded-lg p-6 border-t-4 border-[#f05d23] ${
-        mode === "dark" ? "bg-gray-800" : "bg-white"
+      className={`rounded-xl py-4 transition-all duration-300 backdrop-blur-sm ${
+        mode === "dark" ? "bg-gradient-to-br from-gray-800/90 to-gray-900/90" : "bg-gradient-to-br from-white to-gray-50"
       } ${!isComplete ? "border-red-500" : ""}`}
     >
-      <div className="mb-5">
-        <div className="flex items-center mb-2">
-          <Icon
-            icon="mdi:question-mark-circle"
-            className="w-6 h-6 text-[#f05d23] mr-2"
-          />
-          <span
-            className={`text-lg font-semibold ${
-              mode === "dark" ? "text-gray-300" : "text-gray-600"
-            }`}
-            dangerouslySetInnerHTML={{ __html: q.text }}
-          />
+      <div className="mb-6">
+        <div className="flex items-start gap-4 mb-4">
+          <div className={`p-3 rounded-xl ${mode === "dark" ? "bg-gradient-to-br from-blue-500/20 to-purple-500/20" : "bg-gradient-to-br from-blue-50 to-purple-50"} backdrop-blur-sm`}>
+            <Icon
+              icon="mdi:question-mark-circle"
+              className={`w-7 h-7 ${mode === "dark" ? "text-blue-400" : "text-blue-600"}`}
+            />
+          </div>
+          <div className="flex-1">
+            <span
+              className={`text-xl font-semibold leading-relaxed bg-gradient-to-r ${mode === "dark" ? "from-gray-100 to-gray-300" : "from-gray-900 to-gray-700"} bg-clip-text text-transparent`}
+              dangerouslySetInnerHTML={{ __html: q.text }}
+            />
+            {q.description && (
+              <div
+                className={`mt-2 text-base leading-relaxed ${
+                  mode === "dark" ? "text-gray-400" : "text-gray-600"
+                }`}
+                dangerouslySetInnerHTML={{ __html: q.description }}
+              />
+            )}
+          </div>
         </div>
-        {q.description && (
-          <div
-            className={`text-sm ${
-              mode === "dark" ? "text-gray-400" : "text-gray-600"
-            }`}
-            dangerouslySetInnerHTML={{ __html: q.description }}
-          />
-        )}
       </div>
 
       {q.is_country_select ? (
-        <div className="space-y-2">
+        <div className="space-y-4">
           <label
             htmlFor={`q-${q.id}-country-select`}
             className={`text-sm font-medium ${
@@ -411,24 +413,37 @@ export default function QuestionCard({
           >
             Select Countries
           </label>
-          <Select
-            id={`q-${q.id}-country-select`}
-            options={countryOptions}
-            isMulti
-            value={countryOptions.filter((opt) =>
-              formData.answers[q.id - 1]?.includes(opt.value)
-            )}
-            onChange={(selected) => handleCountrySelectChange(q.id, selected)}
-            placeholder="Select geographic markets served"
-            styles={selectStyles}
-            classNamePrefix="react-select"
-            aria-label="Select geographic markets served"
-          />
+          <div className="relative">
+            <Select
+              id={`q-${q.id}-country-select`}
+              options={countryOptions}
+              isMulti
+              value={countryOptions.filter((opt) =>
+                formData.answers[q.id - 1]?.includes(opt.value)
+              )}
+              onChange={(selected) => handleCountrySelectChange(q.id, selected)}
+              placeholder="Select geographic markets served"
+              styles={{
+                ...selectStyles,
+                menu: (provided) => ({
+                  ...provided,
+                  backgroundColor: mode === "dark" ? "#374151" : "#FFFFFF",
+                  color: mode === "dark" ? "#FFFFFF" : "#231812",
+                  position: "relative",
+                  width: "100%",
+                }),
+                menuList: (provided) => ({
+                  ...provided,
+                  maxHeight: "400px"
+                })
+              }}
+              classNamePrefix="react-select"
+              aria-label="Select geographic markets served"
+            />
+          </div>
           {selectedCountries.length > 0 ? (
             <div
-              className={`text-sm mt-2 ${
-                mode === "dark" ? "text-gray-300" : "text-[#231812]"
-              }`}
+              className={`text-sm mt-2 p-3 rounded-lg bg-gradient-to-r ${mode === "dark" ? "from-gray-700/50 to-gray-800/50" : "from-gray-50 to-gray-100"} backdrop-blur-sm`}
               aria-live="polite"
             >
               <span className="font-medium">Selected Countries: </span>
@@ -436,9 +451,7 @@ export default function QuestionCard({
             </div>
           ) : (
             <div
-              className={`text-sm mt-2 ${
-                mode === "dark" ? "text-gray-400" : "text-gray-500"
-              }`}
+              className={`text-sm mt-2 p-3 rounded-lg bg-gradient-to-r ${mode === "dark" ? "from-gray-700/50 to-gray-800/50" : "from-gray-50 to-gray-100"} backdrop-blur-sm`}
               aria-live="polite"
             >
               No countries selected.
@@ -447,64 +460,108 @@ export default function QuestionCard({
         </div>
       ) : q.is_open_ended ? (
         q.structured_answers ? (
-          <div className="space-y-4">
-            {(dynamicAnswers[q.id] || [{}])
-              .slice(0, q.max_answers || 1)
-              .map((ans, idx) => (
-                <div key={idx} className="flex flex-col gap-4 border-b pb-4">
-                  <h4
+          <div className="space-y-6">
+            <div className="flex flex-col gap-4 p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-gray-50/50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-900/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
+              <div className="flex items-center justify-between">
+                <h4 className={`text-sm font-medium ${mode === "dark" ? "text-gray-300" : "text-[#231812]"}`}>
+                  Reference {1}
+                </h4>
+                {dynamicAnswers[q.id]?.length > 1 && (
+                  <button
+                    onClick={() => handleRemoveAnswer(q.id, 0)}
+                    className="text-red-500 hover:text-red-700 transition-all duration-300 transform hover:scale-110 active:scale-95"
+                    aria-label="Remove reference"
+                  >
+                    <Icon icon="mdi:close" width={24} />
+                  </button>
+                )}
+              </div>
+              {q.structured_answers.fields.map((field) => (
+                <div key={field.name} className="flex flex-col gap-2">
+                  <label
+                    htmlFor={`q-${q.id}-0-${field.name.toLowerCase()}`}
                     className={`text-sm font-medium ${
                       mode === "dark" ? "text-gray-300" : "text-[#231812]"
                     }`}
                   >
-                    Reference {idx + 1}
-                  </h4>
-                  {q.structured_answers.fields.map((field) => (
-                    <div key={field.name} className="flex flex-col gap-1">
-                      <label
-                        htmlFor={`q-${q.id}-${idx}-${field.name.toLowerCase()}`}
-                        className={`text-sm font-medium ${
-                          mode === "dark" ? "text-gray-300" : "text-[#231812]"
-                        }`}
-                      >
-                        {field.name}
-                      </label>
-                      <input
-                        type={field.type}
-                        value={ans[field.name.toLowerCase()] || ""}
-                        onChange={(e) =>
-                          handleStructuredInputChange(
-                            q.id,
-                            idx,
-                            field.name.toLowerCase(),
-                            e.target.value
-                          )
-                        }
-                        className={inputStyles}
-                        placeholder={`Enter ${field.name}`}
-                        id={`q-${q.id}-${idx}-${field.name.toLowerCase()}`}
-                        aria-labelledby={`q-${
-                          q.id
-                        }-${idx}-${field.name.toLowerCase()}-label`}
-                      />
-                    </div>
-                  ))}
-                  {dynamicAnswers[q.id]?.length > 1 && (
-                    <button
-                      onClick={() => handleRemoveAnswer(q.id, idx)}
-                      className="text-red-500 hover:text-red-700 self-end"
-                      aria-label={`Remove reference ${idx + 1}`}
-                    >
-                      <Icon icon="mdi:close" width={24} />
-                    </button>
-                  )}
+                    {field.name}
+                  </label>
+                  <input
+                    type={field.type}
+                    value={dynamicAnswers[q.id]?.[0]?.[field.name.toLowerCase()] || ""}
+                    onChange={(e) =>
+                      handleStructuredInputChange(
+                        q.id,
+                        0,
+                        field.name.toLowerCase(),
+                        e.target.value
+                      )
+                    }
+                    className={`${inputStyles} focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300`}
+                    placeholder={`Enter ${field.name}`}
+                    id={`q-${q.id}-0-${field.name.toLowerCase()}`}
+                    aria-labelledby={`q-${q.id}-0-${field.name.toLowerCase()}-label`}
+                  />
                 </div>
               ))}
+            </div>
+
+            {dynamicAnswers[q.id]?.length > 1 && (
+              <div className="space-y-4">
+                {(dynamicAnswers[q.id] || [{}])
+                  .slice(1, q.max_answers || 1)
+                  .map((ans, idx) => (
+                    <div key={idx + 1} className="flex flex-col gap-4 p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-gray-50/50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-900/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
+                      <div className="flex items-center justify-between">
+                        <h4 className={`text-sm font-medium ${mode === "dark" ? "text-gray-300" : "text-[#231812]"}`}>
+                          Reference {idx + 2}
+                        </h4>
+                        <button
+                          onClick={() => handleRemoveAnswer(q.id, idx + 1)}
+                          className="text-red-500 hover:text-red-700 transition-all duration-300 transform hover:scale-110 active:scale-95"
+                          aria-label={`Remove reference ${idx + 2}`}
+                        >
+                          <Icon icon="mdi:close" width={24} />
+                        </button>
+                      </div>
+                      {q.structured_answers.fields.map((field) => (
+                        <div key={field.name} className="flex flex-col gap-2">
+                          <label
+                            htmlFor={`q-${q.id}-${idx + 1}-${field.name.toLowerCase()}`}
+                            className={`text-sm font-medium ${
+                              mode === "dark" ? "text-gray-300" : "text-[#231812]"
+                            }`}
+                          >
+                            {field.name}
+                          </label>
+                          <input
+                            type={field.type}
+                            value={ans[field.name.toLowerCase()] || ""}
+                            onChange={(e) =>
+                              handleStructuredInputChange(
+                                q.id,
+                                idx + 1,
+                                field.name.toLowerCase(),
+                                e.target.value
+                              )
+                            }
+                            className={`${inputStyles} focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300`}
+                            placeholder={`Enter ${field.name}`}
+                            id={`q-${q.id}-${idx + 1}-${field.name.toLowerCase()}`}
+                            aria-labelledby={`q-${q.id}-${idx + 1}-${field.name.toLowerCase()}-label`}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+              </div>
+            )}
+
             {q.max_answers > 1 &&
               (dynamicAnswers[q.id]?.length || 0) < q.max_answers && (
                 <button
                   onClick={() => handleAddAnswer(q.id, q.max_answers)}
-                  className="mt-2 text-[#f05d23] hover:text-[#d94f1e] font-semibold flex items-center gap-1"
+                  className="mt-2 text-blue-500 hover:text-blue-700 font-semibold flex items-center gap-2 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
                   aria-label="Add reference"
                 >
                   <Icon icon="mdi:plus" width={20} />
@@ -525,20 +582,20 @@ export default function QuestionCard({
             <textarea
               value={dynamicAnswers[q.id]?.[0]?.text || ""}
               onChange={(e) => handleSingleAnswerChange(q.id, e.target.value)}
-              className={`${inputStyles} min-h-[80px] resize-y`}
+              className={`${inputStyles} min-h-[120px] resize-y focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300`}
               placeholder="Enter your answer"
               id={`q-${q.id}-input`}
               aria-labelledby={`q-${q.id}-label`}
             />
             {q.max_words && (
               <div
-                className={`text-sm ${
+                className={`text-sm p-2 rounded-lg ${
                   countWords(dynamicAnswers[q.id]?.[0]?.text || "") >
                   q.max_words
-                    ? "text-red-500"
+                    ? "text-red-500 bg-red-50 dark:bg-red-900/20"
                     : mode === "dark"
-                    ? "text-gray-400"
-                    : "text-gray-600"
+                    ? "text-gray-400 bg-gray-800/50"
+                    : "text-gray-600 bg-gray-50"
                 }`}
               >
                 {countWords(dynamicAnswers[q.id]?.[0]?.text || "")}/
@@ -547,10 +604,10 @@ export default function QuestionCard({
             )}
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
             {(dynamicAnswers[q.id] || [{ text: "", link: "" }]).map(
               (ans, idx) => (
-                <div key={idx} className="flex flex-col gap-2">
+                <div key={idx} className="flex flex-col gap-4 p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-gray-50/50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-900/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
                   <label
                     id={`q-${q.id}-label-${idx}`}
                     className={`text-sm font-medium ${
@@ -567,18 +624,18 @@ export default function QuestionCard({
                         text: e.target.value,
                       })
                     }
-                    className={`${inputStyles} min-h-[80px] resize-y`}
+                    className={`${inputStyles} min-h-[120px] resize-y focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300`}
                     placeholder={`Answer ${idx + 1}`}
                     aria-labelledby={`q-${q.id}-label-${idx}`}
                   />
                   {q.max_words && (
                     <div
-                      className={`text-sm ${
+                      className={`text-sm p-2 rounded-lg ${
                         countWords(ans.text || "") > q.max_words
-                          ? "text-red-500"
+                          ? "text-red-500 bg-red-50 dark:bg-red-900/20"
                           : mode === "dark"
-                          ? "text-gray-400"
-                          : "text-gray-600"
+                          ? "text-gray-400 bg-gray-800/50"
+                          : "text-gray-600 bg-gray-50"
                       }`}
                     >
                       {countWords(ans.text || "")}/{q.max_words} words
@@ -595,7 +652,7 @@ export default function QuestionCard({
                         })
                       }
                       onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
-                      className={`${inputStyles} min-h-0`}
+                      className={`${inputStyles} min-h-0 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300`}
                       placeholder={`Link for answer ${idx + 1} (optional)`}
                       aria-labelledby={`q-${q.id}-label-${idx}`}
                     />
@@ -603,7 +660,7 @@ export default function QuestionCard({
                   {dynamicAnswers[q.id]?.length > 1 && (
                     <button
                       onClick={() => handleRemoveAnswer(q.id, idx)}
-                      className="text-red-500 hover:text-red-700 self-end"
+                      className="text-red-500 hover:text-red-700 self-end transition-all duration-300 transform hover:scale-110 active:scale-95"
                       aria-label={`Remove answer ${idx + 1}`}
                     >
                       <Icon icon="mdi:close" width={24} />
@@ -616,7 +673,7 @@ export default function QuestionCard({
               (dynamicAnswers[q.id]?.length || 0) < q.max_answers && (
                 <button
                   onClick={() => handleAddAnswer(q.id, q.max_answers)}
-                  className="mt-2 text-[#f05d23] hover:text-[#d94f1e] font-semibold flex items-center gap-1"
+                  className="mt-2 text-blue-500 hover:text-blue-700 font-semibold flex items-center gap-2 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
                   aria-label="Add answer"
                 >
                   <Icon icon="mdi:plus" width={20} />
@@ -653,14 +710,12 @@ export default function QuestionCard({
                           : undefined
                       );
                     }}
-                    className={`w-full p-3 rounded-lg border-2 text-left text-sm font-medium transition ${
-                      borderColors[optIdx % borderColors.length]
-                    } ${
+                    className={`w-full p-4 rounded-xl border text-left text-sm font-medium transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] border-blue-400 ${
                       isSelected
-                        ? "bg-[#f05d23] border-[#f05d23] text-white shadow-md"
+                        ? "bg-gradient-to-r from-blue-300 to-sky-500 border-blue-500 text-white shadow-md"
                         : mode === "dark"
-                        ? "bg-gray-700 text-white hover:bg-gray-600 hover:border-[#d94f1e]"
-                        : "bg-gray-50 text-[#231812] hover:bg-gray-100 hover:border-[#d94f1e]"
+                        ? "bg-gradient-to-br from-gray-700/50 to-gray-800/50 text-white hover:from-gray-600 hover:to-gray-700 hover:border-blue-500"
+                        : "bg-gradient-to-br from-gray-50 to-gray-100 text-[#231812] hover:from-gray-100 hover:to-gray-200 hover:border-blue-500"
                     }`}
                   >
                     <div className="flex items-center">
@@ -687,7 +742,7 @@ export default function QuestionCard({
                       onChange={(e) =>
                         handleOtherInputChange(q.id, e.target.value)
                       }
-                      className={`${inputStyles} min-h-[80px] resize-y w-full`}
+                      className={`${inputStyles} min-h-[120px] resize-y w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300`}
                       placeholder={q.other_option_text || "Please specify"}
                       required
                       aria-label={`Specify ${opt} details`}
@@ -698,9 +753,9 @@ export default function QuestionCard({
             })}
           </div>
           {selectedTextInputOption && (
-            <div className="mt-4 space-y-4">
+            <div className="mt-6 space-y-4">
               {(dynamicAnswers[q.id] || [{ text: "" }]).map((ans, idx) => (
-                <div key={idx} className="flex flex-col gap-2">
+                <div key={idx} className="flex flex-col gap-3 p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-gray-50/50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-900/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
                   <label
                     id={`q-${q.id}-text-input-${idx}`}
                     className={`text-sm font-medium ${
@@ -718,7 +773,7 @@ export default function QuestionCard({
                     onChange={(e) =>
                       handleTextInputChange(q.id, idx, e.target.value)
                     }
-                    className={`${inputStyles} min-h-[80px] resize-y w-full`}
+                    className={`${inputStyles} min-h-[120px] resize-y w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300`}
                     placeholder={
                       q.text_input_option?.placeholder || "Please specify"
                     }
@@ -728,7 +783,7 @@ export default function QuestionCard({
                   {dynamicAnswers[q.id]?.length > 1 && (
                     <button
                       onClick={() => handleRemoveTextInputAnswer(q.id, idx)}
-                      className="text-red-500 hover:text-red-700 self-end"
+                      className="text-red-500 hover:text-red-700 self-end transition-all duration-300 transform hover:scale-110 active:scale-95"
                       aria-label={`Remove text input ${idx + 1}`}
                     >
                       <Icon icon="mdi:close" width={24} />
@@ -743,7 +798,7 @@ export default function QuestionCard({
                     onClick={() =>
                       handleAddTextInputAnswer(q.id, q.text_input_max_answers)
                     }
-                    className="mt-2 text-[#f05d23] hover:text-[#d94f1e] font-semibold flex items-center gap-1"
+                    className="mt-2 text-blue-500 hover:text-blue-700 font-semibold flex items-center gap-2 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
                     aria-label="Add text input"
                   >
                     <Icon icon="mdi:plus" width={20} />
@@ -758,7 +813,7 @@ export default function QuestionCard({
       {q.skippable && (
         <button
           onClick={() => handleSkip(q.id)}
-          className="mt-4 text-[#f05d23] hover:text-[#d94f1e] font-semibold flex items-center gap-1"
+          className="mt-6 text-blue-500 hover:text-blue-700 font-semibold flex items-center gap-2 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
           aria-label="Skip question"
         >
           <Icon icon="mdi:skip-next" width={20} />

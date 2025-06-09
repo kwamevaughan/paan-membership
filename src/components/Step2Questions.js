@@ -25,14 +25,6 @@ export default function Step2Questions({
   const [errorMessages, setErrorMessages] = useState({});
   const isDynamicAnswersInitialized = useRef(false);
 
-  const borderColors = [
-    "border-red-500",
-    "border-blue-500",
-    "border-green-500",
-    "border-yellow-500",
-    "border-purple-500",
-  ];
-
   const inferRequiredAnswers = (question) => {
     if (question.max_answers) return question.max_answers;
     const text = question.text.toLowerCase();
@@ -557,24 +549,36 @@ export default function Step2Questions({
   return (
     <div
       ref={containerRef}
-      className="h-[80vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+      className="h-[80vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 pb-48"
     >
-      <div className="space-y-6">
+      <div className="space-y-8">
         {isLoading ? (
-          <div>Loading...</div>
+          <div className="flex items-center justify-center h-full">
+            <div className="relative">
+              <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#f05d23]"></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                <Icon icon="mdi:loading" className="w-8 h-8 text-[#f05d23]" />
+              </div>
+            </div>
+          </div>
         ) : (
-          <div className="flex items-center mb-4">
-            <Icon
-              icon="mdi:folder-outline"
-              className="w-6 h-6 text-[#f05d23] mr-2"
-            />
-            <span
-              className={`text-2xl font-bold ${
-                mode === "dark" ? "text-gray-400" : "text-gray-900"
-              }`}
-            >
-              {currentCategory?.name || "Category"}
-            </span>
+          <div className="flex items-center gap-4 mb-8">
+            <div className={`p-3 rounded-xl ${mode === "dark" ? "bg-gradient-to-br from-blue-500/20 to-purple-500/20" : "bg-gradient-to-br from-blue-50 to-purple-50"} backdrop-blur-sm`}>
+              <Icon
+                icon="mdi:folder-outline"
+                className={`w-7 h-7 ${mode === "dark" ? "text-blue-400" : "text-blue-600"}`}
+              />
+            </div>
+            <div>
+              <span
+                className={`text-2xl font-bold bg-gradient-to-r ${mode === "dark" ? "from-gray-100 to-gray-300" : "from-gray-900 to-gray-700"} bg-clip-text text-transparent`}
+              >
+                {currentCategory?.name || "Category"}
+              </span>
+              <div className={`text-sm mt-1 ${mode === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                Question {currentQuestionIndex + 1} of {currentQuestions.length}
+              </div>
+            </div>
           </div>
         )}
 
@@ -585,6 +589,7 @@ export default function Step2Questions({
               (questionRefs.current[currentQuestions[currentQuestionIndex].id] =
                 el)
             }
+            className="animate-fadeIn transform transition-all duration-500 ease-out"
           >
             <QuestionCard
               q={currentQuestions[currentQuestionIndex]}
@@ -595,7 +600,7 @@ export default function Step2Questions({
               setDynamicAnswers={setDynamicAnswers}
               otherInputs={otherInputs}
               setOtherInputs={setOtherInputs}
-              borderColors={borderColors}
+              borderColors={[]}
               isComplete={checkQuestionComplete(
                 currentQuestions[currentQuestionIndex].id
               )}
@@ -608,20 +613,23 @@ export default function Step2Questions({
           </div>
         )}
 
-        <div className="sticky bottom-0 bg-white dark:bg-gray-800 p-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex justify-between items-center">
+        <div className="relative bottom-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md p-6 border-t border-gray-200 dark:border-gray-700 mt-8">
+          <div className="flex justify-between items-center gap-4">
             <button
               onClick={handleBack}
               disabled={
                 currentCategoryIndex === 0 && currentQuestionIndex === 0
               }
-              className={`${buttonStyles} ${
+              className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] ${
                 currentCategoryIndex === 0 && currentQuestionIndex === 0
-                  ? "opacity-50 cursor-not-allowed"
-                  : ""
+                  ? "opacity-50 cursor-not-allowed bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+                  : "bg-gradient-to-r from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 text-gray-700 dark:text-gray-300 hover:from-gray-200 hover:to-gray-300 dark:hover:from-gray-600 dark:hover:to-gray-500 shadow-md hover:shadow-lg"
               }`}
             >
-              Back
+              <div className="flex items-center gap-2">
+                <Icon icon="mdi:arrow-left" className="w-5 h-5" />
+                Back
+              </div>
             </button>
             <div className="relative group">
               <button
@@ -632,8 +640,10 @@ export default function Step2Questions({
                     : handleNext
                 }
                 disabled={isNextDisabled}
-                className={`${buttonStyles} ${
-                  isNextDisabled ? "opacity-50 cursor-not-allowed" : ""
+                className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] ${
+                  isNextDisabled
+                    ? "opacity-50 cursor-not-allowed bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400"
+                    : "bg-gradient-to-r from-[#172840] to-[#1e3a5f] text-white hover:from-[#1e3a5f] hover:to-[#2c5282] shadow-lg hover:shadow-xl"
                 }`}
                 aria-label={
                   isNextDisabled
@@ -641,24 +651,33 @@ export default function Step2Questions({
                     : buttonText
                 }
               >
-                {buttonText}
+                <div className="flex items-center gap-2">
+                  {buttonText}
+                  <Icon icon="mdi:arrow-right" className="w-5 h-5" />
+                </div>
               </button>
               {isNextDisabled && (
-                <div className="absolute hidden group-hover:block top-[-40px] left-1/2 transform -translate-x-1/2 bg-gray-800 text-white text-sm rounded p-2 whitespace-nowrap z-10">
-                  Answer all questions to proceed
+                <div className="absolute hidden group-hover:block top-[-40px] left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-gray-800 to-gray-900 text-white text-sm rounded-lg p-3 whitespace-nowrap z-10 shadow-lg animate-fadeIn">
+                  <div className="flex items-center gap-2">
+                    <Icon icon="mdi:alert-circle" className="w-5 h-5 text-yellow-400" />
+                    Answer all questions to proceed
+                  </div>
                 </div>
               )}
             </div>
           </div>
           {Object.values(errorMessages).map((msg, idx) => (
-            <p
+            <div
               key={idx}
-              className={`mt-2 text-sm text-red-500 ${
-                mode === "dark" ? "text-red-400" : ""
+              className={`mt-4 p-4 rounded-lg bg-gradient-to-r from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border border-red-200 dark:border-red-800 animate-fadeIn ${
+                mode === "dark" ? "text-red-400" : "text-red-600"
               }`}
             >
-              {msg}
-            </p>
+              <div className="flex items-center gap-2">
+                <Icon icon="mdi:alert-circle" className="w-5 h-5" />
+                {msg}
+              </div>
+            </div>
           ))}
         </div>
       </div>

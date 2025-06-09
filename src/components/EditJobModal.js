@@ -258,7 +258,7 @@ export default function EditJobModal({
       borderRadius: "0.5rem",
       boxShadow: "none",
       "&:hover": {
-        borderColor: "#F05D23",
+        borderColor: "blue-400",
       },
     }),
     menu: (provided) => ({
@@ -269,7 +269,7 @@ export default function EditJobModal({
     option: (provided, state) => ({
       ...provided,
       backgroundColor: state.isSelected
-        ? "#F05D23"
+        ? "blue-400"
         : mode === "dark"
         ? "#374151"
         : "#F9FAFB",
@@ -279,7 +279,7 @@ export default function EditJobModal({
         ? "#F9FAFB"
         : "#231812",
       "&:hover": {
-        backgroundColor: state.isSelected ? "#F05D23" : "#FED7AA",
+        backgroundColor: state.isSelected ? "blue-400" : "#FED7AA",
         color: state.isSelected ? "#FFFFFF" : "#231812",
       },
     }),
@@ -323,7 +323,7 @@ export default function EditJobModal({
           <div className="relative">
             <Icon
               icon="mdi:format-title"
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400"
             />
             <input
               type="text"
@@ -331,7 +331,7 @@ export default function EditJobModal({
               onChange={(e) =>
                 setEditJob((prev) => ({ ...prev, title: e.target.value }))
               }
-              className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
+              className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 ${
                 mode === "dark"
                   ? "bg-gray-700 text-gray-200 border-gray-600"
                   : "bg-gray-50 text-[#231812] border-gray-300"
@@ -352,7 +352,7 @@ export default function EditJobModal({
           <div className="relative">
             <Icon
               icon="mdi:briefcase"
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400"
             />
             <select
               value={editJob.employment_type || "full_time"}
@@ -362,7 +362,7 @@ export default function EditJobModal({
                   employment_type: e.target.value,
                 }))
               }
-              className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
+              className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 ${
                 mode === "dark"
                   ? "bg-gray-700 text-gray-200 border-gray-600"
                   : "bg-gray-50 text-[#231812] border-gray-300"
@@ -388,7 +388,7 @@ export default function EditJobModal({
           <div className="relative">
             <Icon
               icon="mdi:account-group"
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400"
             />
             <select
               value={editJob.job_type || "agencies"}
@@ -398,7 +398,7 @@ export default function EditJobModal({
                   job_type: e.target.value,
                 }))
               }
-              className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
+              className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 ${
                 mode === "dark"
                   ? "bg-gray-700 text-gray-200 border-gray-600"
                   : "bg-gray-50 text-[#231812] border-gray-300"
@@ -440,7 +440,7 @@ export default function EditJobModal({
             <div className="relative">
               <Icon
                 icon="mdi:file-upload"
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400"
               />
               <input
                 type="file"
@@ -480,8 +480,8 @@ export default function EditJobModal({
                         onClick={(e) => handlePreviewClick(e, editJob.file_url)}
                         className={`p-2 rounded-full ${
                           mode === "dark"
-                            ? "bg-gray-700 text-[#f05d23] hover:bg-gray-600"
-                            : "bg-gray-200 text-[#f05d23] hover:bg-gray-300"
+                            ? "bg-gray-700 text-blue-400 hover:bg-gray-600"
+                            : "bg-gray-200 text-blue-400 hover:bg-gray-300"
                         } transition duration-200`}
                         title="View file"
                       >
@@ -531,7 +531,7 @@ export default function EditJobModal({
             >
               <Icon
                 icon="mdi:calendar"
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400"
               />
               <input
                 type="date"
@@ -543,7 +543,7 @@ export default function EditJobModal({
                   }))
                 }
                 min={today}
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 ${
                   mode === "dark"
                     ? "bg-gray-700 text-gray-200 border-gray-600"
                     : "bg-gray-50 text-[#231812] border-gray-300"
@@ -564,7 +564,7 @@ export default function EditJobModal({
           <div className="relative">
             <Icon
               icon="mdi:domain"
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400"
             />
             <input
               type="text"
@@ -575,7 +575,7 @@ export default function EditJobModal({
                   department: e.target.value,
                 }))
               }
-              className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
+              className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 ${
                 mode === "dark"
                   ? "bg-gray-700 text-gray-200 border-gray-600"
                   : "bg-gray-50 text-[#231812] border-gray-300"
@@ -596,7 +596,7 @@ export default function EditJobModal({
             <div className="relative">
               <Icon
                 icon="mdi:map-marker"
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400"
               />
               <input
                 type="text"
@@ -607,7 +607,7 @@ export default function EditJobModal({
                     location: { ...prev.location, city: e.target.value },
                   }))
                 }
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 ${
                   mode === "dark"
                     ? "bg-gray-700 text-gray-200 border-gray-600"
                     : "bg-gray-50 text-[#231812] border-gray-300"
@@ -619,7 +619,7 @@ export default function EditJobModal({
             <div className="relative">
               <Icon
                 icon="mdi:map"
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23]"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400"
               />
               <input
                 type="text"
@@ -630,7 +630,7 @@ export default function EditJobModal({
                     location: { ...prev.location, region: e.target.value },
                   }))
                 }
-                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#f05d23] ${
+                className={`w-full pl-10 pr-4 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 ${
                   mode === "dark"
                     ? "bg-gray-700 text-gray-200 border-gray-600"
                     : "bg-gray-50 text-[#231812] border-gray-300"
@@ -642,7 +642,7 @@ export default function EditJobModal({
             <div className="relative">
               <Icon
                 icon="mdi:earth"
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#f05d23] z-10"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-blue-400 z-10"
               />
               <Select
                 value={
@@ -692,7 +692,7 @@ export default function EditJobModal({
                     remote: e.target.checked,
                   }))
                 }
-                className="w-5 h-5 text-[#f05d23] border-gray-300 rounded focus:ring-[#f05d23] mr-2"
+                className="w-5 h-5 text-blue-400 border-gray-300 rounded focus:ring-blue-400 mr-2"
               />
               <span
                 className={`text-sm ${
@@ -719,7 +719,7 @@ export default function EditJobModal({
           </button>
           <button
             type="submit"
-            className="flex-1 py-2 bg-[#f05d23] text-white rounded-full hover:bg-[#d94f1e] transition duration-200 flex items-center justify-center gap-2 shadow-md"
+            className="flex-1 py-2 bg-blue-400 text-white rounded-full hover:bg-blue-500 transition duration-200 flex items-center justify-center gap-2 shadow-md"
           >
             <Icon icon="mdi:content-save" width={20} height={20} />
             Save

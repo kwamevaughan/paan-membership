@@ -273,10 +273,10 @@ export default function JobForm({ mode, onJobAdded }) {
 
   return (
     <div
-      className={`p-8 rounded-2xl shadow-2xl mb-8 backdrop-blur-sm ${
+      className={`rounded-2xl ${
         mode === "dark"
-          ? "bg-gray-800/95 shadow-gray-900/50"
-          : "bg-white/95 shadow-gray-300/50"
+          ? ""
+          : ""
       } transition-all duration-300 hover:shadow-3xl`}
     >
       <div className="flex items-center mb-8">

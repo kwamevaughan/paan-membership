@@ -136,15 +136,8 @@ export default function JobListings({ mode, jobs, onJobDeleted }) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2
-            className={`text-2xl font-bold ${
-              mode === "dark" ? "text-white" : "text-gray-900"
-            }`}
-          >
-            Job Openings
-          </h2>
           <p
-            className={`text-sm mt-1 ${
+            className={`text-sm ${
               mode === "dark" ? "text-gray-400" : "text-gray-600"
             }`}
           >
@@ -257,7 +250,7 @@ export default function JobListings({ mode, jobs, onJobDeleted }) {
                       })}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="flex items-center justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <div className="flex items-center justify-end space-x-2">
                         <Link
                           href={`/jobs/${job.slug}`}
                           target="_blank"

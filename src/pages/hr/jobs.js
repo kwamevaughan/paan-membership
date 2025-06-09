@@ -9,6 +9,8 @@ import JobForm from "@/components/JobForm";
 import JobListings from "@/components/JobListings";
 import EditJobModal from "@/components/EditJobModal";
 import PreviewModal from "@/components/PreviewModal";
+import ItemActionModal from "@/components/ItemActionModal";
+import JobFilters from "@/components/JobFilters";
 import dynamic from "next/dynamic";
 import { supabase } from "@/lib/supabase";
 import SimpleFooter from "@/layouts/simpleFooter";
@@ -16,6 +18,7 @@ import NotifyEmailGroupModal from "@/components/NotifyEmailGroupModal";
 import ConnectingDotsBackground from "@/components/ConnectingDotsBackground";
 import useAuthSession from "@/hooks/useAuthSession";
 import useLogout from "@/hooks/useLogout";
+import { Icon } from "@iconify/react";
 
 // Helper function to format ISO date as DD/MM/YYYY for display
 const formatDate = (isoDateString) => {
@@ -38,6 +41,8 @@ export default function HRJobBoard({
   breadcrumbs = [],
 }) {
   const [jobs, setJobs] = useState(initialJobs || []);
+  const [filteredJobs, setFilteredJobs] = useState(initialJobs || []);
+  const [isAddJobModalOpen, setIsAddJobModalOpen] = useState(false);
 
   useAuthSession();
 
@@ -217,27 +222,57 @@ export default function HRJobBoard({
               : `${84 + (isSidebarOpen ? 120 : 0) + sidebarState.offset}px`,
           }}
         >
-          {/* <div className="absolute inset-0 z-10 pointer-events-none">
-            <ConnectingDotsBackground
-              color="#f05d23"
-              secondaryColor={mode === "dark" ? "#f05d23" : "#505050"}
-              dotCount={50}
-              dotSize={2.2}
-              lineDistance={180}
-              speed={0.6}
-              mode={mode}
-            />
-          </div> */}
           <div className="max-w-7xl mx-auto">
-            {jobs.length ? (
-              <JobListings mode={mode} jobs={jobs} onJobDeleted={fetchJobs} />
+            <div className="flex justify-end mb-6">
+              <button
+                onClick={() => setIsAddJobModalOpen(true)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 transform hover:scale-105 backdrop-blur-sm shadow-lg hover:shadow-xl ${
+                  mode === "dark"
+                    ? "bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-white/10 text-gray-100 hover:from-blue-500/80 hover:to-blue-500/80"
+                    : "bg-gradient-to-br from-white/60 to-gray-50/60 border-white/20 text-[#231812] hover:from-blue-200 hover:to-blue-400 hover:text-white"
+                }`}
+              >
+                <Icon icon="mdi:plus" className="w-5 h-5" />
+                Add New Job
+              </button>
+            </div>
+
+            <h1 className={`text-2xl font-bold mb-6 ${
+              mode === "dark" ? "text-white" : "text-gray-900"
+            }`}>
+              Job Openings
+            </h1>
+
+            <JobFilters 
+              jobs={jobs} 
+              onFilter={setFilteredJobs} 
+              mode={mode} 
+            />
+            
+            {filteredJobs.length ? (
+              <JobListings mode={mode} jobs={filteredJobs} onJobDeleted={fetchJobs} />
             ) : (
-              <p>Loading jobs...</p>
+              <div className={`text-center py-8 ${
+                mode === "dark" ? "text-gray-400" : "text-gray-500"
+              }`}>
+                {jobs.length ? "No jobs match your filters" : "Loading jobs..."}
+              </div>
             )}
-            <JobForm mode={mode} onJobAdded={handleJobAdded} />
           </div>
         </div>
       </div>
+
+      <ItemActionModal
+        isOpen={isAddJobModalOpen}
+        onClose={() => setIsAddJobModalOpen(false)}
+        title="Add New Job"
+        mode={mode}
+      >
+        <JobForm mode={mode} onJobAdded={(job) => {
+          handleJobAdded(job);
+          setIsAddJobModalOpen(false);
+        }} />
+      </ItemActionModal>
 
       <JobDescriptionModal
         isOpen={isViewModalOpen}

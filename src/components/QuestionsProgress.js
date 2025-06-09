@@ -192,7 +192,7 @@ export default function QuestionsProgress({
                   mode === 'dark' ? 'text-blue-300' : 'text-blue-700'
                 }`}
               >
-                Estimated time remaining
+                Time to complete remaining questions
               </p>
               <p
                 className={`text-lg font-semibold ${
@@ -206,7 +206,7 @@ export default function QuestionsProgress({
                   mode === 'dark' ? 'text-blue-300/70' : 'text-blue-600/70'
                 }`}
               >
-                Total estimated time: {progress.totalEstimatedMinutes} minutes
+                Time spent on completed questions: {progress.totalEstimatedMinutes} minutes
               </p>
             </div>
           </div>

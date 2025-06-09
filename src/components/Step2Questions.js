@@ -557,7 +557,7 @@ export default function Step2Questions({
   return (
     <div
       ref={containerRef}
-      className="h-[70vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
+      className="h-[80vh] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100"
     >
       <div className="space-y-6">
         {isLoading ? (

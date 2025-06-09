@@ -5,6 +5,17 @@ export const useCountry = () => {
   const [countryOptions, setCountryOptions] = useState([]);
   const [loading, setLoading] = useState(true); // Add loading state
 
+  // Define regional options
+  const regionalOptions = [
+    { label: "All of Africa", value: "All of Africa" },
+    { label: "All of Europe", value: "All of Europe" },
+    { label: "All of Asia", value: "All of Asia" },
+    { label: "All of North America", value: "All of North America" },
+    { label: "All of South America", value: "All of South America" },
+    { label: "All of Oceania", value: "All of Oceania" },
+    { label: "Global (All Regions)", value: "Global (All Regions)" }
+  ];
+
   useEffect(() => {
     fetch("/assets/misc/countries.json", { cache: "no-store" })
       .then((res) => {
@@ -26,7 +37,8 @@ export const useCountry = () => {
           ...options.filter((opt) => opt.value === "Kenya"),
           ...options.filter((opt) => opt.value !== "Kenya"),
         ];
-        setCountryOptions(sortedOptions);
+        // Add regional options at the top of the list
+        setCountryOptions([...regionalOptions, ...sortedOptions]);
       })
       .catch((err) => {
         console.error("Error fetching countries:", err.message);
@@ -36,9 +48,11 @@ export const useCountry = () => {
           { name: "Ghana", iso: "GH", flag: "🇬🇭", dialCode: "+233" },
         ];
         setCountries(fallback);
-        setCountryOptions(
-          fallback.map((c) => ({ label: c.name, value: c.name }))
-        );
+        // Include regional options even in fallback case
+        setCountryOptions([
+          ...regionalOptions,
+          ...fallback.map((c) => ({ label: c.name, value: c.name }))
+        ]);
       })
       .finally(() => {
         setLoading(false); // Set loading to false when done
@@ -46,6 +60,10 @@ export const useCountry = () => {
   }, []);
 
   const getDialCode = (countryName) => {
+    // Don't try to get dial code for regional options
+    if (regionalOptions.some(opt => opt.value === countryName)) {
+      return "";
+    }
     const country = countries.find(
       (c) => c.name.toUpperCase() === countryName?.toUpperCase()
     );

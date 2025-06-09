@@ -199,13 +199,6 @@ export default function QuestionsProgress({
               >
                 {progress.estimatedMinutes} minutes
               </p>
-              <p
-                className={`text-xs ${
-                  mode === 'dark' ? 'text-blue-300/70' : 'text-blue-600/70'
-                }`}
-              >
-                Questions completed: {progress.answeredQuestions} of {progress.totalQuestions}
-              </p>
             </div>
           </div>
         </div>

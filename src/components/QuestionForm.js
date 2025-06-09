@@ -337,6 +337,15 @@ export default function QuestionForm({
           : null,
       answerStructure: isOpenEnded && answerStructure ? answerStructure : null,
       job_type: jobType,
+      regionalOptions: isCountrySelect ? [
+        "All of Africa",
+        "All of Europe",
+        "All of Asia",
+        "All of North America",
+        "All of South America",
+        "All of Oceania",
+        "Global (All Regions)"
+      ] : null,
     };
 
     try {

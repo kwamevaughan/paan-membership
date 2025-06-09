@@ -379,6 +379,7 @@ export default function BlogForm({
         onClose={handleCancel}
         title={isEditing ? "Edit Blog Post" : "Create Blog Post"}
         mode={mode}
+        width="max-w-5xl"
       >
         <form
           onSubmit={onSubmit}
@@ -443,7 +444,11 @@ export default function BlogForm({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setImageSource("library")}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setShowImageLibrary(true);
+                  }}
                   className={`flex-1 px-4 py-2 rounded-xl border ${
                     imageSource === "library"
                       ? mode === "dark"
@@ -505,7 +510,11 @@ export default function BlogForm({
                 <div>
                   <button
                     type="button"
-                    onClick={() => setShowImageLibrary(true)}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setShowImageLibrary(true);
+                    }}
                     className={`w-full px-4 py-2 rounded-xl border ${
                       mode === "dark"
                         ? "bg-gray-800 border-gray-700 text-gray-100"

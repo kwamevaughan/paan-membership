@@ -211,7 +211,6 @@ export const useBlog = (blogId) => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    console.log("useBlog handleInputChange called with:", { name, value });
     
     if (name === "multiple") {
       setFormData((prev) => {
@@ -219,7 +218,6 @@ export const useBlog = (blogId) => {
           ...prev,
           ...value,
         };
-        console.log("useBlog handleInputChange - Updated formData:", updated);
         return updated;
       });
     } else if (name === "article_name") {
@@ -233,7 +231,6 @@ export const useBlog = (blogId) => {
           [name]: value,
           slug: slug,
         };
-        console.log("useBlog handleInputChange - Updated formData:", updated);
         return updated;
       });
     } else if (name === "featured_image_url") {
@@ -246,7 +243,6 @@ export const useBlog = (blogId) => {
           featured_image_upload: "", // Clear upload field
           featured_image_library: "", // Clear library field
         };
-        console.log("useBlog handleInputChange - Updated formData with external URL:", updated);
         return updated;
       });
     } else {
@@ -255,7 +251,6 @@ export const useBlog = (blogId) => {
           ...prev,
           [name]: type === "checkbox" ? checked : value,
         };
-        console.log("useBlog handleInputChange - Updated formData:", updated);
         return updated;
       });
     }
@@ -273,11 +268,7 @@ export const useBlog = (blogId) => {
         throw new Error("Not authenticated");
       }
 
-      console.log(
-        "useBlog handleSubmit - Initial formData:",
-        updatedFormData || formData
-      );
-
+      
       const dataToUse = updatedFormData || formData;
 
       const {
@@ -306,12 +297,7 @@ export const useBlog = (blogId) => {
         ...rest
       } = dataToUse;
 
-      console.log("useBlog handleSubmit - Image fields:", {
-        article_image,
-        featured_image_url,
-        featured_image_upload,
-        featured_image_library,
-      });
+      
 
       const is_published = publish_option === "publish";
       const is_draft = publish_option === "draft";
@@ -336,14 +322,12 @@ export const useBlog = (blogId) => {
         finalImageUrl = featured_image_upload || featured_image_library || article_image || "";
       }
       
-      console.log("useBlog handleSubmit - Final image URL:", finalImageUrl);
 
       // Ensure meta_keywords are properly handled
       const finalMetaKeywords = meta_keywords || (keywords ? keywords.join(", ") : "");
 
       // Get the final content from editor or form data
       const finalContent = editorContent || content || article_body || "";
-      console.log("useBlog handleSubmit - Final content:", finalContent);
 
       const blogToUpsert = {
         id: id || undefined,
@@ -373,10 +357,7 @@ export const useBlog = (blogId) => {
         }
       });
 
-      console.log(
-        "useBlog handleSubmit - Final blog data to upsert:",
-        blogToUpsert
-      );
+      
 
       const { data: blog, error: blogError } = await supabase
         .from("blogs")
@@ -452,7 +433,6 @@ export const useBlog = (blogId) => {
   };
 
   const handleEdit = (blog) => {
-    console.log("useBlog handleEdit called with blog:", blog);
 
     // Get article tags from blog_post_tags if available
     const articleTags = blog.blog_post_tags?.map(t => t.tag.name) || [];
@@ -493,7 +473,6 @@ export const useBlog = (blogId) => {
       focus_keyword: blog.focus_keyword || "",
     };
 
-    console.log("useBlog handleEdit transformed data:", transformedData);
 
     setFormData(transformedData);
     setEditorContent(blog.article_body || "");

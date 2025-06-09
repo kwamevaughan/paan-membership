@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import '../styles/novel-editor.css';
+
 :root {
   --background: #ffffff;
   --foreground: #171717;

@@ -6,6 +6,7 @@ export default function ItemActionModal({
   title,
   children,
   mode,
+  width = "max-w-2xl",
 }) {
   if (!isOpen) return null;
 
@@ -38,31 +39,27 @@ export default function ItemActionModal({
       {/* Modal Content */}
       <div className="flex min-h-full items-center justify-center p-4" onClick={(e) => e.stopPropagation()}>
         <div
-          className={`relative w-full max-w-2xl rounded-3xl transform transition-all duration-500 max-h-[85vh] overflow-hidden
+          className={`relative w-full ${width} rounded-3xl transform transition-all duration-500 max-h-[85vh] overflow-hidden
             shadow-2xl shadow-black/20
             ${
               mode === "dark"
-                ? "bg-gray-900/40 text-white border border-white/10"
-                : "bg-white/30 text-gray-900 border border-white/20"
+                ? "bg-gray-900 text-white border border-white/10"
+                : "bg-white/90 text-gray-900 border border-white/20"
             } 
-            backdrop-blur-lg`}
+            backdrop-blur-xl`}
           style={{
-            backdropFilter: "blur(12px) saturate(180%)",
-            WebkitBackdropFilter: "blur(12px) saturate(180%)",
-            background:
-              mode === "dark"
-                ? "linear-gradient(135deg, rgba(15, 23, 42, 0.4) 0%, rgba(30, 41, 59, 0.3) 100%)"
-                : "linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 1) 100%)",
+            backdropFilter: "blur(16px) saturate(180%)",
+            WebkitBackdropFilter: "blur(16px) saturate(180%)"
           }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Premium Header with Gradient Overlay */}
           <div
-            className="relative px-8 py-3 overflow-hidden"
+            className={`relative px-8 py-3 overflow-hidden ${
+              mode === "dark" ? "bg-blue-600" : "bg-blue-500"
+            }`}
             style={{
-              background:
-                "linear-gradient(135deg, rgba(37, 99, 235, 0.8) 0%, rgba(59, 130, 246, 0.8) 50%, rgba(96, 165, 250, 0.8) 100%)",
-              backdropFilter: "blur(8px)",
+              backdropFilter: "blur(8px)"
             }}
           >
             {/* Animated Background Elements */}
@@ -94,12 +91,12 @@ export default function ItemActionModal({
 
           {/* Content Area with Subtle Glass Effect */}
           <div
-            className="p-8 overflow-y-auto max-h-[calc(85vh-120px)]"
+            className={`p-8 overflow-y-auto max-h-[calc(85vh-120px)] ${
+              mode === "dark" ? "bg-gray-900/45" : "bg-white/50"
+            }`}
             style={{
-              background:
-                mode === "dark"
-                  ? "linear-gradient(180deg, rgba(15, 23, 42, 0.1) 0%, rgba(30, 41, 59, 0.05) 100%)"
-                  : "linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%)",
+              backdropFilter: "blur(8px)",
+              WebkitBackdropFilter: "blur(8px)"
             }}
             onClick={(e) => e.stopPropagation()}
           >

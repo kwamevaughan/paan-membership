@@ -9,7 +9,7 @@ const config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Questrial', 'system-ui', 'sans-serif'],
+        sans: ["Questrial", "system-ui", "sans-serif"],
       },
       colors: {
         background: "var(--background)",

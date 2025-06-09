@@ -26,7 +26,7 @@ const ViewToggleButton = memo(({ viewMode, toggleViewMode, mode }) => (
     onClick={toggleViewMode}
     className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 transform hover:scale-105 backdrop-blur-sm shadow-lg hover:shadow-xl ${
       mode === "dark"
-        ? "bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-white/10 text-gray-100 hover:from-blue-500/80 hover:to-blue-500/80"
+        ? "bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-white/10 text-gray-100 hover:from-orange-500/80 hover:to-red-500/80"
         : "bg-gradient-to-br from-white/60 to-gray-50/60 border-white/20 text-[#231812] hover:from-blue-200 hover:to-blue-400 hover:text-white"
     }`}
   >
@@ -101,6 +101,7 @@ export default function EditorComponent({
         "brush",
         "paragraph",
         "|",
+        "customImage",
         "table",
         "link",
         "|",
@@ -194,7 +195,7 @@ export default function EditorComponent({
       extraButtons: [
         {
           name: "customImage",
-          icon: "image",
+          iconURL: "https://cdn-icons-png.flaticon.com/512/2965/2965879.png",
           tooltip: "Insert Image",
           exec: () => {
             setShowImageLibrary(true);
@@ -284,7 +285,9 @@ export default function EditorComponent({
       // Insert the image at the current cursor position if possible
       if (editorRef.current?.editor) {
         const editor = editorRef.current.editor;
-        editor.selection.insertHTML(`<img src="${data.url}" alt="${file.name}" />`);
+        editor.selection.insertHTML(
+          `<img src="${data.url}" alt="${file.name}" />`
+        );
       } else {
         // Fallback to appending at the end if editor reference is not available
         const imageHtml = `<img src="${data.url}" alt="${file.name}" />`;
@@ -305,7 +308,7 @@ export default function EditorComponent({
       console.error("Error uploading image:", {
         message: error.message,
         name: error.name,
-        stack: error.stack
+        stack: error.stack,
       });
       toast.error(`Failed to upload image: ${error.message}`, {
         duration: 5000,

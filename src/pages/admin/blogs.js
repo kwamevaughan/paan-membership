@@ -492,6 +492,7 @@ export default function AdminBlog({
           tags={tags}
           hrUser={hrUser}
           fetchBlogs={fetchBlogs}
+          width="max-w-7xl"
         />
 
         <ItemActionModal

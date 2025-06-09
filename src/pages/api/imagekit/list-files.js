@@ -38,12 +38,7 @@ export default async function handler(req, res) {
     );
 
     const data = await response.json();
-    console.log("ImageKit API response:", {
-      path,
-      status: response.status,
-      statusText: response.statusText,
-      data,
-    });
+    
 
     if (!response.ok) {
       console.error("ImageKit API error:", {
@@ -58,7 +53,6 @@ export default async function handler(req, res) {
     }
 
     // Return the array directly
-    console.log(`Fetched ${data.length} files for path ${path}`);
     res.status(200).json(data);
   } catch (error) {
     console.error("List files error:", {

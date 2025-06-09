@@ -163,7 +163,7 @@ export default function BlogGrid({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className={`relative group rounded-xl overflow-hidden shadow-lg border ${
+              className={`relative group rounded-xl overflow-hidden shadow-lg hover:shadow-sm transition-all duration-300 border ${
                 mode === "dark"
                   ? "bg-gray-800 border-gray-700"
                   : "bg-white border-gray-200"

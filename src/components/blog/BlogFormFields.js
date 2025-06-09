@@ -367,7 +367,7 @@ export default function BlogFormFields({
       {/* Title */}
       <div>
         <label
-          className={`block text-sm font-medium mb-2 ${
+          className={`block text-sm font-bold mb-2 ${
             mode === "dark" ? "text-gray-300" : "text-gray-700"
           }`}
         >
@@ -397,7 +397,7 @@ export default function BlogFormFields({
       {/* Focus Keyword */}
       <div>
         <label
-          className={`block text-sm font-medium mb-2 ${
+          className={`block text-sm font-bold mb-2 ${
             mode === "dark" ? "text-gray-300" : "text-gray-700"
           }`}
         >
@@ -425,7 +425,7 @@ export default function BlogFormFields({
       <div>
         <div className="flex items-center justify-between mb-2">
           <label
-            className={`block text-sm font-medium ${
+            className={`block text-sm font-bold ${
               mode === "dark" ? "text-gray-300" : "text-gray-700"
             }`}
           >
@@ -532,7 +532,7 @@ export default function BlogFormFields({
       {/* Content */}
       <div>
         <label
-          className={`block text-sm font-medium mb-2 ${
+          className={`block text-sm font-bold mb-2 ${
             mode === "dark" ? "text-gray-300" : "text-gray-700"
           }`}
         >
@@ -584,7 +584,7 @@ export default function BlogFormFields({
         {/* Meta Title */}
         <div>
           <label
-            className={`block text-sm font-medium mb-2 ${
+            className={`block text-sm font-bold mb-2 ${
               mode === "dark" ? "text-gray-300" : "text-gray-700"
             }`}
           >
@@ -613,7 +613,7 @@ export default function BlogFormFields({
         {/* Meta Description */}
         <div>
           <label
-            className={`block text-sm font-medium mb-2 ${
+            className={`block text-sm font-bold mb-2 ${
               mode === "dark" ? "text-gray-300" : "text-gray-700"
             }`}
           >
@@ -642,7 +642,7 @@ export default function BlogFormFields({
         {/* Meta Keywords */}
         <div>
           <label
-            className={`block text-sm font-medium mb-2 ${
+            className={`block text-sm font-bold mb-2 ${
               mode === "dark" ? "text-gray-300" : "text-gray-700"
             }`}
           >
@@ -691,7 +691,7 @@ export default function BlogFormFields({
       <div>
         <div className="flex items-center justify-between mb-2">
           <label
-            className={`block text-sm font-medium ${
+            className={`block text-sm font-bold ${
               mode === "dark" ? "text-gray-300" : "text-gray-700"
             }`}
           >
@@ -736,7 +736,7 @@ export default function BlogFormFields({
       <div>
         <div className="flex items-center justify-between mb-2">
           <label
-            className={`block text-sm font-medium ${
+            className={`block text-sm font-bold ${
               mode === "dark" ? "text-gray-300" : "text-gray-700"
             }`}
           >
@@ -831,7 +831,7 @@ export default function BlogFormFields({
             {/* Author */}
             <div className="space-y-2">
               <label
-                className={`flex items-center gap-2 text-sm font-medium ${
+                className={`flex items-center gap-2 text-sm font-bold ${
                   mode === "dark" ? "text-gray-300" : "text-gray-700"
                 }`}
               >
@@ -851,7 +851,7 @@ export default function BlogFormFields({
             {/* Publish Status */}
             <div className="space-y-2">
               <label
-                className={`flex items-center gap-2 text-sm font-medium ${
+                className={`flex items-center gap-2 text-sm font-bold ${
                   mode === "dark" ? "text-gray-300" : "text-gray-700"
                 }`}
               >

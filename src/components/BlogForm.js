@@ -404,7 +404,7 @@ export default function BlogForm({
           {/* Featured Image */}
           <div>
             <label
-              className={`block text-sm font-medium mb-2 ${
+              className={`block text-sm font-bold mb-2 ${
                 mode === "dark" ? "text-gray-300" : "text-gray-700"
               }`}
             >

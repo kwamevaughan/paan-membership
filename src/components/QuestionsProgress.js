@@ -26,52 +26,50 @@ export default function QuestionsProgress({
       const answers = formData.answers[q.id - 1] || [];
       const isAnswered = answers.length > 0;
       
-      // Calculate time estimate based on question type and job type
+      // Calculate base time estimate based on question type and job type
       let questionTimeEstimate = 1; // Default 1 minute
       
-      // Adjust base time based on job type
+      // Adjust base time based on job type and question complexity
       if (formData.job_type === 'freelancer') {
-        // Freelancers have simpler questions and fewer categories
-        if (q.is_open_ended) {
-          questionTimeEstimate = q.structured_answers ? 1.5 : 1.2;
-        } else if (q.text_input_option) {
-          questionTimeEstimate = 1;
-        } else if (q.is_multi_select) {
-          questionTimeEstimate = 0.6;
-        }
-      } else {
-        // Agency questions are more detailed
         if (q.is_open_ended) {
           questionTimeEstimate = q.structured_answers ? 2 : 1.5;
         } else if (q.text_input_option) {
-          questionTimeEstimate = 1.2;
+          questionTimeEstimate = 1;
         } else if (q.is_multi_select) {
           questionTimeEstimate = 0.8;
+        }
+      } else {
+        if (q.is_open_ended) {
+          questionTimeEstimate = q.structured_answers ? 3 : 2;
+        } else if (q.text_input_option) {
+          questionTimeEstimate = 1.5;
+        } else if (q.is_multi_select) {
+          questionTimeEstimate = 1;
         }
       }
 
       // Add category-specific time adjustments
       const category = categories.find(cat => cat.id === q.category);
       if (category) {
-        // Adjust time based on category complexity and job type
         const isFreelancer = formData.job_type === 'freelancer';
         switch (category.name.toLowerCase()) {
           case 'experience':
           case 'portfolio':
-            questionTimeEstimate *= isFreelancer ? 1.1 : 1.2; // Less complex for freelancers
+            questionTimeEstimate += isFreelancer ? 1 : 2; // Add fixed time instead of multiplying
             break;
           case 'preferences':
           case 'availability':
-            questionTimeEstimate *= isFreelancer ? 0.8 : 0.9; // Even simpler for freelancers
+            questionTimeEstimate += isFreelancer ? 0.5 : 1; // Add fixed time instead of multiplying
             break;
           default:
-            questionTimeEstimate *= isFreelancer ? 1 : 1.1; // No adjustment for freelancers
+            questionTimeEstimate += isFreelancer ? 0.5 : 1; // Add fixed time instead of multiplying
         }
       }
 
       if (isAnswered) {
         answeredQuestions++;
-        totalEstimatedMinutes += questionTimeEstimate;
+        // For answered questions, use a more conservative estimate
+        totalEstimatedMinutes += Math.min(questionTimeEstimate, 5); // Cap at 5 minutes per question
       } else {
         remainingEstimatedMinutes += questionTimeEstimate;
       }
@@ -192,7 +190,7 @@ export default function QuestionsProgress({
                   mode === 'dark' ? 'text-blue-300' : 'text-blue-700'
                 }`}
               >
-                Time to complete remaining questions
+                Estimated time to complete remaining questions
               </p>
               <p
                 className={`text-lg font-semibold ${
@@ -206,7 +204,7 @@ export default function QuestionsProgress({
                   mode === 'dark' ? 'text-blue-300/70' : 'text-blue-600/70'
                 }`}
               >
-                Time spent on completed questions: {progress.totalEstimatedMinutes} minutes
+                Questions completed: {progress.answeredQuestions} of {progress.totalQuestions}
               </p>
             </div>
           </div>

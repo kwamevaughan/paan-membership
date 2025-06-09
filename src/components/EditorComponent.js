@@ -101,7 +101,6 @@ export default function EditorComponent({
         "brush",
         "paragraph",
         "|",
-        "customImage",
         "table",
         "link",
         "|",
@@ -195,7 +194,7 @@ export default function EditorComponent({
       extraButtons: [
         {
           name: "customImage",
-          iconURL: "https://cdn-icons-png.flaticon.com/512/2965/2965879.png",
+          icon: "image",
           tooltip: "Insert Image",
           exec: () => {
             setShowImageLibrary(true);

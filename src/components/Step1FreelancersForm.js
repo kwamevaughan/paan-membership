@@ -345,7 +345,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
                     : null
                 }
                 onChange={handleCountryChange}
-                options={countryOptions}
+                options={countryOptions.filter(option => !option.value.includes("All of") && option.value !== "Global (All Regions)")}
                 placeholder="Select or type country"
                 isSearchable
                 isClearable

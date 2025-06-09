@@ -317,7 +317,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                     : { label: "Kenya", value: "Kenya" }
                 }
                 onChange={handleCountryChange}
-                options={countryOptions}
+                options={countryOptions.filter(option => !option.value.includes("All of") && option.value !== "Global (All Regions)")}
                 placeholder="Select or type country"
                 isSearchable
                 isClearable

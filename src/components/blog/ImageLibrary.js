@@ -161,7 +161,11 @@ export default function ImageLibrary({
     >
       <div
         className="absolute inset-0 bg-black bg-opacity-50"
-        onClick={onClose}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          onClose();
+        }}
       ></div>
       <div
         className={`relative w-full max-w-4xl max-h-[80vh] overflow-auto rounded-2xl shadow-xl ${
@@ -177,7 +181,11 @@ export default function ImageLibrary({
             Image Library
           </h2>
           <button
-            onClick={onClose}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onClose();
+            }}
             className={`p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 ${
               mode === "dark" ? "text-gray-400" : "text-gray-500"
             }`}
@@ -303,6 +311,10 @@ export default function ImageLibrary({
                       ? "border-gray-700 hover:border-blue-500"
                       : "border-gray-200 hover:border-blue-500"
                   }`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
                 >
                   <div className="w-full h-48">
                     <Image
@@ -320,6 +332,7 @@ export default function ImageLibrary({
                     <div className="flex gap-2">
                       <button
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           handleImageSelect(file);
                         }}
@@ -329,6 +342,7 @@ export default function ImageLibrary({
                       </button>
                       <button
                         onClick={(e) => {
+                          e.preventDefault();
                           e.stopPropagation();
                           handleDeleteClick(file);
                         }}
@@ -348,7 +362,14 @@ export default function ImageLibrary({
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center">
-          <div className="absolute inset-0 bg-black bg-opacity-50" onClick={handleDeleteCancel}></div>
+          <div 
+            className="absolute inset-0 bg-black bg-opacity-50" 
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleDeleteCancel();
+            }}
+          ></div>
           <div className={`relative p-6 rounded-xl shadow-xl ${
             mode === "dark" ? "bg-gray-900" : "bg-white"
           }`}>
@@ -364,7 +385,11 @@ export default function ImageLibrary({
             </p>
             <div className="flex justify-end gap-4">
               <button
-                onClick={handleDeleteCancel}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleDeleteCancel();
+                }}
                 className={`px-4 py-2 rounded-lg ${
                   mode === "dark"
                     ? "bg-gray-800 text-gray-300 hover:bg-gray-700"
@@ -374,7 +399,11 @@ export default function ImageLibrary({
                 Cancel
               </button>
               <button
-                onClick={handleDeleteConfirm}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleDeleteConfirm();
+                }}
                 className="px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
               >
                 Delete

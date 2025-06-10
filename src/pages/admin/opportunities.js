@@ -330,7 +330,8 @@ export default function AdminBusinessOpportunities({
                       setSortOrder={setSortOrder}
                       mode={mode}
                       loading={loading}
-                      opportunities={opportunities}
+                      items={opportunities}
+                      filteredItems={sortedOpportunities}
                       onOpenUsersModal={modalActions.openUsersModal}
                       filterStatus={filterStatus}
                       setFilterStatus={setFilterStatus}

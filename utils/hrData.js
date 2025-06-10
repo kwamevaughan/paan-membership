@@ -284,7 +284,12 @@ export async function fetchHRData({
       : [];
 
     const jobOpenings = fetchCandidates
-      ? [...new Set(combinedData.map((c) => c.opening))]
+      ? [...new Set(combinedData.map((c) => {
+          const opening = c.opening || '';
+          return opening.replace(/\s+/g, ' ').trim();
+        }))]
+          .filter(Boolean) // Remove null/undefined/empty strings
+          .sort((a, b) => a.localeCompare(b)) // Sort alphabetically
       : [];
 
     return {

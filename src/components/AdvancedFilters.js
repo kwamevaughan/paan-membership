@@ -21,6 +21,7 @@ export default function AdvancedFilters({
   // Type-specific props
   type = "opportunity", // 'opportunity', 'update', or 'market-intel'
   items = [], // opportunities, updates, or market intel items
+  filteredItems = [], // Add this new prop for filtered items
   
   // Opportunity-specific props
   filterType,
@@ -265,6 +266,25 @@ export default function AdvancedFilters({
               aria-hidden="true"
             />
           </button>
+
+          {/* Item Count Display */}
+          <div className={`px-4 py-3 text-sm font-medium rounded-lg ${
+            mode === "dark" ? "text-gray-300" : "text-gray-600"
+          }`}>
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <Icon
+                  icon="eos-icons:loading"
+                  className="w-4 h-4 animate-spin"
+                />
+                <span>Loading...</span>
+              </div>
+            ) : (
+              <span>
+                Showing {filteredItems.length} of {items.length} {type === "opportunity" ? "opportunities" : type === "update" ? "updates" : "blog posts"}
+              </span>
+            )}
+          </div>
 
           <ViewToggle viewMode={viewMode} setViewMode={setViewMode} mode={mode} />
         </div>

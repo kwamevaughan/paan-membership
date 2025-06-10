@@ -17,6 +17,7 @@ import useModals from "@/hooks/useModals";
 import { getAdminBlogProps } from "utils/getPropsUtils";
 import { debounce } from "lodash";
 import { motion } from "framer-motion";
+import { filterAndSortBlogs } from "@/../utils/blogUtils";
 
 export default function AdminBlog({
   mode = "light",
@@ -71,7 +72,7 @@ export default function AdminBlog({
     handleSubmit,
     fetchBlogs,
     editorContent,
-    setEditorContent
+    setEditorContent,
   } = useBlog();
 
   const {
@@ -226,6 +227,15 @@ export default function AdminBlog({
       setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
     }
   };
+
+  const sortedBlogs = filterAndSortBlogs({
+    blogs,
+    filterTerm,
+    selectedCategory,
+    selectedTags,
+    selectedStatus,
+    sortOrder,
+  });
 
   return (
     <div
@@ -400,6 +410,7 @@ export default function AdminBlog({
                       showFilters={showFilters}
                       setShowFilters={setShowFilters}
                       items={blogs}
+                      filteredItems={sortedBlogs}
                       selectedCategory={selectedCategory}
                       onCategoryChange={(value) => {
                         setSelectedCategory(value);
@@ -435,7 +446,7 @@ export default function AdminBlog({
 
                     <div className="mt-8">
                       <BlogGrid
-                        blogs={blogs}
+                        blogs={sortedBlogs}
                         loading={loading}
                         selectedIds={selectedIds}
                         setSelectedIds={setSelectedIds}
@@ -449,6 +460,7 @@ export default function AdminBlog({
                         filterTerm={filterTerm}
                         selectedCategory={selectedCategory}
                         selectedTags={selectedTags}
+                        mode={mode}
                       />
                     </div>
                   </div>

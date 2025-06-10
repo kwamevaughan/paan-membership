@@ -10,6 +10,7 @@ export default function ImageLibrary({
   mode,
   onUpload,
   uploading = false,
+  folder = "/Blog",
 }) {
   const [files, setFiles] = useState([]);
   const [selectedFiles, setSelectedFiles] = useState([]);
@@ -22,7 +23,7 @@ export default function ImageLibrary({
   const fetchFiles = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/imagekit/list-files?path=/Blog");
+      const response = await fetch(`/api/imagekit/list-files?path=${folder}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.error || "Failed to fetch images");
@@ -429,7 +430,7 @@ export default function ImageLibrary({
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div 
-          className="fixed inset-0 z-[60] flex items-center justify-center"
+          className="fixed inset-0 z-[10001] flex items-center justify-center"
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -444,7 +445,7 @@ export default function ImageLibrary({
             }}
           ></div>
           <div 
-            className={`relative p-6 rounded-xl shadow-xl ${
+            className={`relative p-6 rounded-xl shadow-xl max-w-md w-full mx-4 ${
               mode === "dark" ? "bg-gray-900" : "bg-white"
             }`}
             onClick={(e) => {

@@ -553,3 +553,33 @@ export async function getAdminBlogProps({ req, res }) {
     };
   }
 }
+
+export async function getAdminEventsProps({ req, res }) {
+  // Authenticate and authorize
+  const authResult = await withAuth(req, res, { redirectTo: "/login" });
+  if (authResult.redirect) {
+    return authResult;
+  }
+
+  const { supabaseServer } = authResult;
+
+  // Fetch tiers
+  const { data: tiers, error: tiersError } = await supabaseServer
+    .from("tiers")
+    .select("*")
+    .order("id");
+
+  if (tiersError) {
+    return {
+      props: {
+        tiers: [],
+      },
+    };
+  }
+
+  return {
+    props: {
+      tiers: tiers || [],
+    },
+  };
+}

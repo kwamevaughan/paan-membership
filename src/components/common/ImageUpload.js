@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Icon } from "@iconify/react";
 import toast from "react-hot-toast";
-import ImageLibrary from "./ImageLibrary";
+import ImageLibrary from "@/components/common/ImageLibrary";
 
 export default function ImageUpload({
   mode,

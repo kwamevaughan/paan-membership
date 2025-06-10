@@ -27,7 +27,7 @@ export default function AdminMarketIntel({
   const [showForm, setShowForm] = useState(false);
   const [viewMode, setViewMode] = useState("grid");
   const [page, setPage] = useState(1);
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
   const [filterTerm, setFilterTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("newest");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -39,7 +39,7 @@ export default function AdminMarketIntel({
   const [selectedDateRange, setSelectedDateRange] = useState("all");
   const [selectedRating, setSelectedRating] = useState("all");
   const [selectedFeedbackCount, setSelectedFeedbackCount] = useState("all");
-  const itemsPerPage = 12;
+  const itemsPerPage = 6;
   useAuthSession();
 
   const {
@@ -448,6 +448,16 @@ export default function AdminMarketIntel({
                       showFilters={showFilters}
                       setShowFilters={setShowFilters}
                       items={marketIntel}
+                      filteredItems={marketIntel.filter(intel => {
+                        const matchesSearch = !filterTerm || 
+                          intel.title.toLowerCase().includes(filterTerm.toLowerCase()) ||
+                          intel.description.toLowerCase().includes(filterTerm.toLowerCase());
+                        const matchesCategory = selectedCategory === "All" || intel.category === selectedCategory;
+                        const matchesTier = selectedTier === "All" || intel.tier_restriction === selectedTier;
+                        const matchesType = selectedType === "All" || intel.type === selectedType;
+                        const matchesRegion = selectedRegion === "All" || intel.region === selectedRegion;
+                        return matchesSearch && matchesCategory && matchesTier && matchesType && matchesRegion;
+                      }).slice(0, page * itemsPerPage)}
                       selectedCategory={selectedCategory}
                       onCategoryChange={(value) => {
                         setSelectedCategory(value);

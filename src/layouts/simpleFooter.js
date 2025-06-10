@@ -29,7 +29,7 @@ const SimpleFooter = ({ mode, isSidebarOpen }) => {
   }, []);
 
   return (
-    <div className=" relative z-20 flex justify-center">
+    <div className=" relative z-20 mt-10 flex justify-center">
       <footer
         className={`
           ${

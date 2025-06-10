@@ -11,7 +11,7 @@ import { useUpdates } from "@/hooks/useUpdates";
 import SimpleFooter from "@/layouts/simpleFooter";
 import UpdatesForm from "@/components/UpdatesForm";
 import ItemActionModal from "@/components/ItemActionModal";
-import UpdatesList from "@/components/updates/UpdatesList";
+import UpdatesGrid from "@/components/updates/UpdatesGrid";
 import AdvancedFilters from "@/components/AdvancedFilters";
 import { getAdminUpdatesProps } from "utils/getPropsUtils";
 
@@ -102,6 +102,9 @@ export default function AdminUpdates({
     const matchesTags = selectedTags.length === 0 || selectedTags.some(tag => updateTags.includes(tag));
     return matchesSearch && matchesCategory && matchesTier && matchesTags;
   });
+
+  // Calculate paginated updates
+  const paginatedUpdates = filteredUpdates.slice(0, page * itemsPerPage);
 
   const handleCreateUpdate = () => {
     setShowForm(true);
@@ -336,6 +339,7 @@ export default function AdminUpdates({
                       showFilters={showFilters}
                       setShowFilters={setShowFilters}
                       items={updates}
+                      filteredItems={paginatedUpdates}
                       selectedCategory={selectedCategory}
                       onCategoryChange={setSelectedCategory}
                       categories={categories}
@@ -348,8 +352,8 @@ export default function AdminUpdates({
 
                     <div className="mt-8">
 
-                    <UpdatesList
-                      updates={filteredUpdates}
+                      <UpdatesGrid
+                      updates={paginatedUpdates}
                       loading={loading}
                       mode={mode}
                       viewMode={viewMode}

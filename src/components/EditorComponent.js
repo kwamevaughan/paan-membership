@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, memo, useMemo } from "react"; // Added useMemo
 import dynamic from "next/dynamic";
 import { Icon } from "@iconify/react";
-import ImageLibrary from "./blog/ImageLibrary";
+import ImageLibrary from "@/components/common/ImageLibrary";
 import toast from "react-hot-toast";
 
 // Dynamically import JoditEditor for client-side only

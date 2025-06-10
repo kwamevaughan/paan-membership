@@ -49,6 +49,7 @@
     "react-countup": "^6.5.3",
     "react-csv": "^2.2.2",
     "react-date-range": "^2.0.1",
+    "react-datepicker": "^8.4.0",
     "react-dnd": "^16.0.1",
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^18.3.1",
@@ -57,8 +58,10 @@
     "react-leaflet": "^4.2.1",
     "react-quill": "^2.0.0",
     "react-select": "^5.10.1",
+    "rsuite": "^5.82.0",
     "swiper": "^11.2.4",
-    "ua-parser-js": "^2.0.2"
+    "ua-parser-js": "^2.0.2",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

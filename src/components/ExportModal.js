@@ -14,49 +14,111 @@ import useExportFilters from "../hooks/useExportFilters";
 // Utility function to format date to DD-MM-YYYY
 const formatDate = (dateString) => {
     if (!dateString) return "-";
-    const date = new Date(dateString);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-based
-    const year = date.getFullYear();
-    return `${day}-${month}-${year}`;
+    try {
+        // If the date is already in DD/MM/YYYY format, convert it
+        if (dateString.includes('/')) {
+            const [datePart] = dateString.split(',');
+            const [day, month, year] = datePart.split('/');
+            return `${day}-${month}-${year}`;
+        }
+        
+        // Otherwise parse as ISO date
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return "-";
+        const day = String(date.getDate()).padStart(2, "0");
+        const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-based
+        const year = date.getFullYear();
+        return `${day}-${month}-${year}`;
+    } catch (error) {
+        console.error('Error formatting date:', error);
+        return "-";
+    }
 };
 
-export default function ExportModal({ isOpen, onClose, candidates, mode }) {
-    const [selectedFields, setSelectedFields] = useState({
-      primaryContactName: true,
-      primaryContactEmail: true,
-      opening: true,
-        selected_tier: true,
-      job_type: true,
-      status: true,
-      phone: false,
-      linkedin: false,
-      created_at: false,
-    });
+export default function ExportModal({ isOpen, onClose, candidates, mode, type = "applicants" }) {
 
+    const getDefaultFields = () => {
+      if (type === "events") {
+        return {
+          primaryContactName: true,
+          primaryContactEmail: true,
+          primaryContactPhone: true,
+          primaryContactLinkedin: true,
+          agencyName: true,
+          headquartersLocation: true,
+          registered_at: true,
+          status: true
+        };
+      }
+      // Default for applicants
+      return {
+        primaryContactName: true,
+        primaryContactEmail: true,
+        opening: true,
+        selected_tier: true,
+        job_type: true,
+        status: true,
+        phone: false,
+        linkedin: false,
+        created_at: false,
+      };
+    };
+
+    const getFieldsOrder = () => {
+      if (type === "events") {
+        return [
+          { label: "Name", key: "primaryContactName", icon: "mdi:account" },
+          { label: "Email", key: "primaryContactEmail", icon: "mdi:email" },
+          { label: "Phone", key: "primaryContactPhone", icon: "mdi:phone" },
+          { label: "LinkedIn", key: "primaryContactLinkedin", icon: "mdi:linkedin" },
+          { label: "Agency Name", key: "agencyName", icon: "mdi:office-building" },
+          { label: "Location", key: "headquartersLocation", icon: "mdi:map-marker" },
+          { label: "Registration Date", key: "registered_at", icon: "mdi:calendar" },
+          { label: "Status", key: "status", icon: "mdi:tag" }
+        ];
+      }
+      // Default for applicants
+      return [
+        { label: "Name", key: "primaryContactName", icon: "mdi:account" },
+        { label: "Email", key: "primaryContactEmail", icon: "mdi:email" },
+        { label: "Opening", key: "opening", icon: "mdi:briefcase" },
+        { label: "Selected Tier", key: "selected_tier", icon: "mdi:star" },
+        { label: "Job Type", key: "job_type", icon: "mdi:briefcase" },
+        { label: "Status", key: "status", icon: "mdi:tag" },
+        { label: "Phone", key: "phone", icon: "mdi:phone" },
+        { label: "LinkedIn", key: "linkedin", icon: "mdi:linkedin" },
+        { label: "Submitted on", key: "created_at", icon: "mdi:calendar" }
+      ];
+    };
+
+    const [selectedFields, setSelectedFields] = useState(getDefaultFields());
     const [exportFormat, setExportFormat] = useState("csv");
     const [previewRows, setPreviewRows] = useState(3);
-    const [fieldsOrder, setFieldsOrder] = useState([
-      { label: "Name", key: "primaryContactName", icon: "mdi:account" },
-      { label: "Email", key: "primaryContactEmail", icon: "mdi:email" },
-      { label: "Opening", key: "opening", icon: "mdi:briefcase" },
-        { label: "Selected Tier", key: "selected_tier", icon: "mdi:star" },
-      { label: "Job Type", key: "job_type", icon: "mdi:briefcase" },
-      { label: "Status", key: "status", icon: "mdi:tag" },
-      { label: "Phone", key: "phone", icon: "mdi:phone" },
-      { label: "LinkedIn", key: "linkedin", icon: "mdi:linkedin" },
-      { label: "Submitted on", key: "created_at", icon: "mdi:calendar" },
-    ]);
+    const [fieldsOrder, setFieldsOrder] = useState(getFieldsOrder());
     const [showDatePicker, setShowDatePicker] = useState(false);
 
     const { filterStatus, setFilterStatus, dateRange, setDateRange, filteredCandidates } =
         useExportFilters(candidates);
 
+
     // Format the created_at field in filteredCandidates
-    const formattedCandidates = filteredCandidates.map(candidate => ({
+    const formattedCandidates = filteredCandidates.map(candidate => {
+      return {
         ...candidate,
         created_at: formatDate(candidate.created_at),
-    }));
+        phone: candidate.primaryContactPhone || "-",
+        linkedin: candidate.primaryContactLinkedin || "-",
+        primaryContactPhone: candidate.primaryContactPhone || "-",
+        primaryContactLinkedin: candidate.primaryContactLinkedin || "-",
+        primaryContactName: candidate.primaryContactName || "-",
+        primaryContactEmail: candidate.primaryContactEmail || "-",
+        agencyName: candidate.agencyName || "-",
+        headquartersLocation: candidate.headquartersLocation || "-",
+        status: candidate.status || "-",
+        registered_at: candidate.registered_at ? formatDate(candidate.registered_at) : "-"
+      };
+    });
+
 
     const statuses = ["all", "Pending", "Reviewed", "Shortlisted", "Rejected"];
 
@@ -163,7 +225,7 @@ export default function ExportModal({ isOpen, onClose, candidates, mode }) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-[100]">
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-[9999]">
             <div
                 className={`rounded-xl max-w-2xl w-full mx-0 shadow-2xl transform transition-all duration-300 animate-fade-in flex flex-col max-h-[80vh] ${
                     mode === "dark" ? "bg-gray-800 text-white" : "bg-white text-[#231812]"
@@ -172,7 +234,9 @@ export default function ExportModal({ isOpen, onClose, candidates, mode }) {
                 <div className="bg-gradient-to-r from-blue-400 to-blue-600 rounded-t-xl p-4 flex items-center justify-between">
                     <div className="flex items-center">
                         <Icon icon="mdi:export" className="w-8 h-8 text-white mr-3" />
-                        <h2 className="text-2xl font-bold text-white">Export Applicants</h2>
+                        <h2 className="text-2xl font-bold text-white">
+                            {type === "events" ? "Export Event Registrations" : "Export Applicants"}
+                        </h2>
                     </div>
                     <button
                         onClick={onClose}

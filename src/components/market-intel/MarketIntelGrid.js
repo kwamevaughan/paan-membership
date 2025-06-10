@@ -3,6 +3,9 @@ import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
 import MarketIntelCard from "./MarketIntelCard";
 import ItemActionModal from "../ItemActionModal";
+import DataTable from "../common/DataTable";
+import DataGrid from "../common/DataGrid";
+import Image from "next/image";
 
 export default function MarketIntelGrid({
   mode,
@@ -34,17 +37,19 @@ export default function MarketIntelGrid({
   const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [feedback, setFeedback] = useState([]);
   const [loadingFeedback, setLoadingFeedback] = useState(false);
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [intelToDelete, setIntelToDelete] = useState(null);
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
-      setSelectedIds(paginatedIntel.map(intel => intel.id));
+      setSelectedItems(paginatedIntel.map(intel => intel.id));
     } else {
-      setSelectedIds([]);
+      setSelectedItems([]);
     }
   };
 
   const handleSelectItem = (id) => {
-    setSelectedIds(prev => {
+    setSelectedItems(prev => {
       if (prev.includes(id)) {
         return prev.filter(itemId => itemId !== id);
       } else {
@@ -59,35 +64,31 @@ export default function MarketIntelGrid({
     setIsDeleteAllModalOpen(false);
   };
 
-  // Filter the market intel based on all criteria
-  const filteredIntel = marketIntel.filter((intel) => {
-    // Filter by search term
-    const matchesSearch = filterTerm
-      ? (intel.title?.toLowerCase().includes(filterTerm.toLowerCase()) ||
-        (intel.description || "").toLowerCase().includes(filterTerm.toLowerCase()))
-      : true;
+  const filteredIntel = marketIntel?.filter((intel) => {
+    const matchesSearch =
+      !filterTerm ||
+      intel.title.toLowerCase().includes(filterTerm.toLowerCase()) ||
+      intel.description.toLowerCase().includes(filterTerm.toLowerCase());
 
-    // Filter by category
-    const matchesCategory = selectedCategory === "All" || intel.category === selectedCategory;
+    const matchesCategory =
+      selectedCategory === "All" || intel.category === selectedCategory;
 
-    // Filter by tier
-    const matchesTier = selectedTier === "All" || intel.tier_restriction === selectedTier;
+    const matchesTier =
+      selectedTier === "All" || intel.tier_restriction === selectedTier;
 
-    // Filter by type
-    const matchesType = selectedType === "All" || intel.type === selectedType;
+    const matchesType =
+      selectedType === "All" || intel.type === selectedType;
 
-    // Filter by region
-    const matchesRegion = selectedRegion === "All" || intel.region === selectedRegion;
+    const matchesRegion =
+      selectedRegion === "All" || intel.region === selectedRegion;
 
     return matchesSearch && matchesCategory && matchesTier && matchesType && matchesRegion;
-  });
+  }) || [];
 
-  // Calculate the total number of items to show
   const totalItems = currentPage * itemsPerPage;
-  // Get only the items for the current page
   const paginatedIntel = filteredIntel.slice(0, totalItems);
-  // Check if there are more items to load
   const hasMore = filteredIntel.length > totalItems;
+  const remainingCount = filteredIntel.length - paginatedIntel.length;
 
   const fetchMembers = async (tier) => {
     try {
@@ -113,7 +114,7 @@ export default function MarketIntelGrid({
   };
 
   const handleDeleteClick = (intel) => {
-    setSelectedIntel(intel);
+    setIntelToDelete(intel);
     setIsDeleteModalOpen(true);
   };
 
@@ -123,26 +124,270 @@ export default function MarketIntelGrid({
     handleViewFeedback(intel);
   };
 
+  const handleLoadMore = () => {
+    setCurrentPage((prev) => prev + 1);
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  const confirmDelete = () => {
+    if (intelToDelete) {
+      handleDelete(intelToDelete.id);
+      setIsDeleteModalOpen(false);
+      setIntelToDelete(null);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[200px]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="p-12 text-center">
+        <div
+          className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 animate-pulse ${
+            mode === "dark" ? "bg-blue-900/30" : "bg-blue-100"
+          }`}
+        >
+          <Icon
+            icon="eos-icons:loading"
+            className={`h-8 w-8 ${
+              mode === "dark" ? "text-blue-300" : "text-blue-500"
+            } animate-spin`}
+          />
+        </div>
+        <h3 className="mt-2 text-lg font-medium">Loading market intelligence...</h3>
       </div>
     );
   }
 
-  if (!marketIntel?.length) {
+  if (filteredIntel.length === 0) {
     return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">No market intel entries found.</p>
-        <p className="text-sm text-gray-400 mt-2">
+      <div className="p-12 text-center">
+        <div
+          className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 ${
+            mode === "dark" ? "bg-blue-900/30" : "bg-blue-100"
+          }`}
+        >
+          <Icon
+            icon="heroicons:document-text"
+            className={`h-8 w-8 ${
+              mode === "dark" ? "text-blue-300" : "text-blue-500"
+            }`}
+          />
+        </div>
+        <h3 className="mt-2 text-lg font-medium">No market intelligence found</h3>
+        <p
+          className={`mt-2 text-sm max-w-md mx-auto ${
+            mode === "dark" ? "text-gray-400" : "text-gray-500"
+          }`}
+        >
           {filterTerm || selectedCategory !== "All" || selectedTier !== "All" || selectedType !== "All" || selectedRegion !== "All"
             ? "Try adjusting your filters"
-            : "Create one to get started"}
+            : "Create your first market intelligence report"}
         </p>
       </div>
     );
   }
+
+  const tableColumns = [
+    {
+      key: "title",
+      label: "Title",
+    },
+    {
+      key: "type",
+      label: "Type",
+      render: (intel) => (
+        <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
+          mode === "dark"
+            ? "bg-blue-900/50 text-blue-300"
+            : "bg-blue-100 text-blue-700"
+        }`}>
+          {intel.type}
+        </span>
+      ),
+    },
+    {
+      key: "region",
+      label: "Region",
+      render: (intel) => (
+        <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
+          mode === "dark"
+            ? "bg-gray-700 text-gray-300"
+            : "bg-gray-100 text-gray-700"
+        }`}>
+          {intel.region}
+        </span>
+      ),
+    },
+    {
+      key: "tier_restriction",
+      label: "Tier",
+      render: (intel) => (
+        <span className={`px-2 py-1 rounded-lg text-xs font-medium ${
+          mode === "dark"
+            ? "bg-blue-900/50 text-blue-300"
+            : "bg-blue-100 text-blue-700"
+        }`}>
+          {intel.tier_restriction}
+        </span>
+      ),
+    },
+    {
+      key: "downloadable",
+      label: "Downloadable",
+      render: (intel) => (
+        intel.downloadable ? (
+          <span className="flex items-center text-green-500">
+            <Icon icon="heroicons:check-circle" className="w-4 h-4 mr-1" />
+            Yes
+          </span>
+        ) : (
+          <span className="flex items-center text-gray-500">
+            <Icon icon="heroicons:x-circle" className="w-4 h-4 mr-1" />
+            No
+          </span>
+        )
+      ),
+    },
+    {
+      key: "created_at",
+      label: "Created",
+      render: (intel) => formatDate(intel.created_at),
+    },
+  ];
+
+  const renderIntelCard = (intel) => (
+    <>
+      {/* Header with Image */}
+      <div className="relative h-48">
+        {intel.icon_url ? (
+          <Image
+            src={intel.icon_url}
+            alt={intel.title}
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <div
+            className={`w-full h-full flex items-center justify-center ${
+              mode === "dark" ? "bg-gray-700" : "bg-gray-100"
+            }`}
+          >
+            <Icon
+              icon="heroicons:document-chart-bar"
+              className="w-12 h-12 opacity-50"
+            />
+          </div>
+        )}
+        <div
+          className={`absolute inset-0 bg-gradient-to-t ${
+            mode === "dark"
+              ? "from-gray-900/80 to-transparent"
+              : "from-gray-900/60 to-transparent"
+          }`}
+        />
+      </div>
+
+      {/* Content */}
+      <div className="p-6 pb-4">
+        <div className="mb-4">
+          <h3 className="font-bold text-lg mb-1 truncate pr-6 max-w-full">
+            {intel.title}
+          </h3>
+        </div>
+
+        {/* Type and Region */}
+        <div className="flex flex-wrap items-center align-middle gap-2 mb-4 text-sm text-gray-600 dark:text-gray-300">
+          <div className="flex items-center gap-1">
+            <Icon icon="heroicons:document-text" className="w-4 h-4" />
+            <span>{intel.type}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Icon icon="heroicons:globe-americas" className="w-4 h-4" />
+            <span>{intel.region}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Description */}
+      <div className="px-6 pb-6 flex-grow">
+        <div
+          className={`text-sm leading-relaxed mb-6 line-clamp-3 text-gray-600 dark:text-gray-300`}
+        >
+          {intel.description}
+        </div>
+
+        {/* Tier Restriction */}
+        <div className="flex flex-wrap gap-2">
+          <span
+            className={`px-2 py-1 rounded-md text-xs font-medium ${
+              mode === "dark"
+                ? "bg-blue-900/50 text-blue-300"
+                : "bg-blue-100 text-blue-700"
+            }`}
+          >
+            {intel.tier_restriction}
+          </span>
+          {intel.downloadable && (
+            <span
+              className={`px-2 py-1 rounded-md text-xs font-medium ${
+                mode === "dark"
+                  ? "bg-green-900/50 text-green-300"
+                  : "bg-green-100 text-green-700"
+              }`}
+            >
+              Downloadable
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Footer */}
+      <div
+        className={`px-6 py-4 border-t flex items-center justify-between ${
+          mode === "dark"
+            ? "bg-gray-800/40 border-gray-700"
+            : "bg-gray-50 border-gray-200"
+        }`}
+      >
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <span className="flex items-center text-gray-500">
+            <Icon icon="heroicons:calendar" className="w-4 h-4 mr-1" />
+            {formatDate(intel.created_at)}
+          </span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => handleViewFeedback(intel)}
+            className="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition"
+            title="View feedback"
+          >
+            <Icon icon="heroicons:chat-bubble-left-right" className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleEditClick(intel)}
+            className="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition"
+            title="Edit market intelligence"
+          >
+            <Icon icon="heroicons:pencil-square" className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => handleDeleteClick(intel)}
+            className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition"
+            title="Delete market intelligence"
+          >
+            <Icon icon="heroicons:trash" className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+    </>
+  );
 
   return (
     <motion.div
@@ -193,114 +438,35 @@ export default function MarketIntelGrid({
       )}
 
       {viewMode === "table" ? (
-        <div className="overflow-x-auto">
-          <table className={`w-full ${mode === "dark" ? "text-gray-200" : "text-gray-700"}`}>
-            <thead>
-              <tr className={`border-b ${mode === "dark" ? "border-gray-700" : "border-gray-200"}`}>
-                <th className="px-6 py-4 text-left text-sm font-semibold">
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.length === paginatedIntel.length}
-                    onChange={handleSelectAll}
-                    className={`rounded border-gray-300 ${mode === "dark" ? "bg-gray-700" : "bg-white"}`}
-                  />
-                </th>
-                <th className="px-6 py-4 text-left text-sm font-semibold">Title</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold">Description</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold">Category</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold">Type</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold">Region</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold">Tier</th>
-                <th className="px-6 py-4 text-left text-sm font-semibold">Published</th>
-                <th className="px-6 py-4 text-right text-sm font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {paginatedIntel.map((intel) => (
-                <tr
-                  key={intel.id}
-                  onClick={() => handleSelectItem(intel.id)}
-                  className={`hover:bg-opacity-50 ${mode === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-50"}`}
-                >
-                  <td className="px-6 py-4 cursor-pointer" onClick={e => e.stopPropagation()}>
-                    <input
-                      type="checkbox"
-                      checked={selectedIds.includes(intel.id)}
-                      onChange={() => handleSelectItem(intel.id)}
-                      className={`rounded border-gray-300 ${mode === "dark" ? "bg-gray-700" : "bg-white"}`}
-                    />
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="font-medium">{intel.title}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="max-w-md line-clamp-2 text-sm">{(intel.description || '').replace(/<[^>]*>/g, '').slice(0, 120)}</div>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-lg text-xs font-medium ${mode === "dark" ? "bg-green-900/50 text-green-300" : "bg-green-100 text-green-700"}`}>{intel.category}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-lg text-xs font-medium ${mode === "dark" ? "bg-blue-900/50 text-blue-300" : "bg-blue-100 text-blue-700"}`}>{intel.type}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-lg text-xs font-medium ${mode === "dark" ? "bg-blue-900/50 text-blue-300" : "bg-blue-100 text-blue-700"}`}>{intel.region}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-lg text-xs font-medium ${mode === "dark" ? "bg-purple-900/50 text-purple-300" : "bg-purple-100 text-purple-700"}`}>{intel.tier_restriction}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm">{new Date(intel.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
-                  </td>
-                  <td className="px-6 py-4" onClick={e => e.stopPropagation()}>
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => handleViewUsers(intel)}
-                        className="p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 transition"
-                        title="View members"
-                      >
-                        <Icon icon="mdi:account-group" className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleEditClick(intel)}
-                        className="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition"
-                        title="Edit intel"
-                      >
-                        <Icon icon="heroicons:pencil-square" className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(intel)}
-                        className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition"
-                        title="Delete intel"
-                      >
-                        <Icon icon="heroicons:trash" className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <DataTable
+          data={paginatedIntel}
+          columns={tableColumns}
+          selectedItems={selectedIds}
+          onSelectAll={handleSelectAll}
+          onSelectItem={handleSelectItem}
+          onDelete={handleDelete}
+          onEdit={handleEditClick}
+          mode={mode}
+          hasMore={false}
+          onLoadMore={handleLoadMore}
+          remainingCount={remainingCount}
+          itemName="market intelligence"
+        />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-fr">
-          {paginatedIntel.map((intel) => (
-            <MarketIntelCard
-              key={intel.id}
-              intel={intel}
-              mode={mode}
-              handleEditClick={handleEditClick}
-              onDelete={() => handleDeleteClick(intel)}
-              onViewUsers={handleViewUsers}
-              onFeedbackClick={() => handleFeedbackClick(intel)}
-            />
-          ))}
-        </div>
+        <DataGrid
+          data={paginatedIntel}
+          renderCard={renderIntelCard}
+          mode={mode}
+          hasMore={false}
+          onLoadMore={handleLoadMore}
+          remainingCount={remainingCount}
+        />
       )}
       
       {hasMore && (
-        <div className="flex justify-center pt-4">
+        <div className="flex justify-center mt-8">
           <button
-            onClick={() => setCurrentPage(prev => prev + 1)}
+            onClick={handleLoadMore}
             className={`px-6 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${
               mode === "dark"
                 ? "bg-gray-800 hover:bg-gray-700 text-gray-200"
@@ -309,7 +475,7 @@ export default function MarketIntelGrid({
           >
             <div className="flex items-center gap-2">
               <Icon icon="heroicons:arrow-down" className="w-4 h-4" />
-              <span>Load More ({filteredIntel.length - totalItems} remaining)</span>
+              <span>Load More ({remainingCount} remaining)</span>
             </div>
           </button>
         </div>
@@ -318,7 +484,10 @@ export default function MarketIntelGrid({
       {/* Delete Modal */}
       <ItemActionModal
         isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setIntelToDelete(null);
+        }}
         title="Confirm Deletion"
         mode={mode}
       >
@@ -328,13 +497,16 @@ export default function MarketIntelGrid({
               mode === "dark" ? "text-gray-300" : "text-gray-600"
             }`}
           >
-            Are you sure you want to delete the market intel{" "}
-            <strong>&quot;{selectedIntel?.title}&quot;</strong>? This action cannot be
-            undone.
+            Are you sure you want to delete the market intelligence report{" "}
+            <strong>&quot;{intelToDelete?.title}&quot;</strong>? This
+            action cannot be undone.
           </p>
           <div className="flex justify-end space-x-4">
             <button
-              onClick={() => setIsDeleteModalOpen(false)}
+              onClick={() => {
+                setIsDeleteModalOpen(false);
+                setIntelToDelete(null);
+              }}
               className={`px-6 py-3 text-sm font-medium rounded-xl border transition-all duration-200 flex items-center shadow-sm ${
                 mode === "dark"
                   ? "border-gray-600 text-gray-200 bg-gray-800 hover:bg-gray-700"
@@ -345,10 +517,7 @@ export default function MarketIntelGrid({
               Cancel
             </button>
             <button
-              onClick={() => {
-                handleDelete(selectedIntel?.id);
-                setIsDeleteModalOpen(false);
-              }}
+              onClick={confirmDelete}
               className={`px-6 py-3 text-sm font-medium rounded-xl text-white bg-red-600 hover:bg-red-700 transition-all duration-200 flex items-center shadow-sm ${
                 mode === "dark" ? "shadow-white/10" : "shadow-gray-200"
               }`}
@@ -369,7 +538,7 @@ export default function MarketIntelGrid({
       >
         <div className="space-y-6">
           <p className={`text-sm ${mode === "dark" ? "text-gray-300" : "text-gray-600"}`}>
-            Are you sure you want to delete {selectedIds.length} selected market intel{selectedIds.length !== 1 ? 's' : ''}? This action cannot be undone.
+            Are you sure you want to delete {selectedIds.length} selected market intelligence{selectedIds.length !== 1 ? 's' : ''}? This action cannot be undone.
           </p>
           <div className="flex justify-end space-x-4">
             <button
@@ -565,7 +734,7 @@ export default function MarketIntelGrid({
                           <Icon
                             icon="heroicons:calendar"
                             className={`w-4 h-4 ${
-                              mode === "dark" ? "text-purple-400" : "text-purple-600"
+                              mode === "dark" ? "text-blue-400" : "text-blue-600"
                             }`}
                           />
                           <span className={`text-sm ${

@@ -66,40 +66,38 @@ export default function AdvancedFilters({
   tags = [],
 }) {
   const [projectTypes, setProjectTypes] = useState([]);
+  const [eventTypes, setEventTypes] = useState([]);
+  const [eventTiers, setEventTiers] = useState([]);
+  const [eventLocations, setEventLocations] = useState([]);
+  const [opportunityTiers, setOpportunityTiers] = useState([]);
+  const [opportunityJobTypes, setOpportunityJobTypes] = useState([]);
+  const [opportunityStatuses, setOpportunityStatuses] = useState([]);
+  const [updateCategories, setUpdateCategories] = useState([]);
+  const [updateTiers, setUpdateTiers] = useState([]);
+  const [updateTags, setUpdateTags] = useState([]);
+  const [marketIntelCategories, setMarketIntelCategories] = useState([]);
+  const [marketIntelTypes, setMarketIntelTypes] = useState([]);
+  const [marketIntelRegions, setMarketIntelRegions] = useState([]);
+  const [blogCategories, setBlogCategories] = useState([]);
+  const [blogAuthors, setBlogAuthors] = useState([]);
+  const [blogTags, setBlogTags] = useState([]);
 
-  // Add function to check if any filters are active
-  const hasActiveFilters = (type) => {
-    if (type === "opportunity") {
+  // Add this function to check if there are any active filters
+  const hasActiveFilters = () => {
+    if (type === "event") {
       return (
-        filterTerm !== "" ||
-        filterType !== "all" ||
-        filterJobType !== "all" ||
-        filterProjectType !== "all" ||
-        filterStatus !== "all" ||
-        filterApplications !== "all" ||
-        sortOrder !== "newest"
-      );
-    } else if (type === "update") {
-      return (
-        filterTerm !== "" ||
-        selectedCategory !== "All" ||
+        selectedType !== "All" ||
         selectedTier !== "All" ||
-        sortOrder !== "newest"
+        selectedRegion !== "All" ||
+        filterTerm !== ""
       );
-    } else if (type === "blog") {
-      // Check if any filter is active
-      const hasActiveFilter = 
-        (filterTerm && filterTerm.trim() !== "") ||
-        (selectedCategory && selectedCategory !== "All") ||
-        (selectedTags && selectedTags.length > 0) ||
-        (selectedStatus && selectedStatus !== "") ||
-        (selectedAuthor && selectedAuthor !== "") ||
-        (dateRange && (dateRange.start || dateRange.end)) ||
-        (sortOrder && sortOrder !== "newest");
-
-      return hasActiveFilter;
     }
-    return false;
+    return (
+      selectedStatus !== "all" ||
+      selectedTier !== "all" ||
+      selectedRegion !== "all" ||
+      filterTerm !== ""
+    );
   };
 
   // Add useEffect to log filter state for debugging
@@ -112,7 +110,7 @@ export default function AdvancedFilters({
       selectedAuthor,
       dateRange,
       sortOrder,
-      hasActiveFilters: hasActiveFilters(type)
+      hasActiveFilters: hasActiveFilters()
     });
   }, [filterTerm, selectedCategory, selectedTags, selectedStatus, selectedAuthor, dateRange, sortOrder, type]);
 
@@ -145,6 +143,14 @@ export default function AdvancedFilters({
       filters.setSelectedType("All");
       filters.setSelectedRegion("All");
       filters.setSelectedTier("All");
+    } else if (type === "event") {
+      // Reset event-specific filters using props directly
+      setFilterTerm("");
+      onTypeChange?.("All");
+      onTierChange?.("All");
+      onRegionChange?.("All");
+      onDateRangeChange?.("All");
+      setSortOrder("newest");
     }
     if (onResetFilters) {
       onResetFilters();
@@ -157,6 +163,137 @@ export default function AdvancedFilters({
       setProjectTypes(types);
     }
   }, [items, type]);
+
+  // Fetch event filter options from database
+  useEffect(() => {
+    const fetchEventFilterOptions = async () => {
+      if (type === "event") {
+        try {
+          // Fetch event types
+          const { data: events, error: eventsError } = await supabase
+            .from("events")
+            .select("event_type, tier_restriction, location");
+
+          if (eventsError) throw eventsError;
+
+          // Extract unique values
+          const types = [...new Set(events.map(event => event.event_type))].filter(Boolean);
+          const tiers = [...new Set(events.map(event => event.tier_restriction))].filter(Boolean);
+          const locations = [...new Set(events.map(event => event.location))].filter(Boolean);
+
+          setEventTypes(types);
+          setEventTiers(tiers);
+          setEventLocations(locations);
+        } catch (error) {
+          console.error("Error fetching event filter options:", error);
+          toast.error("Failed to load filter options");
+        }
+      }
+    };
+
+    fetchEventFilterOptions();
+  }, [type]);
+
+  // Fetch filter options from database based on type
+  useEffect(() => {
+    const fetchFilterOptions = async () => {
+      try {
+        switch (type) {
+          case "event":
+            const { data: events, error: eventsError } = await supabase
+              .from("events")
+              .select("event_type, tier_restriction, location");
+
+            if (eventsError) throw eventsError;
+
+            setEventTypes([...new Set(events.map(event => event.event_type))].filter(Boolean));
+            setEventTiers([...new Set(events.map(event => event.tier_restriction))].filter(Boolean));
+            setEventLocations([...new Set(events.map(event => event.location))].filter(Boolean));
+            break;
+
+          case "opportunity":
+            const { data: opportunities, error: opportunitiesError } = await supabase
+              .from("opportunities")
+              .select("tier_restriction, job_type, status, project_type");
+
+            if (opportunitiesError) throw opportunitiesError;
+
+            setOpportunityTiers([...new Set(opportunities.map(opp => opp.tier_restriction))].filter(Boolean));
+            setOpportunityJobTypes([...new Set(opportunities.map(opp => opp.job_type))].filter(Boolean));
+            setOpportunityStatuses([...new Set(opportunities.map(opp => opp.status))].filter(Boolean));
+            setProjectTypes([...new Set(opportunities.map(opp => opp.project_type))].filter(Boolean));
+            break;
+
+          case "update":
+            const { data: updates, error: updatesError } = await supabase
+              .from("updates")
+              .select("category, tier_restriction, tags");
+
+            if (updatesError) throw updatesError;
+
+            setUpdateCategories([...new Set(updates.map(update => update.category))].filter(Boolean));
+            setUpdateTiers([...new Set(updates.map(update => update.tier_restriction))].filter(Boolean));
+            
+            // Extract unique tags from all updates
+            const allTags = updates.reduce((tags, update) => {
+              if (update.tags) {
+                const updateTags = Array.isArray(update.tags) ? update.tags : update.tags.split(',').map(tag => tag.trim());
+                return [...tags, ...updateTags];
+              }
+              return tags;
+            }, []);
+            setUpdateTags([...new Set(allTags)].filter(Boolean));
+            break;
+
+          case "market-intel":
+            const { data: marketIntel, error: marketIntelError } = await supabase
+              .from("market_intel")
+              .select("category, type, region, tier_restriction");
+
+            if (marketIntelError) throw marketIntelError;
+
+            setMarketIntelCategories([...new Set(marketIntel.map(item => item.category))].filter(Boolean));
+            setMarketIntelTypes([...new Set(marketIntel.map(item => item.type))].filter(Boolean));
+            setMarketIntelRegions([...new Set(marketIntel.map(item => item.region))].filter(Boolean));
+            break;
+
+          case "blog":
+            const { data: blogs, error: blogsError } = await supabase
+              .from("blogs")
+              .select("category, author_id, tags, status");
+
+            if (blogsError) throw blogsError;
+
+            setBlogCategories([...new Set(blogs.map(blog => blog.category))].filter(Boolean));
+            
+            // Fetch authors separately since we need their names
+            const { data: authors, error: authorsError } = await supabase
+              .from("users")
+              .select("id, name")
+              .in("id", [...new Set(blogs.map(blog => blog.author_id))].filter(Boolean));
+
+            if (authorsError) throw authorsError;
+            setBlogAuthors(authors || []);
+
+            // Extract unique tags from all blogs
+            const allBlogTags = blogs.reduce((tags, blog) => {
+              if (blog.tags) {
+                const blogTags = Array.isArray(blog.tags) ? blog.tags : blog.tags.split(',').map(tag => tag.trim());
+                return [...tags, ...blogTags];
+              }
+              return tags;
+            }, []);
+            setBlogTags([...new Set(allBlogTags)].filter(Boolean));
+            break;
+        }
+      } catch (error) {
+        console.error(`Error fetching ${type} filter options:`, error);
+        toast.error(`Failed to load ${type} filter options`);
+      }
+    };
+
+    fetchFilterOptions();
+  }, [type]);
 
   const filters = {
     filterTerm,
@@ -181,7 +318,7 @@ export default function AdvancedFilters({
     setSortOrder,
   };
 
-  const hasFilters = hasActiveFilters(type);
+  const hasFilters = hasActiveFilters();
 
   return (
     <div className="p-6 dark:bg-gray-900 rounded-xl shadow-lg hover:shadow-md transition-all duration-300">
@@ -205,7 +342,7 @@ export default function AdvancedFilters({
                 ? "border-gray-700 bg-gray-800 text-white placeholder-gray-400 focus:ring-blue-600 focus:border-blue-600"
                 : "border-gray-200 bg-gray-50 text-gray-900 placeholder-gray-400 focus:ring-blue-500 focus:border-blue-500"
             } disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none shadow-sm`}
-            placeholder={`Search ${type === "opportunity" ? "opportunities" : type === "update" ? "updates" : "blog posts"}...`}
+            placeholder={`Search ${type === "opportunity" ? "opportunities" : type === "update" ? "updates" : type === "blog" ? "blog posts" : type === "event" ? "events" : "market intelligence"}...`}
           />
           {loading && (
             <div className="absolute inset-y-0 right-0 pr-4 flex items-center">
@@ -281,7 +418,7 @@ export default function AdvancedFilters({
               </div>
             ) : (
               <span>
-                Showing {filteredItems.length} of {items.length} {type === "opportunity" ? "opportunities" : type === "update" ? "updates" : "blog posts"}
+                Showing {filteredItems?.length || 0} of {items?.length || 0} {type === "opportunity" ? "opportunities" : type === "update" ? "updates" : type === "blog" ? "blog posts" : type === "event" ? "events" : "market intelligence"}
               </span>
             )}
           </div>
@@ -303,396 +440,121 @@ export default function AdvancedFilters({
               <>
                 {/* Tier Filter */}
                 <div>
-                  <label
-                    htmlFor="filter-tier"
-                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+                  <label htmlFor="filter-tier">Filter by Tier</label>
+                  <select
+                    id="filter-tier"
+                    value={filterType}
+                    onChange={(e) => setFilterType(e.target.value)}
+                    disabled={loading}
                   >
-                    Filter by Tier
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="filter-tier"
-                      value={filterType}
-                      onChange={(e) => setFilterType(e.target.value)}
-                      disabled={loading}
-                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
-                        mode === "dark"
-                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
-                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
-                      aria-label="Filter by tier"
-                    >
-                      <option value="all">All Tiers</option>
-                      <option value="Associate Member">Associate Member</option>
-                      <option value="Full Member">Full Member</option>
-                      <option value="Gold Member">Gold Member</option>
-                      <option value="Free Member">Free Member</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
-                      <Icon
-                        icon="heroicons:chevron-down"
-                        className="h-4 w-4"
-                        aria-hidden="true"
-                      />
-                    </div>
-                  </div>
+                    <option value="all">All Tiers</option>
+                    {opportunityTiers.map((tier) => (
+                      <option key={tier} value={tier}>{tier}</option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Job Type Filter */}
                 <div>
-                  <label
-                    htmlFor="filter-job-type"
-                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+                  <label htmlFor="filter-job-type">Filter by Job Type</label>
+                  <select
+                    id="filter-job-type"
+                    value={filterJobType}
+                    onChange={(e) => setFilterJobType(e.target.value)}
+                    disabled={loading}
                   >
-                    Filter by Job Type
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="filter-job-type"
-                      value={filterJobType}
-                      onChange={(e) => setFilterJobType(e.target.value)}
-                      disabled={loading}
-                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
-                        mode === "dark"
-                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
-                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
-                      aria-label="Filter by job type"
-                    >
-                      <option value="all">All Job Types</option>
-                      <option value="Agency">Agency</option>
-                      <option value="Freelancer">Freelancer</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
-                      <Icon
-                        icon="heroicons:chevron-down"
-                        className="h-4 w-4"
-                        aria-hidden="true"
-                      />
-                    </div>
-                  </div>
+                    <option value="all">All Job Types</option>
+                    {opportunityJobTypes.map((jobType) => (
+                      <option key={jobType} value={jobType}>{jobType}</option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Status Filter */}
                 <div>
-                  <label
-                    htmlFor="filter-status"
-                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+                  <label htmlFor="filter-status">Filter by Status</label>
+                  <select
+                    id="filter-status"
+                    value={selectedStatus}
+                    onChange={(e) => onStatusChange?.(e.target.value)}
+                    disabled={loading}
                   >
-                    Filter by Status
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="filter-status"
-                      value={selectedStatus}
-                      onChange={(e) => onStatusChange?.(e.target.value)}
-                      disabled={loading}
-                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
-                        mode === "dark"
-                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
-                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
-                      aria-label="Filter by status"
-                    >
-                      <option value="">All Status</option>
-                      <option value="published">Published</option>
-                      <option value="draft">Draft</option>
-                      <option value="scheduled">Scheduled</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
-                      <Icon
-                        icon="heroicons:chevron-down"
-                        className="h-4 h-4"
-                        aria-hidden="true"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Application Count Filter */}
-                <div>
-                  <label
-                    htmlFor="filter-applications"
-                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
-                  >
-                    Filter by Applications
-                    <div className="inline-block ml-1">
-                      <div className="relative">
-                        <div className="peer">
-                          <Icon
-                            icon="heroicons:information-circle"
-                            className="w-4 h-4 inline text-gray-400 cursor-help"
-                          />
-                        </div>
-                        <div className="invisible peer-hover:visible opacity-0 peer-hover:opacity-100 transition-all duration-200 absolute z-10 p-2 text-xs text-gray-200 bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap border border-gray-700/50 pointer-events-none">
-                          Filter opportunities based on the number of interested members
-                          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800/80"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="filter-applications"
-                      value={filterApplications}
-                      onChange={(e) => setFilterApplications(e.target.value)}
-                      disabled={loading}
-                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
-                        mode === "dark"
-                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
-                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
-                      aria-label="Filter by application count"
-                    >
-                      <option value="all">All Applications</option>
-                      <option value="high">High Interest (10+)</option>
-                      <option value="medium">Medium Interest (5-9)</option>
-                      <option value="low">Low Interest (1-4)</option>
-                      <option value="none">No Applications</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
-                      <Icon
-                        icon="heroicons:chevron-down"
-                        className="h-4 w-4"
-                        aria-hidden="true"
-                      />
-                    </div>
-                  </div>
+                    <option value="">All Status</option>
+                    {opportunityStatuses.map((status) => (
+                      <option key={status} value={status}>{status}</option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Project Type Filter */}
                 <div>
-                  <label
-                    htmlFor="filter-project-type"
-                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+                  <label htmlFor="filter-project-type">Filter by Project Type</label>
+                  <select
+                    id="filter-project-type"
+                    value={filterProjectType}
+                    onChange={(e) => setFilterProjectType(e.target.value)}
+                    disabled={loading}
                   >
-                    Filter by Project Type
-                    <div className="inline-block ml-1">
-                      <div className="relative">
-                        <div className="peer">
-                          <Icon
-                            icon="heroicons:information-circle"
-                            className="w-4 h-4 inline text-gray-400 cursor-help"
-                          />
-                        </div>
-                        <div className="invisible peer-hover:visible opacity-0 peer-hover:opacity-100 transition-all duration-200 absolute z-10 p-2 text-xs text-gray-200 bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap border border-gray-700/50 pointer-events-none">
-                          Filter opportunities based on their project category
-                          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800/80"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="filter-project-type"
-                      value={filterProjectType}
-                      onChange={(e) => setFilterProjectType(e.target.value)}
-                      disabled={loading || projectTypes.length === 0}
-                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
-                        mode === "dark"
-                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
-                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
-                      aria-label="Filter by project type"
-                      title={projectTypes.length === 0 ? "No project types available" : ""}
-                    >
-                      <option value="all">All Project Types</option>
-                      {projectTypes.map((type) => (
-                        <option key={type} value={type}>
-                          {type}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
-                      <Icon
-                        icon="heroicons:chevron-down"
-                        className="h-4 w-4"
-                        aria-hidden="true"
-                      />
-                    </div>
-                  </div>
+                    <option value="all">All Project Types</option>
+                    {projectTypes.map((type) => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
                 </div>
               </>
             ) : type === "update" ? (
               <>
-                {/* Category Filter for Updates */}
+                {/* Category Filter */}
                 <div>
-                  <label
-                    htmlFor="filter-category"
-                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+                  <label htmlFor="filter-category">Filter by Category</label>
+                  <select
+                    id="filter-category"
+                    value={selectedCategory}
+                    onChange={(e) => onCategoryChange(e.target.value)}
+                    disabled={loading}
                   >
-                    Filter by Category
-                    <div className="inline-block ml-1">
-                      <div className="relative">
-                        <div className="peer">
-                          <Icon
-                            icon="heroicons:information-circle"
-                            className="w-4 h-4 inline text-gray-400 cursor-help"
-                          />
-                        </div>
-                        <div className="invisible peer-hover:visible opacity-0 peer-hover:opacity-100 transition-all duration-200 absolute z-10 p-2 text-xs text-gray-200 bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap border border-gray-700/50 pointer-events-none">
-                          Filter updates based on their category
-                          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800/80"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="filter-category"
-                      value={selectedCategory}
-                      onChange={(e) => onCategoryChange(e.target.value)}
-                      disabled={loading}
-                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
-                        mode === "dark"
-                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
-                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
-                      aria-label="Filter by category"
-                    >
-                      <option value="all">All Categories</option>
-                      {categories.filter(category => category !== "all").map((category) => (
-                        <option key={category} value={category}>
-                          {category}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
-                      <Icon
-                        icon="heroicons:chevron-down"
-                        className="h-4 h-4"
-                        aria-hidden="true"
-                      />
-                    </div>
-                  </div>
+                    <option value="all">All Categories</option>
+                    {updateCategories.map((category) => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
                 </div>
 
-                {/* Tags Filter for Updates */}
+                {/* Tier Filter */}
                 <div>
-                  <label
-                    htmlFor="filter-tags"
-                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+                  <label htmlFor="filter-tier">Filter by Tier</label>
+                  <select
+                    id="filter-tier"
+                    value={selectedTier}
+                    onChange={(e) => onTierChange(e.target.value)}
+                    disabled={loading}
                   >
-                    Filter by Tags
-                    <div className="inline-block ml-1">
-                      <div className="relative">
-                        <div className="peer">
-                          <Icon
-                            icon="heroicons:information-circle"
-                            className="w-4 h-4 inline text-gray-400 cursor-help"
-                          />
-                        </div>
-                        <div className="invisible peer-hover:visible opacity-0 peer-hover:opacity-100 transition-all duration-200 absolute z-10 p-2 text-xs text-gray-200 bg-gray-800/80 backdrop-blur-sm rounded-lg shadow-lg -top-8 left-1/2 transform -translate-x-1/2 whitespace-nowrap border border-gray-700/50 pointer-events-none">
-                          Filter updates based on their tags
-                          <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-800/80"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </label>
-                  <div className="relative">
-                    <div
-                      className={`w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
-                        mode === "dark"
-                          ? "border-gray-700 bg-gray-800 text-white focus-within:ring-blue-600 focus-within:border-blue-600"
-                          : "border-gray-200 bg-gray-50 text-gray-900 focus-within:ring-blue-500 focus-within:border-blue-500"
-                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm min-h-[100px]`}
-                    >
-                      {/* Selected Tags */}
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        {selectedTags.map((tag) => (
-                          <span
-                            key={tag}
-                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                              mode === "dark"
-                                ? "bg-blue-900/50 text-blue-200"
-                                : "bg-blue-100 text-blue-700"
-                            }`}
-                          >
-                            {tag}
-                            <button
-                              onClick={() => onTagsChange(selectedTags.filter(t => t !== tag))}
-                              className="ml-1.5 hover:text-red-500 focus:outline-none"
-                            >
-                              <Icon icon="heroicons:x-mark" className="w-3 h-3" />
-                            </button>
-                          </span>
-                        ))}
-                      </div>
-
-                      {/* Tag Selection */}
-                      <div className="flex flex-wrap gap-2">
-                        {items.reduce((tags, item) => {
-                          const itemTags = item.tags ? (Array.isArray(item.tags) ? item.tags : item.tags.split(',').map(tag => tag.trim())) : [];
-                          itemTags.forEach(tag => {
-                            if (!tags.includes(tag)) tags.push(tag);
-                          });
-                          return tags;
-                        }, []).map((tag) => (
-                          <button
-                            key={tag}
-                            onClick={() => {
-                              if (selectedTags.includes(tag)) {
-                                onTagsChange(selectedTags.filter(t => t !== tag));
-                              } else {
-                                onTagsChange([...selectedTags, tag]);
-                              }
-                            }}
-                            className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium transition-colors duration-200 ${
-                              selectedTags.includes(tag)
-                                ? mode === "dark"
-                                  ? "bg-blue-600 text-white"
-                                  : "bg-blue-500 text-white"
-                                : mode === "dark"
-                                ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                            }`}
-                          >
-                            {tag}
-                            {selectedTags.includes(tag) && (
-                              <Icon icon="heroicons:check" className="w-3 h-3 ml-1" />
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
+                    <option value="all">All Tiers</option>
+                    {updateTiers.map((tier) => (
+                      <option key={tier} value={tier}>{tier}</option>
+                    ))}
+                  </select>
                 </div>
 
-                {/* Tier Filter for Updates */}
+                {/* Tags Filter */}
                 <div>
-                  <label
-                    htmlFor="filter-tier"
-                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
-                  >
-                    Filter by Tier
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="filter-tier"
-                      value={selectedTier}
-                      onChange={(e) => onTierChange(e.target.value)}
-                      disabled={loading}
-                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
-                        mode === "dark"
-                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
-                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
-                      aria-label="Filter by tier"
-                    >
-                      <option value="all">All Tiers</option>
-                      {tiers.filter(tier => tier !== "all").map((tier) => (
-                        <option key={tier} value={tier}>
-                          {tier}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
-                      <Icon
-                        icon="heroicons:chevron-down"
-                        className="h-4 w-4"
-                        aria-hidden="true"
-                      />
-                    </div>
+                  <label htmlFor="filter-tags">Filter by Tags</label>
+                  <div className="tag-container">
+                    {updateTags.map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => {
+                          if (selectedTags.includes(tag)) {
+                            onTagsChange(selectedTags.filter(t => t !== tag));
+                          } else {
+                            onTagsChange([...selectedTags, tag]);
+                          }
+                        }}
+                        className={selectedTags.includes(tag) ? "selected" : ""}
+                      >
+                        {tag}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </>
@@ -700,104 +562,139 @@ export default function AdvancedFilters({
               <>
                 {/* Category Filter */}
                 <div>
-                  <label
-                    htmlFor="filter-category"
-                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+                  <label htmlFor="filter-category">Filter by Category</label>
+                  <select
+                    id="filter-category"
+                    value={selectedCategory}
+                    onChange={(e) => onCategoryChange(e.target.value)}
+                    disabled={loading}
                   >
-                    Filter by Category
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="filter-category"
-                      value={selectedCategory}
-                      onChange={(e) => onCategoryChange(e.target.value)}
-                      disabled={loading}
-                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
-                        mode === "dark"
-                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
-                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
-                      aria-label="Filter by category"
-                    >
-                      <option value="all">All Categories</option>
-                      {categories.filter(category => category !== "all").map((category) => (
-                        <option key={category} value={category}>
-                          {category}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
-                      <Icon
-                        icon="heroicons:chevron-down"
-                        className="h-4 h-4"
-                        aria-hidden="true"
-                      />
-                    </div>
-                  </div>
+                    <option value="all">All Categories</option>
+                    {marketIntelCategories.map((category) => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Type Filter */}
                 <div>
-                  <label
-                    htmlFor="filter-type"
-                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+                  <label htmlFor="filter-type">Filter by Type</label>
+                  <select
+                    id="filter-type"
+                    value={selectedType}
+                    onChange={(e) => onTypeChange(e.target.value)}
+                    disabled={loading}
                   >
-                    Filter by Type
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="filter-type"
-                      value={selectedType}
-                      onChange={(e) => onTypeChange(e.target.value)}
-                      disabled={loading}
-                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
-                        mode === "dark"
-                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
-                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
-                      aria-label="Filter by type"
-                    >
-                      {types.filter(type => type !== "all").map((type) => (
-                        <option key={type} value={type}>
-                          {type}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
-                      <Icon
-                        icon="heroicons:chevron-down"
-                        className="h-4 h-4"
-                        aria-hidden="true"
-                      />
-                    </div>
-                  </div>
+                    <option value="all">All Types</option>
+                    {marketIntelTypes.map((type) => (
+                      <option key={type} value={type}>{type}</option>
+                    ))}
+                  </select>
                 </div>
 
                 {/* Region Filter */}
                 <div>
+                  <label htmlFor="filter-region">Filter by Region</label>
+                  <select
+                    id="filter-region"
+                    value={selectedRegion}
+                    onChange={(e) => onRegionChange(e.target.value)}
+                    disabled={loading}
+                  >
+                    <option value="all">All Regions</option>
+                    {marketIntelRegions.map((region) => (
+                      <option key={region} value={region}>{region}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            ) : type === "blog" ? (
+              <>
+                {/* Category Filter */}
+                <div>
+                  <label htmlFor="filter-category">Filter by Category</label>
+                  <select
+                    id="filter-category"
+                    value={selectedCategory}
+                    onChange={(e) => onCategoryChange(e.target.value)}
+                    disabled={loading}
+                  >
+                    <option value="All">All Categories</option>
+                    {blogCategories.map((category) => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Author Filter */}
+                <div>
+                  <label htmlFor="filter-author">Filter by Author</label>
+                  <select
+                    id="filter-author"
+                    value={selectedAuthor}
+                    onChange={(e) => onAuthorChange(e.target.value)}
+                    disabled={loading}
+                  >
+                    <option value="all">All Authors</option>
+                    {blogAuthors.map((author) => (
+                      <option key={author.id} value={author.id}>{author.name}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Tags Filter */}
+                <div>
+                  <label htmlFor="filter-tags">Filter by Tags</label>
+                  <div className="tag-container">
+                    {blogTags.map((tag) => (
+                      <button
+                        key={tag}
+                        onClick={() => {
+                          if (selectedTags.includes(tag)) {
+                            onTagsChange(selectedTags.filter(t => t !== tag));
+                          } else {
+                            onTagsChange([...selectedTags, tag]);
+                          }
+                        }}
+                        className={selectedTags.includes(tag) ? "selected" : ""}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : type === "event" ? (
+              <>
+                {/* Event Type Filter */}
+                <div>
                   <label
-                    htmlFor="filter-region"
+                    htmlFor="filter-event-type"
                     className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
                   >
-                    Filter by Region
+                    Event Type
                   </label>
                   <div className="relative">
                     <select
-                      id="filter-region"
-                      value={selectedRegion}
-                      onChange={(e) => onRegionChange(e.target.value)}
+                      id="filter-event-type"
+                      value={selectedType || "All"}
+                      onChange={(e) => {
+                        console.log('Event Type changed:', {
+                          from: selectedType,
+                          to: e.target.value
+                        });
+                        onTypeChange(e.target.value);
+                      }}
                       disabled={loading}
                       className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
                         mode === "dark"
                           ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
                           : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
                       } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
-                      aria-label="Filter by region"
                     >
-                      {regions.filter(region => region !== "all").map((region) => (
-                        <option key={region} value={region}>
-                          {region}
-                        </option>
+                      <option value="All">All Types</option>
+                      {eventTypes.map((type) => (
+                        <option key={type} value={type}>{type}</option>
                       ))}
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
@@ -816,200 +713,18 @@ export default function AdvancedFilters({
                     htmlFor="filter-tier"
                     className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
                   >
-                    Filter by Tier
+                    Tier
                   </label>
                   <div className="relative">
                     <select
                       id="filter-tier"
-                      value={selectedTier}
-                      onChange={(e) => onTierChange(e.target.value)}
-                      disabled={loading}
-                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
-                        mode === "dark"
-                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
-                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
-                      aria-label="Filter by tier"
-                    >
-                      {tiers.filter(tier => tier !== "all").map((tier) => (
-                        <option key={tier} value={tier}>
-                          {tier}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
-                      <Icon
-                        icon="heroicons:chevron-down"
-                        className="h-4 h-4"
-                        aria-hidden="true"
-                      />
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : type === "blog" ? (
-              <>
-                {/* Category Filter */}
-                <div>
-                  <label
-                    htmlFor="filter-category"
-                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
-                  >
-                    Filter by Category
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="filter-category"
-                      value={selectedCategory}
-                      onChange={(e) => onCategoryChange(e.target.value)}
-                      disabled={loading}
-                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
-                        mode === "dark"
-                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
-                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
-                      aria-label="Filter by category"
-                    >
-                      <option value="All">All Categories</option>
-                      {categories.map((category) => (
-                        <option key={category.id} value={category.name}>
-                          {category.name}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
-                      <Icon
-                        icon="heroicons:chevron-down"
-                        className="h-4 h-4"
-                        aria-hidden="true"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Status Filter */}
-                <div>
-                  <label
-                    htmlFor="filter-status"
-                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
-                  >
-                    Filter by Status
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="filter-status"
-                      value={selectedStatus}
-                      onChange={(e) => onStatusChange?.(e.target.value)}
-                      disabled={loading}
-                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
-                        mode === "dark"
-                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
-                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
-                      aria-label="Filter by status"
-                    >
-                      <option value="">All Status</option>
-                      <option value="published">Published</option>
-                      <option value="draft">Draft</option>
-                      <option value="scheduled">Scheduled</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
-                      <Icon
-                        icon="heroicons:chevron-down"
-                        className="h-4 h-4"
-                        aria-hidden="true"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Author Filter */}
-                <div>
-                  <label
-                    htmlFor="filter-author"
-                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
-                  >
-                    Filter by Author
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="filter-author"
-                      value={selectedAuthor}
-                      onChange={(e) => onAuthorChange(e.target.value)}
-                      disabled={loading}
-                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
-                        mode === "dark"
-                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
-                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
-                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
-                      aria-label="Filter by author"
-                    >
-                      <option value="all">All Authors</option>
-                      {authors.map((author) => (
-                        <option key={author.id} value={author.id}>
-                          {author.name}
-                        </option>
-                      ))}
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
-                      <Icon
-                        icon="heroicons:chevron-down"
-                        className="h-4 h-4"
-                        aria-hidden="true"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Date Range Filter */}
-                <div>
-                  <label
-                    htmlFor="filter-date-range"
-                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
-                  >
-                    Filter by Date Range
-                  </label>
-                  <div className="flex gap-2">
-                    <input
-                      type="date"
-                      value={dateRange?.start || ""}
-                      onChange={(e) => onDateRangeChange({ ...dateRange, start: e.target.value })}
-                      className={`flex-1 px-4 py-2 rounded-xl border ${
-                        mode === "dark"
-                          ? "bg-gray-800 border-gray-700 text-gray-100"
-                          : "bg-white border-gray-300 text-gray-900"
-                      } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-                    />
-                    <input
-                      type="date"
-                      value={dateRange?.end || ""}
-                      onChange={(e) => onDateRangeChange({ ...dateRange, end: e.target.value })}
-                      className={`flex-1 px-4 py-2 rounded-xl border ${
-                        mode === "dark"
-                          ? "bg-gray-800 border-gray-700 text-gray-100"
-                          : "bg-white border-gray-300 text-gray-900"
-                      } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-                    />
-                  </div>
-                </div>
-
-                {/* Tags Filter */}
-                <div>
-                  <label
-                    htmlFor="filter-tags"
-                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
-                  >
-                    Filter by Tags
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="filter-tags"
-                      value=""
+                      value={selectedTier || "All"}
                       onChange={(e) => {
-                        const selectedTag = tags.find(tag => tag.id === e.target.value);
-                        if (selectedTag && !selectedTags.includes(selectedTag.name)) {
-                          onTagsChange?.([...selectedTags, selectedTag.name]);
-                        }
+                        console.log('Tier changed:', {
+                          from: selectedTier,
+                          to: e.target.value
+                        });
+                        onTierChange(e.target.value);
                       }}
                       disabled={loading}
                       className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
@@ -1017,13 +732,10 @@ export default function AdvancedFilters({
                           ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
                           : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
                       } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
-                      aria-label="Filter by tags"
                     >
-                      <option value="">Select a tag</option>
-                      {tags.map((tag) => (
-                        <option key={tag.id} value={tag.id}>
-                          {tag.name}
-                        </option>
+                      <option value="All">All Tiers</option>
+                      {eventTiers.map((tier) => (
+                        <option key={tier} value={tier}>{tier}</option>
                       ))}
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
@@ -1034,31 +746,47 @@ export default function AdvancedFilters({
                       />
                     </div>
                   </div>
-                  {selectedTags.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {selectedTags.map((tagName) => (
-                        <span
-                          key={tagName}
-                          className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
-                            mode === "dark"
-                              ? "bg-gray-700 text-gray-200"
-                              : "bg-gray-100 text-gray-700"
-                          }`}
-                        >
-                          {tagName}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onTagsChange?.(selectedTags.filter(t => t !== tagName));
-                            }}
-                            className="hover:text-red-500"
-                          >
-                            <Icon icon="heroicons:x-mark" className="h-3 w-3" />
-                          </button>
-                        </span>
+                </div>
+
+                {/* Location Filter */}
+                <div>
+                  <label
+                    htmlFor="filter-location"
+                    className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2"
+                  >
+                    Location
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="filter-location"
+                      value={selectedRegion || "All"}
+                      onChange={(e) => {
+                        console.log('Location changed:', {
+                          from: selectedRegion,
+                          to: e.target.value
+                        });
+                        onRegionChange(e.target.value);
+                      }}
+                      disabled={loading}
+                      className={`appearance-none w-full px-4 py-3 text-sm border rounded-lg transition-all duration-200 ${
+                        mode === "dark"
+                          ? "border-gray-700 bg-gray-800 text-white focus:ring-blue-600 focus:border-blue-600"
+                          : "border-gray-200 bg-gray-50 text-gray-900 focus:ring-blue-500 focus:border-blue-500"
+                      } disabled:opacity-50 disabled:cursor-not-allowed shadow-sm pr-8`}
+                    >
+                      <option value="All">All Locations</option>
+                      {eventLocations.map((location) => (
+                        <option key={location} value={location}>{location}</option>
                       ))}
+                    </select>
+                    <div className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-gray-400">
+                      <Icon
+                        icon="heroicons:chevron-down"
+                        className="h-4 h-4"
+                        aria-hidden="true"
+                      />
                     </div>
-                  )}
+                  </div>
                 </div>
               </>
             ) : null}

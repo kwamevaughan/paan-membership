@@ -9,6 +9,9 @@ export function useUpdates(initialUpdates = []) {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedTier, setSelectedTier] = useState("All");
+  const [selectedTags, setSelectedTags] = useState([]);
+  const [sortOrder, setSortOrder] = useState("newest");
   const [formData, setFormData] = useState({
     id: null,
     title: "",
@@ -185,6 +188,18 @@ export function useUpdates(initialUpdates = []) {
     setSelectedCategory(category);
   };
 
+  const handleTierFilter = (tier) => {
+    setSelectedTier(tier);
+  };
+
+  const handleTagsFilter = (tags) => {
+    setSelectedTags(tags);
+  };
+
+  const handleSortOrder = (order) => {
+    setSortOrder(order);
+  };
+
   const fetchUpdates = async () => {
     try {
       setLoading(true);
@@ -206,7 +221,7 @@ export function useUpdates(initialUpdates = []) {
     fetchUpdates();
   }, []);
 
-  // Filter updates based on search query and category
+  // Filter updates based on search query, category, tier, and tags
   const filteredUpdates = updates.filter((update) => {
     const matchesSearch = searchQuery
       ? update.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -216,21 +231,44 @@ export function useUpdates(initialUpdates = []) {
     const matchesCategory =
       selectedCategory === "All" || update.category === selectedCategory;
 
-    return matchesSearch && matchesCategory;
+    const matchesTier =
+      selectedTier === "All" || update.tier_restriction === selectedTier;
+
+    const matchesTags =
+      selectedTags.length === 0 ||
+      selectedTags.every((tag) => update.tags?.includes(tag));
+
+    return matchesSearch && matchesCategory && matchesTier && matchesTags;
+  });
+
+  // Sort updates based on sortOrder
+  const sortedUpdates = [...filteredUpdates].sort((a, b) => {
+    if (sortOrder === "newest") {
+      return new Date(b.created_at) - new Date(a.created_at);
+    } else if (sortOrder === "oldest") {
+      return new Date(a.created_at) - new Date(b.created_at);
+    }
+    return 0;
   });
 
   return {
-    updates: filteredUpdates,
+    updates: sortedUpdates,
     formData,
     loading,
     searchQuery,
     selectedCategory,
+    selectedTier,
+    selectedTags,
+    sortOrder,
     handleInputChange,
     handleSubmit,
     handleEdit,
     handleDelete,
     handleSearch,
     handleCategoryFilter,
+    handleTierFilter,
+    handleTagsFilter,
+    handleSortOrder,
     resetForm,
   };
 }

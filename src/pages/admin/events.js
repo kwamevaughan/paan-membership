@@ -9,103 +9,219 @@ import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useEvents } from "@/hooks/useEvents";
 import EventForm from "@/components/EventForm";
-import EventFilters from "@/components/EventFilters";
+import EventsGrid from "@/components/events/EventsGrid";
+import AdvancedFilters from "@/components/AdvancedFilters";
 import PendingRegistrations from "@/components/PendingRegistrations";
 import SimpleFooter from "@/layouts/simpleFooter";
-import { getTierBadgeColor, getStatusBadgeColor } from "@/../utils/badgeUtils";
-import { getDaysRemaining } from "@/../utils/dateUtils";
-import { createSupabaseServerClient } from "@/lib/supabaseServer";
+import { getAdminEventsProps } from "utils/getPropsUtils";
+import ItemActionModal from "@/components/ItemActionModal";
+import ExportModal from "@/components/ExportModal";
+import { supabase } from "@/lib/supabase";
 
+export default function AdminEvents({
+  mode = "light",
+  toggleMode,
+  tiers,
+  breadcrumbs,
+}) {
+  const [showForm, setShowForm] = useState(false);
+  const [currentEvent, setCurrentEvent] = useState(null);
+  const [showPendingRegistrations, setShowPendingRegistrations] =
+    useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportData, setExportData] = useState([]);
+  const [selectedEventRegistrations, setSelectedEventRegistrations] = useState(null);
 
-export default function AdminEvents({ mode = "light", toggleMode, tiers }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState("list");
+  const [viewMode, setViewMode] = useState("grid");
   const [filterTerm, setFilterTerm] = useState("");
-  const [filterType, setFilterType] = useState("all");
+  const [sortOrder, setSortOrder] = useState("newest");
   const [showFilters, setShowFilters] = useState(false);
-  const [sortOrder, setSortOrder] = useState("date");
-
-  useAuthSession();
-
-const {
-  isSidebarOpen,
-  toggleSidebar,
-  sidebarState,
-  updateDragOffset,
-  isMobile,
-  isHovering,
-  handleMouseEnter,
-  handleMouseLeave,
-  handleOutsideClick,
-} = useSidebar();
-  
-  const handleLogout = useLogout();
-  const {
-    events,
-    pendingRegistrations,
-    formData,
-    loading,
-    handleInputChange,
-    handleSubmit,
-    handleEdit,
-    handleDelete,
-    handleRegistrationAction,
-  } = useEvents();
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedTier, setSelectedTier] = useState("All");
+  const [selectedType, setSelectedType] = useState("All");
+  const [selectedRegion, setSelectedRegion] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(12);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [selectedEventType, setSelectedEventType] = useState("All");
+  const [selectedDateRange, setSelectedDateRange] = useState("All");
+  const [selectedLocation, setSelectedLocation] = useState("All");
+  const [selectedVirtual, setSelectedVirtual] = useState("All");
 
   const router = useRouter();
 
+  const {
+    isSidebarOpen,
+    toggleSidebar,
+    sidebarState,
+    updateDragOffset,
+    isMobile,
+    isHovering,
+    handleMouseEnter,
+    handleMouseLeave,
+    handleOutsideClick,
+  } = useSidebar();
+
+  const {
+    events,
+    registeredEvents,
+    filterOptions,
+    loading: eventsLoading,
+    error,
+    eventsLoading: registrationLoading,
+    handleEventRegistration,
+    fetchEvents,
+    handleRegistrationAction,
+    fetchRegistrations,
+    registrations,
+    handleInputChange,
+    handleSubmit,
+    handleDelete,
+    formData,
+  } = useEvents();
+
+  const handleLogout = useLogout();
+  useAuthSession();
+
   useEffect(() => {
-    if (isEditing) {
-      setActiveTab("form");
+    fetchEvents();
+  }, []);
+
+  const handleResetFilters = () => {
+    setSelectedType("All");
+    setSelectedTier("All");
+    setSelectedRegion("All");
+    setFilterTerm("");
+    setSortOrder("newest");
+  };
+
+  const handleCreateEvent = () => {
+    setCurrentEvent(null);
+    setShowForm(true);
+  };
+
+  const handleEditClick = async (event) => {
+    setCurrentEvent(event);
+    setShowForm(true);
+  };
+
+  const handleFormSubmit = async (formData) => {
+    const success = await handleSubmit(formData);
+    if (success) {
+      setShowForm(false);
+      setCurrentEvent(null);
+      fetchEvents();
     }
-  }, [isEditing]);
-
-  const submitForm = (e) => {
-    e.preventDefault();
-    handleSubmit(e);
-    setIsEditing(false);
-    setActiveTab("list");
   };
 
-  const startEditing = (event) => {
-    handleEdit(event);
-    setIsEditing(true);
-    setActiveTab("form");
-  };
-
-  const cancelForm = () => {
-    setIsEditing(false);
-    setActiveTab("list");
-  };
-
-  const filteredEvents = events.filter((event) => {
-    const matchesTerm =
-      event.title.toLowerCase().includes(filterTerm.toLowerCase()) ||
-      event.description?.toLowerCase().includes(filterTerm.toLowerCase()) ||
-      event.location?.toLowerCase().includes(filterTerm.toLowerCase());
-
-    if (filterType === "all") return matchesTerm;
-    return matchesTerm && event.event_type === filterType;
-  });
-
-  const sortedEvents = [...filteredEvents].sort((a, b) => {
-    if (sortOrder === "date") {
-      return new Date(a.date) - new Date(b.date);
-    } else if (sortOrder === "title") {
-      return a.title.localeCompare(b.title);
-    } else if (sortOrder === "tier") {
-      return a.tier_restriction.localeCompare(b.tier_restriction);
+  const handleDeleteClick = async (id) => {
+    try {
+      await handleDelete(id);
+      fetchEvents();
+    } catch (error) {
+      toast.error(error.message);
     }
-    return 0;
-  });
+  };
+
+  const handleViewRegistrations = async (eventData) => {
+    try {
+      console.log('View registrations clicked for event:', eventData);
+      const fetchedRegistrations = await fetchRegistrations();
+      console.log('Fetched registrations:', fetchedRegistrations);
+      
+      // Ensure we have a valid event ID
+      if (!eventData || !eventData.id) {
+        console.error('Invalid event data:', eventData);
+        toast.error('Invalid event data');
+        return;
+      }
+
+      const eventRegistrations = fetchedRegistrations.filter(reg => {
+        console.log('Comparing:', { 
+          regEventId: reg.event_id, 
+          currentEventId: eventData.id,
+          match: reg.event_id === eventData.id 
+        });
+        return reg.event_id === eventData.id;
+      });
+
+      console.log('Filtered registrations for event:', eventRegistrations);
+      
+      setSelectedEventRegistrations({
+        event: {
+          id: eventData.id,
+          title: eventData.title,
+          description: eventData.description,
+          start_date: eventData.start_date,
+          end_date: eventData.end_date,
+          location: eventData.location,
+          event_type: eventData.event_type,
+          is_virtual: eventData.is_virtual,
+          tier_restriction: eventData.tier_restriction
+        },
+        registrations: eventRegistrations
+      });
+      setShowPendingRegistrations(true);
+    } catch (error) {
+      console.error("Error fetching event registrations:", error);
+      toast.error("Failed to fetch registrations");
+    }
+  };
+
+  const handleRegistrationActionClick = async (registrationId, action) => {
+    try {
+      await handleRegistrationAction(registrationId, action);
+      await fetchRegistrations();
+    } catch (error) {
+      console.error("Error handling registration action:", error);
+    }
+  };
+
+  const handleViewPendingRegistrations = async () => {
+    try {
+      const fetchedRegistrations = await fetchRegistrations();
+      setSelectedEventRegistrations({
+        event: {
+          id: 'all',
+          title: 'All Events',
+          description: 'View all pending registrations',
+          start_date: null,
+          end_date: null,
+          location: null,
+          event_type: null,
+          is_virtual: null,
+          tier_restriction: null
+        },
+        registrations: fetchedRegistrations
+      });
+      setShowPendingRegistrations(true);
+    } catch (error) {
+      console.error("Error fetching registrations:", error);
+      toast.error("Failed to fetch registrations");
+    }
+  };
 
   return (
     <div
-      className={`min-h-screen flex flex-col ${
-        mode === "dark" ? "bg-gray-900 text-white" : "bg-gray-50 text-gray-900"
-      }`}
+      className={`min-h-screen flex flex-col antialiased ${
+        mode === "dark"
+          ? "bg-gray-950 text-gray-100"
+          : "bg-gray-100 text-gray-900"
+      } transition-colors duration-300`}
     >
-      <Toaster />
+      <Toaster
+        toastOptions={{
+          className:
+            mode === "dark"
+              ? "bg-gray-800 text-gray-100 border-gray-700"
+              : "bg-white text-gray-900 border-gray-200",
+          style: {
+            borderRadius: "8px",
+            padding: "12px",
+            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+          },
+        }}
+      />
       <HRHeader
         toggleSidebar={toggleSidebar}
         isSidebarOpen={isSidebarOpen}
@@ -114,17 +230,13 @@ const {
         toggleMode={toggleMode}
         onLogout={handleLogout}
         pageName="Events"
-        pageDescription="Create and manage events for PAAN members."
-        breadcrumbs={[
-          { label: "Dashboard", href: "/admin" },
-          { label: "Events" },
-        ]}
+        pageDescription="Manage events for the PAAN community."
+        breadcrumbs={breadcrumbs}
       />
       <div className="flex flex-1">
         <HRSidebar
           isSidebarOpen={isSidebarOpen}
           mode={mode}
-          toggleMode={toggleMode}
           toggleSidebar={toggleSidebar}
           onLogout={handleLogout}
           setDragOffset={updateDragOffset}
@@ -136,390 +248,329 @@ const {
           handleOutsideClick={handleOutsideClick}
         />
         <div
-          className={`content-container flex-1 transition-all duration-300 overflow-hidden ${
-            isSidebarOpen ? "sidebar-open" : ""
-          } ${sidebarState.hidden ? "sidebar-hidden" : ""}`}
+          className={`flex-1 transition-all duration-300 ease-in-out ${
+            isSidebarOpen ? "md:ml-64" : "md:ml-20"
+          } ${sidebarState.hidden ? "ml-0" : ""}`}
           style={{
             marginLeft: sidebarState.hidden
               ? "0px"
               : `${84 + (isSidebarOpen ? 120 : 0) + sidebarState.offset}px`,
           }}
         >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  Events
-                </h1>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Manage and track events for your network
-                </p>
-              </div>
-              <div className="mt-4 md:mt-0 flex space-x-3">
-                {activeTab === "list" || activeTab === "pending" ? (
-                  <button
-                    onClick={() => {
-                      setIsEditing(false);
-                      setActiveTab("form");
-                    }}
-                    className="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-xl shadow-sm transition-all duration-200 hover:shadow-lg hover:from-indigo-700 hover:to-purple-700"
-                  >
-                    <Icon icon="heroicons:plus" className="w-5 h-5 mr-2" />
-                    Add Event
-                  </button>
-                ) : (
-                  <button
-                    onClick={cancelForm}
-                    className="inline-flex items-center px-4 py-2.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-xl shadow-sm transition-all duration-200"
-                  >
-                    <Icon
-                      icon="heroicons:arrow-left"
-                      className="w-5 h-5 mr-2"
-                    />
-                    Back to List
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Tabs */}
-            <div className="flex space-x-2 mb-6">
-              <button
-                onClick={() => setActiveTab("list")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                  activeTab === "list"
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200"
-                }`}
-              >
-                Event List
-              </button>
-              <button
-                onClick={() => setActiveTab("pending")}
-                className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                  activeTab === "pending"
-                    ? "bg-indigo-600 text-white"
-                    : "bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-gray-200"
-                }`}
-              >
-                Pending Registrations
-              </button>
-            </div>
-
-            {activeTab === "list" ? (
-              <div className="space-y-6">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+            <div className="relative group">
+              <div
+                className={`absolute inset-0 rounded-2xl backdrop-blur-xl ${
+                  mode === "dark"
+                    ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60"
+                    : "bg-gradient-to-br from-white/80 via-white/20 to-white/80"
+                } border ${
+                  mode === "dark" ? "border-white/10" : "border-white/20"
+                } shadow-2xl group-hover:shadow-lg transition-all duration-500`}
+              ></div>
+              <div className="relative p-8 rounded-2xl mb-10">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <h1 className="text-2xl font-bold">Events</h1>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-gray-600 dark:text-gray-300 max-w-2xl">
+                        Manage events for the PAAN community. Create targeted
+                        content for specific membership tiers and track member
+                        engagement.
+                      </p>
+                      <div className="flex items-center gap-4 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Icon
+                            icon="heroicons:calendar"
+                            className="w-4 h-4 text-blue-500"
+                          />
+                          <span className="text-gray-600 dark:text-gray-300">
+                            {events?.length || 0} total events
+                          </span>
+                        </div>
+                        {events?.length > 0 && (
+                          <div className="flex items-center gap-2">
+                            <Icon
+                              icon="heroicons:clock"
+                              className="w-4 h-4 text-purple-500"
+                            />
+                            <span className="text-gray-600 dark:text-gray-300">
+                              Last published{" "}
+                              {new Date(
+                                events[0].created_at
+                              ).toLocaleDateString("en-US", {
+                                month: "long",
+                                day: "numeric",
+                                year: "numeric",
+                              })}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-6 md:mt-0 flex items-center gap-4">
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={handleViewPendingRegistrations}
+                        disabled={registrationLoading}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 ${
+                          mode === "dark"
+                            ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
+                            : "bg-gray-200 hover:bg-gray-300 text-gray-700"
+                        } transition-colors duration-200`}
+                      >
+                        <Icon icon="heroicons:user-group" className="w-4 h-4" />
+                        {registrationLoading
+                          ? "Loading..."
+                          : "Pending Registrations"}
+                      </button>
+                      <button
+                        onClick={handleCreateEvent}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 ${
+                          mode === "dark"
+                            ? "bg-blue-600 hover:bg-blue-700 text-white"
+                            : "bg-blue-500 hover:bg-blue-600 text-white"
+                        } transition-colors duration-200`}
+                      >
+                        <Icon icon="heroicons:plus" className="w-4 h-4" />
+                        New Event
+                      </button>
+                    </div>
+                  </div>
+                </div>
                 <div
-                  className={`bg-white dark:bg-gray-800 shadow-xl rounded-2xl overflow-hidden border-0`}
+                  className={`absolute top-2 right-2 w-12 sm:w-16 h-12 sm:h-16 opacity-10`}
                 >
-                  <EventFilters
+                  <div
+                    className={`w-full h-full rounded-full bg-gradient-to-br ${
+                      mode === "dark"
+                        ? "from-blue-400 to-blue-500"
+                        : "from-blue-400 to-blue-500"
+                    }`}
+                  ></div>
+                </div>
+                <div
+                  className={`absolute bottom-0 left-0 right-0 h-1 ${
+                    mode === "dark"
+                      ? "bg-gradient-to-r from-blue-400 via-blue-500 to-blue-500"
+                      : "bg-gradient-to-r from-[#3c82f6] to-[#dbe9fe]"
+                  }`}
+                ></div>
+                <div
+                  className={`absolute -bottom-1 -left-1 w-2 sm:w-3 h-2 sm:h-3 bg-[#f3584a] rounded-full opacity-40 animate-pulse delay-1000`}
+                ></div>
+              </div>
+            </div>
+
+            <div className="space-y-8">
+              <div className="relative group">
+                <div
+                  className={`absolute inset-0 rounded-2xl backdrop-blur-xl ${
+                    mode === "dark"
+                      ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60"
+                      : "bg-gradient-to-br from-white/80 via-white/20 to-white/80"
+                  } border ${
+                    mode === "dark" ? "border-white/10" : "border-white/20"
+                  } shadow-2xl group-hover:shadow-lg transition-all duration-500`}
+                ></div>
+                <div
+                  className={`relative rounded-2xl overflow-hidden shadow-lg border ${
+                    mode === "dark"
+                      ? "bg-gray-900 border-gray-800"
+                      : "bg-white border-gray-200"
+                  }`}
+                >
+                  <div className="p-6">
+                    
+                  <AdvancedFilters
+                    mode={mode}
+                    loading={eventsLoading}
+                    viewMode={viewMode}
+                    setViewMode={setViewMode}
                     filterTerm={filterTerm}
                     setFilterTerm={setFilterTerm}
-                    filterType={filterType}
-                    setFilterType={setFilterType}
-                    showFilters={showFilters}
-                    setShowFilters={setShowFilters}
                     sortOrder={sortOrder}
                     setSortOrder={setSortOrder}
-                    mode={mode}
-                    loading={loading}
-                  />
-                  {loading ? (
-                    <div className="p-12 text-center">
-                      <div className="w-24 h-24 mx-auto bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mb-6">
-                        <Icon
-                          icon="eos-icons:loading"
-                          className="h-12 w-12 text-indigo-500 dark:text-indigo-300 animate-spin"
-                        />
-                      </div>
-                      <h3 className="mt-2 text-xl font-medium text-gray-900 dark:text-gray-200">
-                        Loading events...
-                      </h3>
-                    </div>
-                  ) : sortedEvents.length > 0 ? (
-                    <div className="p-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {sortedEvents.map((event) => {
-                          const tierColors = getTierBadgeColor(
-                            event.tier_restriction,
-                            mode
-                          );
-                          const daysLeft = getDaysRemaining(event.date);
-                          const statusColors = getStatusBadgeColor(
-                            daysLeft,
-                            mode
-                          );
-
+                    showFilters={showFilters}
+                    setShowFilters={setShowFilters}
+                    type="event"
+                    items={events}
+                    filteredItems={
+                      events
+                        ?.filter((event) => {
+                          const matchesSearch =
+                            !filterTerm ||
+                            event.title
+                              .toLowerCase()
+                              .includes(filterTerm.toLowerCase()) ||
+                            event.description
+                              .toLowerCase()
+                              .includes(filterTerm.toLowerCase());
+                          const matchesCategory =
+                            selectedCategory === "All" ||
+                            event.category === selectedCategory;
+                          const matchesTier =
+                            selectedTier === "All" ||
+                            event.tier_restriction === selectedTier;
+                          const matchesType =
+                            selectedType === "All" ||
+                            event.type === selectedType;
+                          const matchesRegion =
+                            selectedRegion === "All" ||
+                            event.region === selectedRegion;
                           return (
-                            <div
-                              key={event.id}
-                              className={`relative flex flex-col h-full rounded-2xl border-0 ${
-                                mode === "dark" ? "bg-gray-800/50" : "bg-white"
-                              } shadow-lg overflow-hidden hover:shadow-xl transition-all duration-200 group`}
-                            >
-                              <div className="px-6 pt-6 pb-4 border-b border-gray-100 dark:border-gray-700">
-                                <div className="flex justify-between items-start mb-2">
-                                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors line-clamp-1">
-                                    {event.title}
-                                  </h3>
-                                  <span
-                                    className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${tierColors.bg} ${tierColors.text} ${tierColors.border}`}
-                                  >
-                                    {event.tier_restriction === "All"
-                                      ? "All Members"
-                                      : event.tier_restriction}
-                                  </span>
-                                </div>
-                                <div className="flex items-center mt-1.5">
-                                  <Icon
-                                    icon="heroicons:map-pin"
-                                    className="w-4 h-4 text-gray-500 dark:text-gray-400 mr-1.5 flex-shrink-0"
-                                  />
-                                  <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                                    {event.location || "Virtual"}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="px-6 py-4 flex-grow">
-                                {event.description && (
-                                  <p className="text-sm text-gray-700 dark:text-gray-300 line-clamp-2 mb-4">
-                                    {event.description}
-                                  </p>
-                                )}
-                                <div className="flex flex-wrap gap-2 mb-4">
-                                  <div className="flex items-center text-xs px-2.5 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300">
-                                    <Icon
-                                      icon="heroicons:calendar"
-                                      className="w-3.5 h-3.5 mr-1.5"
-                                    />
-                                    <span className="font-medium">
-                                      {event.event_type}
-                                    </span>
-                                  </div>
-                                  {event.is_virtual && (
-                                    <div className="flex items-center text-xs px-2.5 py-1.5 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300">
-                                      <Icon
-                                        icon="heroicons:video-camera"
-                                        className="w-3.5 h-3.5 mr-1.5"
-                                      />
-                                      <span className="font-medium">
-                                        Virtual
-                                      </span>
-                                    </div>
-                                  )}
-                                </div>
-                                {event.registration_link && (
-                                  <a
-                                    href={event.registration_link}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-sm text-indigo-600 dark:text-indigo-400 hover:underline"
-                                  >
-                                    Register Now
-                                  </a>
-                                )}
-                              </div>
-                              <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 mt-auto bg-gray-50 dark:bg-gray-800/80">
-                                <div className="flex justify-between items-center">
-                                  <div>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                      Event Date
-                                    </p>
-                                    <div className="flex items-center">
-                                      <div
-                                        className={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded-lg ${statusColors.bg}`}
-                                      >
-                                        <Icon
-                                          icon="heroicons:clock"
-                                          className={`w-3.5 h-3.5 ${statusColors.icon}`}
-                                        />
-                                        <span
-                                          className={`text-xs font-medium ${statusColors.text}`}
-                                        >
-                                          {daysLeft <= 0
-                                            ? "Past Event"
-                                            : `${daysLeft} days left`}
-                                        </span>
-                                      </div>
-                                    </div>
-                                  </div>
-                                  <div className="flex space-x-2">
-                                    <button
-                                      onClick={() => startEditing(event)}
-                                      className={`inline-flex items-center justify-center p-2 border rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors ${
-                                        mode === "dark"
-                                          ? "border-gray-700"
-                                          : "border-gray-200"
-                                      }`}
-                                      aria-label="Edit"
-                                    >
-                                      <Icon
-                                        icon="heroicons:pencil-square"
-                                        className="w-4 h-4"
-                                      />
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        if (
-                                          window.confirm(
-                                            "Are you sure you want to delete this event?"
-                                          )
-                                        ) {
-                                          handleDelete(event.id);
-                                        }
-                                      }}
-                                      className={`inline-flex items-center justify-center p-2 border rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors ${
-                                        mode === "dark"
-                                          ? "border-gray-700"
-                                          : "border-gray-200"
-                                      }`}
-                                      aria-label="Delete"
-                                    >
-                                      <Icon
-                                        icon="heroicons:trash"
-                                        className="w-4 h-4"
-                                      />
-                                    </button>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
+                            matchesSearch &&
+                            matchesCategory &&
+                            matchesTier &&
+                            matchesType &&
+                            matchesRegion
                           );
-                        })}
-                      </div>
+                        })
+                        .slice(0, currentPage * itemsPerPage) || []
+                    }
+                    selectedCategory={selectedCategory}
+                    onCategoryChange={setSelectedCategory}
+                    categories={[
+                      "All",
+                      "Webinar",
+                      "Conference",
+                      "Workshop",
+                      "Networking",
+                    ]}
+                    selectedTier={selectedTier}
+                    onTierChange={setSelectedTier}
+                    tiers={["All", ...tiers]}
+                    selectedType={selectedType}
+                    onTypeChange={setSelectedType}
+                    types={["All", "Virtual", "In-Person", "Hybrid"]}
+                    selectedRegion={selectedRegion}
+                    onRegionChange={setSelectedRegion}
+                    regions={[
+                      "All",
+                      "North America",
+                      "Europe",
+                      "Asia",
+                      "Global",
+                    ]}
+                    selectedEventType={selectedEventType}
+                    onEventTypeChange={setSelectedEventType}
+                    selectedDateRange={selectedDateRange}
+                    onDateRangeChange={setSelectedDateRange}
+                    selectedLocation={selectedLocation}
+                    onLocationChange={setSelectedLocation}
+                    selectedVirtual={selectedVirtual}
+                    onVirtualChange={setSelectedVirtual}
+                    onResetFilters={handleResetFilters}
+                    filterOptions={filterOptions}
+                  />
+
+                  <div className="mt-8">
+                    <EventsGrid
+                      mode={mode}
+                      events={events}
+                      loading={eventsLoading}
+                      selectedIds={selectedIds}
+                      setSelectedIds={setSelectedIds}
+                      handleEditClick={handleEditClick}
+                      handleDelete={handleDeleteClick}
+                      handleViewRegistrations={handleViewRegistrations}
+                      currentPage={currentPage}
+                      setCurrentPage={setCurrentPage}
+                      itemsPerPage={itemsPerPage}
+                      viewMode={viewMode}
+                      setViewMode={setViewMode}
+                      filterTerm={filterTerm}
+                      selectedCategory={selectedCategory}
+                      selectedTier={selectedTier}
+                      selectedType={selectedType}
+                      selectedRegion={selectedRegion}
+                    />
                     </div>
-                  ) : (
-                    <div className="p-12 text-center">
-                      <div className="w-24 h-24 mx-auto bg-indigo-50 dark:bg-indigo-900/20 rounded-full flex items-center justify-center mb-6">
-                        <Icon
-                          icon="heroicons:calendar"
-                          className="h-12 w-12 text-indigo-500 dark:text-indigo-300"
-                        />
-                      </div>
-                      <h3 className="mt-2 text-xl font-medium text-gray-900 dark:text-gray-200">
-                        No events found
-                      </h3>
-                      <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
-                        {filterTerm || filterType !== "all"
-                          ? "Try adjusting your search or filter criteria to find what you're looking for"
-                          : "Get started by creating a new event for your network"}
-                      </p>
-                      <div className="mt-8">
-                        <button
-                          onClick={() => {
-                            setIsEditing(false);
-                            setActiveTab("form");
-                          }}
-                          className="inline-flex items-center px-6 py-3 border border-transparent shadow-sm text-sm font-medium rounded-xl text-white bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-200"
-                        >
-                          <Icon
-                            icon="heroicons:plus"
-                            className="-ml-1 mr-2 h-5 w-5"
-                          />
-                          Add new event
-                        </button>
-                      </div>
-                    </div>
-                  )}
+                  </div>
                 </div>
+                <div
+                  className={`absolute bottom-0 left-0 right-0 h-1 ${
+                    mode === "dark"
+                      ? "bg-gradient-to-r from-blue-400 via-blue-500 to-blue-500"
+                      : "bg-gradient-to-r from-[#3c82f6] to-[#dbe9fe]"
+                  }`}
+                ></div>
+                <div
+                  className={`absolute -top-1 sm:-top-2 -right-1 sm:-right-2 w-3 sm:w-4 h-3 sm:h-4 bg-[#85c2da] rounded-full opacity-60`}
+                ></div>
+                <div
+                  className={`absolute -bottom-1 -left-1 w-2 sm:w-3 h-2 sm:h-3 bg-[#f3584a] rounded-full opacity-40 animate-pulse delay-1000`}
+                ></div>
               </div>
-            ) : activeTab === "pending" ? (
-              <PendingRegistrations
-                registrations={pendingRegistrations}
-                onAction={handleRegistrationAction}
-                mode={mode}
-                loading={loading}
-              />
-            ) : (
-              <EventForm
-                formData={formData}
-                handleInputChange={handleInputChange}
-                submitForm={submitForm}
-                cancelForm={cancelForm}
-                isEditing={isEditing}
-                tiers={tiers}
-                mode={mode}
-              />
-            )}
+            </div>
+
+            <SimpleFooter mode={mode} />
           </div>
-          <SimpleFooter mode={mode} isSidebarOpen={isSidebarOpen} />
         </div>
       </div>
+
+      <ItemActionModal
+        isOpen={showForm}
+        onClose={() => {
+          setShowForm(false);
+          setCurrentEvent(null);
+        }}
+        title={currentEvent ? "Edit Event" : "Create New Event"}
+        mode={mode}
+        width="max-w-4xl"
+        style={{ isolation: 'isolate' }}
+      >
+        <EventForm
+          formData={currentEvent || formData}
+          handleInputChange={handleInputChange}
+          submitForm={handleFormSubmit}
+          cancelForm={() => {
+            setShowForm(false);
+            setCurrentEvent(null);
+          }}
+          isEditing={!!currentEvent}
+          tiers={tiers}
+          mode={mode}
+        />
+      </ItemActionModal>
+
+      <ItemActionModal
+        isOpen={showPendingRegistrations}
+        onClose={() => {
+          setShowPendingRegistrations(false);
+          setSelectedEventRegistrations(null);
+        }}
+        title={selectedEventRegistrations ? `Registrations for ${selectedEventRegistrations.event.title}` : "Event Registrations"}
+        mode={mode}
+        width="max-w-4xl"
+      >
+        <PendingRegistrations
+          registrations={selectedEventRegistrations?.registrations || registrations}
+          onAction={handleRegistrationActionClick}
+          mode={mode}
+          loading={registrationLoading}
+          onExportClick={(data) => {
+            setExportData(data);
+            setShowExportModal(true);
+          }}
+          events={events}
+        />
+      </ItemActionModal>
+
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        candidates={exportData}
+        mode={mode}
+        type="events"
+      />
     </div>
   );
 }
 
 export async function getServerSideProps({ req, res }) {
-  try {
-    const supabaseServer = createSupabaseServerClient(req, res);
-
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabaseServer.auth.getSession();
-
-    if (sessionError || !session) {
-      return {
-        redirect: {
-          destination: "/hr/login",
-          permanent: false,
-        },
-      };
-    }
-
-    // Verify user is in hr_users
-    const { data: hrUser, error: hrUserError } = await supabaseServer
-      .from("hr_users")
-      .select("id")
-      .eq("id", session.user.id)
-      .single();
-
-    if (hrUserError || !hrUser) {
-      console.error(
-        "[AdminEvents] HR User Error:",
-        hrUserError?.message || "User not in hr_users"
-      );
-      await supabaseServer.auth.signOut();
-      return {
-        redirect: {
-          destination: "/hr/login",
-          permanent: false,
-        },
-      };
-    }
-
-    // Fetch tiers only
-    const { data: tiersData, error: tiersError } = await supabaseServer
-      .from("candidates")
-      .select("selected_tier")
-      .neq("selected_tier", null);
-
-    if (tiersError) {
-      console.error("[AdminEvents] Tiers Error:", tiersError.message);
-      throw tiersError;
-    }
-
-    const tiers = [
-      ...new Set(
-        tiersData
-          .map((item) => item.selected_tier)
-          .filter(
-            (tier) => tier && typeof tier === "string" && tier.trim() !== ""
-          )
-      ),
-    ].sort();
-
-    return {
-      props: {
-        tiers,
-      },
-    };
-  } catch (error) {
-    console.error("[AdminEvents] Error:", error.message);
-    return {
-      redirect: {
-        destination: "/hr/login",
-        permanent: false,
-      },
-    };
-  }
+  return getAdminEventsProps({ req, res });
 }

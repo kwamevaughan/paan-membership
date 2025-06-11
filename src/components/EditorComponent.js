@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, memo } from "react";
+import { useState, useCallback, memo, useRef, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import ImageLibrary from "@/components/common/ImageLibrary";
 import toast from "react-hot-toast";
@@ -8,6 +8,26 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Link from '@tiptap/extension-link';
 import Placeholder from '@tiptap/extension-placeholder';
+import Table from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
+import HorizontalRule from '@tiptap/extension-horizontal-rule';
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import { createLowlight } from 'lowlight';
+import Underline from '@tiptap/extension-underline';
+import Strike from '@tiptap/extension-strike';
+import Superscript from '@tiptap/extension-superscript';
+import Subscript from '@tiptap/extension-subscript';
+import Blockquote from '@tiptap/extension-blockquote';
+import Image from '@tiptap/extension-image';
+import TaskList from '@tiptap/extension-task-list';
+import TaskItem from '@tiptap/extension-task-item';
+import TextStyle from '@tiptap/extension-text-style';
+import Color from '@tiptap/extension-color';
+import Highlight from '@tiptap/extension-highlight';
+import TextAlign from '@tiptap/extension-text-align';
+const lowlight = createLowlight();
 
 // Editor styles
 const editorStyles = `
@@ -26,6 +46,29 @@ const editorStyles = `
     outline: none;
     background: white;
     margin-top: 0.5rem;
+  }
+
+  /* Table styles for TipTap */
+  .ProseMirror table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+  }
+  .ProseMirror th, .ProseMirror td {
+    border: 1px solid #e2e8f0;
+    padding: 0.5em;
+    min-width: 25px;
+    vertical-align: top;
+    background: white;
+  }
+  .ProseMirror th {
+    background: #f8fafc;
+    font-weight: bold;
+  }
+  .dark .ProseMirror th, .dark .ProseMirror td {
+    background: #23272f;
+    border-color: #444c5e;
+    color: #e2e8f0;
   }
 
   .editor-container.dark {
@@ -73,10 +116,18 @@ const editorStyles = `
     margin: 0.5em 0;
   }
 
-  .ProseMirror ul,
+  .ProseMirror ul {
+    list-style-type: disc;
+    padding-left: 2em;
+    margin-bottom: 1em;
+  }
   .ProseMirror ol {
-    padding: 0 1rem;
-    margin-bottom: 1.5em;
+    list-style-type: decimal;
+    padding-left: 2em;
+    margin-bottom: 1em;
+  }
+  .ProseMirror li {
+    margin-bottom: 0.25em;
   }
 
   .ProseMirror a {
@@ -96,6 +147,24 @@ const editorStyles = `
     max-width: 100%;
     height: auto;
     margin: 1em 0;
+  }
+
+  .ProseMirror blockquote {
+    border-left: 4px solid #e2e8f0;
+    margin: 1em 0;
+    padding-left: 1em;
+    color: #555;
+    background: #f8fafc;
+    font-style: italic;
+  }
+  .dark .ProseMirror blockquote {
+    border-left-color: #444c5e;
+    background: #23272f;
+    color: #bfc7d5;
+  }
+
+  .ProseMirror span[style*="font-size"] {
+    font-size: unset !important;
   }
 `;
 
@@ -145,15 +214,27 @@ RawTextEditor.displayName = "RawTextEditor";
 // Custom ToolbarDropdown for modern dropdowns in the toolbar
 const ToolbarDropdown = ({ value, options, onChange, icon, label, mode }) => {
   const [open, setOpen] = useState(false);
-  const handleSelect = (option) => {
-    setOpen(false);
-    onChange(option.value);
-  };
+  const dropdownRef = useRef(null);
+  useEffect(() => {
+    const handleClick = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setOpen(false);
+    };
+    const handleEsc = (e) => { if (e.key === 'Escape') setOpen(false); };
+    if (open) {
+      document.addEventListener('mousedown', handleClick);
+      document.addEventListener('keydown', handleEsc);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [open]);
   return (
-    <div className="relative inline-block text-left">
+    <div className="relative inline-block text-left" ref={dropdownRef}>
       <button
         type="button"
-        className={`flex items-center gap-1 px-2 py-1 rounded-md border border-transparent hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${open ? 'bg-gray-100 dark:bg-gray-800' : ''}`}
+        aria-label={label}
+        className={`flex items-center gap-1 px-2 py-1 rounded-md border border-transparent focus:ring-2 focus:ring-blue-400 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${open ? 'bg-gray-100 dark:bg-gray-800' : ''}`}
         onClick={() => setOpen((v) => !v)}
         aria-haspopup="listbox"
         aria-expanded={open}
@@ -169,7 +250,7 @@ const ToolbarDropdown = ({ value, options, onChange, icon, label, mode }) => {
               <li
                 key={option.value}
                 className={`flex items-center gap-2 px-4 py-2 cursor-pointer hover:bg-blue-100 dark:hover:bg-gray-700 ${option.value === value ? 'bg-blue-100 dark:bg-gray-700 font-semibold' : ''}`}
-                onClick={() => handleSelect(option)}
+                onClick={() => { onChange(option.value); setOpen(false); }}
                 role="option"
                 aria-selected={option.value === value}
               >
@@ -178,6 +259,77 @@ const ToolbarDropdown = ({ value, options, onChange, icon, label, mode }) => {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ColorPicker and HighlightPicker for toolbar
+const ColorPicker = ({ value, onChange, mode }) => {
+  const [open, setOpen] = useState(false);
+  const colors = [
+    '#000000', '#e60000', '#ff9900', '#ffff00', '#008a00', '#0066cc', '#9933ff',
+    '#ffffff', '#facccc', '#ffebcc', '#ffffcc', '#cce8cc', '#cce0f5', '#ebd6ff',
+    '#bbbbbb', '#f06666', '#ffc266', '#ffff66', '#66b966', '#66a3e0', '#c285ff',
+    '#888888', '#a10000', '#b26b00', '#b2b200', '#006100', '#0047b2', '#6b24b2',
+    '#444444', '#5c0000', '#663d00', '#666600', '#003700', '#002966', '#3d1466',
+  ];
+  return (
+    <div className="relative inline-block text-left">
+      <button
+        type="button"
+        className={`flex items-center gap-1 px-2 py-1 rounded-md border border-transparent hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors`}
+        onClick={() => setOpen((v) => !v)}
+        title="Text Color"
+      >
+        <Icon icon="mdi:palette" width={18} height={18} />
+        <span className="w-4 h-4 rounded-full border ml-1" style={{ background: value || '#000' }} />
+      </button>
+      {open && (
+        <div className={`absolute z-10 mt-1 w-56 p-2 rounded-md shadow-lg grid grid-cols-7 gap-1 ${mode === 'dark' ? 'bg-gray-800' : 'bg-white'}`}> 
+          {colors.map((color) => (
+            <button
+              key={color}
+              className={`w-6 h-6 rounded-full border-2 ${value === color ? 'border-blue-500' : 'border-transparent'}`}
+              style={{ background: color }}
+              onClick={() => { onChange(color); setOpen(false); }}
+              title={color}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const HighlightPicker = ({ value, onChange, mode }) => {
+  const [open, setOpen] = useState(false);
+  const highlights = [
+    '#fff475', '#fbbc04', '#f28b82', '#ccff90', '#a7ffeb', '#cbf0f8', '#aecbfa', '#d7aefb', '#fdcfe8', '#e6c9a8', '#e8eaed'
+  ];
+  return (
+    <div className="relative inline-block text-left">
+      <button
+        type="button"
+        className={`flex items-center gap-1 px-2 py-1 rounded-md border border-transparent hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors`}
+        onClick={() => setOpen((v) => !v)}
+        title="Highlight"
+      >
+        <Icon icon="mdi:marker" width={18} height={18} />
+        <span className="w-4 h-4 rounded border ml-1" style={{ background: value || '#fff475' }} />
+      </button>
+      {open && (
+        <div className={`absolute z-10 mt-1 w-56 p-2 rounded-md shadow-lg grid grid-cols-7 gap-1 ${mode === 'dark' ? 'bg-gray-800' : 'bg-white'}`}> 
+          {highlights.map((color) => (
+            <button
+              key={color}
+              className={`w-6 h-6 rounded border-2 ${value === color ? 'border-blue-500' : 'border-transparent'}`}
+              style={{ background: color }}
+              onClick={() => { onChange(color); setOpen(false); }}
+              title={color}
+            />
+          ))}
         </div>
       )}
     </div>
@@ -194,16 +346,45 @@ const TipTapEditor = memo(({
 }) => {
   const [showImageLibrary, setShowImageLibrary] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [linkPopover, setLinkPopover] = useState({ open: false, left: 0, top: 0, value: '', from: null, to: null });
+  const linkInputRef = useRef(null);
+  const editorContainerRef = useRef(null);
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      TextStyle.configure({ types: ['textStyle', 'heading', 'paragraph'] }),
+      Color,
+      Highlight,
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3, 4, 5],
+          allowMarks: ['textStyle', 'color', 'highlight'],
+        },
+        paragraph: {
+          allowMarks: ['textStyle', 'color', 'highlight'],
+        },
+      }),
       Link.configure({
         openOnClick: false,
       }),
       Placeholder.configure({
         placeholder: placeholder,
       }),
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableCell,
+      TableHeader,
+      HorizontalRule,
+      CodeBlockLowlight.configure({ lowlight }),
+      Underline,
+      Strike,
+      Superscript,
+      Subscript,
+      Blockquote,
+      Image,
+      TaskList,
+      TaskItem,
     ],
     content: initialValue,
     onUpdate: ({ editor }) => {
@@ -267,9 +448,57 @@ const TipTapEditor = memo(({
     callback();
   };
 
+  const openLinkPopover = () => {
+    if (!editor) return;
+    const { from, to } = editor.state.selection;
+    if (from === to) return; // no selection
+    const coords = editor.view.coordsAtPos(Math.floor((from + to) / 2));
+    const containerRect = editorContainerRef.current?.getBoundingClientRect();
+    setLinkPopover({
+      open: true,
+      left: coords.left - (containerRect?.left || 0),
+      top: coords.bottom - (containerRect?.top || 0) + 6,
+      value: editor.getAttributes('link').href || '',
+      from,
+      to,
+    });
+    setTimeout(() => linkInputRef.current?.focus(), 10);
+  };
+
+  const closeLinkPopover = () => setLinkPopover((p) => ({ ...p, open: false }));
+
+  const applyLink = () => {
+    if (linkPopover.from !== null && linkPopover.to !== null) {
+      editor.chain().focus().setTextSelection({ from: linkPopover.from, to: linkPopover.to }).run();
+    }
+    if (linkPopover.value) {
+      editor.chain().focus().setLink({ href: linkPopover.value }).run();
+    } else {
+      editor.chain().focus().unsetLink().run();
+    }
+    closeLinkPopover();
+  };
+
+  useEffect(() => {
+    if (!linkPopover.open) return;
+    const handleClick = (e) => {
+      if (linkInputRef.current && !linkInputRef.current.contains(e.target)) closeLinkPopover();
+    };
+    const handleEsc = (e) => { if (e.key === 'Escape') closeLinkPopover(); };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [linkPopover.open]);
+
   return (
-    <div className={`editor-container ${mode === "dark" ? "dark" : ""}`} style={{ contain: 'content' }}>
+    <div ref={editorContainerRef} className={`editor-container ${mode === "dark" ? "dark" : ""}`} style={{ contain: 'content' }}>
       <div className="editor-toolbar flex flex-wrap gap-2">
+        <button onClick={handleToolbarClick(() => editor.chain().focus().undo().run())} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Undo"><Icon icon="mdi:undo" width={20} height={20} /></button>
+        <button onClick={handleToolbarClick(() => editor.chain().focus().redo().run())} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Redo"><Icon icon="mdi:redo" width={20} height={20} /></button>
+        <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
         <button
           onClick={handleToolbarClick(() => editor.chain().focus().toggleBold().run())}
           className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${
@@ -309,6 +538,8 @@ const TipTapEditor = memo(({
             { value: 1, label: 'Heading 1', icon: 'mdi:format-header-1' },
             { value: 2, label: 'Heading 2', icon: 'mdi:format-header-2' },
             { value: 3, label: 'Heading 3', icon: 'mdi:format-header-3' },
+            { value: 4, label: 'Heading 4', icon: 'mdi:format-header-4' },
+            { value: 5, label: 'Heading 5', icon: 'mdi:format-header-5' },
           ]}
           label={
             editor?.getAttributes('heading').level
@@ -337,10 +568,8 @@ const TipTapEditor = memo(({
         />
         <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
         <button
-          onClick={handleToolbarClick(addLink)}
-          className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${
-            editor?.isActive('link') ? 'bg-gray-100 dark:bg-gray-800' : ''
-          }`}
+          onClick={handleToolbarClick(openLinkPopover)}
+          className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('link') ? 'bg-gray-100 dark:bg-gray-800' : ''}`}
           title="Insert Link"
         >
           <Icon icon="mdi:link" width={20} height={20} />
@@ -352,11 +581,34 @@ const TipTapEditor = memo(({
         >
           <Icon icon="mdi:image" width={20} height={20} />
         </button>
-        <button onClick={handleToolbarClick(() => editor.chain().focus().undo().run())} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Undo"><Icon icon="mdi:undo" width={20} height={20} /></button>
-        <button onClick={handleToolbarClick(() => editor.chain().focus().redo().run())} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Redo"><Icon icon="mdi:redo" width={20} height={20} /></button>
+        <button onClick={handleToolbarClick(() => editor.chain().focus().clearNodes().unsetAllMarks().run())} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Clear Formatting"><Icon icon="mdi:format-clear" width={20} height={20} /></button>
         <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
-        <button onClick={handleToolbarClick(() => editor.chain().focus().sinkListItem('listItem').run())} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Indent"><Icon icon="mdi:format-indent-increase" width={20} height={20} /></button>
-        <button onClick={handleToolbarClick(() => editor.chain().focus().liftListItem('listItem').run())} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Outdent"><Icon icon="mdi:format-indent-decrease" width={20} height={20} /></button>
+        <button
+          onClick={handleToolbarClick(() => {
+            if (editor.isActive('bulletList') || editor.isActive('orderedList')) {
+              editor.chain().focus().sinkListItem('listItem').run();
+            } else if (editor.isActive('taskList')) {
+              editor.chain().focus().sinkListItem('taskItem').run();
+            }
+          })}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+          title="Indent"
+        >
+          <Icon icon="mdi:format-indent-increase" width={20} height={20} />
+        </button>
+        <button
+          onClick={handleToolbarClick(() => {
+            if (editor.isActive('bulletList') || editor.isActive('orderedList')) {
+              editor.chain().focus().liftListItem('listItem').run();
+            } else if (editor.isActive('taskList')) {
+              editor.chain().focus().liftListItem('taskItem').run();
+            }
+          })}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+          title="Outdent"
+        >
+          <Icon icon="mdi:format-indent-decrease" width={20} height={20} />
+        </button>
         <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
         <button onClick={handleToolbarClick(() => editor.chain().focus().toggleBlockquote().run())} className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('blockquote') ? 'bg-gray-100 dark:bg-gray-800' : ''}`} title="Blockquote"><Icon icon="mdi:format-quote-close" width={20} height={20} /></button>
         <button onClick={handleToolbarClick(() => editor.chain().focus().toggleCode().run())} className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('code') ? 'bg-gray-100 dark:bg-gray-800' : ''}`} title="Code"><Icon icon="mdi:code-tags" width={20} height={20} /></button>
@@ -379,8 +631,74 @@ const TipTapEditor = memo(({
           }
           mode={mode}
         />
+        <ColorPicker
+          value={editor?.getAttributes('textStyle').color || ''}
+          onChange={(color) => editor.chain().focus().setColor(color).run()}
+          mode={mode}
+        />
+        <HighlightPicker
+          value={editor?.getAttributes('highlight').color || ''}
+          onChange={(color) => editor.chain().focus().setHighlight({ color }).run()}
+          mode={mode}
+        />
+        <button onClick={handleToolbarClick(() => editor.chain().focus().setHorizontalRule().run())} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Horizontal Rule"><Icon icon="mdi:minus" width={20} height={20} /></button>
+        <button onClick={handleToolbarClick(() => editor.chain().focus().toggleCodeBlock().run())} className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('codeBlock') ? 'bg-gray-100 dark:bg-gray-800' : ''}`} title="Code Block"><Icon icon="mdi:code-braces" width={20} height={20} /></button>
+        <button onClick={handleToolbarClick(() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run())} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Insert Table"><Icon icon="mdi:table" width={20} height={20} /></button>
+        <button onClick={handleToolbarClick(() => editor.chain().focus().deleteTable().run())} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Delete Table"><Icon icon="mdi:table-remove" width={20} height={20} /></button>
       </div>
-      <EditorContent editor={editor} />
+      <EditorContent
+        editor={editor}
+        onClick={e => {
+          const link = e.target.closest('a');
+          if (link && editor) {
+            const pos = editor.view.posAtDOM(link, 0);
+            const containerRect = editorContainerRef.current?.getBoundingClientRect();
+            setLinkPopover({
+              open: true,
+              left: e.clientX - (containerRect?.left || 0),
+              top: e.clientY - (containerRect?.top || 0) + 6,
+              value: link.getAttribute('href') || '',
+              from: pos,
+              to: pos + link.textContent.length,
+            });
+            setTimeout(() => linkInputRef.current?.focus(), 10);
+          }
+        }}
+      />
+      {linkPopover.open && (
+        <div
+          className="absolute z-50 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl flex items-center gap-2 px-4 py-2"
+          style={{ left: linkPopover.left, top: linkPopover.top }}
+        >
+          <input
+            ref={linkInputRef}
+            type="text"
+            className="bg-transparent outline-none border-b border-gray-300 dark:border-gray-600 px-2 py-1 text-sm w-48"
+            placeholder="Paste a link..."
+            value={linkPopover.value}
+            onChange={e => setLinkPopover(p => ({ ...p, value: e.target.value }))}
+            onKeyDown={e => { if (e.key === 'Enter') applyLink(); }}
+          />
+          <button onClick={applyLink} className="p-1 hover:bg-blue-100 dark:hover:bg-blue-800 rounded" title="Apply"><Icon icon="mdi:arrow-right" width={18} /></button>
+          <button 
+            onClick={() => {
+              if (editor) {
+                editor
+                  .chain()
+                  .focus()
+                  .removeMark('link')
+                  .run();
+                closeLinkPopover();
+              }
+            }} 
+            className="p-1 hover:bg-red-100 dark:hover:bg-red-800 rounded" 
+            title="Remove"
+          >
+            <Icon icon="mdi:delete" width={18} />
+          </button>
+          <button onClick={closeLinkPopover} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Close"><Icon icon="mdi:close" width={18} /></button>
+        </div>
+      )}
       <ImageLibrary
         isOpen={showImageLibrary}
         onClose={() => setShowImageLibrary(false)}
@@ -477,7 +795,6 @@ function EditorComponent({
           mode={mode}
         />
       </div>
-
       {viewMode === "rich" ? (
         <div style={{ height: `${height}px` }}>
           <TipTapEditor
@@ -495,7 +812,6 @@ function EditorComponent({
           mode={mode}
         />
       )}
-
       <ImageLibrary
         isOpen={showImageLibrary}
         onClose={() => setShowImageLibrary(false)}

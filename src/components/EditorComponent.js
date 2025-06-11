@@ -33,7 +33,7 @@ const lowlight = createLowlight();
 // Editor styles
 const editorStyles = `
   .editor-container {
-    height: 700px;
+    height: auto;
     overflow: auto;
     display: flex;
     flex-direction: column;

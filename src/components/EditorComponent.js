@@ -84,7 +84,7 @@ export default function EditorComponent({
       showXPathInStatusbar: false,
       askBeforePasteHTML: false,
       askBeforePasteFromWord: false,
-      defaultActionOnPaste: "insert_only_text",
+      defaultActionOnPaste: "insert_clear_html",
       saveModeOnBlur: false,
       triggerChangeEvent: true,
       enableDragAndDropFileToEditor: false,

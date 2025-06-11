@@ -485,3 +485,9 @@ export default function AdminUpdates({
     </div>
   );
 }
+export async function getServerSideProps({ req, res }) {
+  const { getAdminBusinessUpdatesProps } = await import(
+    "utils/getPropsUtils"
+  );
+  return await getAdminBusinessUpdatesProps({ req, res });
+}

@@ -1,24 +1,19 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useRouter } from "next/router";
+import { useState, useCallback, useMemo } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import { Icon } from "@iconify/react";
-import HRSidebar from "@/layouts/hrSidebar";
 import HRHeader from "@/layouts/hrHeader";
+import HRSidebar from "@/layouts/hrSidebar";
+import SimpleFooter from "@/layouts/simpleFooter";
+import UpdateGrid from "@/components/updates/UpdateGrid";
+import ItemActionModal from "@/components/ItemActionModal";
+import UpdateForm from "@/components/updates/UpdateForm";
 import useSidebar from "@/hooks/useSidebar";
 import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
-import { useMarketIntel } from "@/hooks/useMarketIntel";
-import SimpleFooter from "@/layouts/simpleFooter";
-import MarketIntelForm from "@/components/MarketIntelForm";
-import MarketIntelGrid from "@/components/market-intel/MarketIntelGrid";
-import AdvancedFilters from "@/components/AdvancedFilters";
-import ItemActionModal from "@/components/ItemActionModal";
-import useModals from "@/hooks/useModals";
-import { getAdminMarketIntelProps } from "utils/getPropsUtils";
-import { debounce } from "lodash";
-import { motion } from "framer-motion";
+import { useUpdates } from "@/hooks/useUpdates";
+
+import { Icon } from "@iconify/react";
 import PageHeader from "@/components/common/PageHeader";
-import MarketIntelFilters from "@/components/filters/MarketIntelFilters";
+import UpdateFilters from "@/components/filters/UpdateFilters";
 import BaseFilters from "@/components/filters/BaseFilters";
 
 export default function AdminMarketIntel({
@@ -56,7 +51,7 @@ export default function AdminMarketIntel({
     handleMouseLeave,
     handleOutsideClick,
   } = useSidebar();
-  
+
   const handleLogout = useLogout();
 
   const {
@@ -78,7 +73,7 @@ export default function AdminMarketIntel({
       categories: [],
       tiers: [],
       types: [],
-      regions: []
+      regions: [],
     },
   } = useMarketIntel(initialMarketIntel);
 
@@ -128,7 +123,7 @@ export default function AdminMarketIntel({
     "Transportation",
     "Manufacturing",
     "Retail",
-    "Other"
+    "Other",
   ];
 
   const regions = [
@@ -175,7 +170,7 @@ export default function AdminMarketIntel({
       if (filterUpdateTimeout.current) {
         clearTimeout(filterUpdateTimeout.current);
       }
-      
+
       filterUpdateTimeout.current = setTimeout(() => {
         updateFilters(filters);
       }, 300);
@@ -203,7 +198,13 @@ export default function AdminMarketIntel({
         clearTimeout(filterUpdateTimeout.current);
       }
     };
-  }, [selectedTier, selectedRegion, selectedType, filterTerm, debouncedFilterUpdate]);
+  }, [
+    selectedTier,
+    selectedRegion,
+    selectedType,
+    filterTerm,
+    debouncedFilterUpdate,
+  ]);
 
   const handleCreateIntel = () => {
     setFormData({
@@ -273,13 +274,13 @@ export default function AdminMarketIntel({
   };
 
   const loadMore = () => {
-    setPage(prev => prev + 1);
+    setPage((prev) => prev + 1);
   };
 
   const handleDeleteClick = async (id) => {
     const success = await handleDelete(id);
     if (success) {
-      setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
+      setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id));
     }
   };
 
@@ -367,7 +368,9 @@ export default function AdminMarketIntel({
                     ? [
                         {
                           icon: "heroicons:clock",
-                          value: `Last published ${new Date(marketIntel[0].created_at).toLocaleDateString("en-US", {
+                          value: `Last published ${new Date(
+                            marketIntel[0].created_at
+                          ).toLocaleDateString("en-US", {
                             month: "long",
                             day: "numeric",
                             year: "numeric",
@@ -394,7 +397,7 @@ export default function AdminMarketIntel({
                   className={`absolute inset-0 rounded-2xl backdrop-blur-xl ${
                     mode === "dark"
                       ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60"
-                    : "bg-gradient-to-br from-white/80 via-white/20 to-white/80"
+                      : "bg-gradient-to-br from-white/80 via-white/20 to-white/80"
                   } border ${
                     mode === "dark" ? "border-white/10" : "border-white/20"
                   } shadow-2xl group-hover:shadow-lg transition-all duration-500`}
@@ -403,7 +406,7 @@ export default function AdminMarketIntel({
                   className={`relative rounded-2xl overflow-hidden shadow-lg border ${
                     mode === "dark"
                       ? "bg-gray-900 border-gray-800"
-                    : "bg-white border-gray-200"
+                      : "bg-white border-gray-200"
                   }`}
                 >
                   <div className="p-6">
@@ -420,35 +423,37 @@ export default function AdminMarketIntel({
                       setShowFilters={setShowFilters}
                       type="market-intel"
                       items={marketIntel || []}
-                      filteredItems={marketIntel?.filter((item) => {
-                        const matchesSearch =
-                          !filterTerm ||
-                          item.title
-                            .toLowerCase()
-                            .includes(filterTerm.toLowerCase()) ||
-                          item.description
-                            .toLowerCase()
-                            .includes(filterTerm.toLowerCase());
-                        const matchesCategory =
-                          selectedCategory === "All" ||
-                          item.category === selectedCategory;
-                        const matchesTier =
-                          selectedTier === "All" ||
-                          item.tier_restriction === selectedTier;
-                        const matchesType =
-                          selectedType === "All" ||
-                          item.type === selectedType;
-                        const matchesRegion =
-                          selectedRegion === "All" ||
-                          item.region === selectedRegion;
-                        return (
-                          matchesSearch &&
-                          matchesCategory &&
-                          matchesTier &&
-                          matchesType &&
-                          matchesRegion
-                        );
-                      }) || []}
+                      filteredItems={
+                        marketIntel?.filter((item) => {
+                          const matchesSearch =
+                            !filterTerm ||
+                            item.title
+                              .toLowerCase()
+                              .includes(filterTerm.toLowerCase()) ||
+                            item.description
+                              .toLowerCase()
+                              .includes(filterTerm.toLowerCase());
+                          const matchesCategory =
+                            selectedCategory === "All" ||
+                            item.category === selectedCategory;
+                          const matchesTier =
+                            selectedTier === "All" ||
+                            item.tier_restriction === selectedTier;
+                          const matchesType =
+                            selectedType === "All" ||
+                            item.type === selectedType;
+                          const matchesRegion =
+                            selectedRegion === "All" ||
+                            item.region === selectedRegion;
+                          return (
+                            matchesSearch &&
+                            matchesCategory &&
+                            matchesTier &&
+                            matchesType &&
+                            matchesRegion
+                          );
+                        }) || []
+                      }
                       onResetFilters={resetFilters}
                     >
                       <MarketIntelFilters
@@ -498,7 +503,7 @@ export default function AdminMarketIntel({
                   className={`absolute bottom-0 left-0 right-0 h-1 ${
                     mode === "dark"
                       ? "bg-gradient-to-r from-blue-400 via-blue-500 to-blue-500"
-                    : "bg-gradient-to-r from-[#3c82f6] to-[#dbe9fe]"
+                      : "bg-gradient-to-r from-[#3c82f6] to-[#dbe9fe]"
                   }`}
                 ></div>
                 <div
@@ -514,9 +519,7 @@ export default function AdminMarketIntel({
         </div>
 
         {isModalOpen && (
-          <div
-            className={`fixed inset-0 bg-black/30 backdrop-blur-md z-40`}
-          />
+          <div className={`fixed inset-0 bg-black/30 backdrop-blur-md z-40`} />
         )}
 
         <MarketIntelForm

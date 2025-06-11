@@ -546,14 +546,31 @@ export default function BlogFormFields({
           }`}
         >
           <EditorComponent
-            initialValue={editorContent || ""}
+            key={`editor-${formData.id || 'new'}`}
+            initialValue={formData.id ? (formData.article_body || editorContent || "") : ""}
             onChange={(newContent) => {
+              // Update both the editor content state and form data
               setEditorContent(newContent);
-              // Also update the formData to keep it in sync
               handleInputChange({
                 target: {
-                  name: 'article_body',
-                  value: newContent
+                  name: 'multiple',
+                  value: {
+                    article_body: newContent,
+                    content: newContent
+                  }
+                }
+              });
+            }}
+            onBlur={(newContent) => {
+              // Ensure content is synced on blur as well
+              setEditorContent(newContent);
+              handleInputChange({
+                target: {
+                  name: 'multiple',
+                  value: {
+                    article_body: newContent,
+                    content: newContent
+                  }
                 }
               });
             }}

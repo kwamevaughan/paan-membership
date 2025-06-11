@@ -259,6 +259,7 @@ export const useBlog = (blogId) => {
 
   const handleSubmit = async (e, updatedFormData = null) => {
     e.preventDefault();
+    const loadingToast = toast.loading(updatedFormData?.id ? "Updating blog post..." : "Creating blog post...");
     try {
       setLoading(true);
       const {
@@ -270,6 +271,7 @@ export const useBlog = (blogId) => {
       }
 
       console.log('useBlog handleSubmit called with data:', updatedFormData);
+      console.log('Editor content state:', editorContent);
       
       const dataToUse = updatedFormData || formData;
 
@@ -299,6 +301,12 @@ export const useBlog = (blogId) => {
         ...rest
       } = dataToUse;
 
+      console.log('Content fields from form data:', {
+        article_body,
+        content,
+        editorContent
+      });
+
       const is_published = publish_option === "publish";
       const is_draft = publish_option === "draft";
       const publish_date =
@@ -320,7 +328,16 @@ export const useBlog = (blogId) => {
       }
 
       const finalMetaKeywords = meta_keywords || (keywords ? keywords.join(", ") : "");
-      const finalContent = editorContent || content || article_body || "";
+      
+      // Prioritize the most recent content
+      const finalContent = dataToUse.article_body || editorContent || content || "";
+      
+      console.log('Final content being saved:', finalContent);
+      console.log('Content source:', {
+        fromFormData: dataToUse.article_body,
+        fromEditorState: editorContent,
+        fromContent: content
+      });
 
       const blogToUpsert = {
         id: id || undefined,
@@ -385,10 +402,19 @@ export const useBlog = (blogId) => {
 
       await fetchBlogs();
       console.log('Blog operation completed successfully');
+      
+      // Update the loading toast to success
+      toast.success(updatedFormData?.id ? "Blog post updated successfully!" : "Blog post created successfully!", {
+        id: loadingToast,
+      });
+      
       return true; // Explicitly return true on success
     } catch (error) {
       console.error("Error saving blog:", error);
-      toast.error("Failed to save blog post");
+      // Update the loading toast to error
+      toast.error("Failed to save blog post", {
+        id: loadingToast,
+      });
       return false; // Return false on error
     } finally {
       setLoading(false);

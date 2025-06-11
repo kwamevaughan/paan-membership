@@ -189,6 +189,14 @@ export default function BlogForm({
     }
   }, [showForm, blogId, setFormData, setEditorContent]);
 
+  // Add a separate effect to handle editor content reset
+  useEffect(() => {
+    if (!blogId && showForm) {
+      // When creating a new blog, ensure editor content is cleared
+      setEditorContent("");
+    }
+  }, [blogId, showForm, setEditorContent]);
+
   const handleTagSelect = (e) => {
     // Handle both event objects and direct tag names
     const tagName = typeof e === 'string' ? e : e.target.value;
@@ -254,9 +262,6 @@ export default function BlogForm({
       console.log("handleSubmit result:", success);
 
       if (success) {
-        console.log("Submission successful, showing success toast");
-        toast.success(blogId ? "Blog post updated successfully!" : "Blog post created successfully!");
-        
         if (typeof fetchBlogs === "function") {
           console.log("Fetching updated blogs...");
           await fetchBlogs();
@@ -305,7 +310,6 @@ export default function BlogForm({
       }
     } catch (error) {
       console.error("Form submission error:", error);
-      toast.error("Failed to save blog post");
     }
   };
 

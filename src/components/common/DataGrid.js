@@ -8,6 +8,8 @@ export default function DataGrid({
   hasMore,
   onLoadMore,
   remainingCount,
+  onEdit,
+  onDelete,
 }) {
   return (
     <div className="">
@@ -21,7 +23,7 @@ export default function DataGrid({
                 : "bg-gradient-to-br from-white to-blue-50 border-blue-100 shadow-lg hover:shadow-xl text-gray-800"
             }`}
           >
-            {renderCard(item)}
+            {renderCard(item, { onEdit, onDelete })}
           </div>
         ))}
       </div>

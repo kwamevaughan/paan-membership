@@ -85,8 +85,25 @@ export default function EditorComponent({
       askBeforePasteHTML: false,
       askBeforePasteFromWord: false,
       defaultActionOnPaste: "insert_only_text",
+      saveModeOnBlur: false,
+      triggerChangeEvent: true,
+      enableDragAndDropFileToEditor: false,
+      uploader: {
+        insertImageAsBase64URI: true,
+      },
+      tabIndex: -1,
+      disablePlugins: [
+        "mobile",
+        "table",
+        "image",
+        "file",
+        "video",
+        "media",
+        "link",
+      ],
       buttons: [
-        "source",
+        "undo",
+        "redo",
         "|",
         "bold",
         "italic",
@@ -101,39 +118,21 @@ export default function EditorComponent({
         "brush",
         "paragraph",
         "|",
-        "customImage",
         "table",
         "link",
         "|",
         "align",
         "|",
-        "undo",
-        "redo",
-        "|",
         "hr",
         "eraser",
         "copyformat",
         "|",
-        "symbol",
-        "fullsize",
         "print",
-        "about",
       ],
       removeButtons: ["about"],
-      uploader: {
-        insertImageAsBase64URI: true,
-      },
-      tabIndex: -1,
-      disablePlugins: [
-        "mobile",
-        "table",
-        "image",
-        "file",
-        "video",
-        "media",
-        "link",
-      ],
       controls: {
+        undo: { icon: "undo" },
+        redo: { icon: "redo" },
         bold: { icon: "bold" },
         italic: { icon: "italic" },
         underline: { icon: "underline" },
@@ -145,25 +144,14 @@ export default function EditorComponent({
         brush: { icon: "paint-brush" },
         paragraph: { icon: "paragraph" },
         align: { icon: "align-left" },
-        undo: { icon: "undo" },
-        redo: { icon: "redo" },
         hr: { icon: "minus" },
         eraser: { icon: "eraser" },
         copyformat: { icon: "copy" },
-        symbol: { icon: "symbol" },
-        fullsize: { icon: "expand" },
         print: { icon: "print" },
-        about: { icon: "info" },
-        image: {
-          exec: () => {
-            setShowImageLibrary(true);
-          },
-        },
       },
       editHTMLDocumentMode: false,
       askBeforePasteHTML: false,
       askBeforePasteFromWord: false,
-      defaultActionOnPaste: "insert_only_text",
       enterMode: "br",
       useArabicTextDirection: false,
       direction: "ltr",
@@ -171,17 +159,18 @@ export default function EditorComponent({
       showCharsCounter: true,
       showWordsCounter: true,
       showXPathInStatusbar: false,
-      saveModeOnBlur: true,
-      triggerChangeEvent: true,
-      enableDragAndDropFileToEditor: false,
-      uploader: {
-        insertImageAsBase64URI: true,
-      },
       events: {
         afterInit: (editor) => {
           editor.events.on("clickImage", () => {
             setShowImageLibrary(true);
             return false;
+          });
+
+          // Add cursor position preservation
+          editor.events.on("change", () => {
+            const selection = editor.selection.save();
+            editor.events.fire("afterSetValue", editor.value);
+            editor.selection.restore(selection);
           });
         },
         beforeCommand: (command) => {
@@ -195,7 +184,7 @@ export default function EditorComponent({
       extraButtons: [
         {
           name: "customImage",
-          iconURL: "https://cdn-icons-png.flaticon.com/512/2965/2965879.png",
+          icon: "image",
           tooltip: "Insert Image",
           exec: () => {
             setShowImageLibrary(true);
@@ -319,11 +308,21 @@ export default function EditorComponent({
   };
 
   const handleImageSelect = (imageUrl) => {
-    const imageHtml = `<img src="${imageUrl}" alt="Selected image" />`;
-    const newContent = content + imageHtml;
-    setContent(newContent);
-    if (onChange) {
-      onChange(newContent);
+    // If imageUrl is an object (from ImageLibrary), extract the URL
+    const url = typeof imageUrl === 'object' ? imageUrl.url : imageUrl;
+    const imageHtml = `<img src="${url}" alt="Selected image" />`;
+    
+    // Insert at cursor position if possible
+    if (editorRef.current?.editor) {
+      const editor = editorRef.current.editor;
+      editor.selection.insertHTML(imageHtml);
+    } else {
+      // Fallback to appending at the end
+      const newContent = content + imageHtml;
+      setContent(newContent);
+      if (onChange) {
+        onChange(newContent);
+      }
     }
     setShowImageLibrary(false);
   };

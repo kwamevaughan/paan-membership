@@ -1,22 +1,22 @@
-import { useState } from "react";
+import { useState, useCallback, useMemo } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import HRHeader from "@/layouts/hrHeader";
 import HRSidebar from "@/layouts/hrSidebar";
 import SimpleFooter from "@/layouts/simpleFooter";
-import AdvancedFilters from "@/components/AdvancedFilters";
-import OpportunityGrid from "@/components/OpportunityGrid";
+import OpportunityGrid from "@/components/opportunities/OpportunityGrid";
 import ItemActionModal from "@/components/ItemActionModal";
 import InterestedUsersModal from "@/components/InterestedUsersModal";
-import OpportunityForm from "@/components/OpportunityForm";
-import ViewToggle from "@/components/ViewToggle";
+import OpportunityForm from "@/components/opportunities/OpportunityForm";
 import useSidebar from "@/hooks/useSidebar";
 import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useOpportunities } from "@/hooks/useOpportunities";
 import { useOpportunityInterests } from "@/hooks/useOpportunityInterests";
-import useModals from "@/hooks/useModals";
 import { filterAndSortOpportunities } from "@/../utils/opportunityUtils";
 import { Icon } from "@iconify/react";
+import PageHeader from "@/components/common/PageHeader";
+import OpportunitiesFilters from "@/components/filters/OpportunityFilters";
+import BaseFilters from "@/components/filters/BaseFilters";
 
 export default function AdminBusinessOpportunities({
   mode = "light",
@@ -33,6 +33,14 @@ export default function AdminBusinessOpportunities({
   const [viewMode, setViewMode] = useState("grid");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterApplications, setFilterApplications] = useState("all");
+  const [selectedLocation, setSelectedLocation] = useState("All");
+  const [selectedServiceType, setSelectedServiceType] = useState("All");
+  const [selectedIndustry, setSelectedIndustry] = useState("All");
+  const [selectedJobType, setSelectedJobType] = useState("All");
+  const [selectedTier, setSelectedTier] = useState("All");
+  const [selectedOpportunityId, setSelectedOpportunityId] = useState(null);
+  const [isUsersModalOpen, setIsUsersModalOpen] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
 
   useAuthSession();
 
@@ -61,18 +69,33 @@ export default function AdminBusinessOpportunities({
     resetForm,
   } = useOpportunities();
 
-  const {
-    isModalOpen,
-    isUsersModalOpen,
-    selectedOpportunityId,
-    isEditing,
-    editingId,
-    modalActions,
-  } = useModals({ handleEdit, handleSubmit, resetForm });
-
   // State for delete confirmation modal
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [opportunityToDelete, setOpportunityToDelete] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [itemToDelete, setItemToDelete] = useState(null);
+
+  const handleViewModeChange = useCallback((newViewMode) => {
+    setViewMode(newViewMode);
+  }, []);
+
+  const handleSelectAll = useCallback((selected) => {
+    if (selected) {
+      setSelectedIds(opportunities.map((opportunity) => opportunity.id));
+    } else {
+      setSelectedIds([]);
+    }
+  }, [opportunities]);
+
+  const handleSelect = useCallback((id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id)
+        ? prev.filter((opportunityId) => opportunityId !== id)
+        : [...prev, id]
+    );
+  }, []);
 
   // Function to open delete confirmation modal
   const openDeleteModal = (id) => {
@@ -103,6 +126,39 @@ export default function AdminBusinessOpportunities({
     }
   };
 
+  const modalActions = {
+    openModal: (opportunity = null) => {
+      if (opportunity) {
+        setIsEditing(true);
+        setEditingId(opportunity.id);
+        handleEdit(opportunity);
+      } else {
+        setIsEditing(false);
+        setEditingId(null);
+        resetForm();
+      }
+      setIsModalOpen(true);
+    },
+    closeModal: () => {
+      setIsModalOpen(false);
+      setIsEditing(false);
+      setEditingId(null);
+      resetForm();
+    },
+    openUsersModal: (opportunityId) => {
+      setSelectedOpportunityId(opportunityId);
+      setIsUsersModalOpen(true);
+    },
+    closeUsersModal: () => {
+      setIsUsersModalOpen(false);
+      setSelectedOpportunityId(null);
+    },
+    submitForm: (e, id) => {
+      handleSubmit(e, id);
+      modalActions.closeModal();
+    }
+  };
+
   const {
     interestedUsers,
     loading: usersLoading,
@@ -117,6 +173,23 @@ export default function AdminBusinessOpportunities({
     filterProjectType,
     sortOrder,
   });
+
+  // Extract unique values for filters
+  const filterOptions = useMemo(() => {
+    const locations = [...new Set(opportunities.map(opp => opp.location))].filter(Boolean);
+    const serviceTypes = [...new Set(opportunities.map(opp => opp.service_type))].filter(Boolean);
+    const industries = [...new Set(opportunities.map(opp => opp.industry))].filter(Boolean);
+    const jobTypes = [...new Set(opportunities.map(opp => opp.job_type))].filter(Boolean);
+    const tiers = [...new Set(opportunities.map(opp => opp.tier_restriction))].filter(Boolean);
+
+    return {
+      locations,
+      serviceTypes,
+      industries,
+      jobTypes,
+      tiers
+    };
+  }, [opportunities]);
 
   return (
     <div
@@ -185,115 +258,48 @@ export default function AdminBusinessOpportunities({
                   mode === "dark" ? "border-white/10" : "border-white/20"
                 } shadow-2xl group-hover:shadow-lg transition-all duration-500`}
               ></div>
-              <div className="relative p-8 rounded-2xl mb-10">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <h1 className="text-2xl font-bold">
-                        Business Opportunities
-                      </h1>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm text-gray-600 dark:text-gray-300 max-w-2xl">
-                        Manage and distribute business opportunities, freelance
-                        gigs, and project collaborations. Create targeted
-                        opportunities for specific membership tiers and track
-                        member engagement.
-                      </p>
-                      <div className="flex items-center gap-4 text-sm flex-wrap">
-                        <div className="flex items-center gap-2">
-                          <Icon
-                            icon="heroicons:briefcase"
-                            className="w-4 h-4 text-blue-500"
-                          />
-                          <span className="text-gray-600 dark:text-gray-300">
-                            {opportunities.length} total opportunities
-                          </span>
-                        </div>
-                        {opportunities.length > 0 && (
-                          <>
-                            <div className="flex items-center gap-2">
-                              <Icon
-                                icon="heroicons:user-group"
-                                className="w-4 h-4 text-purple-500"
-                              />
-                              <span className="text-gray-600 dark:text-gray-300">
-                                {
-                                  opportunities.filter(
-                                    (opp) => opp.job_type === "Freelancer"
-                                  ).length
-                                }{" "}
-                                freelance gigs
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Icon
-                                icon="heroicons:building-office"
-                                className="w-4 h-4 text-green-500"
-                              />
-                              <span className="text-gray-600 dark:text-gray-300">
-                                {
-                                  opportunities.filter(
-                                    (opp) => opp.job_type === "Agency"
-                                  ).length
-                                }{" "}
-                                agency opportunities
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Icon
-                                icon="heroicons:clock"
-                                className="w-4 h-4 text-orange-500"
-                              />
-                              <span className="text-gray-600 dark:text-gray-300">
-                                Last published{" "}
-                                {new Date(
-                                  Math.max(
-                                    ...opportunities.map(
-                                      (opp) => new Date(opp.created_at)
-                                    )
-                                  )
-                                ).toLocaleDateString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                })}
-                              </span>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-6 md:mt-0">
-                    <button
-                      onClick={() => modalActions.openModal()}
-                      className={`inline-flex items-center px-6 py-3 text-sm font-medium rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 focus:ring-2 focus:ring-offset-2 ${
-                        mode === "dark"
-                          ? "bg-gradient-to-r from-blue-400 to-blue-500 text-white hover:from-blue-600 hover:to-blue-600 focus:ring-blue-400 shadow-blue-500/20"
-                          : "bg-gradient-to-r from-blue-400 to-blue-700 text-white hover:from-blue-600 hover:to-blue-600 focus:ring-blue-500 shadow-blue-500/20"
-                      }`}
-                    >
-                      <Icon icon="heroicons:plus" className="w-5 h-5 mr-2" />
-                      New Opportunity
-                    </button>
-                  </div>
-                </div>
-                <div
-                  className={`absolute top-2 right-2 w-12 sm:w-16 h-12 sm:h-16 opacity-10`}
-                ></div>
-                <div
-                  className={`absolute bottom-0 left-0 right-0 h-1 ${
-                    mode === "dark"
-                      ? "bg-gradient-to-r from-purple-500 via-pink-500 to-blue-500"
-                      : "bg-gradient-to-r from-[#3c82f6] to-[#dbe9fe]"
-                  }`}
-                ></div>
-
-                <div
-                  className={`absolute -bottom-1 -left-1 w-2 sm:w-3 h-2 sm:h-3 bg-[#f3584a] rounded-full opacity-40 animate-pulse delay-1000`}
-                ></div>
-              </div>
+              <PageHeader
+                title="Business Opportunities"
+                description="Manage and distribute business opportunities, freelance gigs, and project collaborations. Create targeted opportunities for specific membership tiers and track member engagement."
+                mode={mode}
+                stats={[
+                  {
+                    icon: "heroicons:briefcase",
+                    value: `${opportunities.length} total opportunities`,
+                  },
+                  ...(opportunities.length > 0
+                    ? [
+                        {
+                          icon: "heroicons:user-group",
+                          value: `${opportunities.filter(opp => opp.job_type === "Freelancer").length} freelance gigs`,
+                          iconColor: "text-purple-500",
+                        },
+                        {
+                          icon: "heroicons:building-office",
+                          value: `${opportunities.filter(opp => opp.job_type === "Agency").length} agency opportunities`,
+                          iconColor: "text-green-500",
+                        },
+                        {
+                          icon: "heroicons:clock",
+                          value: `Last published ${new Date(Math.max(...opportunities.map(opp => new Date(opp.created_at)))).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })}`,
+                          iconColor: "text-orange-500",
+                        },
+                      ]
+                    : []),
+                ]}
+                actions={[
+                  {
+                    label: "New Opportunity",
+                    icon: "heroicons:plus",
+                    onClick: () => modalActions.openModal(),
+                    variant: "primary",
+                  },
+                ]}
+              />
             </div>
 
             <div className="space-y-8">
@@ -314,22 +320,18 @@ export default function AdminBusinessOpportunities({
                       : "bg-white border-gray-200"
                   }`}
                 >
-                  <div className="">
-                    <AdvancedFilters
-                      filterTerm={filterTerm}
-                      setFilterTerm={setFilterTerm}
-                      setFilterType={setFilterType}
-                      filterType={filterType}
-                      setFilterJobType={setFilterJobType}
-                      filterJobType={filterJobType}
-                      setFilterProjectType={setFilterProjectType}
-                      filterProjectType={filterProjectType}
-                      setShowFilters={setShowFilters}
-                      showFilters={showFilters}
-                      sortOrder={sortOrder}
-                      setSortOrder={setSortOrder}
+                  <div className="p-6">
+                    <BaseFilters
                       mode={mode}
                       loading={loading}
+                      viewMode={viewMode}
+                      setViewMode={handleViewModeChange}
+                      filterTerm={filterTerm}
+                      setFilterTerm={setFilterTerm}
+                      sortOrder={sortOrder}
+                      setSortOrder={setSortOrder}
+                      showFilters={showFilters}
+                      setShowFilters={setShowFilters}
                       items={opportunities}
                       filteredItems={sortedOpportunities}
                       onOpenUsersModal={modalActions.openUsersModal}
@@ -337,10 +339,29 @@ export default function AdminBusinessOpportunities({
                       setFilterStatus={setFilterStatus}
                       filterApplications={filterApplications}
                       setFilterApplications={setFilterApplications}
-                      viewMode={viewMode}
-                      setViewMode={setViewMode}
-                    />
+                    >
+                      <OpportunitiesFilters
+                        selectedLocation={selectedLocation}
+                        onLocationChange={setSelectedLocation}
+                        selectedServiceType={selectedServiceType}
+                        onServiceTypeChange={setSelectedServiceType}
+                        selectedIndustry={selectedIndustry}
+                        onIndustryChange={setSelectedIndustry}
+                        selectedJobType={selectedJobType}
+                        onJobTypeChange={setSelectedJobType}
+                        selectedTier={selectedTier}
+                        onTierChange={setSelectedTier}
+                        locations={filterOptions.locations}
+                        serviceTypes={filterOptions.serviceTypes}
+                        industries={filterOptions.industries}
+                        jobTypes={filterOptions.jobTypes}
+                        tiers={filterOptions.tiers}
+                        mode={mode}
+                        loading={loading}
+                      />
+                    </BaseFilters>
 
+                    <div className="mt-8">
                     <OpportunityGrid
                       opportunities={sortedOpportunities}
                       loading={loading}
@@ -349,19 +370,21 @@ export default function AdminBusinessOpportunities({
                       onDelete={openDeleteModal}
                       onViewUsers={modalActions.openUsersModal}
                       viewMode={viewMode}
+                      setViewMode={handleViewModeChange}
+                      filterTerm={filterTerm}
+                      selectedLocation={selectedLocation}
+                      selectedServiceType={selectedServiceType}
+                      selectedIndustry={selectedIndustry}
+                      selectedJobType={selectedJobType}
+                      selectedTier={selectedTier}
+                      selectedIds={selectedIds}
+                      onSelect={handleSelect}
+                      onSelectAll={handleSelectAll}
+                      isSelectable={true}
                     />
+                    </div>
                   </div>
-                  <div
-                    className={`absolute top-2 right-2 w-12 sm:w-16 h-12 sm:h-16 opacity-10 z-0`}
-                  >
-                    <div
-                      className={`w-full h-full rounded-full bg-gradient-to-br ${
-                        mode === "dark"
-                          ? "from-violet-500 to-purple-600"
-                          : "from-violet-400 to-purple-500"
-                      }`}
-                    ></div>
-                  </div>
+                  
                 </div>
                 <div
                   className={`absolute bottom-0 left-0 right-0 h-1 ${

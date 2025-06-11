@@ -1,8 +1,86 @@
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Icon } from "@iconify/react";
 import ItemActionModal from "../ItemActionModal";
 
-export default function DataTable({
+const TableRow = memo(({ item, columns, selectedItems, onSelectItem, onEdit, onDelete, customActions, mode }) => {
+  const handleEdit = (e) => {
+    e.stopPropagation();
+    if (onEdit) {
+      onEdit(item);
+    }
+  };
+
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete(item);
+    }
+  };
+
+  return (
+    <tr 
+      key={item.id} 
+      onClick={() => onSelectItem(item.id)}
+      className={`hover:bg-opacity-50 ${
+        mode === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-50"
+      }`}
+    >
+      <td 
+        className="px-6 py-4 cursor-pointer" 
+        onClick={(e) => e.stopPropagation()}
+      >
+        <input
+          type="checkbox"
+          checked={selectedItems.includes(item.id)}
+          onChange={() => onSelectItem(item.id)}
+          className={`rounded border-gray-300 ${
+            mode === "dark" ? "bg-gray-700" : "bg-white"
+          }`}
+        />
+      </td>
+      {columns.map((column) => {
+        const cellContent = column.render ? column.render(item) : item[column.key];
+        return (
+          <td
+            key={column.key}
+            className={`px-6 py-4 ${column.align === "right" ? "text-right" : ""}`}
+            onClick={(e) => column.onClick ? column.onClick(e, item) : null}
+          >
+            {cellContent}
+          </td>
+        );
+      })}
+      <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-end gap-2">
+          {customActions ? (
+            customActions(item)
+          ) : (
+            <>
+              <button
+                onClick={handleEdit}
+                className="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition"
+                title="Edit"
+              >
+                <Icon icon="heroicons:pencil-square" className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleDelete}
+                className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition"
+                title="Delete"
+              >
+                <Icon icon="heroicons:trash" className="w-4 h-4" />
+              </button>
+            </>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+});
+
+TableRow.displayName = 'TableRow';
+
+const DataTable = memo(({
   data,
   columns,
   selectedItems,
@@ -16,12 +94,11 @@ export default function DataTable({
   remainingCount,
   itemName = "item",
   customActions,
-}) {
+}) => {
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
 
   const handleDeleteAll = () => {
-    selectedItems.forEach(id => onDelete(id));
-    setSelectedItems([]);
+    selectedItems.forEach(id => onDelete && onDelete({ id }));
     setIsDeleteAllModalOpen(false);
   };
 
@@ -43,7 +120,7 @@ export default function DataTable({
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setSelectedItems([])}
+              onClick={() => onSelectAll(false)}
               className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 ${
                 mode === "dark"
                   ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
@@ -76,7 +153,7 @@ export default function DataTable({
                 <input
                   type="checkbox"
                   checked={selectedItems.length === data.length}
-                  onChange={onSelectAll}
+                  onChange={(e) => onSelectAll(e.target.checked)}
                   className={`rounded border-gray-300 ${
                     mode === "dark" ? "bg-gray-700" : "bg-white"
                   }`}
@@ -92,64 +169,22 @@ export default function DataTable({
                   {column.label}
                 </th>
               ))}
+              <th className="px-6 py-4 text-right text-sm font-semibold">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
             {data.map((item) => (
-              <tr 
-                key={item.id} 
-                onClick={() => onSelectItem(item.id)}
-                className={`hover:bg-opacity-50 ${
-                  mode === "dark" ? "hover:bg-gray-800" : "hover:bg-gray-50"
-                }`}
-              >
-                <td 
-                  className="px-6 py-4 cursor-pointer" 
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <input
-                    type="checkbox"
-                    checked={selectedItems.includes(item.id)}
-                    onChange={() => onSelectItem(item.id)}
-                    className={`rounded border-gray-300 ${
-                      mode === "dark" ? "bg-gray-700" : "bg-white"
-                    }`}
-                  />
-                </td>
-                {columns.map((column) => (
-                  <td
-                    key={column.key}
-                    className={`px-6 py-4 ${column.align === "right" ? "text-right" : ""}`}
-                    onClick={(e) => column.onClick ? column.onClick(e, item) : null}
-                  >
-                    {column.render ? column.render(item) : item[column.key]}
-                  </td>
-                ))}
-                <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                  <div className="flex items-center justify-end gap-2">
-                    {customActions ? (
-                      customActions(item)
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => onEdit(item)}
-                          className="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition"
-                          title="Edit"
-                        >
-                          <Icon icon="heroicons:pencil-square" className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => onDelete(item.id)}
-                          className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition"
-                          title="Delete"
-                        >
-                          <Icon icon="heroicons:trash" className="w-4 h-4" />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </td>
-              </tr>
+              <TableRow
+                key={item.id}
+                item={item}
+                columns={columns}
+                selectedItems={selectedItems}
+                onSelectItem={onSelectItem}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                customActions={customActions}
+                mode={mode}
+              />
             ))}
           </tbody>
         </table>
@@ -204,11 +239,15 @@ export default function DataTable({
               }`}
             >
               <Icon icon="heroicons:trash" className="h-4 w-4 mr-2" />
-              Delete All
+              Delete
             </button>
           </div>
         </div>
       </ItemActionModal>
     </div>
   );
-} 
+});
+
+DataTable.displayName = 'DataTable';
+
+export default DataTable; 

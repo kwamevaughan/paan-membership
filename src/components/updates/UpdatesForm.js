@@ -1,10 +1,10 @@
 import { Icon } from "@iconify/react";
-import ItemActionModal from "./ItemActionModal";
+import ItemActionModal from "../ItemActionModal";
 import dynamic from "next/dynamic";
 import { useState, useEffect } from "react";
 
 // Dynamically import EditorComponent for client-side only
-const EditorComponent = dynamic(() => import("./EditorComponent"), {
+const EditorComponent = dynamic(() => import("../EditorComponent"), {
   ssr: false,
   loading: () => <p>Loading editor...</p>,
 });

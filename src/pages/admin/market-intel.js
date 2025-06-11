@@ -17,6 +17,9 @@ import useModals from "@/hooks/useModals";
 import { getAdminMarketIntelProps } from "utils/getPropsUtils";
 import { debounce } from "lodash";
 import { motion } from "framer-motion";
+import PageHeader from "@/components/common/PageHeader";
+import MarketIntelFilters from "@/components/filters/MarketIntelFilters";
+import BaseFilters from "@/components/filters/BaseFilters";
 
 export default function AdminMarketIntel({
   mode = "light",
@@ -71,7 +74,13 @@ export default function AdminMarketIntel({
     handleDelete,
     handleSubmit,
     getPDFUrl,
-  } = useMarketIntel();
+    filterOptions = {
+      categories: [],
+      tiers: [],
+      types: [],
+      regions: []
+    },
+  } = useMarketIntel(initialMarketIntel);
 
   const {
     isModalOpen,
@@ -345,72 +354,38 @@ export default function AdminMarketIntel({
                   mode === "dark" ? "border-white/10" : "border-white/20"
                 } shadow-2xl group-hover:shadow-lg transition-all duration-500`}
               ></div>
-              <div className="relative p-8 rounded-2xl mb-10">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <h1 className="text-2xl font-bold">
-                        Market Intelligence
-                      </h1>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm text-gray-600 dark:text-gray-300 max-w-2xl">
-                        Manage market intelligence reports, analyses, and data visualizations. Create targeted content for specific membership tiers and track member engagement.
-                      </p>
-                      <div className="flex items-center gap-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <Icon icon="heroicons:document-text" className="w-4 h-4 text-blue-500" />
-                          <span className="text-gray-600 dark:text-gray-300">
-                            {marketIntel.length} total reports
-                          </span>
-                        </div>
-                        {marketIntel.length > 0 && (
-                          <div className="flex items-center gap-2">
-                            <Icon icon="heroicons:clock" className="w-4 h-4 text-purple-500" />
-                            <span className="text-gray-600 dark:text-gray-300">
-                              Last published {new Date(marketIntel[0].created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-6 md:mt-0 flex items-center gap-4">
-                    <button
-                      onClick={handleCreateIntel}
-                      className={`inline-flex items-center px-6 py-3 text-sm font-medium rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 focus:ring-2 focus:ring-offset-2 ${
-                        mode === "dark"
-                          ? "bg-gradient-to-r from-blue-400 to-blue-500 text-white hover:from-blue-600 hover:to-blue-600 focus:ring-blue-400 shadow-blue-500/20"
-                          : "bg-gradient-to-r from-blue-400 to-blue-700 text-white hover:from-blue-600 hover:to-blue-600 focus:ring-blue-500 shadow-blue-500/20"
-                      }`}
-                    >
-                      <Icon icon="heroicons:plus" className="w-5 h-5 mr-2" />
-                      New Report
-                    </button>
-                  </div>
-                </div>
-                <div
-                  className={`absolute top-2 right-2 w-12 sm:w-16 h-12 sm:h-16 opacity-10`}
-                >
-                  <div
-                    className={`w-full h-full rounded-full bg-gradient-to-br ${
-                      mode === "dark"
-                        ? "from-blue-400 to-blue-500"
-                        : "from-blue-400 to-blue-500"
-                    }`}
-                  ></div>
-                </div>
-                <div
-                  className={`absolute bottom-0 left-0 right-0 h-1 ${
-                    mode === "dark"
-                      ? "bg-gradient-to-r from-blue-400 via-blue-500 to-blue-500"
-                      : "bg-gradient-to-r from-[#3c82f6] to-[#dbe9fe]"
-                  }`}
-                ></div>
-                <div
-                  className={`absolute -bottom-1 -left-1 w-2 sm:w-3 h-2 sm:h-3 bg-[#f3584a] rounded-full opacity-40 animate-pulse delay-1000`}
-                ></div>
-              </div>
+              <PageHeader
+                title="Market Intelligence"
+                description="Manage market intelligence reports, analyses, and data visualizations. Create targeted content for specific membership tiers and track member engagement."
+                mode={mode}
+                stats={[
+                  {
+                    icon: "heroicons:document-text",
+                    value: `${marketIntel.length} total reports`,
+                  },
+                  ...(marketIntel.length > 0
+                    ? [
+                        {
+                          icon: "heroicons:clock",
+                          value: `Last published ${new Date(marketIntel[0].created_at).toLocaleDateString("en-US", {
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                          })}`,
+                          iconColor: "text-purple-500",
+                        },
+                      ]
+                    : []),
+                ]}
+                actions={[
+                  {
+                    label: "New Report",
+                    icon: "heroicons:plus",
+                    onClick: handleCreateIntel,
+                    variant: "primary",
+                  },
+                ]}
+              />
             </div>
 
             <div className="space-y-8">
@@ -432,68 +407,78 @@ export default function AdminMarketIntel({
                   }`}
                 >
                   <div className="p-6">
-                    <AdvancedFilters
-                      type="market-intel"
+                    <BaseFilters
                       mode={mode}
                       loading={loading}
                       viewMode={viewMode}
                       setViewMode={setViewMode}
                       filterTerm={filterTerm}
-                      setFilterTerm={(value) => {
-                        setFilterTerm(value);
-                        updateFilters({ search: value });
-                      }}
+                      setFilterTerm={setFilterTerm}
                       sortOrder={sortOrder}
                       setSortOrder={setSortOrder}
                       showFilters={showFilters}
                       setShowFilters={setShowFilters}
-                      items={marketIntel}
-                      filteredItems={marketIntel.filter(intel => {
-                        const matchesSearch = !filterTerm || 
-                          intel.title.toLowerCase().includes(filterTerm.toLowerCase()) ||
-                          intel.description.toLowerCase().includes(filterTerm.toLowerCase());
-                        const matchesCategory = selectedCategory === "All" || intel.category === selectedCategory;
-                        const matchesTier = selectedTier === "All" || intel.tier_restriction === selectedTier;
-                        const matchesType = selectedType === "All" || intel.type === selectedType;
-                        const matchesRegion = selectedRegion === "All" || intel.region === selectedRegion;
-                        return matchesSearch && matchesCategory && matchesTier && matchesType && matchesRegion;
-                      }).slice(0, page * itemsPerPage)}
-                      selectedCategory={selectedCategory}
-                      onCategoryChange={(value) => {
-                        setSelectedCategory(value);
-                        updateFilters({ category: value });
-                      }}
-                      categories={categories}
-                      selectedType={selectedType}
-                      onTypeChange={(value) => {
-                        setSelectedType(value);
-                        updateFilters({ type: value });
-                      }}
-                      types={types}
-                      selectedRegion={selectedRegion}
-                      onRegionChange={(value) => {
-                        setSelectedRegion(value);
-                        updateFilters({ region: value });
-                      }}
-                      regions={regions}
-                      selectedTier={selectedTier}
-                      onTierChange={(value) => {
-                        setSelectedTier(value);
-                        updateFilters({ tier: value });
-                      }}
-                      tiers={tiers}
+                      type="market-intel"
+                      items={marketIntel || []}
+                      filteredItems={marketIntel?.filter((item) => {
+                        const matchesSearch =
+                          !filterTerm ||
+                          item.title
+                            .toLowerCase()
+                            .includes(filterTerm.toLowerCase()) ||
+                          item.description
+                            .toLowerCase()
+                            .includes(filterTerm.toLowerCase());
+                        const matchesCategory =
+                          selectedCategory === "All" ||
+                          item.category === selectedCategory;
+                        const matchesTier =
+                          selectedTier === "All" ||
+                          item.tier_restriction === selectedTier;
+                        const matchesType =
+                          selectedType === "All" ||
+                          item.type === selectedType;
+                        const matchesRegion =
+                          selectedRegion === "All" ||
+                          item.region === selectedRegion;
+                        return (
+                          matchesSearch &&
+                          matchesCategory &&
+                          matchesTier &&
+                          matchesType &&
+                          matchesRegion
+                        );
+                      }) || []}
                       onResetFilters={resetFilters}
-                    />
+                    >
+                      <MarketIntelFilters
+                        selectedCategory={selectedCategory}
+                        onCategoryChange={setSelectedCategory}
+                        selectedTier={selectedTier}
+                        onTierChange={setSelectedTier}
+                        selectedType={selectedType}
+                        onTypeChange={setSelectedType}
+                        selectedRegion={selectedRegion}
+                        onRegionChange={setSelectedRegion}
+                        categories={filterOptions?.categories || []}
+                        tiers={filterOptions?.tiers || []}
+                        types={filterOptions?.types || []}
+                        regions={filterOptions?.regions || []}
+                        mode={mode}
+                        loading={loading}
+                      />
+                    </BaseFilters>
 
                     <div className="mt-8">
                       <MarketIntelGrid
-                        marketIntel={marketIntel}
+                        mode={mode}
+                        marketIntel={marketIntel || []}
                         loading={loading}
                         selectedIds={selectedIds}
                         setSelectedIds={setSelectedIds}
                         handleEditClick={handleEditClick}
                         handleDelete={handleDeleteClick}
-                        handleViewFeedback={handleViewFeedback}
+                        onViewFeedback={handleViewFeedback}
                         currentPage={page}
                         setCurrentPage={setPage}
                         itemsPerPage={itemsPerPage}
@@ -504,6 +489,7 @@ export default function AdminMarketIntel({
                         selectedTier={selectedTier}
                         selectedType={selectedType}
                         selectedRegion={selectedRegion}
+                        filterOptions={filterOptions}
                       />
                     </div>
                   </div>

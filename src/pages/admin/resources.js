@@ -8,13 +8,14 @@ import useSidebar from "@/hooks/useSidebar";
 import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useResources } from "@/hooks/useResources";
-import ResourceForm from "@/components/ResourceForm";
-import ResourceFilters from "@/components/ResourceFilters";
+import ResourceForm from "@/components/resources/ResourceForm";
+import ResourceFilters from "@/components/resources/ResourceFilters";
 import SimpleFooter from "@/layouts/simpleFooter";
 import FeedbackModal from "@/components/FeedbackModal";
 import { getTierBadgeColor } from "@/../utils/badgeUtils";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { supabase } from "@/lib/supabase";
+import PageHeader from "@/components/common/PageHeader";
 
 export default function AdminResources({
   mode = "light",
@@ -154,20 +155,54 @@ const {
       }`}
     >
       <Toaster />
-      <HRHeader
-        toggleSidebar={toggleSidebar}
-        isSidebarOpen={isSidebarOpen}
-        sidebarState={sidebarState}
-        mode={mode}
-        toggleMode={toggleMode}
-        onLogout={handleLogout}
-        pageName="Resources"
-        pageDescription="Manage valuable tools, templates, and learning materials for agencies."
-        breadcrumbs={[
-          { label: "Dashboard", href: "/admin" },
-          { label: "Resources" },
-        ]}
-      />
+      <div className="relative group">
+        <div
+          className={`absolute inset-0 rounded-2xl backdrop-blur-xl ${
+            mode === "dark"
+              ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60"
+              : "bg-gradient-to-br from-white/80 via-white/20 to-white/80"
+          } border ${
+            mode === "dark" ? "border-white/10" : "border-white/20"
+          } shadow-2xl group-hover:shadow-lg transition-all duration-500`}
+        ></div>
+        <PageHeader
+          title="Resources"
+          description="Manage valuable tools, templates, and learning materials for agencies"
+          mode={mode}
+          stats={[
+            {
+              icon: "heroicons:document-text",
+              value: `${resources.length} total resources`,
+            },
+            ...(resources.length > 0
+              ? [
+                  {
+                    icon: "heroicons:clock",
+                    value: `Last added ${new Date(resources[0].created_at).toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })}`,
+                    iconColor: "text-purple-500",
+                  },
+                ]
+              : []),
+          ]}
+          actions={[
+            {
+              label: activeTab === "list" ? "Add Resource" : "Back to List",
+              icon: activeTab === "list" ? "heroicons:plus" : "heroicons:arrow-left",
+              onClick: activeTab === "list" 
+                ? () => {
+                    setIsEditing(false);
+                    setActiveTab("form");
+                  }
+                : cancelForm,
+              variant: activeTab === "list" ? "primary" : "secondary",
+            },
+          ]}
+        />
+      </div>
       <div className="flex flex-1">
         <HRSidebar
           isSidebarOpen={isSidebarOpen}
@@ -194,43 +229,6 @@ const {
           }}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                  Resources
-                </h1>
-                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                  Manage valuable tools, templates, and learning materials for
-                  agencies
-                </p>
-              </div>
-              <div className="mt-4 md:mt-0 flex space-x-3">
-                {activeTab === "list" ? (
-                  <button
-                    onClick={() => {
-                      setIsEditing(false);
-                      setActiveTab("form");
-                    }}
-                    className="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-sm font-medium rounded-xl shadow-sm transition-all duration-200 hover:shadow-lg hover:from-indigo-700 hover:to-purple-700"
-                  >
-                    <Icon icon="heroicons:plus" className="w-5 h-5 mr-2" />
-                    Add Resource
-                  </button>
-                ) : (
-                  <button
-                    onClick={cancelForm}
-                    className="inline-flex items-center px-4 py-2.5 bg-gray-600 hover:bg-gray-700 text-white text-sm font-medium rounded-xl shadow-sm transition-all duration-200"
-                  >
-                    <Icon
-                      icon="heroicons:arrow-left"
-                      className="w-5 h-5 mr-2"
-                    />
-                    Back to List
-                  </button>
-                )}
-              </div>
-            </div>
-
             <div className="flex space-x-2 mb-6">
               <button
                 onClick={() => setActiveTab("list")}

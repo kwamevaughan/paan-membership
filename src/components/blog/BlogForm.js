@@ -1,14 +1,14 @@
 // BlogForm.jsx
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/router";
-import { useBlog } from "../hooks/useBlog";
-import { useAuth } from "../hooks/useAuth";
+import { useBlog } from "../../hooks/useBlog";
+import { useAuth } from "../../hooks/useAuth";
 import toast from "react-hot-toast";
 import { supabase } from "@/lib/supabase";
 import ImageUpload from "@/components/common/ImageUpload";
-import BlogFormFields from "./blog/BlogFormFields";
+import BlogFormFields from "./BlogFormFields";
 import ImageLibrary from "@/components/common/ImageLibrary";
-import ItemActionModal from "./ItemActionModal";
+import ItemActionModal from "../ItemActionModal";
 import { Icon } from "@iconify/react";
 import Image from "next/image";
 
@@ -46,6 +46,77 @@ export default function BlogForm({
   const [selectedTags, setSelectedTags] = useState([]);
   const fileInputRef = useRef(null);
   const [showImageLibrary, setShowImageLibrary] = useState(false);
+  const [isLoadingBlog, setIsLoadingBlog] = useState(false);
+  const [currentBlogId, setCurrentBlogId] = useState(null);
+
+  // Define isEditing before effects
+  const isEditing = Boolean(blogId);
+
+  // Fetch blog data when blogId changes
+  useEffect(() => {
+    if (blogId && blogId !== currentBlogId) {
+      const fetchBlogData = async () => {
+        try {
+          setIsLoadingBlog(true);
+          console.log('Fetching blog data for ID:', blogId);
+          
+          const { data, error } = await supabase
+            .from("blogs")
+            .select(`
+              *,
+              blog_post_tags (
+                blog_tags (
+                  id,
+                  name,
+                  slug
+                )
+              ),
+              author_details:hr_users (
+                name,
+                username
+              )
+            `)
+            .eq("id", blogId)
+            .single();
+
+          if (error) throw error;
+
+          if (data) {
+            console.log('Received blog data:', data);
+            // Only update form data if we're in edit mode and the form is empty or we have a different blog
+            if (isEditing && (!formData.article_name || formData.id !== data.id)) {
+              handleEdit(data);
+              // Set selected tags from blog_post_tags
+              const tagNames = data.blog_post_tags?.map(pt => pt.blog_tags?.name).filter(Boolean) || [];
+              setSelectedTags(tagNames);
+              
+              // Set image source if there's an image
+              if (data.article_image) {
+                setImageSource("library");
+                setUploadedImage(data.article_image);
+              }
+
+              // Set focus keyword if it exists
+              if (data.focus_keyword) {
+                setFormData(prev => ({
+                  ...prev,
+                  focus_keyword: data.focus_keyword
+                }));
+              }
+              setCurrentBlogId(data.id);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching blog data:", error);
+          toast.error("Failed to load blog data");
+        } finally {
+          setIsLoadingBlog(false);
+        }
+      };
+
+      fetchBlogData();
+    }
+  }, [blogId, handleEdit, isEditing, formData.article_name, formData.id, currentBlogId]);
 
   // Reset form when showForm changes
   useEffect(() => {
@@ -75,81 +146,48 @@ export default function BlogForm({
         content: "",
         publish_option: "draft",
         scheduled_date: null,
+        focus_keyword: "",
       });
       setEditorContent("");
       setImageSource("upload");
       setUploadedImage(null);
       setSelectedTags([]);
+      setCurrentBlogId(null);
+    } else if (!blogId) {
+      // Reset form when opening modal for new post
+      setFormData({
+        id: null,
+        article_name: "",
+        article_body: "",
+        category_id: null,
+        tag_ids: [],
+        article_image: "",
+        meta_title: "",
+        meta_description: "",
+        meta_keywords: "",
+        slug: "",
+        is_published: false,
+        is_draft: true,
+        publish_date: null,
+        author: "",
+        title: "",
+        description: "",
+        keywords: [],
+        featured_image_url: "",
+        featured_image_upload: null,
+        featured_image_library: null,
+        content: "",
+        publish_option: "draft",
+        scheduled_date: null,
+        focus_keyword: "",
+      });
+      setEditorContent("");
+      setImageSource("upload");
+      setUploadedImage(null);
+      setSelectedTags([]);
+      setCurrentBlogId(null);
     }
-  }, [showForm]);
-
-  // Load blog data when blogId changes
-  useEffect(() => {
-    if (blogId) {
-      console.log("Fetching blog data for ID:", blogId);
-      const fetchBlogData = async () => {
-        try {
-          const { data: blogData, error: blogError } = await supabase
-            .from("blogs")
-            .select(`
-              *,
-              author_details:hr_users(name, username),
-              blog_post_tags(
-                tag:blog_tags(
-                  id,
-                  name,
-                  slug
-                )
-              )
-            `)
-            .eq("id", blogId)
-            .single();
-
-          if (blogError) throw blogError;
-
-          let categoryData = null;
-          if (blogData.category_id) {
-            const { data: catData, error: catError } = await supabase
-              .from("blog_categories")
-              .select("*")
-              .eq("id", blogData.category_id)
-              .single();
-
-            if (!catError) {
-              categoryData = catData;
-            }
-          }
-
-          const transformedData = {
-            ...blogData,
-            category: categoryData,
-            tags: blogData.blog_post_tags?.map(pt => ({
-              tag: {
-                id: pt.tag.id,
-                name: pt.tag.name,
-              },
-            })) || [],
-            featured_image_url: blogData.article_image || "",
-            featured_image_library: blogData.article_image || "",
-            featured_image_upload: "",
-            author: blogData.author_details?.name || blogData.author_details?.username || "PAAN Admin",
-            tag_ids: blogData.blog_post_tags?.map(pt => pt.tag.id) || []
-          };
-
-          console.log("Fetched blog data:", transformedData);
-          handleEdit(transformedData);
-          setSelectedTags(blogData.blog_post_tags?.map(pt => pt.tag.name) || []);
-        } catch (error) {
-          console.error("Error fetching blog data:", error);
-          toast.error("Failed to load blog data");
-        }
-      };
-
-      fetchBlogData();
-    }
-  }, [blogId]);
-
-  const isEditing = Boolean(blogId);
+  }, [showForm, blogId, setFormData, setEditorContent]);
 
   const handleTagSelect = (e) => {
     // Handle both event objects and direct tag names
@@ -185,7 +223,8 @@ export default function BlogForm({
     e.preventDefault();
     e.stopPropagation();
     try {
-      console.log("BlogForm onSubmit - Initial formData:", formData);
+      console.log("BlogForm onSubmit - Starting submission");
+      console.log("Initial formData:", formData);
 
       // Construct updated formData with the correct image URL and editor content
       const imageUrl =
@@ -203,15 +242,65 @@ export default function BlogForm({
             : formData.featured_image_library,
         article_body: editorContent || formData.article_body || "",
         content: editorContent || formData.content || "",
+        article_tags: JSON.stringify(selectedTags),
+        focus_keyword: formData.focus_keyword || "",
       };
 
-      console.log("BlogForm onSubmit - Updated formData:", updatedFormData);
+      console.log("Updated formData:", updatedFormData);
 
       // Pass updatedFormData to handleSubmit
+      console.log("Calling handleSubmit...");
       const success = await handleSubmit(e, updatedFormData);
-      if (success && typeof fetchBlogs === "function") {
-        await fetchBlogs();
+      console.log("handleSubmit result:", success);
+
+      if (success) {
+        console.log("Submission successful, showing success toast");
+        toast.success(blogId ? "Blog post updated successfully!" : "Blog post created successfully!");
+        
+        if (typeof fetchBlogs === "function") {
+          console.log("Fetching updated blogs...");
+          await fetchBlogs();
+          console.log("Blogs fetched successfully");
+        }
+
+        console.log("Attempting to close modal...");
         handleCancel();
+        console.log("handleCancel called");
+
+        console.log("Resetting form state...");
+        setFormData({
+          id: null,
+          article_name: "",
+          article_body: "",
+          category_id: null,
+          tag_ids: [],
+          article_image: "",
+          meta_title: "",
+          meta_description: "",
+          meta_keywords: "",
+          slug: "",
+          is_published: false,
+          is_draft: true,
+          publish_date: null,
+          author: "",
+          title: "",
+          description: "",
+          keywords: [],
+          featured_image_url: "",
+          featured_image_upload: null,
+          featured_image_library: null,
+          content: "",
+          publish_option: "draft",
+          scheduled_date: null,
+          focus_keyword: "",
+        });
+        setEditorContent("");
+        setImageSource("upload");
+        setUploadedImage(null);
+        setSelectedTags([]);
+        console.log("Form state reset complete");
+
+        console.log("Redirecting to blogs page...");
         router.push("/admin/blogs");
       }
     } catch (error) {
@@ -381,133 +470,72 @@ export default function BlogForm({
         mode={mode}
         width="max-w-5xl"
       >
-        <form
-          onSubmit={onSubmit}
-          className="space-y-6"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <BlogFormFields
-            mode={mode}
-            formData={formData}
-            handleInputChange={handleInputChange}
-            categories={categories}
-            tags={tags}
-            selectedTags={selectedTags}
-            handleTagSelect={handleTagSelect}
-            handleTagRemove={handleTagRemove}
-            editorContent={editorContent}
-            setEditorContent={setEditorContent}
-            onAddCategory={() => setShowAddCategory(true)}
-            onAddTag={() => setShowAddTag(true)}
-          />
+        {loading || isLoadingBlog ? (
+          <div className="flex items-center justify-center p-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          </div>
+        ) : (
+          <form
+            onSubmit={onSubmit}
+            className="space-y-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <BlogFormFields
+              mode={mode}
+              formData={formData}
+              handleInputChange={handleInputChange}
+              categories={categories}
+              tags={tags}
+              selectedTags={selectedTags}
+              handleTagSelect={handleTagSelect}
+              handleTagRemove={handleTagRemove}
+              editorContent={editorContent}
+              setEditorContent={setEditorContent}
+              onAddCategory={() => setShowAddCategory(true)}
+              onAddTag={() => setShowAddTag(true)}
+            />
 
-          {/* Featured Image */}
-          <div>
-            <label
-              className={`block text-sm font-bold mb-2 ${
-                mode === "dark" ? "text-gray-300" : "text-gray-700"
-              }`}
-            >
-              Featured Image
-            </label>
-            <div className="space-y-4">
-              <div className="flex items-center space-x-4">
-                <button
-                  type="button"
-                  onClick={() => setImageSource("upload")}
-                  className={`flex-1 px-4 py-2 rounded-xl border ${
-                    imageSource === "upload"
-                      ? mode === "dark"
-                        ? "bg-blue-900/30 border-blue-700"
-                        : "bg-blue-50 border-blue-200"
-                      : mode === "dark"
-                      ? "bg-gray-800 border-gray-700"
-                      : "bg-white border-gray-200"
-                  }`}
-                >
-                  Upload Image
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setImageSource("url")}
-                  className={`flex-1 px-4 py-2 rounded-xl border ${
-                    imageSource === "url"
-                      ? mode === "dark"
-                        ? "bg-blue-900/30 border-blue-700"
-                        : "bg-blue-50 border-blue-200"
-                      : mode === "dark"
-                      ? "bg-gray-800 border-gray-700"
-                      : "bg-white border-gray-200"
-                  }`}
-                >
-                  External URL
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setShowImageLibrary(true);
-                  }}
-                  className={`flex-1 px-4 py-2 rounded-xl border ${
-                    imageSource === "library"
-                      ? mode === "dark"
-                        ? "bg-blue-900/30 border-blue-700"
-                        : "bg-blue-50 border-blue-200"
-                      : mode === "dark"
-                      ? "bg-gray-800 border-gray-700"
-                      : "bg-white border-gray-200"
-                  }`}
-                >
-                  Media Library
-                </button>
-              </div>
-
-              {imageSource === "upload" && (
-                <div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => {
-                      const file = e.target.files[0];
-                      handleImageUpload(file);
-                    }}
-                    className="hidden"
-                    ref={fileInputRef}
-                  />
+            {/* Featured Image */}
+            <div>
+              <label
+                className={`block text-sm font-bold mb-2 ${
+                  mode === "dark" ? "text-gray-300" : "text-gray-700"
+                }`}
+              >
+                Featured Image
+              </label>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-4">
                   <button
                     type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className={`w-full px-4 py-2 rounded-xl border ${
-                      mode === "dark"
-                        ? "bg-gray-800 border-gray-700 text-gray-100"
-                        : "bg-white border-gray-300 text-gray-900"
+                    onClick={() => setImageSource("upload")}
+                    className={`flex-1 px-4 py-2 rounded-xl border ${
+                      imageSource === "upload"
+                        ? mode === "dark"
+                          ? "bg-blue-900/30 border-blue-700"
+                          : "bg-blue-50 border-blue-200"
+                        : mode === "dark"
+                        ? "bg-gray-800 border-gray-700"
+                        : "bg-white border-gray-200"
                     }`}
                   >
-                    Choose File
+                    Upload Image
                   </button>
-                </div>
-              )}
-
-              {imageSource === "url" && (
-                <div>
-                  <input
-                    type="text"
-                    name="featured_image_url"
-                    value={formData.featured_image_url || ""}
-                    onChange={handleInputChange}
-                    className={`w-full px-4 py-2 rounded-xl border ${
-                      mode === "dark"
-                        ? "bg-gray-800 border-gray-700 text-gray-100"
-                        : "bg-white border-gray-300 text-gray-900"
-                    } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-                    placeholder="Enter image URL"
-                  />
-                </div>
-              )}
-
-              {imageSource === "library" && (
-                <div>
+                  <button
+                    type="button"
+                    onClick={() => setImageSource("url")}
+                    className={`flex-1 px-4 py-2 rounded-xl border ${
+                      imageSource === "url"
+                        ? mode === "dark"
+                          ? "bg-blue-900/30 border-blue-700"
+                          : "bg-blue-50 border-blue-200"
+                        : mode === "dark"
+                        ? "bg-gray-800 border-gray-700"
+                        : "bg-white border-gray-200"
+                    }`}
+                  >
+                    External URL
+                  </button>
                   <button
                     type="button"
                     onClick={(e) => {
@@ -515,66 +543,133 @@ export default function BlogForm({
                       e.stopPropagation();
                       setShowImageLibrary(true);
                     }}
-                    className={`w-full px-4 py-2 rounded-xl border ${
-                      mode === "dark"
-                        ? "bg-gray-800 border-gray-700 text-gray-100"
-                        : "bg-white border-gray-300 text-gray-900"
+                    className={`flex-1 px-4 py-2 rounded-xl border ${
+                      imageSource === "library"
+                        ? mode === "dark"
+                          ? "bg-blue-900/30 border-blue-700"
+                          : "bg-blue-50 border-blue-200"
+                        : mode === "dark"
+                        ? "bg-gray-800 border-gray-700"
+                        : "bg-white border-gray-200"
                     }`}
                   >
-                    Browse Library
+                    Media Library
                   </button>
                 </div>
-              )}
 
-              {formData.featured_image_url && (
-                <div className="relative aspect-video rounded-xl overflow-hidden">
-                  <Image
-                    src={formData.featured_image_url}
-                    alt="Featured"
-                    fill
-                    className="object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    className="absolute top-2 right-2 p-1 rounded-full bg-red-500 text-white hover:bg-red-600"
-                  >
-                    <Icon icon="heroicons:x-mark" className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
+                {imageSource === "upload" && (
+                  <div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        handleImageUpload(file);
+                      }}
+                      className="hidden"
+                      ref={fileInputRef}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className={`w-full px-4 py-2 rounded-xl border ${
+                        mode === "dark"
+                          ? "bg-gray-800 border-gray-700 text-gray-100"
+                          : "bg-white border-gray-300 text-gray-900"
+                      }`}
+                    >
+                      Choose File
+                    </button>
+                  </div>
+                )}
+
+                {imageSource === "url" && (
+                  <div>
+                    <input
+                      type="text"
+                      name="featured_image_url"
+                      value={formData.featured_image_url || ""}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-2 rounded-xl border ${
+                        mode === "dark"
+                          ? "bg-gray-800 border-gray-700 text-gray-100"
+                          : "bg-white border-gray-300 text-gray-900"
+                      } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                      placeholder="Enter image URL"
+                    />
+                  </div>
+                )}
+
+                {imageSource === "library" && (
+                  <div>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setShowImageLibrary(true);
+                      }}
+                      className={`w-full px-4 py-2 rounded-xl border ${
+                        mode === "dark"
+                          ? "bg-gray-800 border-gray-700 text-gray-100"
+                          : "bg-white border-gray-300 text-gray-900"
+                      }`}
+                    >
+                      Browse Library
+                    </button>
+                  </div>
+                )}
+
+                {formData.featured_image_url && (
+                  <div className="relative aspect-video rounded-xl overflow-hidden">
+                    <Image
+                      src={formData.featured_image_url}
+                      alt="Featured"
+                      fill
+                      className="object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute top-2 right-2 p-1 rounded-full bg-red-500 text-white hover:bg-red-600"
+                    >
+                      <Icon icon="heroicons:x-mark" className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
 
-          <div className="flex justify-end gap-4">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                handleCancel();
-              }}
-              className={`px-6 py-3 rounded-xl ${
-                mode === "dark"
-                  ? "bg-gray-800 text-white hover:bg-gray-700"
-                  : "bg-gray-100 text-gray-900 hover:bg-gray-200"
-              }`}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className={`px-6 py-3 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              {loading
-                ? "Saving..."
-                : isEditing
-                ? "Update Blog"
-                : "Create Blog"}
-            </button>
-          </div>
-        </form>
+            <div className="flex justify-end gap-4 sticky bottom-0 ">
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleCancel();
+                }}
+                className={`px-6 py-3 rounded-xl ${
+                  mode === "dark"
+                    ? "bg-gray-800 text-white hover:bg-gray-700"
+                    : "bg-gray-100 text-gray-900 hover:bg-gray-200"
+                }`}
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className={`px-6 py-3 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                {loading
+                  ? "Saving..."
+                  : isEditing
+                  ? "Update Blog"
+                  : "Create Blog"}
+              </button>
+            </div>
+          </form>
+        )}
       </ItemActionModal>
 
       {/* Add Category Modal */}

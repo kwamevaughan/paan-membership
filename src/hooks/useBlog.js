@@ -1,5 +1,5 @@
 // useBlog.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import toast from "react-hot-toast";
 
@@ -119,7 +119,8 @@ export const useBlog = (blogId) => {
           category:blog_categories(name),
           tags:blog_post_tags(
             tag:blog_tags(name)
-          )
+          ),
+          author_details:hr_users(name, username)
         `
         )
         .order("created_at", { ascending: false });
@@ -130,6 +131,7 @@ export const useBlog = (blogId) => {
         ...blog,
         article_category: blog.category?.name || null,
         article_tags: blog.tags?.map((t) => t.tag.name) || [],
+        author_name: blog.author_details?.name || blog.author_details?.username || 'Unknown'
       }));
 
       setBlogs(transformedData || []);
@@ -158,8 +160,10 @@ export const useBlog = (blogId) => {
       );
     }
 
-    if (filters.tags.length > 0) {
+    if (filters.tags && Array.isArray(filters.tags) && filters.tags.length > 0) {
       filtered = filtered.filter((blog) =>
+        blog.article_tags && 
+        Array.isArray(blog.article_tags) && 
         filters.tags.some((tag) => blog.article_tags.includes(tag))
       );
     }
@@ -182,31 +186,28 @@ export const useBlog = (blogId) => {
       });
     }
 
-    switch (filters.sort) {
-      case "newest":
-        filtered.sort(
-          (a, b) => new Date(b.created_at) - new Date(a.created_at)
-        );
-        break;
-      case "oldest":
-        filtered.sort(
-          (a, b) => new Date(a.created_at) - new Date(b.created_at)
-        );
-        break;
-      case "az":
-        filtered.sort((a, b) => a.article_name.localeCompare(b.article_name));
-        break;
-      case "za":
-        filtered.sort((a, b) => b.article_name.localeCompare(a.article_name));
-        break;
-      case "category":
-        filtered.sort((a, b) => (a.article_category || "").localeCompare(b.article_category || ""));
-        break;
-      default:
-        break;
-    }
+    // Apply sorting
+    const sortValue = filters.sort || "newest";
 
-    setFilteredBlogs(filtered);
+    // Create a new array for sorting to avoid mutating the original
+    const sortedBlogs = [...filtered].sort((a, b) => {
+      switch (sortValue) {
+        case "newest":
+          return new Date(b.created_at) - new Date(a.created_at);
+        case "oldest":
+          return new Date(a.created_at) - new Date(b.created_at);
+        case "az":
+          return (a.article_name || "").toLowerCase().localeCompare((b.article_name || "").toLowerCase());
+        case "za":
+          return (b.article_name || "").toLowerCase().localeCompare((a.article_name || "").toLowerCase());
+        case "category":
+          return (a.article_category || "").toLowerCase().localeCompare((b.article_category || "").toLowerCase());
+        default:
+          return new Date(b.created_at) - new Date(a.created_at);
+      }
+    });
+
+    setFilteredBlogs(sortedBlogs);
   }, [blogs, filters]);
 
   const handleInputChange = (e) => {
@@ -268,6 +269,7 @@ export const useBlog = (blogId) => {
         throw new Error("Not authenticated");
       }
 
+      console.log('useBlog handleSubmit called with data:', updatedFormData);
       
       const dataToUse = updatedFormData || formData;
 
@@ -297,8 +299,6 @@ export const useBlog = (blogId) => {
         ...rest
       } = dataToUse;
 
-      
-
       const is_published = publish_option === "publish";
       const is_draft = publish_option === "draft";
       const publish_date =
@@ -312,21 +312,14 @@ export const useBlog = (blogId) => {
         }
       }
 
-      // Updated image URL selection logic
       let finalImageUrl = "";
       if (featured_image_url && featured_image_url.startsWith('http')) {
-        // If it's an external URL, use it directly
         finalImageUrl = featured_image_url;
       } else {
-        // Otherwise, use the uploaded or library image
         finalImageUrl = featured_image_upload || featured_image_library || article_image || "";
       }
-      
 
-      // Ensure meta_keywords are properly handled
       const finalMetaKeywords = meta_keywords || (keywords ? keywords.join(", ") : "");
-
-      // Get the final content from editor or form data
       const finalContent = editorContent || content || article_body || "";
 
       const blogToUpsert = {
@@ -350,14 +343,13 @@ export const useBlog = (blogId) => {
         created_at: id ? undefined : new Date().toISOString(),
       };
 
-      // Remove any undefined or null values
       Object.keys(blogToUpsert).forEach((key) => {
         if (blogToUpsert[key] === undefined || blogToUpsert[key] === null) {
           delete blogToUpsert[key];
         }
       });
 
-      
+      console.log('Attempting to upsert blog:', blogToUpsert);
 
       const { data: blog, error: blogError } = await supabase
         .from("blogs")
@@ -366,6 +358,8 @@ export const useBlog = (blogId) => {
         .single();
 
       if (blogError) throw blogError;
+
+      console.log('Blog upsert successful:', blog);
 
       // Delete existing tags for this blog
       const { error: deleteTagsError } = await supabase
@@ -389,17 +383,13 @@ export const useBlog = (blogId) => {
         if (tagError) throw tagError;
       }
 
-      toast.success(
-        formData.id
-          ? "Blog post updated successfully"
-          : "Blog post created successfully"
-      );
       await fetchBlogs();
-      return true;
+      console.log('Blog operation completed successfully');
+      return true; // Explicitly return true on success
     } catch (error) {
       console.error("Error saving blog:", error);
       toast.error("Failed to save blog post");
-      return false;
+      return false; // Return false on error
     } finally {
       setLoading(false);
     }
@@ -433,46 +423,34 @@ export const useBlog = (blogId) => {
   };
 
   const handleEdit = (blog) => {
+    if (!blog) return;
 
-    // Get article tags from blog_post_tags if available
-    const articleTags = blog.blog_post_tags?.map(t => t.tag.name) || [];
-
-    // Parse meta_keywords into an array if it exists
-    const keywordsArray = blog.meta_keywords 
-      ? blog.meta_keywords.split(',').map(k => k.trim()).filter(k => k)
-      : [];
-
-    // Format the publish_date to datetime-local input format if it exists
-    const formattedPublishDate = blog.publish_date 
-      ? new Date(blog.publish_date).toISOString().slice(0, 16)
-      : null;
-
+    // Transform the blog data to match the form structure
     const transformedData = {
-      ...blog,
-      category_id: blog.category_id,
-      tag_ids: blog.tags?.map((t) => t.tag.id) || [],
-      article_tags: articleTags,
-      author: blog.author || hrUser?.name || hrUser?.username || "PAAN Admin",
-      publish_option: blog.is_published
-        ? "publish"
-        : blog.publish_date
-        ? "schedule"
-        : "draft",
-      scheduled_date: formattedPublishDate,
-      publish_date: formattedPublishDate,
-      title: blog.meta_title || "",
-      description: blog.meta_description || "",
-      keywords: keywordsArray,
-      meta_keywords: blog.meta_keywords || "",
-      article_image: blog.article_image || "",
-      featured_image_url: blog.article_image || "",
-      featured_image_upload: "",
-      featured_image_library: blog.article_image || "",
-      content: blog.article_body || "",
+      id: blog.id,
+      article_name: blog.article_name || "",
       article_body: blog.article_body || "",
-      focus_keyword: blog.focus_keyword || "",
+      category_id: blog.category_id || null,
+      tag_ids: blog.blog_post_tags?.map(pt => pt.blog_tags?.id) || [],
+      article_image: blog.article_image || "",
+      meta_title: blog.meta_title || "",
+      meta_description: blog.meta_description || "",
+      meta_keywords: blog.meta_keywords || "",
+      slug: blog.slug || "",
+      is_published: blog.is_published || false,
+      is_draft: blog.is_draft || true,
+      publish_date: blog.publish_date || null,
+      author: blog.author_details?.name || blog.author_details?.username || "PAAN Admin",
+      title: blog.article_name || "",
+      description: blog.meta_description || "",
+      keywords: blog.meta_keywords ? blog.meta_keywords.split(",").map(k => k.trim()) : [],
+      featured_image_url: blog.article_image || "",
+      featured_image_upload: null,
+      featured_image_library: blog.article_image || null,
+      content: blog.article_body || "",
+      publish_option: blog.is_published ? "publish" : "draft",
+      scheduled_date: blog.publish_date || null,
     };
-
 
     setFormData(transformedData);
     setEditorContent(blog.article_body || "");

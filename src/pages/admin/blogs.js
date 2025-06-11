@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
 import toast, { Toaster } from "react-hot-toast";
 import { Icon } from "@iconify/react";
@@ -9,15 +9,13 @@ import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useBlog } from "@/hooks/useBlog";
 import SimpleFooter from "@/layouts/simpleFooter";
-import BlogForm from "@/components/BlogForm";
+import BlogForm from "@/components/blog/BlogForm";
 import BlogGrid from "@/components/blog/BlogGrid";
-import AdvancedFilters from "@/components/AdvancedFilters";
 import ItemActionModal from "@/components/ItemActionModal";
-import useModals from "@/hooks/useModals";
 import { getAdminBlogProps } from "utils/getPropsUtils";
-import { debounce } from "lodash";
-import { motion } from "framer-motion";
-import { filterAndSortBlogs } from "@/../utils/blogUtils";
+import PageHeader from "@/components/common/PageHeader";
+import BlogFilters from "@/components/filters/BlogFilters";
+import BaseFilters from "@/components/filters/BaseFilters";
 
 export default function AdminBlog({
   mode = "light",
@@ -30,15 +28,16 @@ export default function AdminBlog({
 }) {
   const [showForm, setShowForm] = useState(false);
   const [viewMode, setViewMode] = useState("grid");
-  const [page, setPage] = useState(1);
-  const [showFilters, setShowFilters] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [filterTerm, setFilterTerm] = useState("");
-  const [sortOrder, setSortOrder] = useState("newest");
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedTags, setSelectedTags] = useState([]);
-  const [selectedStatus, setSelectedStatus] = useState("");
-  const [selectedIds, setSelectedIds] = useState([]);
-  const [editingBlogId, setEditingBlogId] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState("All");
+  const [selectedAuthor, setSelectedAuthor] = useState("All");
+  const [selectedDateRange, setSelectedDateRange] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
+  const [sortOrder, setSortOrder] = useState("newest");
   const itemsPerPage = 12;
   useAuthSession();
 
@@ -75,19 +74,179 @@ export default function AdminBlog({
     setEditorContent,
   } = useBlog();
 
-  const {
-    isModalOpen,
-    isUsersModalOpen,
-    isDeleteModalOpen,
-    selectedItemId,
-    isEditing,
-    editingId,
-    itemToDelete,
-    modalActions,
-  } = useModals({
-    handleEdit,
-    handleSubmit,
-    resetForm: () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [itemToDelete, setItemToDelete] = useState(null);
+
+  // Extract unique authors and create date ranges
+  const blogFilterOptions = useMemo(() => {
+    const authors = [...new Set(blogs.map(blog => blog.author_details?.name || blog.author_details?.username || 'Unknown'))];
+    const dateRanges = [
+      { label: 'Last 7 days', value: '7days' },
+      { label: 'Last 30 days', value: '30days' },
+      { label: 'Last 90 days', value: '90days' },
+      { label: 'This year', value: 'year' }
+    ];
+    const statuses = [
+      { label: 'Published', value: 'published' },
+      { label: 'Draft', value: 'draft' },
+      { label: 'Scheduled', value: 'scheduled' }
+    ];
+
+    return {
+      authors,
+      dateRanges,
+      statuses
+    };
+  }, [blogs]);
+
+  const resetFilters = useCallback(() => {
+    setSelectedCategory("All");
+    setSelectedTags([]);
+    setFilterTerm("");
+    setSelectedStatus("All");
+    setSelectedAuthor("All");
+    setSelectedDateRange("All");
+    updateFilters({
+      category: "All",
+      tags: [],
+      search: "",
+      status: "All",
+      author: "All",
+      dateRange: "All"
+    });
+  }, [updateFilters]);
+
+  const isInitialMount = useRef(true);
+  const filterUpdateTimeout = useRef(null);
+
+  // Update filters when selections change
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    const newFilters = {
+      category: selectedCategory,
+      tags: selectedTags,
+      search: filterTerm,
+      status: selectedStatus,
+      author: selectedAuthor,
+      dateRange: selectedDateRange,
+      sort: sortOrder
+    };
+
+    // For sorting, update immediately
+    if (filters.sort !== sortOrder) {
+      updateFilters(newFilters);
+      return;
+    }
+
+    // For other filters, use debounce
+    if (filterUpdateTimeout.current) {
+      clearTimeout(filterUpdateTimeout.current);
+    }
+    
+    filterUpdateTimeout.current = setTimeout(() => {
+      updateFilters(newFilters);
+    }, 300);
+
+    return () => {
+      if (filterUpdateTimeout.current) {
+        clearTimeout(filterUpdateTimeout.current);
+      }
+    };
+  }, [selectedCategory, selectedTags, filterTerm, selectedStatus, selectedAuthor, selectedDateRange, sortOrder, updateFilters, filters.sort]);
+
+  const handleCreateBlog = useCallback(() => {
+    console.log('handleCreateBlog called');
+    setSelectedIds([]);
+    
+    // Reset form data first
+    setFormData({
+      id: null,
+      article_name: "",
+      article_body: "",
+      category_id: null,
+      tag_ids: [],
+      article_image: "",
+      meta_title: "",
+      meta_description: "",
+      meta_keywords: "",
+      slug: "",
+      is_published: false,
+      is_draft: true,
+      publish_date: null,
+      author: "",
+      title: "",
+      description: "",
+      keywords: [],
+      featured_image_url: "",
+      featured_image_upload: null,
+      featured_image_library: null,
+      content: "",
+      publish_option: "draft",
+      scheduled_date: null,
+    });
+
+    // Then open modal for new post
+    setIsEditing(false);
+    setEditingId(null);
+    setIsModalOpen(true);
+    console.log('Modal state after create:', { isModalOpen: true, isEditing: false });
+  }, [setFormData]);
+
+  const handleEditClick = useCallback((blog) => {
+    console.log('handleEditClick called with blog:', blog);
+    setSelectedIds([]);
+    
+    // Reset form data first
+    setFormData({
+      id: null,
+      article_name: "",
+      article_body: "",
+      category_id: null,
+      tag_ids: [],
+      article_image: "",
+      meta_title: "",
+      meta_description: "",
+      meta_keywords: "",
+      slug: "",
+      is_published: false,
+      is_draft: true,
+      publish_date: null,
+      author: "",
+      title: "",
+      description: "",
+      keywords: [],
+      featured_image_url: "",
+      featured_image_upload: null,
+      featured_image_library: null,
+      content: "",
+      publish_option: "draft",
+      scheduled_date: null,
+    });
+
+    // Then set editing state and load new data
+    setIsEditing(true);
+    setEditingId(blog.id);
+    handleEdit(blog);
+    setIsModalOpen(true);
+    console.log('Modal state after edit:', { isModalOpen: true, isEditing: true, editingId: blog.id });
+  }, [handleEdit, setFormData]);
+
+  const handleCancel = useCallback(() => {
+    console.log('handleCancel called in parent');
+    setIsModalOpen(false);
+    setSelectedIds([]);
+    // Reset form after modal closes
+    setTimeout(() => {
+      console.log('handleCancel timeout executing in parent');
+      setIsEditing(false);
+      setEditingId(null);
       handleEdit({
         id: null,
         article_name: "",
@@ -101,141 +260,118 @@ export default function AdminBlog({
         slug: "",
         is_published: false,
       });
-    },
-  });
+      console.log('Modal state after cancel:', { isModalOpen: false, isEditing: false, editingId: null });
+    }, 50);
+  }, [handleEdit]);
 
-  const router = useRouter();
-
-  const resetFilters = () => {
-    setSelectedCategory("All");
-    setSelectedTags([]);
-    setFilterTerm("");
-    setSortOrder("newest");
-    updateFilters({
-      category: "All",
-      tags: [],
-      search: "",
-    });
-  };
-
-  const isInitialMount = useRef(true);
-  const filterUpdateTimeout = useRef(null);
-
-  // Optimized filter update with debounce
-  const debouncedFilterUpdate = useCallback(
-    (filters) => {
-      if (filterUpdateTimeout.current) {
-        clearTimeout(filterUpdateTimeout.current);
-      }
-      
-      filterUpdateTimeout.current = setTimeout(() => {
-        updateFilters(filters);
-      }, 300);
-    },
-    [updateFilters]
-  );
-
-  // Update filters when selections change
+  // Add effect to monitor modal state
   useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
+    console.log('Modal state changed:', { isModalOpen, isEditing, editingId });
+  }, [isModalOpen, isEditing, editingId]);
 
-    const newFilters = {
-      category: selectedCategory,
-      tags: selectedTags,
-      search: filterTerm,
-    };
-    debouncedFilterUpdate(newFilters);
-
-    return () => {
-      if (filterUpdateTimeout.current) {
-        clearTimeout(filterUpdateTimeout.current);
-      }
-    };
-  }, [selectedCategory, selectedTags, filterTerm, debouncedFilterUpdate]);
-
-  const handleCreateBlog = () => {
-    console.log('handleCreateBlog called');
-    setEditingBlogId(null);
-    setShowForm(true);
-  };
-
-  const handleEditClick = async (blog) => {
-    console.log('handleEditClick called with blog:', blog);
-    setEditingBlogId(blog.id);
-    setShowForm(true);
-  };
-
-  const handleCancel = () => {
-    console.log('handleCancel called');
-    setShowForm(false);
-    setEditingBlogId(null);
-  };
-
-  const handleFormSubmit = async (e, updatedFormData) => {
-    console.log("handleFormSubmit called with formData:", updatedFormData);
+  const handleFormSubmit = useCallback(async (e, updatedFormData) => {
     e.preventDefault();
-    const success = await handleSubmit(e, updatedFormData);
-    if (success) {
-      await fetchBlogs();
-      setShowForm(false);
-      setEditingBlogId(null);
-      setFormData({
-        id: null,
-        article_name: "",
-        article_body: "",
-        category_id: null,
-        tag_ids: [],
-        article_image: "",
-        meta_title: "",
-        meta_description: "",
-        meta_keywords: "",
-        slug: "",
-        is_published: false,
-        is_draft: true,
-        publish_date: null,
-        author: "",
-        title: "",
-        description: "",
-        keywords: [],
-        featured_image_url: "",
-        featured_image_upload: null,
-        featured_image_library: null,
-        content: "",
-        publish_option: "draft",
-        scheduled_date: null,
-      });
+    try {
+      console.log('handleFormSubmit called with data:', updatedFormData);
+      const success = await handleSubmit(e, updatedFormData);
+      console.log('handleSubmit returned:', success);
+      
+      if (success) {
+        await fetchBlogs();
+        setFormData({
+          id: null,
+          article_name: "",
+          article_body: "",
+          category_id: null,
+          tag_ids: [],
+          article_image: "",
+          meta_title: "",
+          meta_description: "",
+          meta_keywords: "",
+          slug: "",
+          is_published: false,
+          is_draft: true,
+          publish_date: null,
+          author: "",
+          title: "",
+          description: "",
+          keywords: [],
+          featured_image_url: "",
+          featured_image_upload: null,
+          featured_image_library: null,
+          content: "",
+          publish_option: "draft",
+          scheduled_date: null,
+        });
+        return true; // Explicitly return true on success
+      }
+      return false; // Return false if not successful
+    } catch (error) {
+      console.error('Error in handleFormSubmit:', error);
+      return false;
     }
-  };
+  }, [handleSubmit, fetchBlogs, setFormData]);
 
-  const confirmDelete = () => {
+  const handleDeleteClick = useCallback((blog) => {
+    console.log('handleDeleteClick called with blog:', blog);
+    setItemToDelete(blog);
+    setIsDeleteModalOpen(true);
+  }, []);
+
+  const confirmDelete = useCallback(() => {
     if (itemToDelete) {
       handleDelete(itemToDelete.id);
-      modalActions.closeDeleteModal();
+      setIsDeleteModalOpen(false);
+      setItemToDelete(null);
     }
-  };
+  }, [itemToDelete, handleDelete]);
 
-  const loadMore = () => {
-    setPage(prev => prev + 1);
-  };
-
-  const handleDeleteClick = async (id) => {
-    const success = await handleDelete(id);
-    if (success) {
-      setSelectedIds(prev => prev.filter(selectedId => selectedId !== id));
+  const handleSelectAll = useCallback((selected) => {
+    if (selected) {
+      setSelectedIds(blogs.map((blog) => blog.id));
+    } else {
+      setSelectedIds([]);
     }
-  };
+  }, [blogs]);
 
-  const sortedBlogs = filterAndSortBlogs({
-    blogs,
-    filterTerm,
-    selectedCategory,
-    selectedTags,
-    selectedStatus,
-    sortOrder,
-  });
+  const handleSelect = useCallback((id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id)
+        ? prev.filter((blogId) => blogId !== id)
+        : [...prev, id]
+    );
+  }, []);
+
+  const handleViewModeChange = useCallback((newViewMode) => {
+    setViewMode(newViewMode);
+  }, []);
+
+  const filteredBlogs = useMemo(() => {
+    if (!blogs) return [];
+    
+    return blogs.filter((blog) => {
+      if (!blog) return false;
+      
+      // Search filter
+      const matchesSearch = !filterTerm || (
+        (blog.article_name && blog.article_name.toLowerCase().includes(filterTerm.toLowerCase())) ||
+        (blog.article_body && blog.article_body.toLowerCase().includes(filterTerm.toLowerCase()))
+      );
+
+      // Category filter
+      const matchesCategory = selectedCategory === "All" || blog.article_category === selectedCategory;
+
+      // Tags filter - ensure selectedTags is an array and handle empty case
+      const matchesTags = !selectedTags || selectedTags.length === 0 || (
+        blog.article_tags && 
+        Array.isArray(blog.article_tags) && 
+        Array.isArray(selectedTags) && 
+        selectedTags.some(tag => blog.article_tags.includes(tag))
+      );
+
+      return matchesSearch && matchesCategory && matchesTags;
+    });
+  }, [blogs, filterTerm, selectedCategory, selectedTags]);
 
   return (
     <div
@@ -304,72 +440,40 @@ export default function AdminBlog({
                   mode === "dark" ? "border-white/10" : "border-white/20"
                 } shadow-2xl group-hover:shadow-lg transition-all duration-500`}
               ></div>
-              <div className="relative p-8 rounded-2xl mb-10">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <h1 className="text-2xl font-bold">
-                        Blog
-                      </h1>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm text-gray-600 dark:text-gray-300 max-w-2xl">
-                        Manage blog posts, articles, and content. Create engaging content for your audience and track engagement.
-                      </p>
-                      <div className="flex items-center gap-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <Icon icon="heroicons:document-text" className="w-4 h-4 text-blue-500" />
-                          <span className="text-gray-600 dark:text-gray-300">
-                            {blogs.length} total posts
-                          </span>
-                        </div>
-                        {blogs.length > 0 && (
-                          <div className="flex items-center gap-2">
-                            <Icon icon="heroicons:clock" className="w-4 h-4 text-purple-500" />
-                            <span className="text-gray-600 dark:text-gray-300">
-                              Last published {new Date(blogs[0].created_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-6 md:mt-0 flex items-center gap-4">
-                    <button
-                      onClick={handleCreateBlog}
-                      className={`inline-flex items-center px-6 py-3 text-sm font-medium rounded-xl shadow-lg transition-all duration-300 transform hover:scale-105 focus:ring-2 focus:ring-offset-2 ${
-                        mode === "dark"
-                          ? "bg-gradient-to-r from-blue-400 to-blue-500 text-white hover:from-blue-600 hover:to-blue-600 focus:ring-blue-400 shadow-blue-500/20"
-                          : "bg-gradient-to-r from-blue-400 to-blue-700 text-white hover:from-blue-600 hover:to-blue-600 focus:ring-blue-500 shadow-blue-500/20"
-                      }`}
-                    >
-                      <Icon icon="heroicons:plus" className="w-5 h-5 mr-2" />
-                      New Post
-                    </button>
-                  </div>
-                </div>
-                <div
-                  className={`absolute top-2 right-2 w-12 sm:w-16 h-12 sm:h-16 opacity-10`}
-                >
-                  <div
-                    className={`w-full h-full rounded-full bg-gradient-to-br ${
-                      mode === "dark"
-                        ? "from-blue-400 to-blue-500"
-                        : "from-blue-400 to-blue-500"
-                    }`}
-                  ></div>
-                </div>
-                <div
-                  className={`absolute bottom-0 left-0 right-0 h-1 ${
-                    mode === "dark"
-                      ? "bg-gradient-to-r from-blue-400 via-blue-500 to-blue-500"
-                      : "bg-gradient-to-r from-[#3c82f6] to-[#dbe9fe]"
-                  }`}
-                ></div>
-                <div
-                  className={`absolute -bottom-1 -left-1 w-2 sm:w-3 h-2 sm:h-3 bg-[#f3584a] rounded-full opacity-40 animate-pulse delay-1000`}
-                ></div>
-              </div>
+              <PageHeader
+                title="Blog"
+                description="Manage blog posts, articles, and content. Create engaging content for your audience and track engagement."
+                mode={mode}
+                stats={[
+                  {
+                    icon: "heroicons:document-text",
+                    value: `${blogs.length} total posts`,
+                  },
+                  ...(blogs.length > 0
+                    ? [
+                        {
+                          icon: "heroicons:clock",
+                          value: `Last published ${new Date(
+                            blogs[0].created_at
+                          ).toLocaleDateString("en-US", {
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                          })}`,
+                          iconColor: "text-purple-500",
+                        },
+                      ]
+                    : []),
+                ]}
+                actions={[
+                  {
+                    label: "New Post",
+                    icon: "heroicons:plus",
+                    onClick: handleCreateBlog,
+                    variant: "primary",
+                  },
+                ]}
+              />
             </div>
 
             <div className="space-y-8">
@@ -391,76 +495,62 @@ export default function AdminBlog({
                   }`}
                 >
                   <div className="p-6">
-                    <AdvancedFilters
-                      type="blog"
+                    <BaseFilters
                       mode={mode}
                       loading={loading}
                       viewMode={viewMode}
-                      setViewMode={setViewMode}
+                      setViewMode={handleViewModeChange}
                       filterTerm={filterTerm}
-                      setFilterTerm={(value) => {
-                        setFilterTerm(value);
-                        updateFilters({ search: value });
-                      }}
+                      setFilterTerm={setFilterTerm}
                       sortOrder={sortOrder}
-                      setSortOrder={(value) => {
-                        setSortOrder(value);
-                        updateFilters({ sort: value });
-                      }}
+                      setSortOrder={setSortOrder}
                       showFilters={showFilters}
                       setShowFilters={setShowFilters}
-                      items={blogs}
-                      filteredItems={sortedBlogs}
-                      selectedCategory={selectedCategory}
-                      onCategoryChange={(value) => {
-                        setSelectedCategory(value);
-                        updateFilters({ category: value });
-                      }}
-                      categories={categories}
-                      selectedTags={selectedTags}
-                      onTagsChange={(value) => {
-                        setSelectedTags(value);
-                        updateFilters({ tags: value });
-                      }}
-                      tags={tags}
-                      selectedStatus={selectedStatus}
-                      onStatusChange={(value) => {
-                        setSelectedStatus(value);
-                        updateFilters({ status: value });
-                      }}
-                      onResetFilters={() => {
-                        setSelectedStatus("");
-                        setSelectedCategory("All");
-                        setSelectedTags([]);
-                        setFilterTerm("");
-                        setSortOrder("newest");
-                        updateFilters({
-                          status: "",
-                          category: "All",
-                          tags: [],
-                          search: "",
-                          sort: "newest"
-                        });
-                      }}
-                    />
+                      type="blog"
+                      items={blogs || []}
+                      filteredItems={filteredBlogs || []}
+                      onResetFilters={resetFilters}
+                    >
+                      <BlogFilters
+                        selectedCategory={selectedCategory}
+                        onCategoryChange={setSelectedCategory}
+                        selectedTags={selectedTags}
+                        onTagsChange={setSelectedTags}
+                        selectedStatus={selectedStatus}
+                        onStatusChange={setSelectedStatus}
+                        selectedAuthor={selectedAuthor}
+                        onAuthorChange={setSelectedAuthor}
+                        dateRange={selectedDateRange}
+                        onDateRangeChange={setSelectedDateRange}
+                        categories={categories.map(cat => cat.name)}
+                        tags={tags.map(tag => tag.name)}
+                        statuses={blogFilterOptions.statuses}
+                        authors={blogFilterOptions.authors}
+                        dateRanges={blogFilterOptions.dateRanges}
+                        mode={mode}
+                        loading={loading}
+                      />
+                    </BaseFilters>
 
                     <div className="mt-8">
                       <BlogGrid
-                        blogs={sortedBlogs}
+                        mode={mode}
+                        blogs={blogs}
                         loading={loading}
-                        selectedIds={selectedIds}
-                        setSelectedIds={setSelectedIds}
                         handleEditClick={handleEditClick}
                         handleDelete={handleDeleteClick}
-                        currentPage={page}
-                        setCurrentPage={setPage}
+                        currentPage={currentPage}
+                        setCurrentPage={setCurrentPage}
                         itemsPerPage={itemsPerPage}
                         viewMode={viewMode}
-                        setViewMode={setViewMode}
+                        setViewMode={handleViewModeChange}
                         filterTerm={filterTerm}
                         selectedCategory={selectedCategory}
                         selectedTags={selectedTags}
-                        mode={mode}
+                        selectedIds={selectedIds}
+                        onSelect={handleSelect}
+                        onSelectAll={handleSelectAll}
+                        isSelectable={true}
                       />
                     </div>
                   </div>
@@ -491,15 +581,15 @@ export default function AdminBlog({
         )}
 
         <BlogForm
-          showForm={showForm}
+          showForm={isModalOpen}
           mode={mode}
-          blogId={editingBlogId}
+          blogId={editingId}
           formData={formData}
           handleInputChange={handleInputChange}
           handleSubmit={handleFormSubmit}
           handleCancel={handleCancel}
           loading={loading}
-          isEditing={!!editingBlogId}
+          isEditing={isEditing}
           categories={categories}
           tags={tags}
           hrUser={hrUser}
@@ -509,7 +599,10 @@ export default function AdminBlog({
 
         <ItemActionModal
           isOpen={isDeleteModalOpen}
-          onClose={modalActions.closeDeleteModal}
+          onClose={() => {
+            setIsDeleteModalOpen(false);
+            setItemToDelete(null);
+          }}
           title="Confirm Deletion"
           mode={mode}
         >
@@ -529,7 +622,10 @@ export default function AdminBlog({
             </p>
             <div className="flex justify-end space-x-4">
               <button
-                onClick={modalActions.closeDeleteModal}
+                onClick={() => {
+                  setIsDeleteModalOpen(false);
+                  setItemToDelete(null);
+                }}
                 className={`px-6 py-3 text-sm font-medium rounded-xl border transition-all duration-200 flex items-center shadow-sm ${
                   mode === "dark"
                     ? "border-gray-600 text-gray-200 bg-gray-800 hover:bg-gray-700"

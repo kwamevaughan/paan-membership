@@ -8,24 +8,38 @@ export default function BlogCard({
   mode,
   handleEditClick,
   onDelete,
+  isSelected,
+  onSelect,
+  isSelectable = false,
 }) {
   const [isHovered, setIsHovered] = useState(false);
 
+  const handleEdit = (e) => {
+    e.stopPropagation();
+    if (handleEditClick) {
+      handleEditClick(blog);
+    }
+  };
+
+  const handleDelete = (e) => {
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete(blog);
+    }
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      className={`relative rounded-xl overflow-hidden shadow-lg border ${
+    <div
+      className={`relative flex flex-col h-full overflow-hidden ${
         mode === "dark"
           ? "bg-gray-900 border-gray-800"
           : "bg-white border-gray-200"
-      }`}
+      } rounded-2xl shadow-lg transition-all duration-300 hover:shadow-xl`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Image Container */}
-      <div className="relative h-48 w-full">
+      <div className="relative aspect-video">
         {blog.article_image ? (
           <Image
             src={blog.article_image}
@@ -50,18 +64,18 @@ export default function BlogCard({
       </div>
 
       {/* Content */}
-      <div className="p-6">
+      <div className="flex flex-col flex-1 p-6">
         <div className="flex items-center gap-2 mb-3">
           <span
-            className={`px-3 py-1 rounded-full text-xs font-medium ${
+            className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${
               mode === "dark"
                 ? "bg-blue-900/50 text-blue-300"
                 : "bg-blue-100 text-blue-700"
             }`}
           >
-            {blog.category?.name || "Uncategorized"}
+            {blog.article_category || "Uncategorized"}
           </span>
-          {blog.is_draft && (
+          {!blog.is_published && (
             <span
               className={`px-3 py-1 rounded-full text-xs font-medium ${
                 mode === "dark"
@@ -83,13 +97,22 @@ export default function BlogCard({
         </h3>
 
         <p
-          className={`text-sm mb-4 line-clamp-3 ${
+          className={`text-sm line-clamp-3 ${
             mode === "dark" ? "text-gray-400" : "text-gray-600"
           }`}
         >
           {blog.article_body?.replace(/<[^>]*>/g, "") || "No content"}
         </p>
+      </div>
 
+      {/* Footer with date and actions */}
+      <div
+        className={`mt-auto border-t ${
+          mode === "dark"
+            ? "bg-gray-800/50 border-gray-700"
+            : "bg-gray-50 border-gray-200"
+        } px-6 py-4`}
+      >
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Icon
@@ -99,24 +122,23 @@ export default function BlogCard({
               }`}
             />
             <span
-              className={`text-xs ${
+              className={`text-sm ${
                 mode === "dark" ? "text-gray-400" : "text-gray-500"
               }`}
             >
-              {new Date(blog.created_at).toLocaleDateString()}
+              Posted on {new Date(blog.created_at).toLocaleDateString()}
             </span>
           </div>
-
           <div className="flex items-center gap-2">
             <button
-              onClick={() => handleEditClick(blog)}
+              onClick={handleEdit}
               className={`p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition`}
               title="Edit blog"
             >
               <Icon icon="heroicons:pencil-square" className="w-4 h-4" />
             </button>
             <button
-              onClick={() => onDelete(blog)}
+              onClick={handleDelete}
               className={`p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition`}
               title="Delete blog"
             >
@@ -125,37 +147,6 @@ export default function BlogCard({
           </div>
         </div>
       </div>
-
-      {/* Hover Overlay */}
-      {isHovered && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className={`absolute inset-0 bg-gradient-to-t ${
-            mode === "dark"
-              ? "from-gray-900/90 to-gray-900/50"
-              : "from-white/90 to-white/50"
-          } backdrop-blur-sm flex items-end justify-end p-4`}
-        >
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => handleEditClick(blog)}
-              className={`p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition`}
-              title="Edit blog"
-            >
-              <Icon icon="heroicons:pencil-square" className="w-4 h-4" />
-            </button>
-            <button
-              onClick={() => onDelete(blog)}
-              className={`p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition`}
-              title="Delete blog"
-            >
-              <Icon icon="heroicons:trash" className="w-4 h-4" />
-            </button>
-          </div>
-        </motion.div>
-      )}
-    </motion.div>
+    </div>
   );
 } 

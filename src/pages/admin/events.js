@@ -8,20 +8,23 @@ import useSidebar from "@/hooks/useSidebar";
 import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useEvents } from "@/hooks/useEvents";
-import EventForm from "@/components/EventForm";
+import EventForm from "@/components/events/EventForm";
 import EventsGrid from "@/components/events/EventsGrid";
-import AdvancedFilters from "@/components/AdvancedFilters";
+// import AdvancedFilters from "@/components/AdvancedFilters";
 import PendingRegistrations from "@/components/PendingRegistrations";
 import SimpleFooter from "@/layouts/simpleFooter";
 import { getAdminEventsProps } from "utils/getPropsUtils";
 import ItemActionModal from "@/components/ItemActionModal";
 import ExportModal from "@/components/ExportModal";
 import { supabase } from "@/lib/supabase";
+import PageHeader from "@/components/common/PageHeader";
+import EventFilters from "@/components/filters/EventFilters";
+import BaseFilters from "@/components/filters/BaseFilters";
 
 export default function AdminEvents({
   mode = "light",
   toggleMode,
-  tiers,
+  tiers = [],
   breadcrumbs,
 }) {
   const [showForm, setShowForm] = useState(false);
@@ -65,7 +68,16 @@ export default function AdminEvents({
   const {
     events,
     registeredEvents,
-    filterOptions,
+    filterOptions = {
+      categories: [],
+      tiers: [],
+      types: [],
+      regions: [],
+      eventTypes: [],
+      dateRanges: [],
+      locations: [],
+      virtualOptions: []
+    },
     loading: eventsLoading,
     error,
     eventsLoading: registrationLoading,
@@ -209,19 +221,7 @@ export default function AdminEvents({
           : "bg-gray-100 text-gray-900"
       } transition-colors duration-300`}
     >
-      <Toaster
-        toastOptions={{
-          className:
-            mode === "dark"
-              ? "bg-gray-800 text-gray-100 border-gray-700"
-              : "bg-white text-gray-900 border-gray-200",
-          style: {
-            borderRadius: "8px",
-            padding: "12px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }}
-      />
+      
       <HRHeader
         toggleSidebar={toggleSidebar}
         isSidebarOpen={isSidebarOpen}
@@ -268,101 +268,47 @@ export default function AdminEvents({
                   mode === "dark" ? "border-white/10" : "border-white/20"
                 } shadow-2xl group-hover:shadow-lg transition-all duration-500`}
               ></div>
-              <div className="relative p-8 rounded-2xl mb-10">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <h1 className="text-2xl font-bold">Events</h1>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm text-gray-600 dark:text-gray-300 max-w-2xl">
-                        Manage events for the PAAN community. Create targeted
-                        content for specific membership tiers and track member
-                        engagement.
-                      </p>
-                      <div className="flex items-center gap-4 text-sm">
-                        <div className="flex items-center gap-2">
-                          <Icon
-                            icon="heroicons:calendar"
-                            className="w-4 h-4 text-blue-500"
-                          />
-                          <span className="text-gray-600 dark:text-gray-300">
-                            {events?.length || 0} total events
-                          </span>
-                        </div>
-                        {events?.length > 0 && (
-                          <div className="flex items-center gap-2">
-                            <Icon
-                              icon="heroicons:clock"
-                              className="w-4 h-4 text-purple-500"
-                            />
-                            <span className="text-gray-600 dark:text-gray-300">
-                              Last published{" "}
-                              {new Date(
-                                events[0].created_at
-                              ).toLocaleDateString("en-US", {
-                                month: "long",
-                                day: "numeric",
-                                year: "numeric",
-                              })}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-6 md:mt-0 flex items-center gap-4">
-                    <div className="flex items-center gap-4">
-                      <button
-                        onClick={handleViewPendingRegistrations}
-                        disabled={registrationLoading}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 ${
-                          mode === "dark"
-                            ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
-                            : "bg-gray-200 hover:bg-gray-300 text-gray-700"
-                        } transition-colors duration-200`}
-                      >
-                        <Icon icon="heroicons:user-group" className="w-4 h-4" />
-                        {registrationLoading
-                          ? "Loading..."
-                          : "Pending Registrations"}
-                      </button>
-                      <button
-                        onClick={handleCreateEvent}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 ${
-                          mode === "dark"
-                            ? "bg-blue-600 hover:bg-blue-700 text-white"
-                            : "bg-blue-500 hover:bg-blue-600 text-white"
-                        } transition-colors duration-200`}
-                      >
-                        <Icon icon="heroicons:plus" className="w-4 h-4" />
-                        New Event
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div
-                  className={`absolute top-2 right-2 w-12 sm:w-16 h-12 sm:h-16 opacity-10`}
-                >
-                  <div
-                    className={`w-full h-full rounded-full bg-gradient-to-br ${
-                      mode === "dark"
-                        ? "from-blue-400 to-blue-500"
-                        : "from-blue-400 to-blue-500"
-                    }`}
-                  ></div>
-                </div>
-                <div
-                  className={`absolute bottom-0 left-0 right-0 h-1 ${
-                    mode === "dark"
-                      ? "bg-gradient-to-r from-blue-400 via-blue-500 to-blue-500"
-                      : "bg-gradient-to-r from-[#3c82f6] to-[#dbe9fe]"
-                  }`}
-                ></div>
-                <div
-                  className={`absolute -bottom-1 -left-1 w-2 sm:w-3 h-2 sm:h-3 bg-[#f3584a] rounded-full opacity-40 animate-pulse delay-1000`}
-                ></div>
-              </div>
+              <PageHeader
+                title="Events"
+                description="Manage events for the PAAN community. Create targeted content for specific membership tiers and track member engagement."
+                mode={mode}
+                stats={[
+                  {
+                    icon: "heroicons:calendar",
+                    value: `${events?.length || 0} total events`,
+                  },
+                  ...(events?.length > 0
+                    ? [
+                        {
+                          icon: "heroicons:clock",
+                          value: `Last published ${new Date(
+                            events[0].created_at
+                          ).toLocaleDateString("en-US", {
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                          })}`,
+                          iconColor: "text-purple-500",
+                        },
+                      ]
+                    : []),
+                ]}
+                actions={[
+                  {
+                    label: registrationLoading ? "Loading..." : "Pending Registrations",
+                    icon: "heroicons:user-group",
+                    onClick: handleViewPendingRegistrations,
+                    disabled: registrationLoading,
+                    variant: "secondary",
+                  },
+                  {
+                    label: "New Event",
+                    icon: "heroicons:plus",
+                    onClick: handleCreateEvent,
+                    variant: "primary",
+                  },
+                ]}
+              />
             </div>
 
             <div className="space-y-8">
@@ -384,110 +330,102 @@ export default function AdminEvents({
                   }`}
                 >
                   <div className="p-6">
-                    
-                  <AdvancedFilters
-                    mode={mode}
-                    loading={eventsLoading}
-                    viewMode={viewMode}
-                    setViewMode={setViewMode}
-                    filterTerm={filterTerm}
-                    setFilterTerm={setFilterTerm}
-                    sortOrder={sortOrder}
-                    setSortOrder={setSortOrder}
-                    showFilters={showFilters}
-                    setShowFilters={setShowFilters}
-                    type="event"
-                    items={events}
-                    filteredItems={
-                      events
-                        ?.filter((event) => {
-                          const matchesSearch =
-                            !filterTerm ||
-                            event.title
-                              .toLowerCase()
-                              .includes(filterTerm.toLowerCase()) ||
-                            event.description
-                              .toLowerCase()
-                              .includes(filterTerm.toLowerCase());
-                          const matchesCategory =
-                            selectedCategory === "All" ||
-                            event.category === selectedCategory;
-                          const matchesTier =
-                            selectedTier === "All" ||
-                            event.tier_restriction === selectedTier;
-                          const matchesType =
-                            selectedType === "All" ||
-                            event.type === selectedType;
-                          const matchesRegion =
-                            selectedRegion === "All" ||
-                            event.region === selectedRegion;
-                          return (
-                            matchesSearch &&
-                            matchesCategory &&
-                            matchesTier &&
-                            matchesType &&
-                            matchesRegion
-                          );
-                        })
-                        .slice(0, currentPage * itemsPerPage) || []
-                    }
-                    selectedCategory={selectedCategory}
-                    onCategoryChange={setSelectedCategory}
-                    categories={[
-                      "All",
-                      "Webinar",
-                      "Conference",
-                      "Workshop",
-                      "Networking",
-                    ]}
-                    selectedTier={selectedTier}
-                    onTierChange={setSelectedTier}
-                    tiers={["All", ...tiers]}
-                    selectedType={selectedType}
-                    onTypeChange={setSelectedType}
-                    types={["All", "Virtual", "In-Person", "Hybrid"]}
-                    selectedRegion={selectedRegion}
-                    onRegionChange={setSelectedRegion}
-                    regions={[
-                      "All",
-                      "North America",
-                      "Europe",
-                      "Asia",
-                      "Global",
-                    ]}
-                    selectedEventType={selectedEventType}
-                    onEventTypeChange={setSelectedEventType}
-                    selectedDateRange={selectedDateRange}
-                    onDateRangeChange={setSelectedDateRange}
-                    selectedLocation={selectedLocation}
-                    onLocationChange={setSelectedLocation}
-                    selectedVirtual={selectedVirtual}
-                    onVirtualChange={setSelectedVirtual}
-                    onResetFilters={handleResetFilters}
-                    filterOptions={filterOptions}
-                  />
-
-                  <div className="mt-8">
-                    <EventsGrid
+                    <BaseFilters
                       mode={mode}
-                      events={events}
                       loading={eventsLoading}
-                      selectedIds={selectedIds}
-                      setSelectedIds={setSelectedIds}
-                      handleEditClick={handleEditClick}
-                      handleDelete={handleDeleteClick}
-                      handleViewRegistrations={handleViewRegistrations}
-                      currentPage={currentPage}
-                      setCurrentPage={setCurrentPage}
-                      itemsPerPage={itemsPerPage}
                       viewMode={viewMode}
                       setViewMode={setViewMode}
                       filterTerm={filterTerm}
-                      selectedCategory={selectedCategory}
-                      selectedTier={selectedTier}
-                      selectedType={selectedType}
-                      selectedRegion={selectedRegion}
-                    />
+                      setFilterTerm={setFilterTerm}
+                      sortOrder={sortOrder}
+                      setSortOrder={setSortOrder}
+                      showFilters={showFilters}
+                      setShowFilters={setShowFilters}
+                      type="event"
+                      items={events || []}
+                      filteredItems={events?.filter((event) => {
+                        const matchesSearch =
+                          !filterTerm ||
+                          event.title
+                            .toLowerCase()
+                            .includes(filterTerm.toLowerCase()) ||
+                          event.description
+                            .toLowerCase()
+                            .includes(filterTerm.toLowerCase());
+                        const matchesCategory =
+                          selectedCategory === "All" ||
+                          event.category === selectedCategory;
+                        const matchesTier =
+                          selectedTier === "All" ||
+                          event.tier_restriction === selectedTier;
+                        const matchesType =
+                          selectedType === "All" ||
+                          event.type === selectedType;
+                        const matchesRegion =
+                          selectedRegion === "All" ||
+                          event.region === selectedRegion;
+                        return (
+                          matchesSearch &&
+                          matchesCategory &&
+                          matchesTier &&
+                          matchesType &&
+                          matchesRegion
+                        );
+                      }) || []}
+                      onResetFilters={handleResetFilters}
+                    >
+                      <EventFilters
+                        selectedCategory={selectedCategory}
+                        onCategoryChange={setSelectedCategory}
+                        selectedTier={selectedTier}
+                        onTierChange={setSelectedTier}
+                        selectedType={selectedType}
+                        onTypeChange={setSelectedType}
+                        selectedRegion={selectedRegion}
+                        onRegionChange={setSelectedRegion}
+                        selectedEventType={selectedEventType}
+                        onEventTypeChange={setSelectedEventType}
+                        selectedDateRange={selectedDateRange}
+                        onDateRangeChange={setSelectedDateRange}
+                        selectedLocation={selectedLocation}
+                        onLocationChange={setSelectedLocation}
+                        selectedVirtual={selectedVirtual}
+                        onVirtualChange={setSelectedVirtual}
+                        categories={filterOptions?.categories || []}
+                        tiers={filterOptions?.tiers || tiers || []}
+                        types={filterOptions?.types || []}
+                        regions={filterOptions?.regions || []}
+                        eventTypes={filterOptions?.eventTypes || []}
+                        dateRanges={filterOptions?.dateRanges || []}
+                        locations={filterOptions?.locations || []}
+                        virtualOptions={filterOptions?.virtualOptions || []}
+                        mode={mode}
+                        loading={eventsLoading}
+                      />
+                    </BaseFilters>
+
+                    <div className="mt-8">
+                      <EventsGrid
+                        mode={mode}
+                        events={events || []}
+                        loading={eventsLoading}
+                        selectedIds={selectedIds}
+                        setSelectedIds={setSelectedIds}
+                        handleEditClick={handleEditClick}
+                        handleDelete={handleDeleteClick}
+                        handleViewRegistrations={handleViewRegistrations}
+                        currentPage={currentPage}
+                        setCurrentPage={setCurrentPage}
+                        itemsPerPage={itemsPerPage}
+                        viewMode={viewMode}
+                        setViewMode={setViewMode}
+                        filterTerm={filterTerm}
+                        selectedCategory={selectedCategory}
+                        selectedTier={selectedTier}
+                        selectedType={selectedType}
+                        selectedRegion={selectedRegion}
+                        filterOptions={filterOptions}
+                      />
                     </div>
                   </div>
                 </div>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 
 export default function useModals({ handleEdit, handleSubmit, resetForm }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -8,56 +8,115 @@ export default function useModals({ handleEdit, handleSubmit, resetForm }) {
   const [editingId, setEditingId] = useState(null);
   const [selectedOpportunityId, setSelectedOpportunityId] = useState(null);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const timeoutRef = useRef(null);
+  const isMountedRef = useRef(true);
 
-  const openModal = (editMode = false, item = null) => {
-    if (editMode && item) {
-      handleEdit(item);
-      setIsEditing(true);
-      setEditingId(item.id);
-    } else {
-      setIsEditing(false);
-      setEditingId(null);
-      resetForm();
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
+  const openModal = useCallback((editMode = false, item = null) => {
+    if (!isMountedRef.current) return;
+
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
-    setIsModalOpen(true);
-  };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
+    // Reset all state first
     setIsEditing(false);
     setEditingId(null);
-    resetForm();
-  };
+    if (resetForm) {
+      resetForm();
+    }
 
-  const openUsersModal = (itemId) => {
+    // Small delay to ensure state is reset before setting new data
+    timeoutRef.current = setTimeout(() => {
+      if (!isMountedRef.current) return;
+      
+      if (editMode && item) {
+        handleEdit(item);
+        setIsEditing(true);
+        setEditingId(item.id);
+      }
+      setIsModalOpen(true);
+    }, 50);
+  }, [handleEdit, resetForm]);
+
+  const closeModal = useCallback(() => {
+    if (!isMountedRef.current) return;
+
+    // Clear any existing timeout
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+
+    // Close modal immediately
+    setIsModalOpen(false);
+    
+    // Reset state after modal is closed
+    timeoutRef.current = setTimeout(() => {
+      if (!isMountedRef.current) return;
+      setIsEditing(false);
+      setEditingId(null);
+      setSelectedOpportunityId(null);
+      if (resetForm) {
+        resetForm();
+      }
+    }, 50); // Reduced timeout to ensure faster state reset
+  }, [resetForm]);
+
+  const openUsersModal = useCallback((itemId) => {
+    if (!isMountedRef.current) return;
+    
     if (!itemId) {
       console.error("[useModals] No item ID provided");
       return;
     }
     setSelectedOpportunityId(itemId);
     setIsUsersModalOpen(true);
-  };
+  }, []);
 
-  const closeUsersModal = () => {
+  const closeUsersModal = useCallback(() => {
+    if (!isMountedRef.current) return;
+    
     setIsUsersModalOpen(false);
     setSelectedOpportunityId(null);
-  };
+  }, []);
 
-  const openDeleteModal = (item) => {
+  const openDeleteModal = useCallback((item) => {
+    if (!isMountedRef.current) return;
+    
     setItemToDelete(item);
     setIsDeleteModalOpen(true);
-  };
+  }, []);
 
-  const closeDeleteModal = () => {
+  const closeDeleteModal = useCallback(() => {
+    if (!isMountedRef.current) return;
+    
     setIsDeleteModalOpen(false);
     setItemToDelete(null);
-  };
+  }, []);
 
-  const submitForm = (e) => {
+  const submitForm = useCallback(async (e) => {
+    if (!isMountedRef.current) return;
+    
     e.preventDefault();
-    handleSubmit(e, editingId);
-    closeModal();
-  };
+    try {
+      const success = await handleSubmit(e, editingId);
+      if (success) {
+        closeModal();
+      }
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
+  }, [handleSubmit, editingId, closeModal]);
 
   return {
     isModalOpen,
@@ -75,6 +134,7 @@ export default function useModals({ handleEdit, handleSubmit, resetForm }) {
       openDeleteModal,
       closeDeleteModal,
       submitForm,
+      setSelectedItemId: setEditingId,
     },
   };
 }

@@ -3,9 +3,9 @@ import { Icon } from "@iconify/react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import Image from "next/image";
-import ImageLibrary from "./common/ImageLibrary";
+import ImageLibrary from "../common/ImageLibrary";
 import toast from "react-hot-toast";
-import EditorComponent from "./EditorComponent";
+import EditorComponent from "../EditorComponent";
 
 export default function EventForm({
   formData,
@@ -102,7 +102,7 @@ export default function EventForm({
   const handleLocalInputChange = (e) => {
     const { name, value, type, checked } = e.target;
     const newValue = type === "checkbox" ? checked : value;
-    
+
     // If is_one_day is checked, set end_date to start_date
     if (name === "is_one_day" && checked && startDate) {
       setEndDate(startDate);
@@ -237,7 +237,7 @@ export default function EventForm({
   const handleEndDateChange = (date) => {
     // Don't allow end date change if it's a one-day event
     if (localFormData.is_one_day) return;
-    
+
     setEndDate(date);
     if (date) {
       const updatedData = {
@@ -367,12 +367,7 @@ export default function EventForm({
         mode === "dark" ? "text-gray-200" : "text-gray-900"
       }`}
     >
-      <div
-        className={`mt-4 ${
-          mode === "dark" ? "bg-gray-800" : ""
-        }`}
-      >
-        
+      <div className={`mt-4 ${mode === "dark" ? "bg-gray-800" : ""}`}>
         <form onSubmit={validateForm} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Event Title */}
@@ -512,7 +507,9 @@ export default function EventForm({
                         ? "bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400"
                         : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
                     } ${errors.endDate ? "border-red-500" : ""} ${
-                      localFormData.is_one_day ? "opacity-50 cursor-not-allowed" : ""
+                      localFormData.is_one_day
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
                     }`}
                     placeholderText="Select end date and time"
                     popperClassName="z-[99999]"
@@ -647,9 +644,9 @@ export default function EventForm({
               <EditorComponent
                 initialValue={localFormData.description || ""}
                 onChange={(value) => {
-                  setLocalFormData(prev => ({
+                  setLocalFormData((prev) => ({
                     ...prev,
-                    description: value
+                    description: value,
                   }));
                   handleInputChange({
                     target: {
@@ -659,9 +656,9 @@ export default function EventForm({
                   });
                 }}
                 onBlur={(value) => {
-                  setLocalFormData(prev => ({
+                  setLocalFormData((prev) => ({
                     ...prev,
-                    description: value
+                    description: value,
                   }));
                   handleInputChange({
                     target: {

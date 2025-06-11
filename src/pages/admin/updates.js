@@ -1,20 +1,20 @@
-import { useState, useEffect } from "react";
-import { useRouter } from "next/router";
+import { useState, useCallback, useMemo } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import { Icon } from "@iconify/react";
-import HRSidebar from "@/layouts/hrSidebar";
 import HRHeader from "@/layouts/hrHeader";
+import HRSidebar from "@/layouts/hrSidebar";
+import SimpleFooter from "@/layouts/simpleFooter";
+import UpdateGrid from "@/components/updates/UpdateGrid";
+import ItemActionModal from "@/components/ItemActionModal";
+import UpdateForm from "@/components/updates/UpdateForm";
 import useSidebar from "@/hooks/useSidebar";
 import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useUpdates } from "@/hooks/useUpdates";
-import SimpleFooter from "@/layouts/simpleFooter";
-import UpdatesForm from "@/components/updates/UpdatesForm";
-import ItemActionModal from "@/components/ItemActionModal";
-import UpdatesGrid from "@/components/updates/UpdatesGrid";
-import AdvancedFilters from "@/components/AdvancedFilters";
-import { getAdminUpdatesProps } from "utils/getPropsUtils";
+
+import { Icon } from "@iconify/react";
 import PageHeader from "@/components/common/PageHeader";
+import UpdateFilters from "@/components/filters/UpdateFilters";
+import BaseFilters from "@/components/filters/BaseFilters";
 
 export default function AdminUpdates({
   mode = "light",
@@ -23,10 +23,10 @@ export default function AdminUpdates({
   breadcrumbs,
 }) {
   const [showForm, setShowForm] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [updateToDelete, setUpdateToDelete] = useState(null);
   const [memberCount, setMemberCount] = useState(0);
   const [viewMode, setViewMode] = useState("grid");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [filterApplications, setFilterApplications] = useState(false);
   const [page, setPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const [filterTerm, setFilterTerm] = useState("");
@@ -34,9 +34,26 @@ export default function AdminUpdates({
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedTier, setSelectedTier] = useState("all");
   const [selectedTags, setSelectedTags] = useState([]);
+  const [categories, setCategories] = useState([
+    "Governance",
+    "Member Spotlights",
+    "Global Partnerships",
+    "Regional Growth",
+    "Events",
+    "News",
+    "Announcements"
+  ]);
+  const [formCategories, setFormCategories] = useState([]);
+  const [tiers, setTiers] = useState([]);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [isUsersModalOpen, setIsUsersModalOpen] = useState(false);
+  const [displayedCount, setDisplayedCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  
   const itemsPerPage = 6;
   useAuthSession();
 
+  
   const {
     isSidebarOpen,
     toggleSidebar,
@@ -48,8 +65,9 @@ export default function AdminUpdates({
     handleMouseLeave,
     handleOutsideClick,
   } = useSidebar();
-  
+
   const handleLogout = useLogout();
+
   const {
     updates,
     formData,
@@ -58,49 +76,104 @@ export default function AdminUpdates({
     handleSubmit,
     handleEdit,
     handleDelete,
-    handleSearch,
-    handleCategoryFilter,
-    selectedCategory: existingSelectedCategory,
-    searchQuery,
-  } = useUpdates(initialUpdates);
-  const router = useRouter();
+    resetForm,
+  } = useUpdates();
 
-  const categories = [
-    "all",
-    "Governance",
-    "Member Spotlights",
-    "Global Partnerships",
-    "Regional Growth",
-    "Events",
-    "Strategic Direction",
-  ];
+  // State for delete confirmation modal
+  const [updateToDelete, setUpdateToDelete] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [selectedUpdateId, setSelectedUpdateId] = useState(null);
+  const handleViewModeChange = useCallback((newViewMode) => {
+    setViewMode(newViewMode);
+  }, []);
 
-  const tiers = [
-    "all",
-    "Associate Member",
-    "Full Member",
-    "Premium Member",
-    "Enterprise Member",
-  ];
+  const handleSelectAll = useCallback(
+    (selected) => {
+      if (selected) {
+        setSelectedIds(updates.map((update) => update.id));
+      } else {
+        setSelectedIds([]);
+      }
+    },
+    [updates]
+  );
 
-  const formCategories = [
-    "Governance",
-    "Member Spotlights",
-    "Global Partnerships",
-    "Regional Growth",
-    "Events",
-    "Strategic Direction",
-  ];
+  const handleSelect = useCallback((id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id)
+        ? prev.filter((updateId) => updateId !== id)
+        : [...prev, id]
+    );
+  }, []);
+
+  const handleCategoryChange = useCallback((category) => {
+    console.log('AdminUpdates - Category changed:', category);
+    setSelectedCategory(category);
+  }, []);
+
+  const handleTierChange = useCallback((tier) => {
+    console.log('AdminUpdates - Tier changed:', tier);
+    setSelectedTier(tier);
+  }, []);
+
+  const modalActions = {
+    openModal: (update = null) => {
+      console.log('AdminUpdates - Opening modal with update:', update);
+      if (update) {
+        setIsEditing(true);
+        setEditingId(update.id);
+        handleEdit(update);
+      } else {
+        setIsEditing(false);
+        setEditingId(null);
+        resetForm();
+      }
+      setShowForm(true);
+    },
+    closeModal: () => {
+      setShowForm(false);
+      setIsEditing(false);
+      setEditingId(null);
+      resetForm();
+    },
+    openUsersModal: (updateId) => {
+      setSelectedUpdateId(updateId);
+      setIsUsersModalOpen(true);
+    },
+    closeUsersModal: () => {
+      setIsUsersModalOpen(false);
+      setSelectedUpdateId(null);
+    },
+    submitForm: (e, id) => {
+      handleSubmit(e, id);
+      modalActions.closeModal();
+    },
+  };
+
+  
 
   // Filter updates based on selected category, tier, and tags
-  const filteredUpdates = updates.filter(update => {
-    const matchesSearch = filterTerm === "" || 
+  const filteredUpdates = updates.filter((update) => {
+    const matchesSearch =
+      filterTerm === "" ||
       update.title.toLowerCase().includes(filterTerm.toLowerCase()) ||
       update.description?.toLowerCase().includes(filterTerm.toLowerCase());
-    const matchesCategory = selectedCategory === "all" || update.category === selectedCategory;
-    const matchesTier = selectedTier === "all" || update.tier_restriction === selectedTier;
-    const updateTags = update.tags ? (Array.isArray(update.tags) ? update.tags : update.tags.split(',').map(tag => tag.trim())) : [];
-    const matchesTags = selectedTags.length === 0 || selectedTags.some(tag => updateTags.includes(tag));
+    const matchesCategory =
+      selectedCategory === "all" || update.category === selectedCategory;
+    const matchesTier =
+      selectedTier === "all" || update.tier_restriction === selectedTier;
+    const updateTags = update.tags
+      ? Array.isArray(update.tags)
+        ? update.tags
+        : update.tags.split(",").map((tag) => tag.trim())
+      : [];
+    const matchesTags =
+      selectedTags.length === 0 ||
+      selectedTags.some((tag) => updateTags.includes(tag));
     return matchesSearch && matchesCategory && matchesTier && matchesTags;
   });
 
@@ -108,25 +181,16 @@ export default function AdminUpdates({
   const paginatedUpdates = filteredUpdates.slice(0, page * itemsPerPage);
 
   const handleCreateUpdate = () => {
-    setShowForm(true);
+    modalActions.openModal();
   };
 
   const handleCancel = () => {
-    setShowForm(false);
-    handleEdit({
-      id: null,
-      title: "",
-      description: "",
-      category: "Governance",
-      cta_text: "",
-      cta_url: "",
-      tier_restriction: "Associate Member",
-      tags: "",
-    });
+    modalActions.closeModal();
   };
 
-  const openDeleteModal = (id) => {
-    setUpdateToDelete(id);
+  const openDeleteModal = (update) => {
+    console.log('Opening delete modal for update:', update);
+    setUpdateToDelete(update);
     setIsDeleteModalOpen(true);
   };
 
@@ -137,41 +201,29 @@ export default function AdminUpdates({
 
   const confirmDelete = () => {
     if (updateToDelete) {
-      handleDelete(updateToDelete);
+      handleDelete(updateToDelete.id);
       closeDeleteModal();
     }
   };
 
-  const fetchMemberCount = async (tier) => {
-    try {
-      const response = await fetch(`/api/members/count?tier=${encodeURIComponent(tier)}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch member count');
-      }
-      const data = await response.json();
-      setMemberCount(data.count);
-    } catch (error) {
-      console.error('Error fetching member count:', error);
-      setMemberCount(0);
-    }
-  };
+  
 
-  useEffect(() => {
-    if (formData.tier_restriction) {
-      fetchMemberCount(formData.tier_restriction);
-    }
-  }, [formData.tier_restriction]);
 
   const handleFormSubmit = async (e) => {
     await handleSubmit(e, () => {
-      setShowForm(false);
-      handleCancel();
+      modalActions.closeModal();
     });
   };
 
   const loadMore = () => {
-    setPage(prev => prev + 1);
+    setPage((prev) => prev + 1);
   };
+
+  const handleCountChange = useCallback(({ displayedCount, totalCount }) => {
+    console.log('AdminUpdates - Count change:', { displayedCount, totalCount });
+    setDisplayedCount(displayedCount);
+    setTotalCount(totalCount);
+  }, []);
 
   return (
     <div
@@ -253,7 +305,9 @@ export default function AdminUpdates({
                     ? [
                         {
                           icon: "heroicons:clock",
-                          value: `Last published ${new Date(updates[0].created_at).toLocaleDateString("en-US", {
+                          value: `Last published ${new Date(
+                            updates[0].created_at
+                          ).toLocaleDateString("en-US", {
                             month: "long",
                             day: "numeric",
                             year: "numeric",
@@ -293,12 +347,11 @@ export default function AdminUpdates({
                   }`}
                 >
                   <div className="p-6">
-                    <AdvancedFilters
-                      type="update"
+                    <BaseFilters
                       mode={mode}
                       loading={loading}
                       viewMode={viewMode}
-                      setViewMode={setViewMode}
+                      setViewMode={handleViewModeChange}
                       filterTerm={filterTerm}
                       setFilterTerm={setFilterTerm}
                       sortOrder={sortOrder}
@@ -306,40 +359,47 @@ export default function AdminUpdates({
                       showFilters={showFilters}
                       setShowFilters={setShowFilters}
                       items={updates}
-                      filteredItems={paginatedUpdates}
-                      selectedCategory={selectedCategory}
-                      onCategoryChange={setSelectedCategory}
-                      categories={categories}
-                      selectedTier={selectedTier}
-                      onTierChange={setSelectedTier}
-                      tiers={tiers}
-                      selectedTags={selectedTags}
-                      onTagsChange={setSelectedTags}
-                    />
+                      filteredItems={updates}
+                      onOpenUsersModal={modalActions.openUsersModal}
+                      filterStatus={filterStatus}
+                      setFilterStatus={setFilterStatus}
+                      filterApplications={filterApplications}
+                      setFilterApplications={setFilterApplications}
+                      type="update"
+                      displayedCount={displayedCount}
+                      totalCount={totalCount}
+                    >
+                      <UpdateFilters
+                        selectedCategory={selectedCategory}
+                        onCategoryChange={handleCategoryChange}
+                        selectedTier={selectedTier}
+                        onTierChange={handleTierChange}
+                        categories={categories}
+                        mode={mode}
+                        loading={loading}
+                      />
+                    </BaseFilters>
 
                     <div className="mt-8">
-
-                      <UpdatesGrid
-                      updates={paginatedUpdates}
-                      loading={loading}
-                      mode={mode}
-                      viewMode={viewMode}
-                      onEdit={(update) => {
-                        handleEdit(update);
-                        setShowForm(true);
-                      }}
-                      onDelete={openDeleteModal}
-                      page={page}
-                      itemsPerPage={itemsPerPage}
-                      onLoadMore={loadMore}
-                      selectedCategory={selectedCategory}
-                      onCategoryChange={setSelectedCategory}
-                      categories={categories}
-                      selectedTier={selectedTier}
-                      onTierChange={setSelectedTier}
-                      tiers={tiers}
+                      <UpdateGrid
+                        updates={updates}
+                        loading={loading}
+                        mode={mode}
+                        onEdit={modalActions.openModal}
+                        onDelete={openDeleteModal}
+                        onViewUsers={modalActions.openUsersModal}
+                        viewMode={viewMode}
+                        setViewMode={handleViewModeChange}
+                        filterTerm={filterTerm}
+                        selectedCategory={selectedCategory}
+                        selectedTier={selectedTier}
+                        selectedIds={selectedIds}
+                        onSelect={handleSelect}
+                        onSelectAll={handleSelectAll}
+                        isSelectable={true}
+                        onCountChange={handleCountChange}
                       />
-                      </div>
+                    </div>
                   </div>
                 </div>
                 <div
@@ -362,12 +422,10 @@ export default function AdminUpdates({
         </div>
 
         {showForm && (
-          <div
-            className={`fixed inset-0 bg-black/30 backdrop-blur-md z-40`}
-          />
+          <div className={`fixed inset-0 bg-black/30 backdrop-blur-md z-40`} />
         )}
 
-        <UpdatesForm
+        <UpdateForm
           showForm={showForm}
           mode={mode}
           formData={formData}
@@ -375,7 +433,7 @@ export default function AdminUpdates({
           handleSubmit={handleFormSubmit}
           handleCancel={handleCancel}
           loading={loading}
-          categories={formCategories}
+          categories={categories}
           memberCount={memberCount}
         />
 
@@ -393,9 +451,7 @@ export default function AdminUpdates({
             >
               Are you sure you want to delete the update{" "}
               <strong>
-                &quot;
-                {updates.find((update) => update.id === updateToDelete)?.title || ""}
-                &quot;
+                &quot;{updateToDelete?.title || ""}&quot;
               </strong>
               ? This action cannot be undone.
             </p>
@@ -413,8 +469,10 @@ export default function AdminUpdates({
               </button>
               <button
                 onClick={confirmDelete}
-                className={`px-6 py-3 text-sm font-medium rounded-xl text-white bg-red-600 hover:bg-red-700 transition-all duration-200 flex items-center shadow-sm ${
-                  mode === "dark" ? "shadow-white/10" : "shadow-gray-200"
+                className={`px-6 py-3 text-sm font-medium rounded-xl border transition-all duration-200 flex items-center shadow-sm ${
+                  mode === "dark"
+                    ? "border-red-600 text-red-200 bg-red-900/30 hover:bg-red-800/40"
+                    : "border-red-200 text-red-700 bg-white hover:bg-red-50"
                 }`}
               >
                 <Icon icon="heroicons:trash" className="h-4 w-4 mr-2" />
@@ -426,8 +484,4 @@ export default function AdminUpdates({
       </div>
     </div>
   );
-}
-
-export async function getServerSideProps({ req, res }) {
-  return await getAdminUpdatesProps({ req, res });
 }

@@ -12,10 +12,9 @@ import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useOpportunities } from "@/hooks/useOpportunities";
 import { useOpportunityInterests } from "@/hooks/useOpportunityInterests";
-import { filterAndSortOpportunities } from "@/../utils/opportunityUtils";
 import { Icon } from "@iconify/react";
 import PageHeader from "@/components/common/PageHeader";
-import OpportunitiesFilters from "@/components/filters/OpportunityFilters";
+import OpportunityFilters from "@/components/filters/OpportunityFilters";
 import BaseFilters from "@/components/filters/BaseFilters";
 
 export default function AdminBusinessOpportunities({
@@ -164,15 +163,7 @@ export default function AdminBusinessOpportunities({
     loading: usersLoading,
     error: usersError,
   } = useOpportunityInterests(selectedOpportunityId);
-
-  const sortedOpportunities = filterAndSortOpportunities({
-    opportunities,
-    filterTerm,
-    filterType,
-    filterJobType,
-    filterProjectType,
-    sortOrder,
-  });
+  
 
   // Extract unique values for filters
   const filterOptions = useMemo(() => {
@@ -333,14 +324,15 @@ export default function AdminBusinessOpportunities({
                       showFilters={showFilters}
                       setShowFilters={setShowFilters}
                       items={opportunities}
-                      filteredItems={sortedOpportunities}
+                      filteredItems={opportunities}
                       onOpenUsersModal={modalActions.openUsersModal}
                       filterStatus={filterStatus}
                       setFilterStatus={setFilterStatus}
                       filterApplications={filterApplications}
                       setFilterApplications={setFilterApplications}
+                      type="opportunity"
                     >
-                      <OpportunitiesFilters
+                      <OpportunityFilters
                         selectedLocation={selectedLocation}
                         onLocationChange={setSelectedLocation}
                         selectedServiceType={selectedServiceType}
@@ -358,12 +350,15 @@ export default function AdminBusinessOpportunities({
                         tiers={filterOptions.tiers}
                         mode={mode}
                         loading={loading}
+                        opportunities={opportunities}
+                        filterTerm={filterTerm}
+                        sortOrder={sortOrder}
                       />
                     </BaseFilters>
 
                     <div className="mt-8">
                     <OpportunityGrid
-                      opportunities={sortedOpportunities}
+                      opportunities={opportunities}
                       loading={loading}
                       mode={mode}
                       onEdit={modalActions.openModal}

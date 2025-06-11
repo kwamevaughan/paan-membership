@@ -129,8 +129,8 @@ export async function getAdminBusinessOpportunitiesProps({ req, res }) {
   }
 }
 
-export async function getAdminUpdatesProps({ req, res }) {
-  console.log("[getAdminUpdatesProps] Starting at", new Date().toISOString());
+export async function getAdminBusinessUpdatesProps({ req, res }) {
+  console.log("[getAdminBusinessUpdatesProps] Starting at", new Date().toISOString());
 
   // Authenticate and authorize
   const authResult = await withAuth(req, res);
@@ -151,7 +151,7 @@ export async function getAdminUpdatesProps({ req, res }) {
 
     if (updatesError) {
       console.error(
-        "[getAdminUpdatesProps] Updates Error:",
+        "[getAdminBusinessUpdatesProps] Updates Error:",
         updatesError.message
       );
       throw new Error(`Failed to fetch updates: ${updatesError.message}`);

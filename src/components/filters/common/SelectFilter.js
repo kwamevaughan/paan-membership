@@ -15,7 +15,7 @@ export default function SelectFilter({
   const [isFocused, setIsFocused] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
-  const hasValue = isMulti ? (Array.isArray(value) && value.length > 0) : (value && value !== "All");
+  const hasValue = isMulti ? (Array.isArray(value) && value.length > 0) : (value && value !== "");
 
   const getOptionValue = (option) => {
     if (typeof option === 'object' && option !== null) {
@@ -113,7 +113,7 @@ export default function SelectFilter({
               ))
             ) : (
               <span className="text-gray-500">
-                {isMulti ? "Select tags..." : (value === "All" ? `All ${label}s` : getOptionLabel(options.find(opt => getOptionValue(opt) === value) || value))}
+                {isMulti ? "Select tags..." : getOptionLabel(options.find(opt => getOptionValue(opt) === value) || value)}
               </span>
             )}
           </div>
@@ -163,17 +163,6 @@ export default function SelectFilter({
             left: 'var(--select-left)',
             width: 'var(--select-width)'
           }}>
-            {!isMulti && (
-              <button
-                type="button"
-                onClick={() => handleSelect("All")}
-                className={`w-full px-4 py-2 text-left text-sm hover:bg-blue-50 dark:hover:bg-blue-900/30 ${
-                  mode === "dark" ? "text-gray-200" : "text-gray-700"
-                }`}
-              >
-                All {label}s
-              </button>
-            )}
             {options.map((option) => {
               const optionValue = getOptionValue(option);
               const optionLabel = getOptionLabel(option);

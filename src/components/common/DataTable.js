@@ -103,7 +103,18 @@ const DataTable = memo(({
   };
 
   return (
-    <div className="">
+    <div className="space-y-4">
+      <div className="flex justify-between items-center">
+        <div className={`px-4 py-2 rounded-lg ${mode === "dark" ? "bg-gray-800" : "bg-white"} shadow-sm`}>
+          <span className="font-semibold">{data.length}</span>
+          <span className="text-gray-600 dark:text-gray-400"> opportunities found</span>
+        </div>
+
+        <div className="text-sm text-gray-500 dark:text-gray-400">
+          Showing {Math.min(12, data.length)} of {data.length} opportunities
+        </div>
+      </div>
+
       {selectedItems.length > 0 && (
         <div className={`mb-4 p-4 rounded-lg flex items-center justify-between ${
           mode === "dark" ? "bg-gray-800" : "bg-gray-100"

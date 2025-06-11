@@ -19,6 +19,8 @@ export default function BaseFilters({
   filteredItems = [],
   type = "event",
   onResetFilters,
+  displayedCount,
+  totalCount,
   children, // For page-specific filters
 }) {
   const hasActiveFilters = () => {
@@ -54,7 +56,7 @@ export default function BaseFilters({
                 type="text"
                 value={filterTerm}
                 onChange={(e) => setFilterTerm(e.target.value)}
-                placeholder={`Search ${type}s...`}
+                placeholder={`Search ${type === "opportunity" ? "opportunities" : `${type}s`}...`}
                 className={`w-full px-4 py-2 pl-10 rounded-lg border ${
                   mode === "dark"
                     ? "bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-blue-500"
@@ -73,7 +75,7 @@ export default function BaseFilters({
                 mode === "dark" ? "text-gray-400" : "text-gray-500"
               }`}
             >
-              Showing {filteredItems.length} of {items.length} {type}s
+              Showing {displayedCount || 0} of {totalCount || 0} {type === "opportunity" ? "opportunities" : `${type}s`}
             </span>
           </div>
 

@@ -560,7 +560,7 @@ export default function BlogFormFields({
             mode={mode}
             holderId="jodit-editor-blog-form"
             className="w-full"
-            height="300"
+            height=""
           />
         </div>
         <FieldSEOIndicator

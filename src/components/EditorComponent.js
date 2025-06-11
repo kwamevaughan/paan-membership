@@ -27,19 +27,19 @@ import TextStyle from '@tiptap/extension-text-style';
 import Color from '@tiptap/extension-color';
 import Highlight from '@tiptap/extension-highlight';
 import TextAlign from '@tiptap/extension-text-align';
+import { createPortal } from "react-dom";
 const lowlight = createLowlight();
 
 // Editor styles
 const editorStyles = `
   .editor-container {
-    height: 100%;
+    height: 700px;
     overflow: auto;
     display: flex;
     flex-direction: column;
   }
 
   .editor-container .ProseMirror {
-    height: 300px;
     overflow-y: auto;
     padding: 0.5rem;
     border: none;
@@ -349,6 +349,7 @@ const TipTapEditor = memo(({
   const [linkPopover, setLinkPopover] = useState({ open: false, left: 0, top: 0, value: '', from: null, to: null });
   const linkInputRef = useRef(null);
   const editorContainerRef = useRef(null);
+  const linkPopoverRef = useRef(null);
 
   const editor = useEditor({
     extensions: [
@@ -482,7 +483,7 @@ const TipTapEditor = memo(({
   useEffect(() => {
     if (!linkPopover.open) return;
     const handleClick = (e) => {
-      if (linkInputRef.current && !linkInputRef.current.contains(e.target)) closeLinkPopover();
+      if (linkPopoverRef.current && !linkPopoverRef.current.contains(e.target)) closeLinkPopover();
     };
     const handleEsc = (e) => { if (e.key === 'Escape') closeLinkPopover(); };
     document.addEventListener('mousedown', handleClick);
@@ -667,8 +668,13 @@ const TipTapEditor = memo(({
       />
       {linkPopover.open && (
         <div
+          ref={linkPopoverRef}
           className="absolute z-50 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl flex items-center gap-2 px-4 py-2"
           style={{ left: linkPopover.left, top: linkPopover.top }}
+          tabIndex={0}
+          onClick={(e) => {
+            e.stopPropagation();
+          }}
         >
           <input
             ref={linkInputRef}
@@ -681,13 +687,12 @@ const TipTapEditor = memo(({
           />
           <button onClick={applyLink} className="p-1 hover:bg-blue-100 dark:hover:bg-blue-800 rounded" title="Apply"><Icon icon="mdi:arrow-right" width={18} /></button>
           <button 
-            onClick={() => {
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
               if (editor) {
-                editor
-                  .chain()
-                  .focus()
-                  .removeMark('link')
-                  .run();
+                editor.chain().focus().unsetLink().run();
                 closeLinkPopover();
               }
             }} 
@@ -696,16 +701,36 @@ const TipTapEditor = memo(({
           >
             <Icon icon="mdi:delete" width={18} />
           </button>
-          <button onClick={closeLinkPopover} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Close"><Icon icon="mdi:close" width={18} /></button>
+          <button 
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              closeLinkPopover();
+            }} 
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" 
+            title="Close"
+          >
+            <Icon icon="mdi:close" width={18} />
+          </button>
         </div>
       )}
-      <ImageLibrary
-        isOpen={showImageLibrary}
-        onClose={() => setShowImageLibrary(false)}
-        mode={mode}
-        onUpload={handleImageUpload}
-        uploading={uploadingImage}
-      />
+      {showImageLibrary && createPortal(
+        <ImageLibrary
+          isOpen={showImageLibrary}
+          onClose={() => setShowImageLibrary(false)}
+          mode={mode}
+          onUpload={handleImageUpload}
+          uploading={uploadingImage}
+          onSelect={(selectedImage) => {
+            if (editor) {
+              editor.chain().focus().setImage({ src: selectedImage.url }).run();
+              setShowImageLibrary(false);
+            }
+          }}
+        />,
+        document.body
+      )}
     </div>
   );
 });
@@ -812,13 +837,22 @@ function EditorComponent({
           mode={mode}
         />
       )}
-      <ImageLibrary
-        isOpen={showImageLibrary}
-        onClose={() => setShowImageLibrary(false)}
-        mode={mode}
-        onUpload={handleImageUpload}
-        uploading={uploadingImage}
-      />
+      {showImageLibrary && createPortal(
+        <ImageLibrary
+          isOpen={showImageLibrary}
+          onClose={() => setShowImageLibrary(false)}
+          mode={mode}
+          onUpload={handleImageUpload}
+          uploading={uploadingImage}
+          onSelect={(selectedImage) => {
+            if (editor) {
+              editor.chain().focus().setImage({ src: selectedImage.url }).run();
+              setShowImageLibrary(false);
+            }
+          }}
+        />,
+        document.body
+      )}
     </div>
   );
 }

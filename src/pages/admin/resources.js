@@ -11,7 +11,7 @@ import { useResources } from "@/hooks/useResources";
 import ResourceForm from "@/components/resources/ResourceForm";
 import ResourceFilters from "@/components/resources/ResourceFilters";
 import SimpleFooter from "@/layouts/simpleFooter";
-import FeedbackModal from "@/components/FeedbackModal";
+// import FeedbackModal from "@/components/FeedbackModal";
 import { getTierBadgeColor } from "@/../utils/badgeUtils";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { supabase } from "@/lib/supabase";

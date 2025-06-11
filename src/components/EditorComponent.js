@@ -142,6 +142,48 @@ const RawTextEditor = memo(
 
 RawTextEditor.displayName = "RawTextEditor";
 
+// Custom ToolbarDropdown for modern dropdowns in the toolbar
+const ToolbarDropdown = ({ value, options, onChange, icon, label, mode }) => {
+  const [open, setOpen] = useState(false);
+  const handleSelect = (option) => {
+    setOpen(false);
+    onChange(option.value);
+  };
+  return (
+    <div className="relative inline-block text-left">
+      <button
+        type="button"
+        className={`flex items-center gap-1 px-2 py-1 rounded-md border border-transparent hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors ${open ? 'bg-gray-100 dark:bg-gray-800' : ''}`}
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        {icon && <Icon icon={icon} width={18} height={18} />}
+        <span className="text-sm font-medium">{label}</span>
+        <Icon icon="mdi:chevron-down" width={18} height={18} />
+      </button>
+      {open && (
+        <div className={`absolute z-10 mt-1 w-40 rounded-md shadow-lg ${mode === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'} ring-1 ring-black ring-opacity-5 focus:outline-none`}>
+          <ul tabIndex={-1} role="listbox">
+            {options.map((option) => (
+              <li
+                key={option.value}
+                className={`flex items-center gap-2 px-4 py-2 cursor-pointer hover:bg-blue-100 dark:hover:bg-gray-700 ${option.value === value ? 'bg-blue-100 dark:bg-gray-700 font-semibold' : ''}`}
+                onClick={() => handleSelect(option)}
+                role="option"
+                aria-selected={option.value === value}
+              >
+                {option.icon && <Icon icon={option.icon} width={16} height={16} />}
+                {option.label}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
+
 // TipTap Editor Component
 const TipTapEditor = memo(({ 
   initialValue,
@@ -256,52 +298,43 @@ const TipTapEditor = memo(({
           <Icon icon="mdi:format-underline" width={20} height={20} />
         </button>
         <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
-        <button
-          onClick={handleToolbarClick(() => editor.chain().focus().toggleHeading({ level: 1 }).run())}
-          className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${
-            editor?.isActive('heading', { level: 1 }) ? 'bg-gray-100 dark:bg-gray-800' : ''
-          }`}
-          title="Heading 1"
-        >
-          <Icon icon="mdi:format-header-1" width={20} height={20} />
-        </button>
-        <button
-          onClick={handleToolbarClick(() => editor.chain().focus().toggleHeading({ level: 2 }).run())}
-          className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${
-            editor?.isActive('heading', { level: 2 }) ? 'bg-gray-100 dark:bg-gray-800' : ''
-          }`}
-          title="Heading 2"
-        >
-          <Icon icon="mdi:format-header-2" width={20} height={20} />
-        </button>
-        <button
-          onClick={handleToolbarClick(() => editor.chain().focus().toggleHeading({ level: 3 }).run())}
-          className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${
-            editor?.isActive('heading', { level: 3 }) ? 'bg-gray-100 dark:bg-gray-800' : ''
-          }`}
-          title="Heading 3"
-        >
-          <Icon icon="mdi:format-header-3" width={20} height={20} />
-        </button>
+        <ToolbarDropdown
+          value={editor?.getAttributes('heading').level || 'paragraph'}
+          onChange={(val) => {
+            if (val === 'paragraph') editor.chain().focus().setParagraph().run();
+            else editor.chain().focus().toggleHeading({ level: Number(val) }).run();
+          }}
+          options={[
+            { value: 'paragraph', label: 'Normal', icon: 'mdi:format-paragraph' },
+            { value: 1, label: 'Heading 1', icon: 'mdi:format-header-1' },
+            { value: 2, label: 'Heading 2', icon: 'mdi:format-header-2' },
+            { value: 3, label: 'Heading 3', icon: 'mdi:format-header-3' },
+          ]}
+          label={
+            editor?.getAttributes('heading').level
+              ? `H${editor.getAttributes('heading').level}`
+              : 'Normal'
+          }
+          mode={mode}
+        />
         <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
-        <button
-          onClick={handleToolbarClick(() => editor.chain().focus().toggleBulletList().run())}
-          className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${
-            editor?.isActive('bulletList') ? 'bg-gray-100 dark:bg-gray-800' : ''
-          }`}
-          title="Bullet List"
-        >
-          <Icon icon="mdi:format-list-bulleted" width={20} height={20} />
-        </button>
-        <button
-          onClick={handleToolbarClick(() => editor.chain().focus().toggleOrderedList().run())}
-          className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${
-            editor?.isActive('orderedList') ? 'bg-gray-100 dark:bg-gray-800' : ''
-          }`}
-          title="Numbered List"
-        >
-          <Icon icon="mdi:format-list-numbered" width={20} height={20} />
-        </button>
+        <ToolbarDropdown
+          value={editor?.isActive('bulletList') ? 'bullet' : editor?.isActive('orderedList') ? 'ordered' : editor?.isActive('taskList') ? 'check' : 'none'}
+          onChange={(val) => {
+            if (val === 'bullet') editor.chain().focus().toggleBulletList().run();
+            else if (val === 'ordered') editor.chain().focus().toggleOrderedList().run();
+            else if (val === 'check') editor.chain().focus().toggleTaskList().run();
+          }}
+          options={[
+            { value: 'bullet', label: 'Bulleted List', icon: 'mdi:format-list-bulleted' },
+            { value: 'ordered', label: 'Numbered List', icon: 'mdi:format-list-numbered' },
+            { value: 'check', label: 'Checklist', icon: 'mdi:checkbox-marked-outline' },
+          ]}
+          label={
+            editor?.isActive('bulletList') ? 'Bulleted' : editor?.isActive('orderedList') ? 'Numbered' : editor?.isActive('taskList') ? 'Checklist' : 'List'
+          }
+          mode={mode}
+        />
         <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
         <button
           onClick={handleToolbarClick(addLink)}
@@ -319,6 +352,33 @@ const TipTapEditor = memo(({
         >
           <Icon icon="mdi:image" width={20} height={20} />
         </button>
+        <button onClick={handleToolbarClick(() => editor.chain().focus().undo().run())} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Undo"><Icon icon="mdi:undo" width={20} height={20} /></button>
+        <button onClick={handleToolbarClick(() => editor.chain().focus().redo().run())} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Redo"><Icon icon="mdi:redo" width={20} height={20} /></button>
+        <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
+        <button onClick={handleToolbarClick(() => editor.chain().focus().sinkListItem('listItem').run())} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Indent"><Icon icon="mdi:format-indent-increase" width={20} height={20} /></button>
+        <button onClick={handleToolbarClick(() => editor.chain().focus().liftListItem('listItem').run())} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Outdent"><Icon icon="mdi:format-indent-decrease" width={20} height={20} /></button>
+        <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
+        <button onClick={handleToolbarClick(() => editor.chain().focus().toggleBlockquote().run())} className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('blockquote') ? 'bg-gray-100 dark:bg-gray-800' : ''}`} title="Blockquote"><Icon icon="mdi:format-quote-close" width={20} height={20} /></button>
+        <button onClick={handleToolbarClick(() => editor.chain().focus().toggleCode().run())} className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('code') ? 'bg-gray-100 dark:bg-gray-800' : ''}`} title="Code"><Icon icon="mdi:code-tags" width={20} height={20} /></button>
+        <button onClick={handleToolbarClick(() => editor.chain().focus().toggleStrike().run())} className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('strike') ? 'bg-gray-100 dark:bg-gray-800' : ''}`} title="Strikethrough"><Icon icon="mdi:format-strikethrough-variant" width={20} height={20} /></button>
+        <button onClick={handleToolbarClick(() => editor.chain().focus().toggleSuperscript().run())} className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('superscript') ? 'bg-gray-100 dark:bg-gray-800' : ''}`} title="Superscript"><Icon icon="mdi:format-superscript" width={20} height={20} /></button>
+        <button onClick={handleToolbarClick(() => editor.chain().focus().toggleSubscript().run())} className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('subscript') ? 'bg-gray-100 dark:bg-gray-800' : ''}`} title="Subscript"><Icon icon="mdi:format-subscript" width={20} height={20} /></button>
+        <ToolbarDropdown
+          value={editor?.getAttributes('textAlign').textAlign || 'left'}
+          onChange={(val) => editor.chain().focus().setTextAlign(val).run()}
+          options={[
+            { value: 'left', label: 'Align Left', icon: 'mdi:format-align-left' },
+            { value: 'center', label: 'Align Center', icon: 'mdi:format-align-center' },
+            { value: 'right', label: 'Align Right', icon: 'mdi:format-align-right' },
+            { value: 'justify', label: 'Justify', icon: 'mdi:format-align-justify' },
+          ]}
+          label={
+            editor?.getAttributes('textAlign').textAlign
+              ? `Align ${editor.getAttributes('textAlign').textAlign.charAt(0).toUpperCase() + editor.getAttributes('textAlign').textAlign.slice(1)}`
+              : 'Align'
+          }
+          mode={mode}
+        />
       </div>
       <EditorContent editor={editor} />
       <ImageLibrary

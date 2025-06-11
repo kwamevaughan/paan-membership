@@ -34,9 +34,10 @@ const lowlight = createLowlight();
 const editorStyles = `
   .editor-container {
     height: auto;
-    overflow: auto;
+    overflow: visible;
     display: flex;
     flex-direction: column;
+    position: relative;
   }
 
   .editor-container .ProseMirror {
@@ -46,6 +47,7 @@ const editorStyles = `
     outline: none;
     background: white;
     margin-top: 0.5rem;
+    min-height: 200px;
   }
 
   /* Table styles for TipTap */
@@ -82,15 +84,23 @@ const editorStyles = `
   .editor-toolbar {
     position: sticky;
     top: 0;
-    z-index: 2;
+    z-index: 50;
     background: white;
     border-bottom: 1px solid #e2e8f0;
     padding: 0.5rem;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    margin-bottom: 0.5rem;
   }
 
   .dark .editor-toolbar {
+    background: rgba(26, 26, 26, 0.95);
     border-bottom-color: #2d3748;
+  }
+
+  .dark .editor-container .ProseMirror {
     background: #1a1a1a;
+    color: white;
   }
 
   .ProseMirror p {
@@ -165,6 +175,39 @@ const editorStyles = `
 
   .ProseMirror span[style*="font-size"] {
     font-size: unset !important;
+  }
+
+  /* Ensure the editor content area is scrollable */
+  .editor-container .ProseMirror {
+    max-height: 500px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f7fafc;
+  }
+
+  .dark .editor-container .ProseMirror {
+    scrollbar-color: #4a5568 #2d3748;
+  }
+
+  .editor-container .ProseMirror::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .editor-container .ProseMirror::-webkit-scrollbar-track {
+    background: #f7fafc;
+  }
+
+  .editor-container .ProseMirror::-webkit-scrollbar-thumb {
+    background-color: #cbd5e0;
+    border-radius: 4px;
+  }
+
+  .dark .editor-container .ProseMirror::-webkit-scrollbar-track {
+    background: #2d3748;
+  }
+
+  .dark .editor-container .ProseMirror::-webkit-scrollbar-thumb {
+    background-color: #4a5568;
   }
 `;
 

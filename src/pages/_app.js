@@ -5,6 +5,7 @@ import "leaflet/dist/leaflet.css";
 import "../styles/globals.css";
 import { Questrial } from "next/font/google";
 import { sidebarNav } from "@/data/nav";
+import '@/styles/editor.css';
 
 const questrial = Questrial({
   weight: "400",

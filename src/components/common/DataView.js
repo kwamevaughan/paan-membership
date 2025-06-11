@@ -30,9 +30,6 @@ const DataView = memo(({
   const [paginatedData, setPaginatedData] = useState([]);
 
   useEffect(() => {
-    console.log('DataView - Received data:', data);
-    console.log('DataView - View mode:', viewMode);
-    console.log('DataView - Item name:', itemName);
   }, [data, viewMode, itemName]);
 
   useEffect(() => {
@@ -40,15 +37,7 @@ const DataView = memo(({
       const startIndex = 0;
       const endIndex = Math.min(currentPage * itemsPerPage, data.length);
       const newPaginatedData = data.slice(startIndex, endIndex);
-      console.log('DataView - Pagination:', {
-        currentPage,
-        itemsPerPage,
-        startIndex,
-        endIndex,
-        dataLength: data.length,
-        paginatedLength: newPaginatedData.length,
-        hasMore: endIndex < data.length
-      });
+      
       setPaginatedData(newPaginatedData);
       
       // Notify parent of count changes
@@ -65,16 +54,9 @@ const DataView = memo(({
   const totalItems = totalCount || data.length;
   const displayedCount = paginatedData.length;
 
-  console.log('DataView - Current state:', {
-    hasMoreItems,
-    totalItems,
-    displayedCount,
-    paginatedDataLength: paginatedData.length,
-    dataLength: data?.length
-  });
+  
 
   const handleEdit = (item) => {
-    console.log('DataView - Edit clicked:', item);
     if (handleEditClick) {
       handleEditClick(item);
     } else if (onEdit) {
@@ -83,7 +65,6 @@ const DataView = memo(({
   };
 
   const handleDelete = (item) => {
-    console.log('DataView - Delete clicked:', item);
     if (onDelete) {
       onDelete(item);
     }
@@ -98,16 +79,13 @@ const DataView = memo(({
 
   // Create a wrapper for the card renderer that includes the handlers
   const renderCardWithHandlers = (item) => {
-    console.log('DataView - Rendering card for item:', item);
     return renderCard(item, { onEdit: handleEdit, onDelete: handleDelete });
   };
 
   if (!data || data.length === 0) {
-    console.log('DataView - No data to display');
     return null;
   }
 
-  console.log('DataView - Rendering view with mode:', viewMode);
   return (
     <div className="space-y-6">
       {viewMode === "list" || viewMode === "table" ? (

@@ -162,7 +162,6 @@ export default function AdminBlog({
   }, [selectedCategory, selectedTags, filterTerm, selectedStatus, selectedAuthor, selectedDateRange, sortOrder, updateFilters, filters.sort]);
 
   const handleCreateBlog = useCallback(() => {
-    console.log('handleCreateBlog called');
     setSelectedIds([]);
     
     // Reset form data first
@@ -196,11 +195,9 @@ export default function AdminBlog({
     setIsEditing(false);
     setEditingId(null);
     setIsModalOpen(true);
-    console.log('Modal state after create:', { isModalOpen: true, isEditing: false });
   }, [setFormData]);
 
   const handleEditClick = useCallback((blog) => {
-    console.log('handleEditClick called with blog:', blog);
     setSelectedIds([]);
     
     // Reset form data first
@@ -235,16 +232,13 @@ export default function AdminBlog({
     setEditingId(blog.id);
     handleEdit(blog);
     setIsModalOpen(true);
-    console.log('Modal state after edit:', { isModalOpen: true, isEditing: true, editingId: blog.id });
   }, [handleEdit, setFormData]);
 
   const handleCancel = useCallback(() => {
-    console.log('handleCancel called in parent');
     setIsModalOpen(false);
     setSelectedIds([]);
     // Reset form after modal closes
     setTimeout(() => {
-      console.log('handleCancel timeout executing in parent');
       setIsEditing(false);
       setEditingId(null);
       handleEdit({
@@ -260,21 +254,17 @@ export default function AdminBlog({
         slug: "",
         is_published: false,
       });
-      console.log('Modal state after cancel:', { isModalOpen: false, isEditing: false, editingId: null });
     }, 50);
   }, [handleEdit]);
 
   // Add effect to monitor modal state
   useEffect(() => {
-    console.log('Modal state changed:', { isModalOpen, isEditing, editingId });
   }, [isModalOpen, isEditing, editingId]);
 
   const handleFormSubmit = useCallback(async (e, updatedFormData) => {
     e.preventDefault();
     try {
-      console.log('handleFormSubmit called with data:', updatedFormData);
       const success = await handleSubmit(e, updatedFormData);
-      console.log('handleSubmit returned:', success);
       
       if (success) {
         await fetchBlogs();
@@ -313,7 +303,6 @@ export default function AdminBlog({
   }, [handleSubmit, fetchBlogs, setFormData]);
 
   const handleDeleteClick = useCallback((blog) => {
-    console.log('handleDeleteClick called with blog:', blog);
     setItemToDelete(blog);
     setIsDeleteModalOpen(true);
   }, []);

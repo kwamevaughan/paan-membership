@@ -60,9 +60,33 @@ export default function BlogForm({
   const [isSEOCollapsed, setIsSEOCollapsed] = useState(true);
   const [isImageCollapsed, setIsImageCollapsed] = useState(true);
   const [isPublishingCollapsed, setIsPublishingCollapsed] = useState(true);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   // Define isEditing before effects
   const isEditing = Boolean(blogId);
+
+  // Add effect to handle beforeunload
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+        return '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [hasUnsavedChanges]);
+
+  // Add effect to track form changes
+  useEffect(() => {
+    if (showForm) {
+      setHasUnsavedChanges(true);
+    }
+  }, [formData, editorContent, showForm]);
 
   // Fetch blog data when blogId changes
   useEffect(() => {
@@ -479,6 +503,7 @@ export default function BlogForm({
       console.log("handleSubmit result:", success);
 
       if (success) {
+        setHasUnsavedChanges(false);
         if (typeof fetchBlogs === "function") {
           console.log("Fetching updated blogs...");
           await fetchBlogs();

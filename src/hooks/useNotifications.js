@@ -28,9 +28,16 @@ const useNotifications = () => {
         .select("*")
         .order("created_at", { ascending: false });
 
+      // Fetch submission errors
+      const { data: submissionErrors, error: submissionError } = await supabase
+        .from("submission_errors")
+        .select("*")
+        .order("created_at", { ascending: false });
+
       if (applicantError) throw applicantError;
       if (marketIntelError) throw marketIntelError;
       if (offerError) throw offerError;
+      if (submissionError) throw submissionError;
 
       // Transform and combine all notifications
       const allNotifications = [
@@ -71,6 +78,17 @@ const useNotifications = () => {
           metadata: {
             offerId: feedback.offer_id,
             userId: feedback.user_id
+          }
+        })),
+        ...(submissionErrors || []).map(error => ({
+          id: error.id,
+          type: 'submission_error',
+          title: 'Submission Error',
+          message: error.error_message,
+          timestamp: error.created_at,
+          metadata: {
+            userId: error.user_id,
+            errorDetails: error.error_details
           }
         }))
       ].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
@@ -127,10 +145,18 @@ const useNotifications = () => {
       })
       .subscribe();
 
+    const submissionErrorSubscription = supabase
+      .channel('submission_errors_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'submission_errors' }, () => {
+        fetchNotifications();
+      })
+      .subscribe();
+
     return () => {
       applicantSubscription.unsubscribe();
       marketIntelSubscription.unsubscribe();
       offerSubscription.unsubscribe();
+      submissionErrorSubscription.unsubscribe();
     };
   }, []);
 

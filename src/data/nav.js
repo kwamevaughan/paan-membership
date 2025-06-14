@@ -10,6 +10,16 @@ export const sidebarNav = [
     ],
   },
   {
+    category: "Member Management",
+    items: [
+      {
+        href: "/hr/applicants",
+        icon: "mdi:account-multiple",
+        label: "Applicants",
+      },
+    ],
+  },
+  {
     category: "Recruitment Tools",
     items: [
       { href: "/hr/jobs", icon: "mdi:briefcase", label: "EOI Postings" },
@@ -32,16 +42,7 @@ export const sidebarNav = [
       // { href: "/hr/recruiters", icon: "stash:search-box", label: "Recruiters" },
     ],
   },
-  {
-    category: "Member Management",
-    items: [
-      {
-        href: "/hr/applicants",
-        icon: "mdi:account-multiple",
-        label: "Applicants",
-      },
-    ],
-  },
+
   {
     category: "Content Management",
     items: [

@@ -84,6 +84,7 @@ const SimpleFooter = ({ mode, isSidebarOpen }) => {
                   width={30}
                   height={30}
                   className="absolute top-0 left-0"
+                  unoptimized
                 />
               </div>
             </span>{" "}
@@ -97,6 +98,7 @@ const SimpleFooter = ({ mode, isSidebarOpen }) => {
                   width={30}
                   height={30}
                   className="absolute top-0 left-0"
+                  unoptimized
                 />
               </div>
             </span>

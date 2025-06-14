@@ -32,10 +32,23 @@ export default function CandidateModal({
   if (!isOpen || !candidate) return null;
 
   const handleDocumentPreview = (url) => {
-    const fileId = url.split("id=")[1].split("&")[0];
-    const previewUrl = `https://drive.google.com/file/d/${fileId}/preview`;
-    setPreviewUrl(previewUrl);
-    setIsPreviewModalOpen(true);
+    if (!url) {
+      console.warn('No document URL provided');
+      return;
+    }
+
+    try {
+      const fileId = url.split("id=")[1]?.split("&")[0];
+      if (!fileId) {
+        console.warn('Invalid Google Drive URL format');
+        return;
+      }
+      const previewUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+      setPreviewUrl(previewUrl);
+      setIsPreviewModalOpen(true);
+    } catch (error) {
+      console.error('Error processing document URL:', error);
+    }
   };
 
   const closePreviewModal = () => {

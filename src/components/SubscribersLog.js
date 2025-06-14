@@ -224,7 +224,7 @@ export default function SubscribersLog({
       </div>
 
       <div className="flex flex-col rounded-xl overflow-hidden border border-gray-200 dark:border-slate-800">
-        <div className="max-h-[430px] overflow-y-auto">
+        <div className="max-h-[480px] overflow-y-auto">
           <table className="min-w-full text-sm">
             <thead
               className={`sticky top-0 z-10 ${

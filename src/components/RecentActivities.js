@@ -1,9 +1,108 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Icon } from "@iconify/react";
 import { useTimeline } from "@/hooks/useTimeline";
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
+
+const ACTIVITY_STYLES = {
+  business_opportunities: {
+    bg: "bg-blue-500",
+    gradient: "from-blue-500 to-blue-200",
+    icon: "lucide:briefcase",
+    glow: "shadow-blue-500/25",
+    color: "text-blue-600",
+    ring: "ring-blue-500/20"
+  },
+  events: {
+    bg: "bg-blue-500",
+    gradient: "from-blue-500 to-blue-200",
+    icon: "lucide:calendar",
+    glow: "shadow-blue-500/25",
+    color: "text-blue-600",
+    ring: "ring-blue-500/20"
+  },
+  updates: {
+    bg: "bg-purple-500",
+    gradient: "from-purple-500 to-purple-200",
+    icon: "lucide:trending-up",
+    glow: "shadow-purple-500/25",
+    color: "text-purple-600",
+    ring: "ring-purple-500/20"
+  },
+  access: {
+    bg: "bg-orange-500",
+    gradient: "from-orange-500 to-orange-200",
+    icon: "lucide:key",
+    glow: "shadow-orange-500/25",
+    color: "text-orange-600",
+    ring: "ring-orange-500/20"
+  },
+  resources: {
+    bg: "bg-indigo-500",
+    gradient: "from-indigo-500 to-indigo-200",
+    icon: "lucide:book-open",
+    glow: "shadow-indigo-500/25",
+    color: "text-indigo-600",
+    ring: "ring-indigo-500/20"
+  },
+  offers: {
+    bg: "bg-pink-500",
+    gradient: "from-pink-500 to-pink-200",
+    icon: "lucide:tag",
+    glow: "shadow-pink-500/25",
+    color: "text-pink-600",
+    ring: "ring-pink-500/20"
+  },
+};
+
+const FILTER_CATEGORIES = [
+  { id: "all", label: "All", icon: "lucide:filter" },
+  { id: "Business Opportunities", label: "Business", icon: "lucide:building-2" },
+  { id: "Events", label: "Events", icon: "lucide:calendar" },
+  { id: "Updates", label: "Updates", icon: "lucide:trending-up" },
+  { id: "Resources", label: "Resources", icon: "lucide:book-open" },
+  { id: "Offers", label: "Offers", icon: "lucide:tag" },
+];
+
+const ANIMATION_VARIANTS = {
+  container: {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  },
+  item: {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.4 }
+    },
+    exit: {
+      opacity: 0,
+      y: -20,
+      transition: { duration: 0.3 }
+    }
+  },
+  activity: {
+    hidden: { opacity: 0, x: -30 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: { duration: 0.4 }
+    },
+    exit: {
+      opacity: 0,
+      x: 30,
+      transition: { duration: 0.3 }
+    }
+  }
+};
 
 export default function ModernTimeline({
   mode = "light",
@@ -13,15 +112,17 @@ export default function ModernTimeline({
   const [activeFilter, setActiveFilter] = useState("all");
   const { activities, loading } = useTimeline(activeFilter);
 
-  // Filter activities with loading simulation
-  const handleFilter = (filter) => {
+  const handleFilter = useCallback((filter) => {
     setActiveFilter(filter);
-    if (onFilter) onFilter(filter);
-  };
+    onFilter?.(filter);
+  }, [onFilter]);
 
-  // Memoize grouped activities
-  const filteredActivities = useMemo(() => {
-    // Group by date
+  const handleActivityClick = useCallback((activity) => {
+    onActivityClick?.(activity);
+  }, [onActivityClick]);
+
+  // Memoize grouped activities for better performance
+  const groupedActivities = useMemo(() => {
     return activities.reduce((groups, activity) => {
       const date = activity.date;
       if (!groups[date]) {
@@ -41,132 +142,90 @@ export default function ModernTimeline({
     const latestDate = new Date(Math.max(...dates));
 
     if (earliestDate.toDateString() === latestDate.toDateString()) {
-      return `Updated ${format(latestDate, "MMM d")}`;
+      return `Updated ${format(latestDate, "MMM d, yyyy")}`;
     }
-    return `${format(earliestDate, "MMM d")} to ${format(
-      latestDate,
-      "MMM d"
-    )}`;
+    return `${format(earliestDate, "MMM d, yyyy")} to ${format(latestDate, "MMM d, yyyy")}`;
   }, [activities]);
 
-  // Activity styles with blue-based palette
-  const activityStyles = {
-    business_opportunities: {
-      bg: "bg-[#d97708]", // Orange for a warm, professional tone
-      gradient: "from-[#d97708] to-[#fef1ce]", // Orange to light yellow for vibrancy
-      icon: "lucide:briefcase",
-      glow: "shadow-[#d97708]/25",
-    },
-    events: {
-      bg: "bg-[#4086f7]", // Bright blue for event energy
-      gradient: "from-[#4086f7] to-[#84c1d9]", // Blue to light cyan for a fresh look
-      icon: "lucide:calendar",
-      glow: "shadow-[#4086f7]/25",
-    },
-    updates: {
-      bg: "bg-[#84c1d9]", // Light cyan for a clean, modern feel
-      gradient: "from-[#84c1d9] to-[#eff6ff]", // Light cyan to soft white-blue
-      icon: "lucide:trending-up",
-      glow: "shadow-[#84c1d9]/25",
-    },
-    access: {
-      bg: "bg-[#f97315]", // Vibrant orange-red for emphasis
-      gradient: "from-[#f97315] to-[#d97708]", // Orange-red to orange for depth
-      icon: "lucide:key",
-      glow: "shadow-[#f97315]/25",
-    },
-    resources: {
-      bg: "bg-[#fef1ce]", // Light yellow for a warm, approachable tone
-      gradient: "from-[#fef1ce] to-[#eff6ff]", // Light yellow to soft white-blue
-      icon: "lucide:book-open",
-      glow: "shadow-[#fef1ce]/25",
-    },
-    offers: {
-      bg: "bg-[#eff6ff]", // Soft white-blue for a neutral, clean look
-      gradient: "from-[#eff6ff] to-[#84c1d9]", // Soft white-blue to light cyan
-      icon: "lucide:tag",
-      glow: "shadow-[#eff6ff]/25",
-    },
-  };
-
-  // Filter categories with Iconify icons
-  const filterCategories = [
-    { id: "all", label: "All", icon: "lucide:filter" },
-    {
-      id: "Business Opportunities",
-      label: "Business",
-      icon: "lucide:building-2",
-    },
-    { id: "Events", label: "Events", icon: "lucide:calendar" },
-    { id: "Updates", label: "Updates", icon: "lucide:trending-up" },
-    {
-      id: "Resources",
-      label: "Resources",
-      icon: "lucide:book-open",
-    },
-    { id: "Offers", label: "Offers", icon: "lucide:tag" },
-  ];
+  const isDark = mode === "dark";
 
   return (
-    <div className="relative overflow-hidden duration-500 shadow-md hover:shadow-xl rounded-2xl">
-      {/* Background Effects */}
+    <div className="relative overflow-hidden duration-500 transition-all rounded-3xl shadow-lg hover:shadow-xl">
+      {/* Animated Background Effects */}
       <div className="absolute inset-0 -z-10">
-        <div
+        <motion.div
+          animate={{
+            scale: [1, 1.1, 1],
+            rotate: [0, 5, 0],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
           className={`absolute top-0 left-1/4 w-96 h-96 rounded-full blur-3xl opacity-10 ${
-            mode === "dark"
-              ? "bg-gradient-to-r from-[#d97708] to-[#4086f7]" // Orange to blue
-              : "bg-gradient-to-r from-[#84c1d9] to-[#fef1ce]" // Light cyan to light yellow
+            isDark ? "bg-gradient-to-r from-blue-400 to-purple-400" : "bg-gradient-to-r from-blue-400 to-indigo-400"
           }`}
         />
-        <div
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            rotate: [0, -5, 0],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: 5
+          }}
           className={`absolute bottom-0 right-1/4 w-96 h-96 rounded-full blur-3xl opacity-10 ${
-            mode === "dark"
-              ? "bg-gradient-to-r from-[#4086f7] to-[#d97708]" // Blue to orange
-              : "bg-gradient-to-r from-[#fef1ce] to-[#84c1d9]" // Light yellow to light cyan
+            isDark ? "bg-gradient-to-r from-purple-400 to-pink-400" : "bg-gradient-to-r from-indigo-400 to-purple-400"
           }`}
         />
       </div>
 
-      <div
-        className={`rounded-2xl border backdrop-blur-xl transition-all duration-500 hover:shadow-2xl ${
-          mode === "dark"
-            ? "bg-[#172840]/90 border-[#172840]/50 shadow-xl shadow-black/25 text-white"
-            : "bg-white/90 border-[#84c1d9]/50 shadow-xl shadow-[#84c1d9]/10 text-[#172840]"
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.6 }}
+        className={`rounded-3xl border backdrop-blur-xl transition-all duration-500 ${
+          isDark
+            ? "bg-gray-900/90 border-gray-700/50 shadow-xl hover:shadow-2xl shadow-black/25 text-white"
+            : "bg-white/90 border-gray-200/50 shadow-xl hover:shadow-2xl shadow-gray-900/10 text-gray-900"
         }`}
       >
-        {/* Header Section */}
+        {/* Enhanced Header Section */}
         <div
           className={`px-8 py-6 border-b backdrop-blur-sm sticky top-0 z-20 rounded-t-3xl ${
-            mode === "dark"
-              ? "border-[#172840]/50 bg-[#172840]/95"
-              : "border-[#84c1d9]/50 bg-white/95"
+            isDark ? "border-gray-700/50 bg-gray-900/95" : "border-gray-200/50 bg-white/95"
           }`}
         >
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="p-3 rounded-2xl bg-blue-400/10 shadow-lg">
-                  {" "}
-                  {/* Light yellow background */}
+              <motion.div
+                whileHover={{ scale: 1.05, rotate: 5 }}
+                className="relative"
+              >
+                <div className={`p-3 rounded-2xl shadow-lg ${
+                  isDark ? "bg-blue-500/20" : "bg-blue-50"
+                }`}>
                   <Icon
                     icon="lucide:clock"
-                    className="w-6 h-6 text-[#4086f7]"
-                  />{" "}
-                  {/* Blue icon */}
+                    className={`w-6 h-6 ${isDark ? "text-blue-400" : "text-blue-600"}`}
+                  />
                 </div>
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-[#f97315] rounded-full animate-pulse shadow-lg shadow-[#f97315]/50" />{" "}
-                {/* Orange-red pulse */}
-              </div>
+               
+              </motion.div>
               <div>
-                <h2 className={`text-xl font-bold text-[#172840] $`}>
+                <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
                   Activity Timeline
                 </h2>
                 <div className="flex items-center gap-2 mt-1">
-                  <span
-                    className={`text-sm font-medium ${
-                      mode === "dark" ? "text-[#84c1d9]" : "text-[#172840]"
-                    }`}
-                  >
+                  <Icon
+                    icon="lucide:calendar-days"
+                    className={`w-4 h-4 ${isDark ? "text-gray-400" : "text-gray-500"}`}
+                  />
+                  <span className={`text-sm font-medium ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                     {dateRangeText}
                   </span>
                 </div>
@@ -177,10 +236,10 @@ export default function ModernTimeline({
               whileHover={{ scale: 1.1, rotate: 90 }}
               whileTap={{ scale: 0.95 }}
               className={`group p-3 rounded-2xl transition-all duration-300 ${
-                mode === "dark"
-                  ? "bg-[#172840]/80 hover:bg-[#3b82f6]/80 text-[#84c1d9] hover:text-white"
-                  : "bg-[#84c1d9]/20 hover:bg-[#3b82f6]/20 text-[#172840] hover:text-[#172840]"
-              } backdrop-blur-sm shadow-lg`}
+                isDark
+                  ? "bg-gray-800/80 hover:bg-gray-700/80 text-gray-300 hover:text-white"
+                  : "bg-gray-100/80 hover:bg-gray-200/80 text-gray-600 hover:text-gray-900"
+              } backdrop-blur-sm shadow-lg hover:shadow-xl`}
               aria-label="More options"
             >
               <Icon
@@ -190,24 +249,20 @@ export default function ModernTimeline({
             </motion.button>
           </div>
 
-          {/* Modern Filter Pills */}
+          {/* Enhanced Filter Pills */}
           <div className="flex gap-3 overflow-x-auto scrollbar-none pb-4">
-            {filterCategories.map((category) => (
+            {FILTER_CATEGORIES.map((category) => (
               <motion.button
                 key={category.id}
                 onClick={() => handleFilter(category.id)}
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                className={`px-5 py-2.5 text-sm font-semibold rounded-2xl flex items-center gap-2 transition-all focus:outline-none whitespace-nowrap ${
+                className={`px-5 py-2.5 text-sm font-semibold rounded-2xl flex items-center gap-2 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 whitespace-nowrap ${
                   activeFilter === category.id
-                    ? `bg-[#84c1d9]/20 shadow-lg ${
-                        mode === "dark"
-                          ? "shadow-[#d97708]/50"
-                          : "shadow-[#4086f7]/30"
-                      } ring-2 ring-[#4086f7]/20` // Blue ring for active state
-                    : mode === "dark"
-                    ? "bg-[#d97708]/20 text-[#fef1ce] hover:bg-[#d97708]/40 border border-[#d97708]/30 hover:border-[#4086f7]/50 shadow-md" // Orange and light yellow
-                    : "bg-[#eff6ff]/60 text-[#4086f7] hover:bg-[#84c1d9]/20 border border-[#84c1d9]/50 hover:border-[#4086f7]/50 shadow-md" // Soft white-blue and blue
+                    ? `${isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-500/10 text-blue-600"} shadow-lg ring-2 ring-blue-500/20`
+                    : isDark
+                    ? "bg-gray-800/60 text-gray-300 hover:bg-gray-700/60 border border-gray-700/50 hover:border-gray-600/50 shadow-md hover:text-white"
+                    : "bg-gray-100/60 text-gray-700 hover:bg-gray-200/60 border border-gray-200/50 hover:border-gray-300/50 shadow-md hover:text-gray-900"
                 } backdrop-blur-sm`}
                 aria-label={`Filter by ${category.label}`}
               >
@@ -218,184 +273,147 @@ export default function ModernTimeline({
           </div>
         </div>
 
-        {/* Timeline Section */}
-        <div className="flex-1 overflow-y-auto scrollbar-thin max-h-[450px]">
+        {/* Enhanced Timeline Section */}
+        <div className="flex-1 overflow-y-auto max-h-[500px]">
           {loading ? (
-            <div className="py-10 px-8 text-center">
+            <div className="py-12 px-8 text-center">
               <motion.div
                 animate={{ rotate: 360 }}
                 transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
                 className="mx-auto w-16 h-16 mb-6"
               >
-                <div
-                  className={`w-16 h-16 rounded-full border-4 border-transparent ${
-                    mode === "dark"
-                      ? "border-t-[#fef1ce] border-r-[#4086f7]" // Light yellow and blue
-                      : "border-t-[#f97315] border-r-[#4086f7]" // Orange-red and blue
-                  }`}
+                <Icon
+                  icon="lucide:loader-2"
+                  className={`w-16 h-16 ${isDark ? "text-blue-400" : "text-blue-600"}`}
                 />
               </motion.div>
-              <p
-                className={`text-lg font-medium ${
-                  mode === "dark" ? "text-[#84c1d9]" : "text-[#172840]"
-                }`}
-              >
+              <p className={`text-lg font-medium ${isDark ? "text-gray-200" : "text-gray-800"}`}>
                 Loading timeline...
               </p>
-              <p
-                className={`text-sm mt-2 ${
-                  mode === "dark" ? "text-[#84c1d9]/70" : "text-[#172840]/70"
-                }`}
-              >
+              <p className={`text-sm mt-2 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                 Fetching your latest activities
               </p>
             </div>
-          ) : Object.keys(filteredActivities).length > 0 ? (
-            <div className="relative px-6">
-              <AnimatePresence>
-                {Object.entries(filteredActivities).map(
-                  ([date, dateActivities], dateIndex) => (
+          ) : Object.keys(groupedActivities).length > 0 ? (
+            <motion.div
+              variants={ANIMATION_VARIANTS.container}
+              initial="hidden"
+              animate="visible"
+              className="relative px-6 pb-4"
+            >
+              <AnimatePresence mode="wait">
+                {Object.entries(groupedActivities).map(([date, dateActivities], dateIndex) => (
+                  <motion.div
+                    key={date}
+                    variants={ANIMATION_VARIANTS.item}
+                    className="mb-10"
+                  >
+                    {/* Enhanced Date Marker */}
                     <motion.div
-                      key={date}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.4, delay: dateIndex * 0.1 }}
-                      className="mb-10"
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: dateIndex * 0.1 }}
+                      className="sticky top-[4rem] z-10 mb-2"
                     >
-                      {/* Date marker */}
-                      <motion.div
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
-                        className="sticky top-[7rem] z-10 mb-6"
-                      >
-                        <div
-                          className={`inline-flex items-center gap-3 px-6 py-3 rounded-2xl font-bold shadow-lg backdrop-blur-sm ${
-                            mode === "dark"
-                              ? "bg-[#d97708]/20 text-[#fef1ce] shadow-black/30 border border-[#f97315]/50" // Orange and light yellow
-                              : "bg-[#eff6ff]/90 text-[#4086f7] shadow-[#84c1d9]/50 border border-[#84c1d9]/50" // Soft white-blue and blue
-                          }`}
-                        >
-                          <div
-                            className={`w-2 h-2 rounded-full ${
-                              mode === "dark" ? "bg-[#f97315]" : "bg-[#4086f7]" // Orange-red or blue
-                            } animate-pulse`}
-                          />
-                          {date}
-                        </div>
-                      </motion.div>
+                      <div className={`inline-flex items-center gap-3 px-6 py-3 rounded-2xl font-bold shadow-xl backdrop-blur-sm border ${
+                        isDark
+                          ? "bg-gray-800/90 text-white shadow-black/30 border-gray-700/50"
+                          : "bg-white/90 text-gray-900 shadow-gray-900/20 border-gray-200/50"
+                      }`}>
+                        <motion.div
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{ duration: 2, repeat: Infinity }}
+                          className={`w-2 h-2 rounded-full ${isDark ? "bg-blue-400" : "bg-blue-600"}`}
+                        />
+                        {date}
+                      </div>
+                    </motion.div>
 
-                      {/* Activities for this date */}
-                      <div className="space-y-4">
-                        {dateActivities.map((activity, index) => (
+                    {/* Enhanced Activities */}
+                    <div className="space-y-4">
+                      {dateActivities.map((activity, index) => {
+                        const style = ACTIVITY_STYLES[activity.type] || ACTIVITY_STYLES.updates;
+                        
+                        return (
                           <motion.div
                             key={`${date}-${index}`}
-                            initial={{ opacity: 0, x: -30 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            exit={{ opacity: 0, x: 30 }}
-                            transition={{ duration: 0.4, delay: index * 0.05 }}
+                            variants={ANIMATION_VARIANTS.activity}
+                            transition={{ delay: index * 0.05 }}
                             className="relative pl-12"
                           >
-                            {/* Timeline line */}
+                            {/* Enhanced Timeline Line */}
                             {index < dateActivities.length - 1 && (
-                              <div
-                                className={`absolute left-5 top-12 w-0.5 h-full opacity-30 ${
-                                  mode === "dark"
-                                    ? "bg-gradient-to-b from-[#fef1ce] to-transparent" // Light yellow
-                                    : "bg-gradient-to-b from-[#4086f7] to-transparent" // Blue
-                                }`}
-                              />
+                              <div className={`absolute left-5 top-12 w-0.5 h-full opacity-30 ${
+                                isDark
+                                  ? "bg-gradient-to-b from-gray-600 to-transparent"
+                                  : "bg-gradient-to-b from-gray-400 to-transparent"
+                              }`} />
                             )}
 
                             <div className="flex items-start gap-4">
-                              {/* Icon marker with enhanced design */}
+                              {/* Enhanced Icon Marker */}
                               <div className="absolute left-0 top-0">
                                 <motion.div
-                                  whileHover={{ scale: 1.2, rotate: 5 }}
+                                  whileHover={{ scale: 1.2, rotate: 10 }}
                                   className={`relative w-10 h-10 rounded-2xl flex items-center justify-center 
-                                    bg-gradient-to-br ${
-                                      activityStyles[activity.type].gradient
-                                    } 
-                                    shadow-xl ${
-                                      activityStyles[activity.type].glow
-                                    } ring-2 ring-white/20`}
+                                    bg-gradient-to-br ${style.gradient} 
+                                    shadow-xl ${style.glow} ring-4 ring-white/20 backdrop-blur-sm`}
                                 >
                                   <Icon
-                                    icon={activityStyles[activity.type].icon}
+                                    icon={style.icon}
                                     className="w-5 h-5 text-white"
                                   />
                                   <div className="absolute inset-0 rounded-2xl bg-white/10" />
                                 </motion.div>
                               </div>
 
-                              {/* Time marker */}
+                              {/* Enhanced Time Marker */}
                               <div className="min-w-[70px] text-xs font-bold mt-2">
-                                <span
-                                  className={`px-2 py-1 rounded-lg ${
-                                    mode === "dark"
-                                      ? "bg-[#172840]/50 text-[#84c1d9]"
-                                      : "bg-transparent text-[#172840]"
-                                  } backdrop-blur-sm`}
-                                >
+                                <span className={`px-3 py-1 rounded-lg backdrop-blur-sm ${
+                                  isDark
+                                    ? "bg-gray-800/60 text-gray-300 border border-gray-700/50"
+                                    : "bg-gray-100/60 text-gray-700 border border-gray-200/50"
+                                }`}>
                                   {activity.time}
                                 </span>
                               </div>
 
-                              {/* Content card with enhanced design */}
+                              {/* Enhanced Content Card */}
                               <Link href={activity.url} className="flex-1">
                                 <motion.div
-                                  className={`group p-5 rounded-2xl transition-all cursor-pointer backdrop-blur-sm border ${
-                                    mode === "dark"
-                                      ? "bg-[#d97708]/20 hover:bg-[#f97315]/30 border-[#fef1ce]/30 hover:border-[#f97315]/50 shadow-lg hover:shadow-xl shadow-black/20"
-                                      : "bg-[#eff6ff]/60 hover:bg-[#84c1d9]/30 border-[#84c1d9]/50 hover:border-[#4086f7]/70 shadow-lg hover:shadow-xl shadow-[#84c1d9]/10"
+                                  className={`group p-5 rounded-2xl transition-all cursor-pointer backdrop-blur-sm border hover:shadow-xl ${
+                                    isDark
+                                      ? "bg-gray-800/40 hover:bg-gray-800/60 border-gray-700/30 hover:border-gray-600/50 shadow-lg shadow-black/20"
+                                      : "bg-white/60 hover:bg-white/80 border-gray-200/50 hover:border-gray-300/70 shadow-lg shadow-gray-900/10"
                                   }`}
                                   whileHover={{ scale: 1.02, y: -2 }}
                                   whileTap={{ scale: 0.98 }}
-                                  onClick={() => onActivityClick?.(activity)}
+                                  onClick={() => handleActivityClick(activity)}
                                 >
                                   <div className="flex justify-between items-start mb-3">
-                                    <p
-                                      className={`text-sm font-semibold leading-relaxed ${
-                                        mode === "dark"
-                                          ? "text-white"
-                                          : "text-[#172840]"
-                                      }`}
-                                    >
+                                    <p className={`text-sm font-semibold leading-relaxed ${
+                                      isDark ? "text-gray-100" : "text-gray-900"
+                                    }`}>
                                       {activity.description}
                                     </p>
                                     <Icon
                                       icon="lucide:arrow-up-right"
                                       className={`w-5 h-5 opacity-0 group-hover:opacity-100 transition-all transform group-hover:translate-x-1 group-hover:-translate-y-1 ${
-                                        mode === "dark"
-                                          ? "text-[#84c1d9]"
-                                          : "text-[#172840]"
+                                        isDark ? "text-gray-300" : "text-gray-600"
                                       }`}
                                     />
                                   </div>
 
-                                  {/* Enhanced category chip */}
+                                  {/* Enhanced Category Chip */}
                                   <div className="flex">
-                                    <span
-                                      className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-xl backdrop-blur-sm ${
-                                        mode === "dark"
-                                          ? `bg-${
-                                              activityStyles[activity.type].bg
-                                            }/40 text-white border border-${
-                                              activityStyles[activity.type].bg
-                                            }/40`
-                                          : `bg-${
-                                              activityStyles[activity.type].bg
-                                            }/20 text-${
-                                              activityStyles[activity.type].bg
-                                            } border border-${
-                                              activityStyles[activity.type].bg
-                                            }/50`
-                                      } shadow-sm`}
-                                    >
+                                    <span className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-xl backdrop-blur-sm border shadow-sm ${
+                                      isDark
+                                        ? `bg-gray-700/60 text-gray-200 border-gray-600/50`
+                                        : `bg-gray-50/80 ${style.color} border-gray-200/50`
+                                    }`}>
                                       <Icon
                                         icon={
-                                          activity.category ===
-                                          "Business Opportunities"
+                                          activity.category === "Business Opportunities"
                                             ? "lucide:building-2"
                                             : activity.category === "Events"
                                             ? "lucide:calendar"
@@ -414,58 +432,50 @@ export default function ModernTimeline({
                               </Link>
                             </div>
                           </motion.div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )
-                )}
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                ))}
               </AnimatePresence>
-            </div>
+            </motion.div>
           ) : (
             <div className="py-24 px-8 text-center">
               <motion.div
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.6, type: "spring" }}
-                className={`mx-auto w-24 h-24 rounded-3xl flex items-center justify-center mb-8 shadow-xl ${
-                  mode === "dark"
-                    ? "bg-[#d97708]/20 shadow-black/30" // Orange
-                    : "bg-[#84c1d9]/20 shadow-[#4086f7]/50" // Light cyan
-                } backdrop-blur-sm`}
+                className={`mx-auto w-24 h-24 rounded-3xl flex items-center justify-center mb-8 shadow-xl backdrop-blur-sm ${
+                  isDark
+                    ? "bg-gray-800/60 shadow-black/30"
+                    : "bg-gray-100/60 shadow-gray-900/20"
+                }`}
               >
                 <Icon
                   icon="lucide:search-x"
-                  className={`w-12 h-12 ${
-                    mode === "dark" ? "text-[#fef1ce]" : "text-[#4086f7]" // Light yellow or blue
-                  }`}
+                  className={`w-12 h-12 ${isDark ? "text-gray-400" : "text-gray-600"}`}
                 />
               </motion.div>
-              <p
-                className={`text-xl font-bold mb-2 ${
-                  mode === "dark" ? "text-white" : "text-[#172840]"
-                }`}
-              >
+              <p className={`text-xl font-bold mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>
                 No activities found
               </p>
-              <p
-                className={`text-sm mb-8 ${
-                  mode === "dark" ? "text-[#84c1d9]/70" : "text-[#172840]/70"
-                }`}
-              >
+              <p className={`text-sm mb-8 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
                 Try adjusting your filters or check back later for new updates
               </p>
               <motion.button
                 onClick={() => handleFilter("all")}
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-6 py-3 rounded-2xl text-sm font-semibold bg-gradient-to-r from-[#3b82f6] to-[#84c1d9] text-white shadow-lg hover:shadow-xl transition-all backdrop-blur-sm"
+                className="px-6 py-3 rounded-2xl text-sm font-semibold bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg hover:shadow-xl transition-all backdrop-blur-sm"
               >
+                <Icon icon="lucide:refresh-cw" className="w-4 h-4 inline mr-2" />
                 Reset all filters
               </motion.button>
             </div>
           )}
         </div>
-      </div>
+      </motion.div>
+
     </div>
   );
 }

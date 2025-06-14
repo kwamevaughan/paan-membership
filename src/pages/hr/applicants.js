@@ -501,7 +501,7 @@ export default function HRApplicants({
       >
         <div className="space-y-4">
           <p className="text-lg">
-            Are you sure you want to delete this candidate? This action cannot
+            Are you sure you want to delete {candidateToDelete ? candidates.find(c => c.id === candidateToDelete)?.primaryContactName : 'this candidate'}? This action cannot
             be undone.
           </p>
           <div className="flex justify-end gap-4">

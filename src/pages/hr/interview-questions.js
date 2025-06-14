@@ -177,7 +177,7 @@ export default function HRInterviewQuestions({
             toggleSidebar={toggleSidebar}
             onLogout={handleLogout}
             setDragOffset={updateDragOffset}
-            user={{ name: "PAAN HR Team" }}
+            user={{ name: "PAAN Admin" }}
             isMobile={isMobile}
             isHovering={isHovering}
             handleMouseEnter={handleMouseEnter}

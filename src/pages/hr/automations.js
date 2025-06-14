@@ -224,6 +224,12 @@ export default function Automations({
           onLogout={handleLogout}
           toggleSidebar={toggleSidebar}
           setDragOffset={updateDragOffset}
+          user={{ name: "PAAN Admin" }}
+          isMobile={isMobile}
+          isHovering={isHovering}
+          handleMouseEnter={handleMouseEnter}
+          handleMouseLeave={handleMouseLeave}
+          handleOutsideClick={handleOutsideClick}
         />
         <div
           className={`content-container flex-1 p-10 pt-4 transition-all duration-300 overflow-hidden ${

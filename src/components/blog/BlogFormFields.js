@@ -634,7 +634,7 @@ export default function BlogFormFields({
               name="category_id"
               value={formData.category_id || ""}
               onChange={handleInputChange}
-              className={`w-full px-4 py-2.5 rounded-xl border appearance-none ${
+              className={`w-full px-4 py-2.5 rounded-xl border appearance-none capitalize ${
                 mode === "dark"
                   ? "bg-gray-800 border-gray-700 text-gray-100"
                   : "bg-white border-gray-300 text-gray-900"
@@ -706,7 +706,7 @@ export default function BlogFormFields({
               name="tags"
               onChange={handleTagChange}
               value=""
-              className={`w-full px-4 py-2.5 rounded-xl border appearance-none ${
+              className={`w-full px-4 py-2.5 rounded-xl border appearance-none capitalize ${
                 mode === "dark"
                   ? "bg-gray-800 border-gray-700 text-gray-100"
                   : "bg-white border-gray-300 text-gray-900"

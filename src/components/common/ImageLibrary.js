@@ -533,17 +533,18 @@ export default function ImageLibrary({
                       >
                         <div className="flex gap-2">
                           <button
-                            onClick={(e) => {
+                            onMouseDown={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
                               handleImageSelect(file);
+                              onClose();
                             }}
                             className="p-2 rounded-full bg-blue-500 hover:bg-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
                           >
                             <Icon icon="heroicons:plus" className="w-5 h-5" />
                           </button>
                           <button
-                            onClick={(e) => {
+                            onMouseDown={(e) => {
                               e.preventDefault();
                               e.stopPropagation();
                               handleDeleteClick(file);

@@ -519,8 +519,32 @@ const TipTapEditor = memo(({
   };
 
   const handleToolbarClick = (callback) => (e) => {
+    console.log('Toolbar click event:', {
+      event: e.type,
+      target: e.target,
+      currentTarget: e.currentTarget,
+      editorExists: !!editor,
+      editorIsActive: editor?.isActive(),
+      timestamp: new Date().toISOString()
+    });
+
     e.preventDefault();
-    callback();
+    e.stopPropagation();
+
+    if (editor) {
+      // Execute the callback immediately
+      callback();
+      
+      // Ensure editor stays focused
+      editor.commands.focus();
+      
+      console.log('After toolbar action:', {
+        isFocused: editor.view?.hasFocus(),
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      console.warn('Editor not available for toolbar action');
+    }
   };
 
   const openLinkPopover = () => {
@@ -568,36 +592,122 @@ const TipTapEditor = memo(({
     };
   }, [linkPopover.open]);
 
+  // Add editor state logging
+  useEffect(() => {
+    if (editor) {
+      const logEditorState = () => {
+        console.log('Editor state changed:', {
+          isFocused: editor.view?.hasFocus(),
+          isActive: editor.isActive(),
+          timestamp: new Date().toISOString()
+        });
+      };
+
+      // Add focus/blur handlers to the editor view
+      editor.view.dom.addEventListener('focus', logEditorState, true);
+      editor.view.dom.addEventListener('blur', logEditorState, true);
+      editor.on('update', logEditorState);
+
+      return () => {
+        editor.view.dom.removeEventListener('focus', logEditorState, true);
+        editor.view.dom.removeEventListener('blur', logEditorState, true);
+        editor.off('update', logEditorState);
+      };
+    }
+  }, [editor]);
+
   return (
     <div ref={editorContainerRef} className={`editor-container ${mode === "dark" ? "dark" : ""}`} style={{ contain: 'content' }}>
-      <div className="editor-toolbar flex flex-wrap gap-2">
-        <button onClick={handleToolbarClick(() => editor.chain().focus().undo().run())} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Undo"><Icon icon="mdi:undo" width={20} height={20} /></button>
-        <button onClick={handleToolbarClick(() => editor.chain().focus().redo().run())} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Redo"><Icon icon="mdi:redo" width={20} height={20} /></button>
+      <div 
+        className="editor-toolbar flex flex-wrap gap-2"
+        onMouseDown={(e) => {
+          // Only prevent default if clicking on a button
+          if (e.target.closest('button')) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+          console.log('Toolbar container mousedown:', {
+            target: e.target,
+            currentTarget: e.currentTarget,
+            isButton: !!e.target.closest('button'),
+            timestamp: new Date().toISOString()
+          });
+        }}
+      >
+        <button 
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (editor) {
+              editor.chain().focus().undo().run();
+            }
+          }}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" 
+          title="Undo"
+          type="button"
+        >
+          <Icon icon="mdi:undo" width={20} height={20} />
+        </button>
+        <button 
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (editor) {
+              editor.chain().focus().redo().run();
+            }
+          }}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" 
+          title="Redo"
+          type="button"
+        >
+          <Icon icon="mdi:redo" width={20} height={20} />
+        </button>
         <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
         <button
-          onClick={handleToolbarClick(() => editor.chain().focus().toggleBold().run())}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (editor) {
+              editor.chain().focus().toggleBold().run();
+            }
+          }}
           className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${
             editor?.isActive('bold') ? 'bg-gray-100 dark:bg-gray-800' : ''
           }`}
           title="Bold"
+          type="button"
         >
           <Icon icon="mdi:format-bold" width={20} height={20} />
         </button>
         <button
-          onClick={handleToolbarClick(() => editor.chain().focus().toggleItalic().run())}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (editor) {
+              editor.chain().focus().toggleItalic().run();
+            }
+          }}
           className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${
             editor?.isActive('italic') ? 'bg-gray-100 dark:bg-gray-800' : ''
           }`}
           title="Italic"
+          type="button"
         >
           <Icon icon="mdi:format-italic" width={20} height={20} />
         </button>
         <button
-          onClick={handleToolbarClick(() => editor.chain().focus().toggleUnderline().run())}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (editor) {
+              editor.chain().focus().toggleUnderline().run();
+            }
+          }}
           className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${
             editor?.isActive('underline') ? 'bg-gray-100 dark:bg-gray-800' : ''
           }`}
           title="Underline"
+          type="button"
         >
           <Icon icon="mdi:format-underline" width={20} height={20} />
         </button>
@@ -643,53 +753,151 @@ const TipTapEditor = memo(({
         />
         <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
         <button
-          onClick={handleToolbarClick(openLinkPopover)}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (editor) {
+              openLinkPopover();
+            }
+          }}
           className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('link') ? 'bg-gray-100 dark:bg-gray-800' : ''}`}
           title="Insert Link"
+          type="button"
         >
           <Icon icon="mdi:link" width={20} height={20} />
         </button>
         <button
-          onClick={handleToolbarClick(() => setShowImageLibrary(true))}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (editor) {
+              setShowImageLibrary(true);
+            }
+          }}
           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
           title="Insert Image"
+          type="button"
         >
           <Icon icon="mdi:image" width={20} height={20} />
         </button>
-        <button onClick={handleToolbarClick(() => editor.chain().focus().clearNodes().unsetAllMarks().run())} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Clear Formatting"><Icon icon="mdi:format-clear" width={20} height={20} /></button>
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (editor) {
+              editor.chain().focus().clearNodes().unsetAllMarks().run();
+            }
+          }}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+          title="Clear Formatting"
+          type="button"
+        >
+          <Icon icon="mdi:format-clear" width={20} height={20} />
+        </button>
         <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
         <button
-          onClick={handleToolbarClick(() => {
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             if (editor.isActive('bulletList') || editor.isActive('orderedList')) {
               editor.chain().focus().sinkListItem('listItem').run();
             } else if (editor.isActive('taskList')) {
               editor.chain().focus().sinkListItem('taskItem').run();
             }
-          })}
+          }}
           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
           title="Indent"
+          type="button"
         >
           <Icon icon="mdi:format-indent-increase" width={20} height={20} />
         </button>
         <button
-          onClick={handleToolbarClick(() => {
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
             if (editor.isActive('bulletList') || editor.isActive('orderedList')) {
               editor.chain().focus().liftListItem('listItem').run();
             } else if (editor.isActive('taskList')) {
               editor.chain().focus().liftListItem('taskItem').run();
             }
-          })}
+          }}
           className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
           title="Outdent"
+          type="button"
         >
           <Icon icon="mdi:format-indent-decrease" width={20} height={20} />
         </button>
         <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-1" />
-        <button onClick={handleToolbarClick(() => editor.chain().focus().toggleBlockquote().run())} className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('blockquote') ? 'bg-gray-100 dark:bg-gray-800' : ''}`} title="Blockquote"><Icon icon="mdi:format-quote-close" width={20} height={20} /></button>
-        <button onClick={handleToolbarClick(() => editor.chain().focus().toggleCode().run())} className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('code') ? 'bg-gray-100 dark:bg-gray-800' : ''}`} title="Code"><Icon icon="mdi:code-tags" width={20} height={20} /></button>
-        <button onClick={handleToolbarClick(() => editor.chain().focus().toggleStrike().run())} className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('strike') ? 'bg-gray-100 dark:bg-gray-800' : ''}`} title="Strikethrough"><Icon icon="mdi:format-strikethrough-variant" width={20} height={20} /></button>
-        <button onClick={handleToolbarClick(() => editor.chain().focus().toggleSuperscript().run())} className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('superscript') ? 'bg-gray-100 dark:bg-gray-800' : ''}`} title="Superscript"><Icon icon="mdi:format-superscript" width={20} height={20} /></button>
-        <button onClick={handleToolbarClick(() => editor.chain().focus().toggleSubscript().run())} className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('subscript') ? 'bg-gray-100 dark:bg-gray-800' : ''}`} title="Subscript"><Icon icon="mdi:format-subscript" width={20} height={20} /></button>
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (editor) {
+              editor.chain().focus().toggleBlockquote().run();
+            }
+          }}
+          className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('blockquote') ? 'bg-gray-100 dark:bg-gray-800' : ''}`}
+          title="Blockquote"
+          type="button"
+        >
+          <Icon icon="mdi:format-quote-close" width={20} height={20} />
+        </button>
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (editor) {
+              editor.chain().focus().toggleCode().run();
+            }
+          }}
+          className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('code') ? 'bg-gray-100 dark:bg-gray-800' : ''}`}
+          title="Code"
+          type="button"
+        >
+          <Icon icon="mdi:code-tags" width={20} height={20} />
+        </button>
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (editor) {
+              editor.chain().focus().toggleStrike().run();
+            }
+          }}
+          className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('strike') ? 'bg-gray-100 dark:bg-gray-800' : ''}`}
+          title="Strikethrough"
+          type="button"
+        >
+          <Icon icon="mdi:format-strikethrough-variant" width={20} height={20} />
+        </button>
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (editor) {
+              editor.chain().focus().toggleSuperscript().run();
+            }
+          }}
+          className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('superscript') ? 'bg-gray-100 dark:bg-gray-800' : ''}`}
+          title="Superscript"
+          type="button"
+        >
+          <Icon icon="mdi:format-superscript" width={20} height={20} />
+        </button>
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (editor) {
+              editor.chain().focus().toggleSubscript().run();
+            }
+          }}
+          className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('subscript') ? 'bg-gray-100 dark:bg-gray-800' : ''}`}
+          title="Subscript"
+          type="button"
+        >
+          <Icon icon="mdi:format-subscript" width={20} height={20} />
+        </button>
         <ToolbarDropdown
           value={editor?.getAttributes('textAlign').textAlign || 'left'}
           onChange={(val) => {
@@ -724,10 +932,62 @@ const TipTapEditor = memo(({
           onChange={(color) => editor.chain().focus().setHighlight({ color }).run()}
           mode={mode}
         />
-        <button onClick={handleToolbarClick(() => editor.chain().focus().setHorizontalRule().run())} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Horizontal Rule"><Icon icon="mdi:minus" width={20} height={20} /></button>
-        <button onClick={handleToolbarClick(() => editor.chain().focus().toggleCodeBlock().run())} className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('codeBlock') ? 'bg-gray-100 dark:bg-gray-800' : ''}`} title="Code Block"><Icon icon="mdi:code-braces" width={20} height={20} /></button>
-        <button onClick={handleToolbarClick(() => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run())} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Insert Table"><Icon icon="mdi:table" width={20} height={20} /></button>
-        <button onClick={handleToolbarClick(() => editor.chain().focus().deleteTable().run())} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded" title="Delete Table"><Icon icon="mdi:table-remove" width={20} height={20} /></button>
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (editor) {
+              editor.chain().focus().setHorizontalRule().run();
+            }
+          }}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+          title="Horizontal Rule"
+          type="button"
+        >
+          <Icon icon="mdi:minus" width={20} height={20} />
+        </button>
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (editor) {
+              editor.chain().focus().toggleCodeBlock().run();
+            }
+          }}
+          className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('codeBlock') ? 'bg-gray-100 dark:bg-gray-800' : ''}`}
+          title="Code Block"
+          type="button"
+        >
+          <Icon icon="mdi:code-braces" width={20} height={20} />
+        </button>
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (editor) {
+              editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+            }
+          }}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+          title="Insert Table"
+          type="button"
+        >
+          <Icon icon="mdi:table" width={20} height={20} />
+        </button>
+        <button
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (editor) {
+              editor.chain().focus().deleteTable().run();
+            }
+          }}
+          className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded"
+          title="Delete Table"
+          type="button"
+        >
+          <Icon icon="mdi:table-remove" width={20} height={20} />
+        </button>
       </div>
       <EditorContent
         editor={editor}

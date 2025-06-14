@@ -6,7 +6,7 @@ import useSidebar from "@/hooks/useSidebar";
 import SimpleFooter from "@/layouts/simpleFooter";
 import EmailTemplateList from "@/components/EmailTemplateList";
 import EmailTemplateEditor from "@/components/EmailTemplateEditor";
-import ImageGallery from "@/components/ImageGallery";
+import ImageLibrary from "@/components/common/ImageLibrary";
 import EmailPreviewModal from "@/components/EmailPreviewModal";
 import { useEmailTemplates } from "@/hooks/useEmailTemplates";
 import { getJoditConfig } from "@/config/getJoditConfig";
@@ -263,7 +263,7 @@ export default function EmailTemplates({
           </div>
         </main>
       </div>
-      <ImageGallery
+      <ImageLibrary
         isOpen={isGalleryOpen}
         onClose={() => setIsGalleryOpen(false)}
         onSelectImage={handleInsertImage}

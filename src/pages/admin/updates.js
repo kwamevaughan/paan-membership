@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import HRHeader from "@/layouts/hrHeader";
 import HRSidebar from "@/layouts/hrSidebar";
@@ -157,28 +157,103 @@ export default function AdminUpdates({
   
 
   // Filter updates based on selected category, tier, and tags
-  const filteredUpdates = updates.filter((update) => {
-    const matchesSearch =
-      filterTerm === "" ||
-      update.title.toLowerCase().includes(filterTerm.toLowerCase()) ||
-      update.description?.toLowerCase().includes(filterTerm.toLowerCase());
-    const matchesCategory =
-      selectedCategory === "all" || update.category === selectedCategory;
-    const matchesTier =
-      selectedTier === "all" || update.tier_restriction === selectedTier;
-    const updateTags = update.tags
-      ? Array.isArray(update.tags)
-        ? update.tags
-        : update.tags.split(",").map((tag) => tag.trim())
-      : [];
-    const matchesTags =
-      selectedTags.length === 0 ||
-      selectedTags.some((tag) => updateTags.includes(tag));
-    return matchesSearch && matchesCategory && matchesTier && matchesTags;
-  });
+  const filteredUpdates = useMemo(() => {
+    return updates.filter((update) => {
+      const matchesSearch =
+        filterTerm === "" ||
+        update.title.toLowerCase().includes(filterTerm.toLowerCase()) ||
+        update.description?.toLowerCase().includes(filterTerm.toLowerCase());
+      const matchesCategory =
+        selectedCategory === "all" || update.category === selectedCategory;
+      const matchesTier =
+        selectedTier === "all" || update.tier_restriction === selectedTier;
+      const updateTags = update.tags
+        ? Array.isArray(update.tags)
+          ? update.tags
+          : update.tags.split(",").map((tag) => tag.trim())
+        : [];
+      const matchesTags =
+        selectedTags.length === 0 ||
+        selectedTags.some((tag) => updateTags.includes(tag));
+      return matchesSearch && matchesCategory && matchesTier && matchesTags;
+    });
+  }, [updates, filterTerm, selectedCategory, selectedTier, selectedTags]);
 
   // Calculate paginated updates
-  const paginatedUpdates = filteredUpdates.slice(0, page * itemsPerPage);
+  const paginatedUpdates = useMemo(() => {
+    const paginated = filteredUpdates.slice(0, page * itemsPerPage);
+    const displayedCount = paginated.length;
+    const totalCount = filteredUpdates.length;
+    const remainingCount = Math.max(0, totalCount - displayedCount);
+    const hasMore = remainingCount > 0;
+
+    console.log('Admin Updates - Pagination Debug:', {
+      totalItems: totalCount,
+      currentPage: page,
+      itemsPerPage,
+      displayedItems: displayedCount,
+      remainingCount,
+      hasMore,
+      expectedDisplayed: Math.min(page * itemsPerPage, totalCount)
+    });
+
+    return paginated;
+  }, [filteredUpdates, page, itemsPerPage]);
+
+  // Update counts when pagination changes
+  useEffect(() => {
+    const displayedCount = paginatedUpdates.length;
+    const totalCount = filteredUpdates.length;
+    
+    console.log('Admin Updates - Updating counts:', {
+      displayedCount,
+      totalCount,
+      currentPage: page,
+      itemsPerPage
+    });
+
+    setDisplayedCount(displayedCount);
+    setTotalCount(totalCount);
+  }, [paginatedUpdates, filteredUpdates, page, itemsPerPage]);
+
+  const hasMore = filteredUpdates.length > page * itemsPerPage;
+  const remainingCount = Math.max(0, filteredUpdates.length - (page * itemsPerPage));
+
+  const loadMore = () => {
+    const newPage = page + 1;
+    const newDisplayedCount = Math.min(newPage * itemsPerPage, filteredUpdates.length);
+    
+    console.log('Admin Updates - Load More:', {
+      currentPage: page,
+      newPage,
+      totalItems: filteredUpdates.length,
+      currentItems: page * itemsPerPage,
+      newDisplayedCount,
+      remainingItems: Math.max(0, filteredUpdates.length - newDisplayedCount)
+    });
+
+    setPage(newPage);
+  };
+
+  const handleCountChange = useCallback(({ displayedCount, totalCount }) => {
+    const expectedDisplayed = Math.min(page * itemsPerPage, totalCount);
+    console.log('Admin Updates - Count change from child:', { 
+      displayedCount, 
+      totalCount,
+      currentPage: page,
+      itemsPerPage,
+      expectedDisplayed,
+      isConsistent: displayedCount === expectedDisplayed
+    });
+    setDisplayedCount(displayedCount);
+    setTotalCount(totalCount);
+  }, [page, itemsPerPage]);
+
+  // Reset page when filters change
+  useEffect(() => {
+    console.log('Admin Updates - Resetting page due to filter change');
+    setPage(1);
+  }, [filterTerm, selectedCategory, selectedTier, selectedTags]);
 
   const handleCreateUpdate = () => {
     modalActions.openModal();
@@ -214,16 +289,6 @@ export default function AdminUpdates({
       modalActions.closeModal();
     });
   };
-
-  const loadMore = () => {
-    setPage((prev) => prev + 1);
-  };
-
-  const handleCountChange = useCallback(({ displayedCount, totalCount }) => {
-    console.log('AdminUpdates - Count change:', { displayedCount, totalCount });
-    setDisplayedCount(displayedCount);
-    setTotalCount(totalCount);
-  }, []);
 
   return (
     <div
@@ -382,7 +447,7 @@ export default function AdminUpdates({
 
                     <div className="mt-8">
                       <UpdateGrid
-                        updates={updates}
+                        updates={filteredUpdates}
                         loading={loading}
                         mode={mode}
                         onEdit={modalActions.openModal}
@@ -397,6 +462,9 @@ export default function AdminUpdates({
                         onSelect={handleSelect}
                         onSelectAll={handleSelectAll}
                         isSelectable={true}
+                        hasMore={hasMore}
+                        onLoadMore={loadMore}
+                        remainingCount={remainingCount}
                         onCountChange={handleCountChange}
                       />
                     </div>

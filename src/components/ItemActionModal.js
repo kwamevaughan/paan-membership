@@ -115,7 +115,7 @@ export default function ItemActionModal({
             {/* Content Area with Subtle Glass Effect */}
             <div
               className={`p-8 overflow-y-auto max-h-[calc(85vh-120px)] ${
-                mode === "dark" ? "bg-gray-900/45" : "bg-white/90"
+                mode === "dark" ? "bg-gray-900/45" : "bg-white/40"
               }`}
               style={{
                 backdropFilter: "blur(8px)",

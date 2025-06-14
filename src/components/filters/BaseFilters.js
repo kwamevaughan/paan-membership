@@ -56,7 +56,7 @@ export default function BaseFilters({
                 type="text"
                 value={filterTerm}
                 onChange={(e) => setFilterTerm(e.target.value)}
-                placeholder={`Search ${type === "opportunity" ? "opportunities" : `${type}s`}...`}
+                placeholder={`Search ${type === "marketIntel" ? "Market Intel reports" : type === "opportunity" ? "opportunities" : `${type}s`}...`}
                 className={`w-full px-4 py-2 pl-10 rounded-lg border ${
                   mode === "dark"
                     ? "bg-gray-800 border-gray-700 text-white placeholder-gray-400 focus:border-blue-500"
@@ -75,7 +75,7 @@ export default function BaseFilters({
                 mode === "dark" ? "text-gray-400" : "text-gray-500"
               }`}
             >
-              Showing {displayedCount || 0} of {totalCount || 0} {type === "opportunity" ? "opportunities" : `${type}s`}
+              Showing {displayedCount || filteredItems.length} of {totalCount || items.length} {type === "marketIntel" ? "Market Intel reports" : type === "opportunity" ? "opportunities" : `${type}s`}
             </span>
           </div>
 

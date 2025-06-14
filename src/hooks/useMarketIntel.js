@@ -38,11 +38,15 @@ export function useMarketIntel(candidatesMap = {}) {
     try {
       isFetching.current = true;
       setLoading(true);
+      console.log("[useMarketIntel] Starting fetch...");
 
       // Get current user
       const { data: { user }, error: userError } = await supabase.auth.getUser();
+      console.log("[useMarketIntel] User auth check:", { user, userError });
+      
       if (userError || !user) {
-        console.error("User not authenticated");
+        console.error("[useMarketIntel] User not authenticated");
+        toast.error("Please log in to view market intel");
         return;
       }
 
@@ -53,13 +57,17 @@ export function useMarketIntel(candidatesMap = {}) {
         .eq("id", user.id)
         .single();
 
+      console.log("[useMarketIntel] HR user check:", { hrUser, hrError });
+
       if (hrError) {
         console.error("[useMarketIntel] HR user check error:", hrError);
+        toast.error("Error checking HR user status");
         return;
       }
 
       if (!hrUser) {
         console.error("[useMarketIntel] Not authorized as HR user");
+        toast.error("You must be an HR user to view market intel");
         return;
       }
 
@@ -69,6 +77,7 @@ export function useMarketIntel(candidatesMap = {}) {
         .order("created_at", { ascending: false });
 
       const { data, error } = await query;
+      console.log("[useMarketIntel] Market intel query result:", { data, error });
 
       if (error) {
         console.error("[useMarketIntel] Error fetching data:", error);
@@ -76,6 +85,7 @@ export function useMarketIntel(candidatesMap = {}) {
       }
 
       if (!data || data.length === 0) {
+        console.log("[useMarketIntel] No market intel data found");
         setMarketIntel([]);
         setFilteredIntel([]);
         return;
@@ -136,16 +146,26 @@ export function useMarketIntel(candidatesMap = {}) {
       return matchesTier && matchesRegion && matchesType && matchesDownloadable && matchesSearch;
     });
 
+    console.log('[useMarketIntel] Filtered data:', {
+      totalItems: marketIntel.length,
+      filteredItems: filtered.length,
+      filters
+    });
+
     setFilteredIntel(filtered);
   }, [filters, marketIntel]);
 
   // Update filters
   const updateFilters = useCallback((newFilters) => {
+    console.log('[useMarketIntel] Updating filters:', {
+      currentFilters: filters,
+      newFilters
+    });
     setFilters(prev => ({
       ...prev,
       ...newFilters
     }));
-  }, []);
+  }, [filters]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

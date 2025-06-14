@@ -513,21 +513,6 @@ export default function EventsGrid({
       ),
     },
     {
-      key: "region",
-      label: "Region",
-      render: (event) => (
-        <span
-          className={`px-2 py-1 rounded-lg text-xs font-medium ${
-            mode === "dark"
-              ? "bg-gray-700 text-gray-300"
-              : "bg-gray-100 text-gray-700"
-          }`}
-        >
-          {event.location}
-        </span>
-      ),
-    },
-    {
       key: "tier_restriction",
       label: "Tier",
       render: (event) => (

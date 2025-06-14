@@ -40,21 +40,44 @@ const DataView = memo(({
       
       setPaginatedData(newPaginatedData);
       
+      console.log('DataView - Pagination Debug:', {
+        totalItems: totalCount || data.length,
+        currentPage,
+        itemsPerPage,
+        displayedItems: newPaginatedData.length,
+        hasMore,
+        remainingCount,
+        onLoadMore: !!onLoadMore,
+        startIndex,
+        endIndex
+      });
+      
       // Notify parent of count changes
       if (onCountChange) {
         onCountChange({
           displayedCount: newPaginatedData.length,
-          totalCount: data.length
+          totalCount: totalCount || data.length
         });
       }
     }
-  }, [data, currentPage, itemsPerPage, onCountChange]);
+  }, [data, currentPage, itemsPerPage, onCountChange, hasMore, remainingCount, totalCount]);
 
-  const hasMoreItems = paginatedData.length < (totalCount || data.length);
+  const hasMoreItems = hasMore || (data && data.length > currentPage * itemsPerPage);
   const totalItems = totalCount || data.length;
   const displayedCount = paginatedData.length;
+  const remainingItems = Math.max(0, totalItems - (currentPage * itemsPerPage));
 
-  
+  console.log('DataView - Final Counts:', {
+    totalItems,
+    displayedCount,
+    remainingItems,
+    currentPage,
+    itemsPerPage,
+    hasMoreItems,
+    dataLength: data?.length,
+    totalCount,
+    hasMore
+  });
 
   const handleEdit = (item) => {
     if (handleEditClick) {
@@ -100,7 +123,7 @@ const DataView = memo(({
           mode={mode}
           hasMore={hasMoreItems}
           onLoadMore={handleLoadMore}
-          remainingCount={totalItems - displayedCount}
+          remainingCount={remainingItems}
           itemName={itemName}
           customActions={customActions}
           displayedCount={displayedCount}
@@ -113,7 +136,7 @@ const DataView = memo(({
           mode={mode}
           hasMore={hasMoreItems}
           onLoadMore={handleLoadMore}
-          remainingCount={totalItems - displayedCount}
+          remainingCount={remainingItems}
           onEdit={handleEdit}
           onDelete={handleDelete}
           displayedCount={displayedCount}

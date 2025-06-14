@@ -94,6 +94,7 @@ const DataTable = memo(({
   remainingCount,
   itemName = "item",
   customActions,
+  totalCount,
 }) => {
   const [isDeleteAllModalOpen, setIsDeleteAllModalOpen] = useState(false);
 
@@ -107,11 +108,11 @@ const DataTable = memo(({
       <div className="flex justify-between items-center">
         <div className={`px-4 py-2 rounded-lg ${mode === "dark" ? "bg-gray-800" : "bg-white"} shadow-sm`}>
           <span className="font-semibold">{data.length}</span>
-          <span className="text-gray-600 dark:text-gray-400"> opportunities found</span>
+          <span className="text-gray-600 dark:text-gray-400 capitalize"> {itemName}{data.length !== 1 ? 's' : ''} found</span>
         </div>
 
         <div className="text-sm text-gray-500 dark:text-gray-400">
-          Showing {Math.min(12, data.length)} of {data.length} opportunities
+          Showing {data.length} of {totalCount} {itemName}{data.length !== 1 ? 's' : ''}
         </div>
       </div>
 
@@ -213,7 +214,7 @@ const DataTable = memo(({
           >
             <div className="flex items-center gap-2">
               <Icon icon="heroicons:arrow-down" className="w-4 h-4" />
-              <span>Load More ({remainingCount} remaining)</span>
+              <span>Load More ({totalCount - data.length} remaining)</span>
             </div>
           </button>
         </div>

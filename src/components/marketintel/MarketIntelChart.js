@@ -50,4 +50,3 @@ export default function MarketIntelChart({ mode, chartData }) {
     </motion.div>
   );
 }
-

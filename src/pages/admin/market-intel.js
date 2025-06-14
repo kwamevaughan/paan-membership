@@ -1,44 +1,52 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { useRouter } from "next/router";
 import toast, { Toaster } from "react-hot-toast";
-import HRHeader from "@/layouts/hrHeader";
+import { Icon } from "@iconify/react";
 import HRSidebar from "@/layouts/hrSidebar";
-import SimpleFooter from "@/layouts/simpleFooter";
-import UpdateGrid from "@/components/updates/UpdateGrid";
-import ItemActionModal from "@/components/ItemActionModal";
-import UpdateForm from "@/components/updates/UpdateForm";
+import HRHeader from "@/layouts/hrHeader";
 import useSidebar from "@/hooks/useSidebar";
 import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
-import { useUpdates } from "@/hooks/useUpdates";
-
-import { Icon } from "@iconify/react";
+import { useMarketIntel } from "@/hooks/useMarketIntel";
+import MarketIntelForm from "@/components/marketintel/MarketIntelForm";
+import MarketIntelGrid from "@/components/marketintel/MarketIntelGrid";
+import SimpleFooter from "@/layouts/simpleFooter";
+import { getAdminMarketIntelProps } from "utils/getPropsUtils";
+import ItemActionModal from "@/components/ItemActionModal";
+import ExportModal from "@/components/ExportModal";
+import { supabase } from "@/lib/supabase";
 import PageHeader from "@/components/common/PageHeader";
-import UpdateFilters from "@/components/filters/UpdateFilters";
+import MarketIntelFilters from "@/components/filters/MarketIntelFilters";
 import BaseFilters from "@/components/filters/BaseFilters";
 
 export default function AdminMarketIntel({
   mode = "light",
   toggleMode,
-  initialMarketIntel,
+  tiers = [],
   breadcrumbs,
 }) {
   const [showForm, setShowForm] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [currentMarketIntel, setCurrentMarketIntel] = useState(null);
+  const [showExportModal, setShowExportModal] = useState(false);
+  const [exportData, setExportData] = useState([]);
+
   const [viewMode, setViewMode] = useState("grid");
-  const [page, setPage] = useState(1);
-  const [showFilters, setShowFilters] = useState(false);
   const [filterTerm, setFilterTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("newest");
-  const [selectedCategory, setSelectedCategory] = useState("All");
-  const [selectedTier, setSelectedTier] = useState("All");
-  const [selectedType, setSelectedType] = useState("All");
-  const [selectedRegion, setSelectedRegion] = useState("All");
+  const [showFilters, setShowFilters] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedTier, setSelectedTier] = useState("");
+  const [selectedType, setSelectedType] = useState("");
+  const [selectedRegion, setSelectedRegion] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(6);
   const [selectedIds, setSelectedIds] = useState([]);
-  const [selectedDownloadable, setSelectedDownloadable] = useState("all");
-  const [selectedDateRange, setSelectedDateRange] = useState("all");
-  const [selectedRating, setSelectedRating] = useState("all");
-  const [selectedFeedbackCount, setSelectedFeedbackCount] = useState("all");
-  const itemsPerPage = 6;
-  useAuthSession();
+  const [displayedCount, setDisplayedCount] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+
+  const router = useRouter();
 
   const {
     isSidebarOpen,
@@ -52,241 +60,154 @@ export default function AdminMarketIntel({
     handleOutsideClick,
   } = useSidebar();
 
-  const handleLogout = useLogout();
-
   const {
     marketIntel,
-    formData,
-    setFormData,
-    loading,
-    sortBy,
-    setSortBy,
-    filters,
-    updateFilters,
-    handleSearch,
-    handleInputChange,
-    handleEdit,
-    handleDelete,
-    handleSubmit,
-    getPDFUrl,
     filterOptions = {
       categories: [],
       tiers: [],
       types: [],
       regions: [],
     },
-  } = useMarketIntel(initialMarketIntel);
-
-  const {
-    isModalOpen,
-    isUsersModalOpen,
-    isDeleteModalOpen,
-    selectedItemId,
-    isEditing,
-    editingId,
-    itemToDelete,
-    modalActions,
-  } = useModals({
-    handleEdit,
+    loading: marketIntelLoading,
+    error,
+    fetchMarketIntel,
+    handleInputChange,
     handleSubmit,
-    resetForm: () => {
-      handleEdit({
-        id: null,
-        title: "",
-        description: "",
-        category: "Governance",
-        cta_text: "",
-        cta_url: "",
-        tier_restriction: "Associate Member",
-        tags: "",
-      });
-    },
-  });
+    handleDelete,
+    formData,
+  } = useMarketIntel();
 
-  const router = useRouter();
+  useEffect(() => {
+    console.log('AdminMarketIntel - marketIntel data:', {
+      count: marketIntel?.length,
+      items: marketIntel?.map(item => ({
+        title: item.title,
+        category: item.category,
+        tier: item.tier_restriction
+      }))
+    });
+  }, [marketIntel]);
 
-  const types = [
-    "All",
-    "Report",
-    "Analysis",
-    "Regional Insight",
-    "Data Visualization",
-  ];
+  const handleLogout = useLogout();
+  useAuthSession();
 
-  const categories = [
-    "Governance",
-    "Technology",
-    "Finance",
-    "Healthcare",
-    "Education",
-    "Energy",
-    "Transportation",
-    "Manufacturing",
-    "Retail",
-    "Other",
-  ];
-
-  const regions = [
-    "All",
-    "Global",
-    "North America",
-    "South America",
-    "Europe",
-    "Asia Pacific",
-    "Middle East",
-    "Africa",
-  ];
-
-  const tiers = [
-    "All",
-    "Associate Member",
-    "Full Member",
-    "Premium Member",
-    "Enterprise Member",
-  ];
-
-  const resetFilters = () => {
-    setSelectedCategory("All");
-    setSelectedTier("All");
+  const handleResetFilters = () => {
     setSelectedType("All");
+    setSelectedTier("All");
     setSelectedRegion("All");
     setFilterTerm("");
     setSortOrder("newest");
-    updateFilters({
-      category: "All",
-      tier: "All",
-      type: "All",
-      region: "All",
-      search: "",
-    });
   };
 
-  const isInitialMount = useRef(true);
-  const filterUpdateTimeout = useRef(null);
-
-  // Optimized filter update with debounce
-  const debouncedFilterUpdate = useCallback(
-    (filters) => {
-      if (filterUpdateTimeout.current) {
-        clearTimeout(filterUpdateTimeout.current);
-      }
-
-      filterUpdateTimeout.current = setTimeout(() => {
-        updateFilters(filters);
-      }, 300);
-    },
-    [updateFilters]
-  );
-
-  // Update filters when selections change
-  useEffect(() => {
-    if (isInitialMount.current) {
-      isInitialMount.current = false;
-      return;
-    }
-
-    const newFilters = {
-      tier: selectedTier,
-      region: selectedRegion,
-      type: selectedType,
-      search: filterTerm,
-    };
-    debouncedFilterUpdate(newFilters);
-
-    return () => {
-      if (filterUpdateTimeout.current) {
-        clearTimeout(filterUpdateTimeout.current);
-      }
-    };
-  }, [
-    selectedTier,
-    selectedRegion,
-    selectedType,
-    filterTerm,
-    debouncedFilterUpdate,
-  ]);
-
-  const handleCreateIntel = () => {
-    setFormData({
-      id: null,
-      title: "",
-      description: "",
-      tier_restriction: "Associate Member",
-      url: "",
-      icon_url: "",
-      region: "Global",
-      type: "Report",
-      downloadable: false,
-      chart_data: "",
-      file_path: "",
-    });
+  const handleCreateMarketIntel = () => {
+    setCurrentMarketIntel(null);
     setShowForm(true);
   };
 
-  const handleEditClick = async (intel) => {
-    setFormData(intel);
+  const handleEditClick = async (marketIntel) => {
+    setCurrentMarketIntel(marketIntel);
     setShowForm(true);
   };
 
-  const handleFormSubmit = async (e) => {
-    e.preventDefault();
-    const success = await handleSubmit(e);
-    if (success) {
-      setShowForm(false);
-      setFormData({
-        id: null,
-        title: "",
-        description: "",
-        tier_restriction: "Associate Member",
-        url: "",
-        icon_url: "",
-        region: "Global",
-        type: "Report",
-        downloadable: false,
-        chart_data: "",
-        file_path: "",
-      });
+  const handleFormSubmit = async (formData) => {
+    try {
+      const success = await handleSubmit(formData);
+      if (success) {
+        setShowForm(false);
+        setCurrentMarketIntel(null);
+        await fetchMarketIntel();
+      }
+    } catch (error) {
+      console.error("Error submitting market intel:", error);
+      toast.error("Failed to submit market intel");
     }
   };
 
-  const handleCancel = () => {
-    setShowForm(false);
-    setFormData({
-      id: null,
-      title: "",
-      description: "",
-      tier_restriction: "Associate Member",
-      url: "",
-      icon_url: "",
-      region: "Global",
-      type: "Report",
-      downloadable: false,
-      chart_data: "",
-      file_path: "",
+  const handleDeleteClick = async (marketIntel) => {
+    setCurrentMarketIntel(marketIntel);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      if (!currentMarketIntel?.id) {
+        throw new Error("No market intel selected for deletion");
+      }
+      await handleDelete(currentMarketIntel.id);
+      setShowDeleteModal(false);
+      setCurrentMarketIntel(null);
+      await fetchMarketIntel();
+      toast.success("Market intel deleted successfully");
+    } catch (error) {
+      console.error("Error deleting market intel:", error);
+      toast.error(error.message || "Failed to delete market intel");
+    }
+  };
+
+  const filteredMarketIntel = useMemo(() => {
+    if (!marketIntel) return [];
+    
+    return marketIntel.filter((item) => {
+      if (!item) return false;
+      
+      const matchesSearch = !searchQuery || 
+        (item.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+         item.body?.toLowerCase().includes(searchQuery.toLowerCase()));
+      
+      const matchesCategory = !selectedCategory || 
+        selectedCategory === "All" || 
+        selectedCategory === "all" || 
+        item.category?.toLowerCase() === selectedCategory.toLowerCase();
+      
+      const matchesTier = !selectedTier || 
+        selectedTier === "All" || 
+        selectedTier === "all" || 
+        item.tier_restriction?.toLowerCase() === selectedTier.toLowerCase();
+      
+      const matchesType = !selectedType || 
+        selectedType === "All" || 
+        selectedType === "all" || 
+        item.type?.toLowerCase() === selectedType.toLowerCase();
+      
+      const matchesRegion = !selectedRegion || 
+        selectedRegion === "All" || 
+        selectedRegion === "all" || 
+        item.region?.toLowerCase() === selectedRegion.toLowerCase();
+      
+      return matchesSearch && matchesCategory && matchesTier && matchesType && matchesRegion;
     });
+  }, [marketIntel, searchQuery, selectedCategory, selectedTier, selectedType, selectedRegion]);
+
+  const sortedMarketIntel = useMemo(() => {
+    return [...filteredMarketIntel].sort((a, b) => {
+      const dateA = new Date(a.created_at);
+      const dateB = new Date(b.created_at);
+      return dateB - dateA;
+    });
+  }, [filteredMarketIntel]);
+
+  const hasMore = sortedMarketIntel.length > currentPage * itemsPerPage;
+  const remainingCount = sortedMarketIntel.length - (currentPage * itemsPerPage);
+
+  console.log('Admin Market Intel - Pagination Debug:', {
+    totalItems: sortedMarketIntel.length,
+    currentPage,
+    itemsPerPage,
+    displayedItems: Math.min(currentPage * itemsPerPage, sortedMarketIntel.length),
+    remainingCount,
+    hasMore,
+    filteredCount: filteredMarketIntel.length
+  });
+
+  const handleLoadMore = () => {
+    setCurrentPage(prev => prev + 1);
   };
 
-  const confirmDelete = () => {
-    if (itemToDelete) {
-      handleDelete(itemToDelete.id);
-      modalActions.closeDeleteModal();
-    }
-  };
-
-  const loadMore = () => {
-    setPage((prev) => prev + 1);
-  };
-
-  const handleDeleteClick = async (id) => {
-    const success = await handleDelete(id);
-    if (success) {
-      setSelectedIds((prev) => prev.filter((selectedId) => selectedId !== id));
-    }
-  };
-
-  const handleViewFeedback = (intel) => {
-    // View feedback logic here
-  };
+  const handleCountChange = useCallback(({ displayedCount, totalCount }) => {
+    console.log('AdminMarketIntel - Count change:', { displayedCount, totalCount });
+    setDisplayedCount(displayedCount);
+    setTotalCount(totalCount);
+  }, []);
 
   return (
     <div
@@ -296,19 +217,6 @@ export default function AdminMarketIntel({
           : "bg-gray-100 text-gray-900"
       } transition-colors duration-300`}
     >
-      <Toaster
-        toastOptions={{
-          className:
-            mode === "dark"
-              ? "bg-gray-800 text-gray-100 border-gray-700"
-              : "bg-white text-gray-900 border-gray-200",
-          style: {
-            borderRadius: "8px",
-            padding: "12px",
-            boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-          },
-        }}
-      />
       <HRHeader
         toggleSidebar={toggleSidebar}
         isSidebarOpen={isSidebarOpen}
@@ -317,7 +225,7 @@ export default function AdminMarketIntel({
         toggleMode={toggleMode}
         onLogout={handleLogout}
         pageName="Market Intel"
-        pageDescription="Manage market intelligence reports, analyses, and data visualizations."
+        pageDescription="Manage Market Intel for the PAAN community."
         breadcrumbs={breadcrumbs}
       />
       <div className="flex flex-1">
@@ -356,15 +264,15 @@ export default function AdminMarketIntel({
                 } shadow-2xl group-hover:shadow-lg transition-all duration-500`}
               ></div>
               <PageHeader
-                title="Market Intelligence"
-                description="Manage market intelligence reports, analyses, and data visualizations. Create targeted content for specific membership tiers and track member engagement."
+                title="Market Intel"
+                description="Manage Market Intel resources for the PAAN community. Create targeted content for specific membership tiers and track member engagement."
                 mode={mode}
                 stats={[
                   {
-                    icon: "heroicons:document-text",
-                    value: `${marketIntel.length} total reports`,
+                    icon: "heroicons:calendar",
+                    value: `${marketIntel?.length || 0} total Market Intel`,
                   },
-                  ...(marketIntel.length > 0
+                  ...(marketIntel?.length > 0
                     ? [
                         {
                           icon: "heroicons:clock",
@@ -382,9 +290,9 @@ export default function AdminMarketIntel({
                 ]}
                 actions={[
                   {
-                    label: "New Report",
+                    label: "New Market Intel",
                     icon: "heroicons:plus",
-                    onClick: handleCreateIntel,
+                    onClick: handleCreateMarketIntel,
                     variant: "primary",
                   },
                 ]}
@@ -412,49 +320,23 @@ export default function AdminMarketIntel({
                   <div className="p-6">
                     <BaseFilters
                       mode={mode}
-                      loading={loading}
+                      loading={marketIntelLoading}
                       viewMode={viewMode}
                       setViewMode={setViewMode}
-                      filterTerm={filterTerm}
-                      setFilterTerm={setFilterTerm}
+                      filterTerm={searchQuery}
+                      setFilterTerm={setSearchQuery}
                       sortOrder={sortOrder}
                       setSortOrder={setSortOrder}
                       showFilters={showFilters}
                       setShowFilters={setShowFilters}
-                      type="market-intel"
+                      type="marketIntel"
                       items={marketIntel || []}
-                      filteredItems={
-                        marketIntel?.filter((item) => {
-                          const matchesSearch =
-                            !filterTerm ||
-                            item.title
-                              .toLowerCase()
-                              .includes(filterTerm.toLowerCase()) ||
-                            item.description
-                              .toLowerCase()
-                              .includes(filterTerm.toLowerCase());
-                          const matchesCategory =
-                            selectedCategory === "All" ||
-                            item.category === selectedCategory;
-                          const matchesTier =
-                            selectedTier === "All" ||
-                            item.tier_restriction === selectedTier;
-                          const matchesType =
-                            selectedType === "All" ||
-                            item.type === selectedType;
-                          const matchesRegion =
-                            selectedRegion === "All" ||
-                            item.region === selectedRegion;
-                          return (
-                            matchesSearch &&
-                            matchesCategory &&
-                            matchesTier &&
-                            matchesType &&
-                            matchesRegion
-                          );
-                        }) || []
-                      }
-                      onResetFilters={resetFilters}
+                      filteredItems={filteredMarketIntel}
+                      searchQuery={searchQuery}
+                      onSearchChange={setSearchQuery}
+                      onResetFilters={handleResetFilters}
+                      displayedCount={displayedCount}
+                      totalCount={totalCount}
                     >
                       <MarketIntelFilters
                         selectedCategory={selectedCategory}
@@ -465,36 +347,35 @@ export default function AdminMarketIntel({
                         onTypeChange={setSelectedType}
                         selectedRegion={selectedRegion}
                         onRegionChange={setSelectedRegion}
-                        categories={filterOptions?.categories || []}
-                        tiers={filterOptions?.tiers || []}
-                        types={filterOptions?.types || []}
-                        regions={filterOptions?.regions || []}
+                        categories={[...new Set(marketIntel.map(item => item.category))].filter(Boolean)}
+                        tiers={[...new Set(marketIntel.map(item => item.tier_restriction))].filter(Boolean)}
+                        types={[...new Set(marketIntel.map(item => item.type))].filter(Boolean)}
+                        regions={[...new Set(marketIntel.map(item => item.region))].filter(Boolean)}
                         mode={mode}
-                        loading={loading}
+                        loading={marketIntelLoading}
                       />
                     </BaseFilters>
 
                     <div className="mt-8">
                       <MarketIntelGrid
                         mode={mode}
-                        marketIntel={marketIntel || []}
-                        loading={loading}
+                        marketIntel={sortedMarketIntel}
+                        loading={marketIntelLoading}
                         selectedIds={selectedIds}
                         setSelectedIds={setSelectedIds}
-                        handleEditClick={handleEditClick}
-                        handleDelete={handleDeleteClick}
-                        onViewFeedback={handleViewFeedback}
-                        currentPage={page}
-                        setCurrentPage={setPage}
-                        itemsPerPage={itemsPerPage}
+                        onEdit={handleEditClick}
+                        onDelete={handleDeleteClick}
                         viewMode={viewMode}
                         setViewMode={setViewMode}
-                        filterTerm={filterTerm}
+                        filterTerm={searchQuery}
                         selectedCategory={selectedCategory}
                         selectedTier={selectedTier}
-                        selectedType={selectedType}
-                        selectedRegion={selectedRegion}
-                        filterOptions={filterOptions}
+                        isSelectable={true}
+                        hasMore={hasMore}
+                        onLoadMore={handleLoadMore}
+                        remainingCount={remainingCount}
+                        onCountChange={handleCountChange}
+                        totalCount={sortedMarketIntel.length}
                       />
                     </div>
                   </div>
@@ -514,77 +395,87 @@ export default function AdminMarketIntel({
                 ></div>
               </div>
             </div>
+
+            <SimpleFooter mode={mode} />
           </div>
-          <SimpleFooter mode={mode} isSidebarOpen={isSidebarOpen} />
         </div>
+      </div>
 
-        {isModalOpen && (
-          <div className={`fixed inset-0 bg-black/30 backdrop-blur-md z-40`} />
-        )}
-
+      <ItemActionModal
+        isOpen={showForm}
+        onClose={() => {
+          setShowForm(false);
+          setCurrentMarketIntel(null);
+        }}
+        title={currentMarketIntel ? "Edit Market Intel" : "Create New Market Intel"}
+        mode={mode}
+        width="max-w-4xl"
+        style={{ isolation: "isolate" }}
+      >
         <MarketIntelForm
-          showForm={showForm}
-          mode={mode}
-          formData={formData}
+          formData={currentMarketIntel || formData}
           handleInputChange={handleInputChange}
-          handleSubmit={handleFormSubmit}
-          handleCancel={handleCancel}
-          loading={loading}
-          isEditing={!!formData.id}
-          categories={categories}
-          memberCount={0}
-          getPDFUrl={getPDFUrl}
-        />
-
-        <ItemActionModal
-          isOpen={isDeleteModalOpen}
-          onClose={modalActions.closeDeleteModal}
-          title="Confirm Deletion"
+          submitForm={handleFormSubmit}
+          cancelForm={() => {
+            setShowForm(false);
+            setCurrentMarketIntel(null);
+          }}
+          isEditing={!!currentMarketIntel}
+          tiers={tiers}
           mode={mode}
-        >
-          <div className="space-y-6">
-            <p
-              className={`text-sm ${
-                mode === "dark" ? "text-gray-300" : "text-gray-600"
+        />
+      </ItemActionModal>
+
+      <ItemActionModal
+        isOpen={showDeleteModal}
+        onClose={() => {
+          setShowDeleteModal(false);
+          setCurrentMarketIntel(null);
+        }}
+        title="Delete Market Intel"
+        mode={mode}
+        width="max-w-md"
+      >
+        <div className="space-y-4">
+          <p className={`text-sm ${mode === "dark" ? "text-gray-300" : "text-gray-600"}`}>
+            Are you sure you want to delete &ldquo;{currentMarketIntel?.title}&rdquo;? This action cannot be undone.
+          </p>
+          <div className="flex justify-end space-x-4">
+            <button
+              onClick={() => {
+                setShowDeleteModal(false);
+                setCurrentMarketIntel(null);
+              }}
+              className={`px-4 py-2 text-sm font-medium rounded-lg border transition-all duration-200 ${
+                mode === "dark"
+                  ? "border-gray-600 text-gray-200 bg-gray-800 hover:bg-gray-700"
+                  : "border-gray-200 text-gray-700 bg-white hover:bg-gray-50"
               }`}
             >
-              Are you sure you want to delete the report{" "}
-              <strong>
-                &quot;
-                {itemToDelete?.title || ""}
-                &quot;
-              </strong>
-              ? This action cannot be undone.
-            </p>
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={modalActions.closeDeleteModal}
-                className={`px-6 py-3 text-sm font-medium rounded-xl border transition-all duration-200 flex items-center shadow-sm ${
-                  mode === "dark"
-                    ? "border-gray-600 text-gray-200 bg-gray-800 hover:bg-gray-700"
-                    : "border-gray-200 text-gray-700 bg-white hover:bg-gray-50"
-                }`}
-              >
-                <Icon icon="heroicons:x-mark" className="h-4 w-4 mr-2" />
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className={`px-6 py-3 text-sm font-medium rounded-xl text-white bg-red-600 hover:bg-red-700 transition-all duration-200 flex items-center shadow-sm ${
-                  mode === "dark" ? "shadow-white/10" : "shadow-gray-200"
-                }`}
-              >
-                <Icon icon="heroicons:trash" className="h-4 w-4 mr-2" />
-                Delete
-              </button>
-            </div>
+              Cancel
+            </button>
+            <button
+              onClick={confirmDelete}
+              className="px-4 py-2 text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 transition-all duration-200"
+            >
+              Delete
+            </button>
           </div>
-        </ItemActionModal>
-      </div>
+        </div>
+      </ItemActionModal>
+
+      <ExportModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        candidates={exportData}
+        mode={mode}
+        type="marketIntel"
+      />
     </div>
   );
 }
 
 export async function getServerSideProps({ req, res }) {
+  const { getAdminMarketIntelProps } = await import("utils/getPropsUtils");
   return await getAdminMarketIntelProps({ req, res });
 }

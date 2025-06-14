@@ -39,33 +39,16 @@ const UpdateGrid = memo(({
       return [];
     }
 
-    const filtered = updates.filter((update) => {
-      if (!update) {
-        console.log('UpdateGrid - Found null/undefined update');
-        return false;
-      }
-
-      const matchesSearch =
-        !filterTerm ||
-        (update.title &&
-          update.title.toLowerCase().includes(filterTerm.toLowerCase())) ||
-        (update.description &&
-          update.description
-            .toLowerCase()
-            .includes(filterTerm.toLowerCase()));
-
-      const matchesCategory =
-        !selectedCategory || selectedCategory === "all" || update.category === selectedCategory;
-
-      const matchesTier =
-        !selectedTier || selectedTier === "all" || update.tier_restriction === selectedTier;
-
-      return matchesSearch && matchesCategory && matchesTier;
+    // Use the data as is since it's already filtered by the parent
+    console.log('UpdateGrid - Using pre-filtered data:', {
+      totalItems: updates.length,
+      items: updates.map(item => ({
+        id: item.id,
+        title: item.title
+      }))
     });
-
-    console.log('UpdateGrid - Filtered updates count:', filtered.length);
-    return filtered;
-  }, [updates, filterTerm, selectedCategory, selectedTier]);
+    return updates;
+  }, [updates]);
 
   const sortedUpdates = useMemo(() => {
     const sorted = [...(filteredUpdates || [])].sort((a, b) => {
@@ -73,19 +56,33 @@ const UpdateGrid = memo(({
       const dateB = new Date(b.created_at);
       return dateB - dateA;
     });
-    console.log('UpdateGrid - Sorted updates count:', sorted.length);
+    console.log('UpdateGrid - Sorted items count:', sorted.length);
     return sorted;
   }, [filteredUpdates]);
+
+  const paginatedUpdates = useMemo(() => {
+    // Use all items since parent handles pagination
+    console.log('UpdateGrid - Pagination Debug:', {
+      totalItems: sortedUpdates.length,
+      items: sortedUpdates.map(item => ({
+        id: item.id,
+        title: item.title
+      }))
+    });
+    return sortedUpdates;
+  }, [sortedUpdates]);
 
   // Notify parent of count changes when filtered/sorted updates change
   useEffect(() => {
     if (onCountChange) {
-      onCountChange({
-        displayedCount: Math.min(6, sortedUpdates.length),
+      const counts = {
+        displayedCount: paginatedUpdates.length,
         totalCount: sortedUpdates.length
-      });
+      };
+      console.log('UpdateGrid - Notifying count change:', counts);
+      onCountChange(counts);
     }
-  }, [sortedUpdates, onCountChange]);
+  }, [sortedUpdates, paginatedUpdates, onCountChange]);
 
   const handleEdit = (update) => {
     if (onEdit) {
@@ -96,6 +93,21 @@ const UpdateGrid = memo(({
   const handleDelete = (update) => {
     if (onDelete) {
       onDelete(update);
+    }
+  };
+
+  const handleLoadMore = () => {
+    console.log('UpdateGrid - Load More Debug:', {
+      hasMore,
+      remainingCount,
+      totalCount: sortedUpdates.length,
+      currentItems: paginatedUpdates.length,
+      onLoadMore: !!onLoadMore,
+      sortedItems: sortedUpdates.length,
+      paginatedItems: paginatedUpdates.length
+    });
+    if (onLoadMore) {
+      onLoadMore();
     }
   };
 
@@ -240,7 +252,7 @@ const UpdateGrid = memo(({
 
   return (
     <DataView
-      data={sortedUpdates}
+      data={paginatedUpdates}
       columns={tableColumns}
       renderCard={renderUpdateCard}
       mode={mode}
@@ -252,7 +264,7 @@ const UpdateGrid = memo(({
       onEdit={handleEdit}
       handleEditClick={handleEdit}
       hasMore={hasMore}
-      onLoadMore={onLoadMore}
+      onLoadMore={handleLoadMore}
       remainingCount={remainingCount}
       itemName="update"
       customActions={customActions}
@@ -261,6 +273,7 @@ const UpdateGrid = memo(({
       itemsPerPage={6}
       totalCount={sortedUpdates.length}
       onCountChange={onCountChange}
+      currentPage={1}
     />
   );
 });

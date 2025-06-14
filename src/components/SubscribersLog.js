@@ -11,7 +11,7 @@ export default function SubscribersLog({
   const [searchTerm, setSearchTerm] = useState("");
   const [sortConfig, setSortConfig] = useState({
     key: "created_at",
-    direction: "desc",
+    direction: "desc", // This ensures newest first by default
   });
 
   // Filter subscribers based on search term
@@ -27,15 +27,45 @@ export default function SubscribersLog({
   const itemsPerPage = 10;
   const totalPages = Math.ceil(filteredSubscribers.length / itemsPerPage);
 
-  // Sort subscribers based on sortConfig
+  // Enhanced sorting function to handle date parsing better
   const sortedSubscribers = [...filteredSubscribers].sort((a, b) => {
     const key = sortConfig.key;
     const direction = sortConfig.direction === "asc" ? 1 : -1;
+
     if (key === "created_at") {
-      return direction * (new Date(b[key]) - new Date(a[key]));
+      // More robust date parsing
+      const getDateValue = (dateStr) => {
+        if (!dateStr) return 0;
+
+        // Try to parse as ISO string first
+        let date = new Date(dateStr);
+
+        // If invalid, try parsing as MM/DD/YYYY or other formats
+        if (isNaN(date.getTime())) {
+          // Handle various date formats
+          const parts = dateStr.split(/[\/\-\s,]/);
+          if (parts.length >= 3) {
+            // Assume MM/DD/YYYY or DD/MM/YYYY format
+            date = new Date(parts[2], parts[0] - 1, parts[1]);
+          }
+        }
+
+        return isNaN(date.getTime()) ? 0 : date.getTime();
+      };
+
+      const dateA = getDateValue(a[key]);
+      const dateB = getDateValue(b[key]);
+
+      // For descending order (newest first), we want larger dates first
+      return direction === 1 ? dateA - dateB : dateB - dateA;
     }
-    if (a[key] < b[key]) return -direction;
-    if (a[key] > b[key]) return direction;
+
+    // Handle other fields
+    const aVal = a[key] || "";
+    const bVal = b[key] || "";
+
+    if (aVal < bVal) return -direction;
+    if (aVal > bVal) return direction;
     return 0;
   });
 
@@ -64,7 +94,15 @@ export default function SubscribersLog({
   );
 
   const formatDate = (dateString) => {
+    if (!dateString) return "—";
+
     const date = new Date(dateString);
+
+    // If date is invalid, try to parse it differently
+    if (isNaN(date.getTime())) {
+      return dateString; // Return original string if can't parse
+    }
+
     return new Intl.DateTimeFormat("en-US", {
       month: "short",
       day: "numeric",
@@ -75,7 +113,9 @@ export default function SubscribersLog({
   };
 
   const getSortIcon = (key) => {
-    if (sortConfig.key !== key) return "mdi:arrow-up-down";
+    if (sortConfig.key !== key) {
+      return key === "created_at" ? "mdi:arrow-down" : "mdi:arrow-up-down";
+    }
     return sortConfig.direction === "asc" ? "mdi:arrow-up" : "mdi:arrow-down";
   };
 
@@ -86,7 +126,7 @@ export default function SubscribersLog({
     }
 
     const headers = ["Name", "Email", "Joined"];
-    const rows = filteredSubscribers.map((sub) => [
+    const rows = sortedSubscribers.map((sub) => [
       sub.name || "—",
       sub.email,
       formatDate(sub.created_at),
@@ -111,7 +151,7 @@ export default function SubscribersLog({
     link.setAttribute("href", url);
     link.setAttribute(
       "download",
-      `subscribers_${new Date().toISOString()}.csv`
+      `subscribers_${new Date().toISOString().split("T")[0]}.csv`
     );
     document.body.appendChild(link);
     link.click();
@@ -136,10 +176,10 @@ export default function SubscribersLog({
         <div className="flex flex-col sm:flex-row justify-between gap-4">
           <div className="flex items-center gap-3">
             <div
-              className={`p-3 rounded-xl shadow-lg ${
+              className={`p-3 rounded-xl shadow-lg transition-all duration-300 ${
                 mode === "dark"
-                  ? "bg-indigo-500/20 text-indigo-300"
-                  : "bg-blue-400/10 text-[#172840]"
+                  ? "bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30"
+                  : "bg-blue-400/10 text-[#172840] hover:bg-blue-400/20"
               }`}
             >
               <Icon
@@ -148,8 +188,8 @@ export default function SubscribersLog({
               />
             </div>
             <div>
-              <h2 className="text-xl font-semibold">Subscribers</h2>
-              <p className="text-sm text-gray-400">
+              <h2 className="text-xl font-semibold tracking-tight">Subscribers</h2>
+              <p className="text-sm text-gray-400 mt-0.5">
                 {filteredSubscribers.length}{" "}
                 {filteredSubscribers.length === 1 ? "member" : "members"} total
               </p>
@@ -163,19 +203,19 @@ export default function SubscribersLog({
             >
               <motion.button
                 whileHover={{
-                  scale: 1.1,
+                  scale: 1.05,
                   rotate: 90,
-                  transition: { duration: 0.3, ease: "easeInOut" },
+                  transition: { duration: 0.2, ease: "easeInOut" },
                 }}
                 whileTap={{
                   scale: 0.95,
-                  transition: { duration: 0.3, ease: "easeInOut" },
+                  transition: { duration: 0.2, ease: "easeInOut" },
                 }}
-                className={`p-3 rounded-2xl transition-all duration-100 ${
+                className={`p-3 rounded-2xl transition-all duration-200 ${
                   mode === "dark"
                     ? "bg-[#172840]/80 hover:bg-[#3b82f6]/80 text-[#84c1d9] hover:text-white"
                     : "bg-[#84c1d9]/20 hover:bg-[#3b82f6]/20 text-[#172840] hover:text-[#172840]"
-                } backdrop-blur-sm shadow-lg`}
+                } backdrop-blur-sm shadow-lg hover:shadow-xl`}
                 aria-label="More options"
               >
                 <Icon
@@ -185,18 +225,19 @@ export default function SubscribersLog({
               </motion.button>
               {dropdownVisible && (
                 <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.3, ease: "easeInOut" }}
-                  className="absolute right-0 mt-2 w-40 p-2 bg-white shadow-md rounded-xl dark:bg-slate-800 dark:text-white"
+                  initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                  transition={{ duration: 0.2, ease: "easeInOut" }}
+                  className="absolute right-0 mt-2 w-48 p-2 bg-white shadow-lg rounded-xl dark:bg-slate-800 dark:text-white border border-gray-100 dark:border-slate-700"
                   onMouseEnter={handleMouseEnter}
                   onMouseLeave={handleMouseLeave}
                 >
                   <button
                     onClick={exportToCSV}
-                    className="w-full py-2 px-4 text-left text-sm text-gray-800 hover:bg-gray-200 rounded-lg dark:text-gray-200 dark:hover:bg-slate-700"
+                    className="w-full py-2.5 px-4 text-left text-sm text-gray-800 hover:bg-gray-100 rounded-lg dark:text-gray-200 dark:hover:bg-slate-700 transition-colors flex items-center gap-2"
                   >
+                    <Icon icon="mdi:file-export-outline" className="w-4 h-4" />
                     Export All
                   </button>
                 </motion.div>
@@ -211,20 +252,20 @@ export default function SubscribersLog({
           />
           <input
             type="text"
-            placeholder="Search..."
+            placeholder="Search subscribers..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className={`pl-10 pr-4 py-2 w-full rounded-lg text-sm focus:outline-none focus:ring-2 transition-all ${
+            className={`pl-10 pr-4 py-2.5 w-full rounded-lg text-sm focus:outline-none focus:ring-2 transition-all ${
               mode === "dark"
-                ? "bg-slate-800 border border-slate-700 focus:ring-indigo-500 text-white"
-                : "bg-gray-50 border border-gray-200 focus:ring-indigo-300 text-gray-800"
+                ? "bg-slate-800 border border-slate-700 focus:ring-indigo-500 text-white placeholder-gray-500"
+                : "bg-gray-50 border border-gray-200 focus:ring-indigo-300 text-gray-800 placeholder-gray-400"
             }`}
           />
         </div>
       </div>
 
       <div className="flex flex-col rounded-xl overflow-hidden border border-gray-200 dark:border-slate-800">
-        <div className="max-h-[480px] overflow-y-auto">
+        <div className="max-h-[480px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-slate-600 scrollbar-track-transparent">
           <table className="min-w-full text-sm">
             <thead
               className={`sticky top-0 z-10 ${
@@ -235,7 +276,7 @@ export default function SubscribersLog({
                 <th className="text-left px-6 py-4 font-semibold text-gray-500 dark:text-gray-400">
                   <button
                     onClick={() => handleSort("name")}
-                    className="flex items-center gap-1"
+                    className="flex items-center gap-1 hover:text-indigo-500 transition-colors"
                   >
                     Subscriber Info
                     <Icon icon={getSortIcon("name")} className="w-4 h-4" />
@@ -244,7 +285,7 @@ export default function SubscribersLog({
                 <th className="text-left px-6 py-4 font-semibold text-gray-500 dark:text-gray-400">
                   <button
                     onClick={() => handleSort("created_at")}
-                    className="flex items-center gap-1"
+                    className="flex items-center gap-1 hover:text-indigo-500 transition-colors"
                   >
                     Joined
                     <Icon
@@ -277,12 +318,12 @@ export default function SubscribersLog({
                   </td>
                 </tr>
               ) : paginatedSubscribers.length > 0 ? (
-                paginatedSubscribers.map((subscriber) => (
+                paginatedSubscribers.map((subscriber, index) => (
                   <tr
-                    key={subscriber.id}
+                    key={subscriber.id || index}
                     className={`group transition-all ${
                       mode === "dark"
-                        ? "hover:bg-slate-800 border-b border-slate-800"
+                        ? "hover:bg-slate-800/50 border-b border-slate-800"
                         : "hover:bg-gray-50 border-b border-gray-100"
                     }`}
                   >
@@ -290,10 +331,10 @@ export default function SubscribersLog({
                       <div className="flex flex-col gap-2">
                         <div className="flex items-center gap-3">
                           <div
-                            className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
                               mode === "dark"
-                                ? "bg-indigo-500/20"
-                                : "bg-[#84c1d9]/20"
+                                ? "bg-indigo-500/20 group-hover:bg-indigo-500/30"
+                                : "bg-[#84c1d9]/20 group-hover:bg-[#84c1d9]/30"
                             } ${subscriber.name ? "" : "opacity-50"}`}
                           >
                             {subscriber.name ? (
@@ -317,7 +358,7 @@ export default function SubscribersLog({
                               />
                             )}
                           </div>
-                          <span className="font-medium">
+                          <span className="font-medium group-hover:text-indigo-500 transition-colors">
                             {subscriber.name || "—"}
                           </span>
                         </div>
@@ -326,11 +367,13 @@ export default function SubscribersLog({
                             icon="mdi:email-outline"
                             className="w-4 h-4 opacity-50"
                           />
-                          <span>{subscriber.email}</span>
+                          <span className="break-all group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors">
+                            {subscriber.email}
+                          </span>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-400">
+                    <td className="px-6 py-4 text-sm text-gray-400 group-hover:text-gray-500 dark:group-hover:text-gray-300 transition-colors">
                       {formatDate(subscriber.created_at)}
                     </td>
                   </tr>
@@ -379,11 +422,11 @@ export default function SubscribersLog({
               <button
                 onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                 disabled={currentPage === 1}
-                className={`px-3 py-1 text-sm rounded-md transition-all ${
+                className={`px-3 py-1.5 text-sm rounded-md transition-all ${
                   mode === "dark"
                     ? "bg-slate-800 text-gray-300 hover:bg-slate-700 disabled:opacity-50"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-                }`}
+                } disabled:cursor-not-allowed`}
               >
                 Previous
               </button>
@@ -395,11 +438,11 @@ export default function SubscribersLog({
                   setCurrentPage((p) => Math.min(p + 1, totalPages))
                 }
                 disabled={currentPage === totalPages}
-                className={`px-3 py-1 text-sm rounded-md transition-all ${
+                className={`px-3 py-1.5 text-sm rounded-md transition-all ${
                   mode === "dark"
                     ? "bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
                     : "bg-[#84c1d9] text-white hover:bg-indigo-600 disabled:opacity-50"
-                }`}
+                } disabled:cursor-not-allowed`}
               >
                 Next
               </button>

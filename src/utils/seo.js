@@ -30,7 +30,6 @@ export const calculateSEOScore = (formData, editorContent) => {
   const powerWords = ['ultimate', 'essential', 'proven', 'exclusive', 'secret', 'guaranteed', 'powerful', 'revolutionary', 'breakthrough', 'innovative'];
   if (powerWords.some(word => formData.article_name?.toLowerCase().includes(word))) score++;
   if (/\d+/.test(formData.article_name)) score++;
-  if (editorContent?.toLowerCase().includes('table of contents') || editorContent?.toLowerCase().includes('contents')) score++;
   const paragraphs = editorContent?.split('</p>') || [];
   if (paragraphs.every(p => p.split(/\s+/).filter(Boolean).length <= 150)) score++;
   if (editorContent?.includes('<img')) score++;

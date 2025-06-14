@@ -6,8 +6,8 @@ import { createPortal } from "react-dom";
 import ItemActionModal from "@/components/ItemActionModal";
 import { supabase } from "@/lib/supabase";
 
-export default function OfferCard({
-  offer,
+export default function ResourceCard({
+  resource,
   mode = "light",
   onEdit,
   onDelete,
@@ -23,7 +23,7 @@ export default function OfferCard({
     e.preventDefault();
     e.stopPropagation();
     if (onEdit) {
-      onEdit(offer);
+      onEdit(resource);
     }
   };
 
@@ -31,7 +31,7 @@ export default function OfferCard({
     e.preventDefault();
     e.stopPropagation();
     if (onDelete) {
-      onDelete(offer);
+      onDelete(resource);
     }
   };
 
@@ -47,9 +47,9 @@ export default function OfferCard({
     try {
       // First get the feedback
       const { data: feedbackData, error: feedbackError } = await supabase
-        .from('offer_feedback')
+        .from('resource_feedback')
         .select('*')
-        .eq('offer_id', offer.id)
+        .eq('resource_id', resource.id)
         .order('created_at', { ascending: false });
 
       if (feedbackError) throw feedbackError;
@@ -112,14 +112,14 @@ export default function OfferCard({
   };
 
   const renderHeader = () => {
-    if (offer.offer_type === "Video" && offer.video_url) {
-      const thumbnailUrl = getVideoThumbnail(offer.video_url);
+    if (resource.resource_type === "Video" && resource.video_url) {
+      const thumbnailUrl = getVideoThumbnail(resource.video_url);
       return (
         <div className="relative h-48">
           {thumbnailUrl ? (
             <Image
               src={thumbnailUrl}
-              alt={offer.title}
+              alt={resource.title}
               fill
               className="object-cover"
               unoptimized={true}
@@ -160,10 +160,10 @@ export default function OfferCard({
 
     return (
       <div className="relative h-48">
-        {offer.icon_url ? (
+        {resource.icon_url ? (
           <Image
-            src={offer.icon_url}
-            alt={offer.title}
+            src={resource.icon_url}
+            alt={resource.title}
             fill
             className="object-cover"
             unoptimized={true}
@@ -195,7 +195,7 @@ export default function OfferCard({
                 : "bg-blue-100 text-blue-600"
             }`}
           >
-            {offer.offer_type}
+            {resource.resource_type}
           </span>
         </div>
       </div>
@@ -209,22 +209,22 @@ export default function OfferCard({
       <ItemActionModal
         isOpen={showVideoModal}
         onClose={() => setShowVideoModal(false)}
-        title={offer.title}
+        title={resource.title}
         mode={mode}
         width="max-w-4xl"
       >
         <div className="relative w-full" style={{ paddingTop: "56.25%" }}>
           <iframe
-            src={getEmbedUrl(offer.video_url)}
+            src={getEmbedUrl(resource.video_url)}
             className="absolute top-0 left-0 w-full h-full rounded-xl"
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
           />
         </div>
         <div className="mt-4">
-          <h3 className="text-lg font-semibold mb-2">{offer.title}</h3>
+          <h3 className="text-lg font-semibold mb-2">{resource.title}</h3>
           <p className={`text-sm ${mode === "dark" ? "text-gray-300" : "text-gray-600"}`}>
-            {offer.description}
+            {resource.description}
           </p>
         </div>
       </ItemActionModal>,
@@ -260,7 +260,7 @@ export default function OfferCard({
               <p className={`mt-2 text-sm ${
                 mode === "dark" ? "text-gray-400" : "text-gray-500"
               }`}>
-                Users haven&apos;t provided any feedback for this offer.
+                Users haven&apos;t provided any feedback for this resource.
               </p>
             </div>
           ) : (
@@ -342,7 +342,7 @@ export default function OfferCard({
         <div className="p-6 pb-4">
           <div className="mb-4">
             <h3 className="font-bold text-lg mb-1 truncate pr-6 max-w-full">
-              {offer.title}
+              {resource.title}
             </h3>
           </div>
         </div>
@@ -353,7 +353,7 @@ export default function OfferCard({
             className={`text-sm leading-relaxed mb-6 line-clamp-3 ${
               mode === "dark" ? "text-gray-300" : "text-gray-600"
             }`}
-            dangerouslySetInnerHTML={{ __html: offer.description }}
+            dangerouslySetInnerHTML={{ __html: resource.description }}
           />
 
           {/* Tier Restriction */}
@@ -365,9 +365,9 @@ export default function OfferCard({
                   : "bg-purple-100 text-purple-700"
               }`}
             >
-              {offer.tier_restriction}
+              {resource.tier_restriction}
             </span>
-            {offer.offer_type === "PDF" && (
+            {resource.resource_type === "PDF" && (
               <span
                 className={`px-2 py-1 rounded-md text-xs font-medium ${
                   mode === "dark"
@@ -392,7 +392,7 @@ export default function OfferCard({
           <div className="flex items-center gap-2 text-sm font-medium">
             <span className="flex items-center text-gray-500">
               <Icon icon="heroicons:calendar" className="w-4 h-4 mr-1" />
-              {new Date(offer.created_at).toLocaleDateString("en-US", {
+              {new Date(resource.created_at).toLocaleDateString("en-US", {
                 month: "short",
                 day: "numeric",
                 year: "numeric",
@@ -401,9 +401,9 @@ export default function OfferCard({
           </div>
 
           <div className="flex items-center gap-2">
-            {offer.url && (
+            {resource.url && (
               <a
-                href={offer.url}
+                href={resource.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition"
@@ -412,7 +412,7 @@ export default function OfferCard({
                 <Icon icon="heroicons:arrow-top-right-on-square" className="w-4 h-4" />
               </a>
             )}
-            {offer.video_url && (
+            {resource.video_url && (
               <button
                 onClick={() => setShowVideoModal(true)}
                 className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition"
@@ -433,7 +433,7 @@ export default function OfferCard({
               type="button"
               onClick={handleEdit}
               className="p-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition"
-              title="Edit Offer"
+              title="Edit Resource"
             >
               <Icon icon="heroicons:pencil-square" className="w-4 h-4" />
             </button>
@@ -441,7 +441,7 @@ export default function OfferCard({
               type="button"
               onClick={handleDelete}
               className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition"
-              title="Delete Offer"
+              title="Delete Resource"
             >
               <Icon icon="heroicons:trash" className="w-4 h-4" />
             </button>

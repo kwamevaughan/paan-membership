@@ -1,62 +1,51 @@
 import SelectFilter from "./common/SelectFilter";
 
 export default function OfferFilters({
-  selectedCategory = "All",
-  onCategoryChange,
-  selectedTier = "All",
+  selectedTier,
   onTierChange,
-  selectedType = "All",
+  selectedType,
   onTypeChange,
-  selectedRegion = "All",
-  onRegionChange,
-  categories = [],
   tiers = [],
   types = [],
-  regions = [],
   mode = "light",
   loading = false,
 }) {
-  return (
-    <>
-      <SelectFilter
-        id="filter-category"
-        label="Category"
-        value={selectedCategory}
-        onChange={onCategoryChange}
-        options={categories}
-        mode={mode}
-        loading={loading}
-      />
+  const defaultTiers = [
+    "All",
+    "Associate Member",
+    "Full Member",
+    "Gold Member",
+    "Free Member",
+  ];
 
+  const defaultTypes = [
+    "All",
+    "Workshop",
+    "Service",
+    "Discount",
+  ];
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <SelectFilter
-        id="filter-tier"
         label="Tier"
         value={selectedTier}
         onChange={onTierChange}
-        options={tiers}
+        options={tiers.length > 0 ? ["All", ...tiers] : defaultTiers}
+        disabled={loading}
         mode={mode}
-        loading={loading}
+        id="offer-tier"
       />
 
       <SelectFilter
-        id="filter-type"
         label="Type"
         value={selectedType}
         onChange={onTypeChange}
-        options={types}
+        options={types.length > 0 ? ["All", ...types] : defaultTypes}
+        disabled={loading}
         mode={mode}
-        loading={loading}
+        id="offer-type"
       />
-
-      <SelectFilter
-        id="filter-region"
-        label="Region"
-        value={selectedRegion}
-        onChange={onRegionChange}
-        options={regions}
-        mode={mode}
-        loading={loading}
-      />
-    </>
+    </div>
   );
-} 
+}

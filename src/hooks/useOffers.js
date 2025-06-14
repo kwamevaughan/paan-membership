@@ -11,6 +11,7 @@ export function useOffers(candidatesMap = {}) {
     tier_restriction: "All",
     url: "",
     icon_url: "",
+    offer_type: "Workshop",
   });
   const [loading, setLoading] = useState(false);
   const [filterTerm, setFilterTerm] = useState("");
@@ -37,7 +38,7 @@ export function useOffers(candidatesMap = {}) {
       let query = supabase
         .from("offers")
         .select(
-          "id, title, description, tier_restriction, url, icon_url, created_at, updated_at"
+          "id, title, description, tier_restriction, url, icon_url, created_at, updated_at, offer_type"
         );
 
       // Apply filters
@@ -160,6 +161,7 @@ export function useOffers(candidatesMap = {}) {
         tier_restriction: formData.tier_restriction,
         url: formData.url || null,
         icon_url: formData.icon_url || null,
+        offer_type: formData.offer_type,
       };
 
       if (formData.id) {
@@ -197,6 +199,7 @@ export function useOffers(candidatesMap = {}) {
         tier_restriction: "All",
         url: "",
         icon_url: "",
+        offer_type: "Workshop",
       });
     } catch (error) {
       console.error("[useOffers] Submit error:", error.message);
@@ -214,6 +217,7 @@ export function useOffers(candidatesMap = {}) {
       tier_restriction: offer.tier_restriction,
       url: offer.url || "",
       icon_url: offer.icon_url || "",
+      offer_type: offer.offer_type,
     });
   };
 

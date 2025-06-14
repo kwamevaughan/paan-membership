@@ -139,23 +139,25 @@ export default function BaseFilters({
               transition={{ duration: 0.2 }}
               className="mt-6 overflow-hidden"
             >
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
-                {/* Sort Order Filter (Common) */}
-                <div className="w-full">
-                  <SelectFilter
-                    label="Sort By"
-                    value={sortOrder}
-                    onChange={setSortOrder}
-                    options={sortOptions}
-                    disabled={loading}
-                    mode={mode}
-                    id="sort-order"
-                  />
-                </div>
+              <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* Sort Order Filter */}
+                  <div className="w-full">
+                    <SelectFilter
+                      label="Sort By"
+                      value={sortOrder}
+                      onChange={setSortOrder}
+                      options={sortOptions}
+                      disabled={loading}
+                      mode={mode}
+                      id="sort-order"
+                    />
+                  </div>
 
-                {/* Page-specific filters */}
-                <div className="col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-5">
-                  {children}
+                  {/* Page-specific filters */}
+                  <div className="col-span-1 sm:col-span-2">
+                    {children}
+                  </div>
                 </div>
               </div>
             </motion.div>

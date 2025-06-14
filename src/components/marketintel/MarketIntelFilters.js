@@ -1,6 +1,6 @@
 import ViewToggle from "@/components/ViewToggle";
 
-export default function UpdatesFilters({
+export default function MarketIntelFilters({
   searchQuery,
   onSearch,
   selectedCategory,
@@ -17,7 +17,7 @@ export default function UpdatesFilters({
           type="text"
           value={searchQuery}
           onChange={(e) => onSearch(e.target.value)}
-          placeholder="Search updates..."
+          placeholder="Search market intel..."
           className={`w-full px-4 py-3 rounded-xl shadow-lg ${
             mode === "dark"
               ? "bg-gray-800 text-white border-gray-600"

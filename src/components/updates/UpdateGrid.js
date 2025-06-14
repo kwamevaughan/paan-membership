@@ -39,14 +39,7 @@ const UpdateGrid = memo(({
       return [];
     }
 
-    // Use the data as is since it's already filtered by the parent
-    console.log('UpdateGrid - Using pre-filtered data:', {
-      totalItems: updates.length,
-      items: updates.map(item => ({
-        id: item.id,
-        title: item.title
-      }))
-    });
+    
     return updates;
   }, [updates]);
 
@@ -56,7 +49,6 @@ const UpdateGrid = memo(({
       const dateB = new Date(b.created_at);
       return dateB - dateA;
     });
-    console.log('UpdateGrid - Sorted items count:', sorted.length);
     return sorted;
   }, [filteredUpdates]);
 

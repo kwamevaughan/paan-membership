@@ -556,7 +556,7 @@ export async function getAdminBlogProps({ req, res }) {
 
 export async function getAdminEventsProps({ req, res }) {
   // Authenticate and authorize
-  const authResult = await withAuth(req, res, { redirectTo: "/login" });
+  const authResult = await withAuth(req, res, { redirectTo: "/hr/login" });
   if (authResult.redirect) {
     return authResult;
   }
@@ -583,6 +583,37 @@ export async function getAdminEventsProps({ req, res }) {
     },
   };
 }
+
+export async function getAdminResourcesProps({ req, res }) {
+  // Authenticate and authorize
+  const authResult = await withAuth(req, res, { redirectTo: "/hr/login" });
+  if (authResult.redirect) {
+    return authResult;
+  }
+
+  const { supabaseServer } = authResult;
+
+  // Fetch tiers
+  const { data: tiers, error: tiersError } = await supabaseServer
+    .from("tiers")
+    .select("*")
+    .order("id");
+
+  if (tiersError) {
+    return {
+      props: {
+        tiers: [],
+      },
+    };
+  }
+
+  return {
+    props: {
+      tiers: tiers || [],
+    },
+  };
+}
+
 
 export async function getAdminOffersProps({ req, res }) {
   console.log("[getAdminOffersProps] Starting at", new Date().toISOString());

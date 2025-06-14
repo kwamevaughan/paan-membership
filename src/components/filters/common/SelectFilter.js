@@ -154,15 +154,18 @@ export default function SelectFilter({
 
         {/* Dropdown menu */}
         {isOpen && (
-          <div className={`fixed z-[9999] w-[var(--select-width)] py-1 rounded-lg shadow-lg ${
-            mode === "dark"
-              ? "bg-gray-800 border border-gray-700"
-              : "bg-white border border-gray-200"
-          }`} style={{ 
-            top: 'var(--select-top)',
-            left: 'var(--select-left)',
-            width: 'var(--select-width)'
-          }}>
+          <div 
+            className={`fixed z-[9999] w-[var(--select-width)] py-1 rounded-lg shadow-lg max-h-[300px] overflow-y-auto ${
+              mode === "dark"
+                ? "bg-gray-800 border border-gray-700"
+                : "bg-white border border-gray-200"
+            }`} 
+            style={{ 
+              top: 'var(--select-top)',
+              left: 'var(--select-left)',
+              width: 'var(--select-width)'
+            }}
+          >
             {options.map((option) => {
               const optionValue = getOptionValue(option);
               const optionLabel = getOptionLabel(option);

@@ -187,15 +187,7 @@ export default function AdminUpdates({
     const remainingCount = Math.max(0, totalCount - displayedCount);
     const hasMore = remainingCount > 0;
 
-    console.log('Admin Updates - Pagination Debug:', {
-      totalItems: totalCount,
-      currentPage: page,
-      itemsPerPage,
-      displayedItems: displayedCount,
-      remainingCount,
-      hasMore,
-      expectedDisplayed: Math.min(page * itemsPerPage, totalCount)
-    });
+    
 
     return paginated;
   }, [filteredUpdates, page, itemsPerPage]);
@@ -205,12 +197,7 @@ export default function AdminUpdates({
     const displayedCount = paginatedUpdates.length;
     const totalCount = filteredUpdates.length;
     
-    console.log('Admin Updates - Updating counts:', {
-      displayedCount,
-      totalCount,
-      currentPage: page,
-      itemsPerPage
-    });
+    
 
     setDisplayedCount(displayedCount);
     setTotalCount(totalCount);

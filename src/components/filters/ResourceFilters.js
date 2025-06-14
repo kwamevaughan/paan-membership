@@ -1,15 +1,12 @@
 import SelectFilter from "./common/SelectFilter";
 
-export default function EventFilters({
+export default function ResourceFilters({
   selectedTier,
   onTierChange,
   selectedType,
   onTypeChange,
-  selectedLocation,
-  onLocationChange,
   tiers = [],
   types = [],
-  locations = [],
   mode = "light",
   loading = false,
 }) {
@@ -21,14 +18,16 @@ export default function EventFilters({
   ];
 
   const defaultTypes = [
-    "Networking",
     "Workshop",
-    "Conference",
-    "Webinar",
+    "PDF",
+    "Event",
+    "Video",
+    "Audio",
+    "Other",
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <SelectFilter
         label="Tier"
         value={selectedTier}
@@ -36,7 +35,7 @@ export default function EventFilters({
         options={tiers.length > 0 ? tiers : defaultTiers}
         disabled={loading}
         mode={mode}
-        id="event-tier"
+        id="resource-tier"
       />
 
       <SelectFilter
@@ -46,18 +45,8 @@ export default function EventFilters({
         options={types.length > 0 ? types : defaultTypes}
         disabled={loading}
         mode={mode}
-        id="event-type"
-      />
-
-      <SelectFilter
-        label="Location"
-        value={selectedLocation}
-        onChange={onLocationChange}
-        options={locations}
-        disabled={loading}
-        mode={mode}
-        id="event-location"
+        id="resource-type"
       />
     </div>
   );
-} 
+}

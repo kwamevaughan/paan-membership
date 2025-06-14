@@ -3,7 +3,7 @@ import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
 
-const ResourceForm = ({
+const OfferForm = ({
   formData,
   handleInputChange,
   submitForm,
@@ -11,7 +11,7 @@ const ResourceForm = ({
   isEditing,
   mode,
 }) => {
-  const resourceTypes = ["PDF", "Video", "Workshop", "Audio", "Other"];
+  const offerTypes = ["Discount", "Workshop", "Service", "Other"];
   const validTiers = [
     "Associate Member",
     "Full Member",
@@ -20,7 +20,7 @@ const ResourceForm = ({
   ];
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [resourceSource, setResourceSource] = useState(
+  const [offerSource, setOfferSource] = useState(
     formData.video_url ? "video" : formData.file_path ? "file" : "file"
   );
 
@@ -37,16 +37,16 @@ const ResourceForm = ({
     e.preventDefault();
     const newErrors = {};
     if (!formData.title) newErrors.title = "Title is required";
-    if (!resourceTypes.includes(formData.resource_type))
-      newErrors.resource_type = "Please select a valid resource type";
+    if (!offerTypes.includes(formData.offer_type))
+      newErrors.offer_type = "Please select a valid offer type";
     if (!validTiers.includes(formData.tier_restriction))
       newErrors.tier_restriction = "Please select a valid tier restriction";
-    if (resourceSource === "file" && !formData.file && !formData.file_path)
+    if (offerSource === "file" && !formData.file && !formData.file_path)
       newErrors.file = "Please upload a PDF file";
-    if (resourceSource === "video" && !formData.video_url)
+    if (offerSource === "video" && !formData.video_url)
       newErrors.video_url = "Video URL is required";
     else if (
-      resourceSource === "video" &&
+      offerSource === "video" &&
       !(
         formData.video_url.startsWith("https://www.youtube.com/") ||
         formData.video_url.startsWith("https://youtu.be/") ||
@@ -63,13 +63,13 @@ const ResourceForm = ({
     try {
       setIsSubmitting(true);
       const loadingToast = toast.loading(
-        isEditing ? "Updating resource..." : "Creating resource..."
+        isEditing ? "Updating offer..." : "Creating offer..."
       );
       
       await submitForm(e);
       
       toast.success(
-        isEditing ? "Resource updated successfully!" : "Resource created successfully!",
+        isEditing ? "Offer updated successfully!" : "Offer created successfully!",
         { id: loadingToast }
       );
       
@@ -77,7 +77,7 @@ const ResourceForm = ({
       cancelForm();
     } catch (error) {
       toast.error(
-        isEditing ? "Failed to update resource" : "Failed to create resource",
+        isEditing ? "Failed to update offer" : "Failed to create offer",
         { id: loadingToast }
       );
       console.error("Form submission error:", error);
@@ -88,7 +88,7 @@ const ResourceForm = ({
 
   const handleSourceChange = (e) => {
     const newSource = e.target.value;
-    setResourceSource(newSource);
+    setOfferSource(newSource);
     handleInputChange({
       target: { name: "file", value: null },
     });
@@ -117,7 +117,7 @@ const ResourceForm = ({
         <p className={`mt-2 text-sm ${
           mode === "dark" ? "text-gray-400" : "text-gray-500"
         }`}>
-          Fill in the details below to {isEditing ? "update" : "create"} your resource.
+          Fill in the details below to {isEditing ? "update" : "create"} your offer
         </p>
       </div>
 
@@ -145,7 +145,7 @@ const ResourceForm = ({
                       ? "bg-gray-700/50 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500"
                       : "bg-white border-gray-200 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                   } ${errors.title ? "border-red-500" : ""}`}
-                  placeholder="Enter resource title"
+                  placeholder="Enter offer title"
                 />
                 {errors.title && (
                   <motion.p
@@ -179,7 +179,7 @@ const ResourceForm = ({
                     ? "bg-gray-700/50 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500"
                     : "bg-white border-gray-200 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
                 }`}
-                placeholder="Enter resource description"
+                placeholder="Enter offer description"
               />
             </div>
           </div>
@@ -187,37 +187,37 @@ const ResourceForm = ({
           <div className="space-y-6">
             <div>
               <label
-                htmlFor="resource_type"
+                htmlFor="offer_type"
                 className={`block text-sm font-medium ${
                   mode === "dark" ? "text-gray-200" : "text-gray-700"
                 }`}
               >
-                Resource Type
+                Offer Type
               </label>
               <select
-                name="resource_type"
-                id="resource_type"
-                value={formData.resource_type}
+                name="offer_type"
+                id="offer_type"
+                value={formData.offer_type}
                 onChange={handleInputChange}
                 className={`mt-1 block w-full rounded-xl border text-sm px-4 py-3 transition-all duration-200 ${
                   mode === "dark"
                     ? "bg-gray-700/50 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500"
                     : "bg-white border-gray-200 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
-                } ${errors.resource_type ? "border-red-500" : ""}`}
+                } ${errors.offer_type ? "border-red-500" : ""}`}
               >
-                {resourceTypes.map((type) => (
+                {offerTypes.map((type) => (
                   <option key={type} value={type}>
                     {type}
                   </option>
                 ))}
               </select>
-              {errors.resource_type && (
+              {errors.offer_type && (
                 <motion.p
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="mt-1 text-red-500 text-xs"
                 >
-                  {errors.resource_type}
+                  {errors.offer_type}
                 </motion.p>
               )}
             </div>
@@ -265,11 +265,11 @@ const ResourceForm = ({
           <label className={`block text-sm font-medium ${
             mode === "dark" ? "text-gray-200" : "text-gray-700"
           }`}>
-            Resource Source
+            Offer Source
           </label>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <label className={`relative flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
-              resourceSource === "file"
+              offerSource === "file"
                 ? mode === "dark"
                   ? "border-blue-500 bg-blue-500/10"
                   : "border-blue-500 bg-blue-50"
@@ -279,19 +279,19 @@ const ResourceForm = ({
             }`}>
               <input
                 type="radio"
-                name="resourceSource"
+                name="offerSource"
                 value="file"
-                checked={resourceSource === "file"}
+                checked={offerSource === "file"}
                 onChange={handleSourceChange}
                 className="sr-only"
               />
               <div className="flex items-center">
                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                  resourceSource === "file"
+                  offerSource === "file"
                     ? "border-blue-500"
                     : "border-gray-400"
                 }`}>
-                  {resourceSource === "file" && (
+                  {offerSource === "file" && (
                     <div className="w-3 h-3 rounded-full bg-blue-500" />
                   )}
                 </div>
@@ -304,7 +304,7 @@ const ResourceForm = ({
             </label>
 
             <label className={`relative flex items-center p-4 rounded-xl border-2 cursor-pointer transition-all duration-200 ${
-              resourceSource === "video"
+              offerSource === "video"
                 ? mode === "dark"
                   ? "border-blue-500 bg-blue-500/10"
                   : "border-blue-500 bg-blue-50"
@@ -314,19 +314,19 @@ const ResourceForm = ({
             }`}>
               <input
                 type="radio"
-                name="resourceSource"
+                name="offerSource"
                 value="video"
-                checked={resourceSource === "video"}
+                checked={offerSource === "video"}
                 onChange={handleSourceChange}
                 className="sr-only"
               />
               <div className="flex items-center">
                 <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                  resourceSource === "video"
+                  offerSource === "video"
                     ? "border-blue-500"
                     : "border-gray-400"
                 }`}>
-                  {resourceSource === "video" && (
+                  {offerSource === "video" && (
                     <div className="w-3 h-3 rounded-full bg-blue-500" />
                   )}
                 </div>
@@ -339,7 +339,7 @@ const ResourceForm = ({
             </label>
           </div>
 
-          {resourceSource === "file" && (
+          {offerSource === "file" && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -393,7 +393,7 @@ const ResourceForm = ({
             </motion.div>
           )}
 
-          {resourceSource === "video" && (
+          {offerSource === "video" && (
             <motion.div
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
@@ -465,7 +465,7 @@ const ResourceForm = ({
             ) : (
               <>
                 <Icon icon="heroicons:check" className="w-5 h-5" />
-                <span>{isEditing ? "Update Resource" : "Create Resource"}</span>
+                <span>{isEditing ? "Update Offer" : "Create Offer"}</span>
               </>
             )}
           </button>
@@ -475,4 +475,4 @@ const ResourceForm = ({
   );
 };
 
-export default ResourceForm;
+export default OfferForm;

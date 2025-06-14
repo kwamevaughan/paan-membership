@@ -40,17 +40,7 @@ const DataView = memo(({
       
       setPaginatedData(newPaginatedData);
       
-      console.log('DataView - Pagination Debug:', {
-        totalItems: totalCount || data.length,
-        currentPage,
-        itemsPerPage,
-        displayedItems: newPaginatedData.length,
-        hasMore,
-        remainingCount,
-        onLoadMore: !!onLoadMore,
-        startIndex,
-        endIndex
-      });
+      
       
       // Notify parent of count changes
       if (onCountChange) {
@@ -67,17 +57,7 @@ const DataView = memo(({
   const displayedCount = paginatedData.length;
   const remainingItems = Math.max(0, totalItems - (currentPage * itemsPerPage));
 
-  console.log('DataView - Final Counts:', {
-    totalItems,
-    displayedCount,
-    remainingItems,
-    currentPage,
-    itemsPerPage,
-    hasMoreItems,
-    dataLength: data?.length,
-    totalCount,
-    hasMore
-  });
+  
 
   const handleEdit = (item) => {
     if (handleEditClick) {

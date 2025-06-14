@@ -34,18 +34,10 @@ const MarketIntelGrid = memo(({
 
   const filteredMarketIntel = useMemo(() => {
     if (!marketIntel) {
-      console.log('MarketIntelGrid - No market intel available');
       return [];
     }
 
-    // Use the data as is since it's already filtered by the parent
-    console.log('MarketIntelGrid - Using pre-filtered data:', {
-      totalItems: marketIntel.length,
-      items: marketIntel.map(item => ({
-        id: item.id,
-        title: item.title
-      }))
-    });
+    
     return marketIntel;
   }, [marketIntel]);
 
@@ -55,7 +47,6 @@ const MarketIntelGrid = memo(({
       const dateB = new Date(b.created_at);
       return dateB - dateA;
     });
-    console.log('MarketIntelGrid - Sorted items count:', sorted.length);
     return sorted;
   }, [filteredMarketIntel]);
 
@@ -91,13 +82,7 @@ const MarketIntelGrid = memo(({
   };
 
   const handleLoadMore = () => {
-    console.log('MarketIntelGrid - Load More Debug:', {
-      hasMore,
-      remainingCount,
-      totalCount: sortedMarketIntel.length,
-      currentItems: paginatedMarketIntel.length,
-      onLoadMore: !!onLoadMore
-    });
+    
     if (onLoadMore) {
       onLoadMore();
     }

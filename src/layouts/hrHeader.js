@@ -6,6 +6,9 @@ import Search from "@/components/Search";
 import FullscreenToggle from "@/components/FullscreenToggle";
 import TooltipIconButton from "@/components/TooltipIconButton";
 import LanguageSwitch from "@/components/LanguageSwitch";
+import NotificationDropdown from "@/components/NotificationDropdown";
+import useNotifications from "@/hooks/useNotifications";
+import { supabase } from "@/lib/supabase";
 
 const HRHeader = ({
   mode,
@@ -14,11 +17,35 @@ const HRHeader = ({
   onLogout,
   sidebarState,
   toggleSidebar,
-  isMobile, // Added from useSidebar
+  isMobile,
 }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
   const headerRef = useRef(null);
+  const { notifications, loading, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const [userData, setUserData] = useState(null);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: hrUser, error } = await supabase
+            .from("hr_users")
+            .select("name, username")
+            .eq("id", user.id)
+            .single();
+          
+          if (error) throw error;
+          setUserData(hrUser);
+        }
+      } catch (error) {
+        console.error("[HRHeader] Error fetching user data:", error);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -36,8 +63,6 @@ const HRHeader = ({
       document.body.style.paddingTop = `${headerHeight}px`;
     }
   }, []);
-
-  const fullName = "PAAN HR Team";
 
   return (
     <header
@@ -107,35 +132,33 @@ const HRHeader = ({
             <LanguageSwitch mode={mode} />
 
             {/* Notifications */}
-            <TooltipIconButton
-              label="View Notifications"
+            <NotificationDropdown
+              notifications={notifications}
+              loading={loading}
+              unreadCount={unreadCount}
+              onMarkAsRead={markAsRead}
+              onMarkAllAsRead={markAllAsRead}
               mode={mode}
-              className="bg-white/50"
-            >
-              <Icon
-                icon="mdi-light:bell"
-                width={26}
-                height={26}
-                className="animate-swing-infinite"
-              />
-            </TooltipIconButton>
+            />
 
             {/* User Dropdown */}
             <div
-              className="flex items-center gap-2 pl-4 relative group cursor-default"
+              className="flex items-center gap-2 pl-4 relative"
               ref={dropdownRef}
-              onClick={() => setDropdownOpen(!dropdownOpen)}
             >
-              <div className="flex items-center gap-2 cursor-pointer">
+              <div 
+                className="flex items-center gap-2 cursor-pointer"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+              >
                 <div className="hidden md:block">
                   <span
                     className={`font-bold text-xs ${
                       mode === "dark" ? "text-white" : "text-[#231812]"
                     }`}
                   >
-                    {fullName}
+                    {userData?.name || "Loading..."}
                   </span>
-                  <span className="block text-sm font-normal text-right text-[#f05d23]">
+                  <span className="block text-sm font-normal text-right text-sky-700">
                     Admin
                   </span>
                 </div>
@@ -163,7 +186,6 @@ const HRHeader = ({
                   }`}
                 >
                   <div className="p-8">
-                    <p className="text-lg mb-6">User Profile</p>
                     <div className="flex items-center gap-2 border-b pb-6 w-full">
                       <div className="overflow-hidden flex-shrink-0">
                         <Image
@@ -179,13 +201,13 @@ const HRHeader = ({
                         />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-md font-bold">{fullName}</span>
-                        <span className="text-sm">Business Department</span>
+                        <span className="text-md font-bold">{userData?.name || "Loading..."}</span>
+                        <span className="text-sm">{userData?.username || ""}</span>
                       </div>
                     </div>
                     <button
                       onClick={onLogout}
-                      className="block w-full text-center text-white px-4 py-2 bg-[#f05d23] rounded-full hover:bg-[#d94f1e] transition duration-200 mt-4"
+                      className="block w-full text-center text-white px-4 py-2 bg-blue-400 rounded-full hover:bg-sky-800 transition duration-200 mt-4"
                     >
                       Logout
                     </button>

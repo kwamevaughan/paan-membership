@@ -45,7 +45,7 @@ const editorStyles = `
     padding: 0.5rem;
     border: none;
     outline: none;
-    background: white;
+    background: rgb(255 255 255 / 53%);
     margin-top: 0.5rem;
     min-height: 200px;
   }
@@ -85,7 +85,7 @@ const editorStyles = `
     position: sticky;
     top: 0;
     z-index: 50;
-    background: white;
+    background: rgb(255 255 255 / 50%);
     border-bottom: 1px solid #e2e8f0;
     padding: 0.5rem;
     backdrop-filter: blur(8px);
@@ -227,7 +227,7 @@ const ViewToggleButton = memo(({ viewMode, toggleViewMode, mode }) => (
     className={`relative flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 transform hover:scale-105 backdrop-blur-sm shadow-lg hover:shadow-xl ${
       mode === "dark"
         ? "bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-white/10 text-gray-100 hover:from-orange-500/80 hover:to-red-500/80"
-        : "bg-gradient-to-br from-white/60 to-gray-50/60 border-white/20 text-[#231812] hover:from-blue-200 hover:to-blue-400 hover:text-white"
+        : "bg-gradient-to-br from-white/40 to-gray-50/60 border-white/20 text-[#231812] hover:from-blue-200 hover:to-blue-400/80 hover:text-white"
     }`}
   >
     <Icon icon="mdi:code-tags" width={16} height={16} />

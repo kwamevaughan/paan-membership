@@ -71,8 +71,8 @@ export function useTimeline(categoryFilter = "all") {
         {
           name: "events",
           select:
-            "id, title, description, event_type, date, location, is_virtual, registration_link, tier_restriction, created_at, updated_at",
-          order: { field: "date", ascending: true },
+            "id, title, description, event_type, start_date, end_date, location, is_virtual, registration_link, tier_restriction, created_at, updated_at",
+          order: { field: "start_date", ascending: true },
           type: "events",
           tierField: "tier_restriction",
           category: "Events",

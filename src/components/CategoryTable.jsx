@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Icon } from "@iconify/react";
 import ItemActionModal from "@/components/ItemActionModal";
 import toast from "react-hot-toast";
@@ -12,6 +12,10 @@ export default function CategoryTable({
 }) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [categoryToDelete, setCategoryToDelete] = useState(null);
+  const [filters, setFilters] = useState({
+    jobType: "",
+    mandatory: "",
+  });
 
   const handleDeleteClick = (category) => {
     setCategoryToDelete(category);
@@ -35,6 +39,27 @@ export default function CategoryTable({
     setIsDeleteModalOpen(false);
     setCategoryToDelete(null);
   };
+
+  const handleFilterChange = (filterType, value) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
+
+  const filteredCategories = useMemo(() => {
+    return categories.filter(category => {
+      const matchesJobType = !filters.jobType || category.job_type === filters.jobType;
+      const matchesMandatory = filters.mandatory === "" || 
+        (filters.mandatory === "yes" && category.is_mandatory) ||
+        (filters.mandatory === "no" && !category.is_mandatory);
+      return matchesJobType && matchesMandatory;
+    });
+  }, [categories, filters]);
+
+  const uniqueJobTypes = useMemo(() => {
+    return [...new Set(categories.map(cat => cat.job_type).filter(Boolean))];
+  }, [categories]);
 
   return (
     <div className="relative">
@@ -69,6 +94,57 @@ export default function CategoryTable({
           </button>
         </div>
 
+        {/* Filter Controls */}
+        <div className={`mb-4 p-4 rounded-xl ${
+          mode === "dark" ? "bg-blue-500/20" : "bg-blue-50"
+        }`}>
+          <div className="flex flex-wrap gap-4">
+            <div className="flex-1 min-w-[200px]">
+              <label className={`block text-sm font-medium mb-2 ${
+                mode === "dark" ? "text-gray-200" : "text-gray-700"
+              }`}>
+                Job Type
+              </label>
+              <select
+                value={filters.jobType}
+                onChange={(e) => handleFilterChange("jobType", e.target.value)}
+                className={`w-full px-3 py-2 rounded-lg border capitalize ${
+                  mode === "dark"
+                    ? "bg-blue-900/50 border-blue-400/30 text-gray-200"
+                    : "bg-white border-blue-200 text-gray-700"
+                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              >
+                <option value="">All Job Types</option>
+                {uniqueJobTypes.map((type) => (
+                  <option key={type} value={type}>
+                    {type}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <label className={`block text-sm font-medium mb-2 ${
+                mode === "dark" ? "text-gray-200" : "text-gray-700"
+              }`}>
+                Mandatory Status
+              </label>
+              <select
+                value={filters.mandatory}
+                onChange={(e) => handleFilterChange("mandatory", e.target.value)}
+                className={`w-full px-3 py-2 rounded-lg border ${
+                  mode === "dark"
+                    ? "bg-blue-900/50 border-blue-400/30 text-gray-200"
+                    : "bg-white border-blue-200 text-gray-700"
+                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+              >
+                <option value="">All</option>
+                <option value="yes">Mandatory</option>
+                <option value="no">Optional</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
         <div className="overflow-x-auto">
           <table
             className={`min-w-full rounded-xl backdrop-blur-sm border ${
@@ -100,7 +176,7 @@ export default function CategoryTable({
               </tr>
             </thead>
             <tbody>
-              {categories.length === 0 ? (
+              {filteredCategories.length === 0 ? (
                 <tr>
                   <td
                     colSpan={4}
@@ -112,7 +188,7 @@ export default function CategoryTable({
                   </td>
                 </tr>
               ) : (
-                categories.map((category) => (
+                filteredCategories.map((category) => (
                   <tr
                     key={category.id}
                     className={`border-t ${
@@ -122,7 +198,7 @@ export default function CategoryTable({
                     } hover:bg-blue-500/10 transition-colors duration-200`}
                   >
                     <td className="py-3 px-4">{category.name}</td>
-                    <td className="py-3 px-4">{category.job_type || "None"}</td>
+                    <td className="py-3 px-4 capitalize">{category.job_type || "None"}</td>
                     <td className="py-3 px-4">
                       {category.is_mandatory ? "Yes" : "No"}
                     </td>

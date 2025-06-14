@@ -24,11 +24,11 @@ export const sidebarNav = [
         icon: "lsicon:email-send-outline",
         label: "Email Templates",
       },
-      {
-        href: "/hr/automations",
-        icon: "carbon:power-virtual-server-disaster-recovery-automation",
-        label: "Automations",
-      },
+      // {
+      //   href: "/hr/automations",
+      //   icon: "carbon:power-virtual-server-disaster-recovery-automation",
+      //   label: "Automations",
+      // },
       // { href: "/hr/recruiters", icon: "stash:search-box", label: "Recruiters" },
     ],
   },
@@ -83,27 +83,24 @@ export const sidebarNav = [
     ],
   },
 
-  
-  {
-    category: "Notifications",
-    items: [
-      {
-        href: "/admin/notifications",
-        icon: "mdi:bell-outline",
-        label: "Push Notifications",
-      },
-      
-    ],
-  },
-  {
-    category: "Settings",
-    items: [
-      
-      {
-        href: "/admin/settings/categories",
-        icon: "mdi:shape-outline",
-        label: "Category Management",
-      },
-    ],
-  },
+  // {
+  //   category: "Notifications",
+  //   items: [
+  //     {
+  //       href: "/admin/notifications",
+  //       icon: "mdi:bell-outline",
+  //       label: "Push Notifications",
+  //     },
+  //   ],
+  // },
+  // {
+  //   category: "Settings",
+  //   items: [
+  //     {
+  //       href: "/admin/settings/categories",
+  //       icon: "mdi:shape-outline",
+  //       label: "Category Management",
+  //     },
+  //   ],
+  // },
 ];

@@ -13,7 +13,7 @@ const TooltipIconButton = ({
     <div className="relative group">
       <button
         onClick={onClick}
-        className={`p-4 rounded-full focus:outline-none ${
+        className={`p-2 rounded-full focus:outline-none ${
           mode === "dark" ? "hover:bg-gray-700" : "hover:bg-sky-50"
         } ${className}`}
         aria-label={label}

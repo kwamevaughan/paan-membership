@@ -56,9 +56,9 @@ const DraggableQuestion = ({
           icon="mdi:drag"
           className={`cursor-move ${
             mode === "dark" ? "text-amber-400" : "text-amber-600"
-          } animate-bounce`}
-          width={14}
-          height={14}
+          } `}
+          width={20}
+          height={20}
           style={{
             animationDuration: "2s",
             animationIterationCount: "infinite",

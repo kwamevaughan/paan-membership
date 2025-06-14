@@ -20,8 +20,12 @@ export default function EmailTemplates({
   toggleMode,
   initialTemplates,
   breadcrumbs,
+  isMobile,
+  isHovering,
+  handleMouseEnter,
+  handleMouseLeave,
 }) {
-  const { isSidebarOpen, toggleSidebar, sidebarState, updateDragOffset } =
+  const { isSidebarOpen, toggleSidebar, sidebarState, updateDragOffset, handleOutsideClick } =
     useSidebar();
   const handleLogout = useLogout();
   useAuthSession();
@@ -196,7 +200,9 @@ export default function EmailTemplates({
   return (
     <div
       className={`min-h-screen flex flex-col ${
-        mode === "dark" ? "bg-gray-900" : "bg-gray-50"
+        mode === "dark" 
+          ? "bg-gradient-to-br from-blue-500 via-sky-500 to-sky-900" 
+          : "bg-gradient-to-br from-blue-50 via-sky-50 to-sky-50"
       }`}
     >
       <Toaster />
@@ -207,31 +213,39 @@ export default function EmailTemplates({
         mode={mode}
         toggleMode={toggleMode}
         onLogout={handleLogout}
-        pageName="Email Templates"
-        pageDescription="Customize email templates for recruitment workflows."
+        pageName=""
+        pageDescription="."
         breadcrumbs={breadcrumbs}
+        isMobile={isMobile}
       />
       <div className="flex flex-1">
         <HRSidebar
-          isOpen={isSidebarOpen}
           isSidebarOpen={isSidebarOpen}
           mode={mode}
           toggleMode={toggleMode}
-          onLogout={handleLogout}
           toggleSidebar={toggleSidebar}
+          onLogout={handleLogout}
           setDragOffset={updateDragOffset}
+          user={{ name: "PAAN HR Team" }}
+          isMobile={isMobile}
+          isHovering={isHovering}
+          handleMouseEnter={handleMouseEnter}
+          handleMouseLeave={handleMouseLeave}
+          handleOutsideClick={handleOutsideClick}
         />
-        <main
-          className={`content-container flex-1 p-6 transition-all duration-300 overflow-hidden ${
+        <div
+          className={`content-container flex-1 p-4 md:p-10 pt-4 transition-all duration-300 overflow-hidden ${
             isSidebarOpen ? "sidebar-open" : ""
           } ${sidebarState.hidden ? "sidebar-hidden" : ""}`}
           style={{
-            marginLeft: sidebarState.hidden
+            marginLeft: isMobile
+              ? "0px"
+              : sidebarState.hidden
               ? "0px"
               : `${84 + (isSidebarOpen ? 120 : 0) + sidebarState.offset}px`,
           }}
         >
-          <div className="max-w-7xl mx-auto space-y-6">
+          <div className="max-w-8xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               <div className="lg:col-span-1">
                 <EmailTemplateList
@@ -261,7 +275,7 @@ export default function EmailTemplates({
               </div>
             </div>
           </div>
-        </main>
+        </div>
       </div>
       <ImageLibrary
         isOpen={isGalleryOpen}

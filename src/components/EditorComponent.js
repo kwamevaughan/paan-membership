@@ -20,7 +20,7 @@ import Strike from '@tiptap/extension-strike';
 import Superscript from '@tiptap/extension-superscript';
 import Subscript from '@tiptap/extension-subscript';
 import Blockquote from '@tiptap/extension-blockquote';
-import Image from '@tiptap/extension-image';
+import CustomImage from './CustomImage';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import TextStyle from '@tiptap/extension-text-style';
@@ -427,7 +427,7 @@ const TipTapEditor = memo(({
       Superscript,
       Subscript,
       Blockquote,
-      Image,
+      CustomImage,
       TaskList,
       TaskItem,
     ],
@@ -764,7 +764,50 @@ const TipTapEditor = memo(({
           isOpen={showImageLibrary}
           onClose={() => setShowImageLibrary(false)}
           mode={mode}
-          onUpload={handleImageUpload}
+          onUpload={async (file) => {
+            try {
+              setUploadingImage(true);
+              const loadingToast = toast.loading("Uploading image...");
+
+              const formData = new FormData();
+              formData.append("file", file);
+
+              const response = await fetch("/api/imagekit/upload-file", {
+                method: "POST",
+                body: formData,
+              });
+
+              const data = await response.json();
+
+              if (!response.ok) {
+                throw new Error(data.details || data.error || "Upload failed");
+              }
+
+              if (!data.url) {
+                throw new Error("No image URL received from server");
+              }
+
+              toast.success("Image uploaded successfully", {
+                id: loadingToast,
+              });
+
+              // Return the upload data without inserting
+              return {
+                fileId: data.fileId,
+                name: file.name,
+                url: data.url,
+                createdAt: new Date().toISOString()
+              };
+            } catch (error) {
+              console.error("Error uploading image:", error);
+              toast.error(`Failed to upload image: ${error.message}`, {
+                duration: 5000,
+              });
+              throw error;
+            } finally {
+              setUploadingImage(false);
+            }
+          }}
           uploading={uploadingImage}
           onSelect={(selectedImage) => {
             if (editor) {

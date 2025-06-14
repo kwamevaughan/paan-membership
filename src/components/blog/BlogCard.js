@@ -2,47 +2,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Icon } from "@iconify/react";
 import Image from "next/image";
-
-const calculateSEOScore = (blog) => {
-  let score = 0;
-  let totalChecks = 0;
-
-  // Basic SEO checks
-  if (blog.article_name?.toLowerCase().includes(blog.focus_keyword?.toLowerCase())) score++;
-  if (blog.description?.toLowerCase().includes(blog.focus_keyword?.toLowerCase())) score++;
-  if (blog.slug?.toLowerCase().includes(blog.focus_keyword?.toLowerCase())) score++;
-  if (blog.article_body?.toLowerCase().includes(blog.focus_keyword?.toLowerCase())) score++;
-  if (blog.article_body?.split(/\s+/).filter(Boolean).length >= 600) score++;
-  totalChecks += 5;
-
-  // Additional SEO checks
-  const headings = blog.article_body?.match(/<h[2-4][^>]*>.*?<\/h[2-4]>/gi) || [];
-  if (headings.some(h => h.toLowerCase().includes(blog.focus_keyword?.toLowerCase()))) score++;
-  const altTexts = blog.article_body?.match(/alt="[^"]*"/gi) || [];
-  if (altTexts.some(alt => alt.toLowerCase().includes(blog.focus_keyword?.toLowerCase()))) score++;
-  const density = blog.article_body ? ((blog.article_body.toLowerCase().match(new RegExp(blog.focus_keyword?.toLowerCase(), 'g')) || []).length / (blog.article_body.split(/\s+/).filter(Boolean).length || 1)) * 100 : 0;
-  if (density >= 0.5 && density <= 2.5) score++;
-  if (blog.slug?.length <= 60) score++;
-  if (blog.article_body?.includes('href="http')) score++;
-  if (blog.article_body?.includes('href="/')) score++;
-  totalChecks += 6;
-
-  // Readability checks
-  const firstWords = blog.article_name?.toLowerCase().split(' ').slice(0, 3).join(' ');
-  if (firstWords?.includes(blog.focus_keyword?.toLowerCase())) score++;
-  const sentimentWords = ['best', 'worst', 'amazing', 'terrible', 'great', 'poor', 'excellent', 'bad', 'good', 'fantastic', 'awful'];
-  if (sentimentWords.some(word => blog.article_name?.toLowerCase().includes(word))) score++;
-  const powerWords = ['ultimate', 'essential', 'proven', 'exclusive', 'secret', 'guaranteed', 'powerful', 'revolutionary', 'breakthrough', 'innovative'];
-  if (powerWords.some(word => blog.article_name?.toLowerCase().includes(word))) score++;
-  if (/\d+/.test(blog.article_name)) score++;
-  if (blog.article_body?.toLowerCase().includes('table of contents') || blog.article_body?.toLowerCase().includes('contents')) score++;
-  const paragraphs = blog.article_body?.split('</p>') || [];
-  if (paragraphs.every(p => p.split(/\s+/).filter(Boolean).length <= 150)) score++;
-  if (blog.article_body?.includes('<img')) score++;
-  totalChecks += 7;
-
-  return Math.round((score / totalChecks) * 100);
-};
+import { calculateSEOScore, getScoreColor, getScoreBgColor, getScoreIcon } from '@/utils/seo';
 
 export default function BlogCard({
   blog,
@@ -117,32 +77,18 @@ export default function BlogCard({
           >
             {blog.article_category || "Uncategorized"}
           </span>
-          <div className="flex items-center gap-1">
-            <span className={`text-xs font-medium ${
-              seoScore >= 90 ? (mode === "dark" ? "text-green-400" : "text-green-600") :
-              seoScore >= 80 ? (mode === "dark" ? "text-blue-400" : "text-blue-600") :
-              seoScore >= 70 ? (mode === "dark" ? "text-yellow-400" : "text-yellow-600") :
-              seoScore >= 60 ? (mode === "dark" ? "text-orange-400" : "text-orange-600") :
-              (mode === "dark" ? "text-red-400" : "text-red-600")
+          <div className="flex items-center gap-2">
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
+              getScoreBgColor(blog.seo_score || calculateSEOScore(blog, blog.article_body), mode)
             }`}>
-              SEO: {seoScore}%
-            </span>
-            <Icon 
-              icon={
-                seoScore >= 90 ? "heroicons:star" :
-                seoScore >= 80 ? "heroicons:check-circle" :
-                seoScore >= 70 ? "heroicons:exclamation-circle" :
-                seoScore >= 60 ? "heroicons:exclamation-triangle" :
-                "heroicons:x-circle"
-              }
-              className={`w-4 h-4 ${
-                seoScore >= 90 ? (mode === "dark" ? "text-green-400" : "text-green-600") :
-                seoScore >= 80 ? (mode === "dark" ? "text-blue-400" : "text-blue-600") :
-                seoScore >= 70 ? (mode === "dark" ? "text-yellow-400" : "text-yellow-600") :
-                seoScore >= 60 ? (mode === "dark" ? "text-orange-400" : "text-orange-600") :
-                (mode === "dark" ? "text-red-400" : "text-red-600")
-              }`}
-            />
+              <span className={`text-sm font-medium ${getScoreColor(blog.seo_score || calculateSEOScore(blog, blog.article_body), mode)}`}>
+                SEO: {blog.seo_score || calculateSEOScore(blog, blog.article_body)}%
+              </span>
+              <Icon 
+                icon={getScoreIcon(blog.seo_score || calculateSEOScore(blog, blog.article_body))}
+                className={`w-4 h-4 ${getScoreColor(blog.seo_score || calculateSEOScore(blog, blog.article_body), mode)}`}
+              />
+            </div>
           </div>
 
           {!blog.is_published && (

@@ -14,6 +14,7 @@ import { Icon } from "@iconify/react";
 import Image from "next/image";
 import SEOAccordion, { calculateTotalScore } from './seo/SEOTabs';
 import Preview from './seo/Preview';
+import { calculateSEOScore, getScoreColor, getScoreBgColor, getScoreIcon } from '@/utils/seo';
 
 export default function BlogForm({
   mode,
@@ -54,25 +55,6 @@ export default function BlogForm({
   const [isSEOCollapsed, setIsSEOCollapsed] = useState(true);
   const [isImageCollapsed, setIsImageCollapsed] = useState(true);
   const [isPublishingCollapsed, setIsPublishingCollapsed] = useState(true);
-
-  // Helper functions for SEO score display
-  const getScoreBgColor = (score) => {
-    if (score >= 80) return mode === "dark" ? "bg-green-900/30" : "bg-green-50";
-    if (score >= 60) return mode === "dark" ? "bg-yellow-900/30" : "bg-yellow-50";
-    return mode === "dark" ? "bg-red-900/30" : "bg-red-50";
-  };
-
-  const getScoreColor = (score) => {
-    if (score >= 80) return mode === "dark" ? "text-green-400" : "text-green-600";
-    if (score >= 60) return mode === "dark" ? "text-yellow-400" : "text-yellow-600";
-    return mode === "dark" ? "text-red-400" : "text-red-600";
-  };
-
-  const getScoreIcon = (score) => {
-    if (score >= 80) return "heroicons:check-circle";
-    if (score >= 60) return "heroicons:exclamation-circle";
-    return "heroicons:x-circle";
-  };
 
   // Define isEditing before effects
   const isEditing = Boolean(blogId);
@@ -572,10 +554,6 @@ export default function BlogForm({
     
     const loadingToast = toast.loading('Uploading image...');
     try {
-      // Create a preview URL for the selected image
-      const previewUrl = URL.createObjectURL(file);
-      setUploadedImage(previewUrl);
-      
       // Get authentication token for ImageKit
       const response = await fetch('/api/imagekit/auth');
       if (!response.ok) throw new Error('Failed to get upload token');
@@ -603,31 +581,24 @@ export default function BlogForm({
 
       const uploadData = await uploadResponse.json();
       
-      // Update form data with the uploaded image URL
-      handleInputChange({
-        target: {
-          name: 'multiple',
-          value: {
-            featured_image_upload: uploadData.url,
-            article_image: uploadData.url,
-            featured_image_url: uploadData.url
-          }
-        }
-      });
-
-      // Clean up the blob URL
-      URL.revokeObjectURL(previewUrl);
-      
       // Show success message
       toast.success('Image uploaded successfully', {
         id: loadingToast,
       });
+
+      // Return the upload data in the correct format
+      return {
+        fileId: uploadData.fileId,
+        name: file.name,
+        url: uploadData.url,
+        createdAt: new Date().toISOString()
+      };
     } catch (error) {
       console.error('Error uploading image:', error);
       toast.error('Failed to upload image', {
         id: loadingToast,
       });
-      setUploadedImage(null);
+      throw error;
     }
   };
 
@@ -658,14 +629,14 @@ export default function BlogForm({
         width="max-w-5xl"
         rightElement={
           <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
-            getScoreBgColor(calculateTotalScore(formData, editorContent))
+            getScoreBgColor(calculateSEOScore(formData, editorContent), mode)
           }`}>
-            <span className={`text-sm font-medium ${getScoreColor(calculateTotalScore(formData, editorContent))}`}>
-              Score: {calculateTotalScore(formData, editorContent)}%
+            <span className={`text-sm font-medium ${getScoreColor(calculateSEOScore(formData, editorContent), mode)}`}>
+              Score: {calculateSEOScore(formData, editorContent)}%
             </span>
             <Icon 
-              icon={getScoreIcon(calculateTotalScore(formData, editorContent))}
-              className={`w-4 h-4 ${getScoreColor(calculateTotalScore(formData, editorContent))}`}
+              icon={getScoreIcon(calculateSEOScore(formData, editorContent))}
+              className={`w-4 h-4 ${getScoreColor(calculateSEOScore(formData, editorContent), mode)}`}
             />
           </div>
         }
@@ -705,14 +676,14 @@ export default function BlogForm({
               mode={mode}
               rightElement={
                 <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
-                  getScoreBgColor(calculateTotalScore(formData, editorContent))
+                  getScoreBgColor(calculateSEOScore(formData, editorContent), mode)
                 }`}>
-                  <span className={`text-sm font-medium ${getScoreColor(calculateTotalScore(formData, editorContent))}`}>
-                    Score: {calculateTotalScore(formData, editorContent)}%
+                  <span className={`text-sm font-medium ${getScoreColor(calculateSEOScore(formData, editorContent), mode)}`}>
+                    Score: {calculateSEOScore(formData, editorContent)}%
                   </span>
                   <Icon 
-                    icon={getScoreIcon(calculateTotalScore(formData, editorContent))}
-                    className={`w-4 h-4 ${getScoreColor(calculateTotalScore(formData, editorContent))}`}
+                    icon={getScoreIcon(calculateSEOScore(formData, editorContent))}
+                    className={`w-4 h-4 ${getScoreColor(calculateSEOScore(formData, editorContent), mode)}`}
                   />
                 </div>
               }

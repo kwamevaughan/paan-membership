@@ -2,6 +2,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import toast from "react-hot-toast";
+import { calculateSEOScore } from '@/utils/seo';
 
 export const useBlog = (blogId) => {
   const [blogs, setBlogs] = useState([]);
@@ -301,11 +302,6 @@ export const useBlog = (blogId) => {
         ...rest
       } = dataToUse;
 
-      console.log('Content fields from form data:', {
-        article_body,
-        content,
-        editorContent
-      });
 
       const is_published = publish_option === "publish";
       const is_draft = publish_option === "draft";
@@ -332,78 +328,8 @@ export const useBlog = (blogId) => {
       // Prioritize the most recent content
       const finalContent = dataToUse.article_body || editorContent || content || "";
       
-      console.log('Final content being saved:', finalContent);
-      console.log('Content source:', {
-        fromFormData: dataToUse.article_body,
-        fromEditorState: editorContent,
-        fromContent: content
-      });
 
       // Calculate SEO score
-      const calculateSEOScore = () => {
-        let score = 0;
-        let totalChecks = 0;
-
-        // Title checks
-        const titleLength = article_name?.length || 0;
-        if (titleLength >= 30 && titleLength <= 60) {
-          score += 1;
-        }
-        totalChecks += 1;
-
-        const hasKeywordInTitle = focus_keyword && 
-          article_name?.toLowerCase().includes(focus_keyword.toLowerCase());
-        if (hasKeywordInTitle) {
-          score += 1;
-        }
-        totalChecks += 1;
-
-        // Description checks
-        const descLength = description?.length || 0;
-        if (descLength >= 120 && descLength <= 160) {
-          score += 1;
-        }
-        totalChecks += 1;
-
-        const hasKeywordInDesc = focus_keyword && 
-          description?.toLowerCase().includes(focus_keyword.toLowerCase());
-        if (hasKeywordInDesc) {
-          score += 1;
-        }
-        totalChecks += 1;
-
-        // Content checks
-        const wordCount = finalContent?.split(/\s+/).filter(Boolean).length || 0;
-        if (wordCount >= 300) {
-          score += 1;
-        }
-        totalChecks += 1;
-
-        const hasKeywordInContent = focus_keyword && 
-          finalContent?.toLowerCase().includes(focus_keyword.toLowerCase());
-        if (hasKeywordInContent) {
-          score += 1;
-        }
-        totalChecks += 1;
-
-        // Calculate keyword density
-        const keywordDensity = focus_keyword ? {
-          keyword: focus_keyword,
-          density: finalContent ? ((finalContent.toLowerCase().match(new RegExp(focus_keyword.toLowerCase(), 'g')) || []).length / wordCount) * 100 : 0
-        } : null;
-
-        const hasGoodDensity = keywordDensity && 
-          keywordDensity.density >= 0.5 && 
-          keywordDensity.density <= 2.5;
-        if (hasGoodDensity) {
-          score += 1;
-        }
-        totalChecks += 1;
-
-        // Calculate percentage
-        return Math.round((score / totalChecks) * 100);
-      };
-
       const blogToUpsert = {
         id: id || undefined,
         article_name,
@@ -421,7 +347,13 @@ export const useBlog = (blogId) => {
         article_category,
         article_tags: article_tags || [],
         focus_keyword: focus_keyword || "",
-        seo_score: calculateSEOScore(),
+        seo_score: calculateSEOScore({
+          article_name,
+          description,
+          slug,
+          focus_keyword,
+          article_body: finalContent
+        }, finalContent),
         updated_at: new Date().toISOString(),
         created_at: id ? undefined : new Date().toISOString(),
       };

@@ -692,7 +692,13 @@ const TipTapEditor = memo(({
         <button onClick={handleToolbarClick(() => editor.chain().focus().toggleSubscript().run())} className={`p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded ${editor?.isActive('subscript') ? 'bg-gray-100 dark:bg-gray-800' : ''}`} title="Subscript"><Icon icon="mdi:format-subscript" width={20} height={20} /></button>
         <ToolbarDropdown
           value={editor?.getAttributes('textAlign').textAlign || 'left'}
-          onChange={(val) => editor.chain().focus().setTextAlign(val).run()}
+          onChange={(val) => {
+            if (editor.isActive('image')) {
+              editor.chain().focus().updateAttributes('image', { align: val }).run();
+            } else {
+              editor.chain().focus().setTextAlign(val).run();
+            }
+          }}
           options={[
             { value: 'left', label: 'Align Left', icon: 'mdi:format-align-left' },
             { value: 'center', label: 'Align Center', icon: 'mdi:format-align-center' },
@@ -700,9 +706,11 @@ const TipTapEditor = memo(({
             { value: 'justify', label: 'Justify', icon: 'mdi:format-align-justify' },
           ]}
           label={
-            editor?.getAttributes('textAlign').textAlign
-              ? `Align ${editor.getAttributes('textAlign').textAlign.charAt(0).toUpperCase() + editor.getAttributes('textAlign').textAlign.slice(1)}`
-              : 'Align'
+            editor?.isActive('image')
+              ? `Align ${editor.getAttributes('image').align || 'left'}`
+              : editor?.getAttributes('textAlign').textAlign
+                ? `Align ${editor.getAttributes('textAlign').textAlign.charAt(0).toUpperCase() + editor.getAttributes('textAlign').textAlign.slice(1)}`
+                : 'Align'
           }
           mode={mode}
         />

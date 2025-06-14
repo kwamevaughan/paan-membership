@@ -158,6 +158,15 @@ export default function BlogGrid({
       >
         <Icon icon="heroicons:pencil-square" className="w-5 h-5" />
       </button>
+      <a
+        href={`https://paan.africa/blog/${blog.slug}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 transition"
+        title="View blog post"
+      >
+        <Icon icon="heroicons:eye" className="w-5 h-5" />
+      </a>
       <button
         onClick={() => handleDelete(blog)}
         className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition"

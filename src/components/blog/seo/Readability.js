@@ -112,18 +112,6 @@ export default function Readability({ formData, editorContent, mode }) {
       icon: getStatusIcon(hasNumbers ? "good" : "warning")
     });
 
-    // Table of contents
-    const hasTableOfContents = editorContent?.toLowerCase().includes('table of contents') || 
-      editorContent?.toLowerCase().includes('contents');
-    checks.push({
-      title: "Table of Contents",
-      status: hasTableOfContents ? "good" : "warning",
-      message: hasTableOfContents 
-        ? "Table of contents found" 
-        : "Consider adding a table of contents",
-      icon: getStatusIcon(hasTableOfContents ? "good" : "warning")
-    });
-
     // Paragraph length
     const paragraphs = editorContent?.split('</p>') || [];
     const hasGoodParagraphLength = paragraphs.every(p => {

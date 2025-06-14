@@ -687,27 +687,40 @@ export default function BlogForm({
         width="max-w-5xl"
         hasUnsavedChanges={hasUnsavedChanges}
         rightElement={
-          <div
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${getScoreBgColor(
-              calculateSEOScore(formData, editorContent),
-              mode
-            )}`}
-          >
-            <span
-              className={`text-sm font-medium ${getScoreColor(
+          <div className="flex items-center gap-2">
+            {isEditing && formData.slug && (
+              <a
+                href={`https://paan.africa/blog/${formData.slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="p-2 rounded-lg hover:bg-white/20 text-white transition"
+                title="View blog post"
+              >
+                <Icon icon="heroicons:eye" className="w-5 h-5" />
+              </a>
+            )}
+            <div
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${getScoreBgColor(
                 calculateSEOScore(formData, editorContent),
                 mode
               )}`}
             >
-              Score: {calculateSEOScore(formData, editorContent)}%
-            </span>
-            <Icon
-              icon={getScoreIcon(calculateSEOScore(formData, editorContent))}
-              className={`w-4 h-4 ${getScoreColor(
-                calculateSEOScore(formData, editorContent),
-                mode
-              )}`}
-            />
+              <span
+                className={`text-sm font-medium ${getScoreColor(
+                  calculateSEOScore(formData, editorContent),
+                  mode
+                )}`}
+              >
+                Score: {calculateSEOScore(formData, editorContent)}%
+              </span>
+              <Icon
+                icon={getScoreIcon(calculateSEOScore(formData, editorContent))}
+                className={`w-4 h-4 ${getScoreColor(
+                  calculateSEOScore(formData, editorContent),
+                  mode
+                )}`}
+              />
+            </div>
           </div>
         }
       >

@@ -499,6 +499,8 @@ export default function AdminBlog({
                       items={blogs || []}
                       filteredItems={filteredBlogs || []}
                       onResetFilters={resetFilters}
+                      displayedCount={filteredBlogs.length}
+                      totalCount={blogs.length}
                     >
                       <BlogFilters
                         selectedCategory={selectedCategory}

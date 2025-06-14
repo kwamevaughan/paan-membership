@@ -153,6 +153,15 @@ export default function BlogCard({
             >
               <Icon icon="heroicons:pencil-square" className="w-4 h-4" />
             </button>
+            <a
+              href={`https://paan.africa/blog/${blog.slug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 transition`}
+              title="View blog post"
+            >
+              <Icon icon="heroicons:eye" className="w-4 h-4" />
+            </a>
             <button
               onClick={handleDelete}
               className={`p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition`}

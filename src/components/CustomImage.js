@@ -1,22 +1,22 @@
-import Image from '@tiptap/extension-image'
-import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react'
-import { Icon } from "@iconify/react"
-import { useState } from 'react'
+import Image from "@tiptap/extension-image";
+import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
+import { Icon } from "@iconify/react";
+import { useState } from "react";
 
-function ImageNode({ node, updateAttributes, selected }) {
-  const { src, alt } = node.attrs
-  const [isEditing, setIsEditing] = useState(false)
-  const [altText, setAltText] = useState(alt || '')
+function ImageNode({ node, updateAttributes, selected, deleteNode }) {
+  const { src, alt } = node.attrs;
+  const [isEditing, setIsEditing] = useState(false);
+  const [altText, setAltText] = useState(alt || "");
 
-  let className = 'image'
+  let className = "image";
   if (selected) {
-    className += ' ProseMirror-selectednode'
+    className += " ProseMirror-selectednode";
   }
 
   const handleAltTextChange = () => {
-    updateAttributes({ alt: altText })
-    setIsEditing(false)
-  }
+    updateAttributes({ alt: altText });
+    setIsEditing(false);
+  };
 
   return (
     <NodeViewWrapper className={className} data-drag-handle>
@@ -32,8 +32,8 @@ function ImageNode({ node, updateAttributes, selected }) {
                 className="flex-1 px-2 py-1 text-sm bg-white text-black rounded"
                 placeholder="Enter alt text..."
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    handleAltTextChange()
+                  if (e.key === "Enter") {
+                    handleAltTextChange();
                   }
                 }}
               />
@@ -52,7 +52,7 @@ function ImageNode({ node, updateAttributes, selected }) {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  setAltText(alt || '');
+                  setAltText(alt || "");
                   setIsEditing(false);
                 }}
                 className="p-1 hover:bg-white/20 rounded"
@@ -64,25 +64,38 @@ function ImageNode({ node, updateAttributes, selected }) {
           ) : (
             <div className="flex items-center justify-between">
               <span className="text-sm truncate">
-                {alt ? `Alt: ${alt}` : 'No alt text'}
+                {alt ? `Alt: ${alt}` : "No alt text"}
               </span>
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  setIsEditing(true);
-                }}
-                className="p-1 hover:bg-white/20 rounded"
-                title="Edit alt text"
-              >
-                <Icon icon="mdi:pencil" width={16} />
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsEditing(true);
+                  }}
+                  className="p-1 hover:bg-white/20 rounded"
+                  title="Edit alt text"
+                >
+                  <Icon icon="mdi:pencil" width={16} />
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    deleteNode();
+                  }}
+                  className="p-1 hover:bg-white/20 rounded"
+                  title="Delete image"
+                >
+                  <Icon icon="mdi:delete" width={16} />
+                </button>
+              </div>
             </div>
           )}
         </div>
       </div>
     </NodeViewWrapper>
-  )
+  );
 }
 
 export default Image.extend({
@@ -91,19 +104,19 @@ export default Image.extend({
       ...this.parent?.(),
       alt: {
         default: null,
-        parseHTML: element => element.getAttribute('alt'),
-        renderHTML: attributes => {
+        parseHTML: (element) => element.getAttribute("alt"),
+        renderHTML: (attributes) => {
           if (!attributes.alt) {
-            return {}
+            return {};
           }
           return {
-            alt: attributes.alt
-          }
-        }
-      }
-    }
+            alt: attributes.alt,
+          };
+        },
+      },
+    };
   },
   addNodeView() {
-    return ReactNodeViewRenderer(ImageNode)
-  }
-}) 
+    return ReactNodeViewRenderer(ImageNode);
+  },
+});

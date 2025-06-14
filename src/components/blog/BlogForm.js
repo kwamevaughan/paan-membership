@@ -12,9 +12,14 @@ import ItemActionModal from "../ItemActionModal";
 import CollapsibleSection from "../common/CollapsibleSection";
 import { Icon } from "@iconify/react";
 import Image from "next/image";
-import SEOAccordion, { calculateTotalScore } from './seo/SEOTabs';
-import Preview from './seo/Preview';
-import { calculateSEOScore, getScoreColor, getScoreBgColor, getScoreIcon } from '@/utils/seo';
+import SEOAccordion, { calculateTotalScore } from "./seo/SEOTabs";
+import Preview from "./seo/Preview";
+import {
+  calculateSEOScore,
+  getScoreColor,
+  getScoreBgColor,
+  getScoreIcon,
+} from "@/utils/seo";
 
 export default function BlogForm({
   mode,
@@ -65,11 +70,12 @@ export default function BlogForm({
       const fetchBlogData = async () => {
         try {
           setIsLoadingBlog(true);
-          console.log('Fetching blog data for ID:', blogId);
-          
+          console.log("Fetching blog data for ID:", blogId);
+
           const { data, error } = await supabase
             .from("blogs")
-            .select(`
+            .select(
+              `
               *,
               blog_post_tags (
                 blog_tags (
@@ -82,21 +88,28 @@ export default function BlogForm({
                 name,
                 username
               )
-            `)
+            `
+            )
             .eq("id", blogId)
             .single();
 
           if (error) throw error;
 
           if (data) {
-            console.log('Received blog data:', data);
+            console.log("Received blog data:", data);
             // Only update form data if we're in edit mode and the form is empty or we have a different blog
-            if (isEditing && (!formData.article_name || formData.id !== data.id)) {
+            if (
+              isEditing &&
+              (!formData.article_name || formData.id !== data.id)
+            ) {
               handleEdit(data);
               // Set selected tags from blog_post_tags
-              const tagNames = data.blog_post_tags?.map(pt => pt.blog_tags?.name).filter(Boolean) || [];
+              const tagNames =
+                data.blog_post_tags
+                  ?.map((pt) => pt.blog_tags?.name)
+                  .filter(Boolean) || [];
               setSelectedTags(tagNames);
-              
+
               // Set image source if there's an image
               if (data.article_image) {
                 setImageSource("library");
@@ -105,9 +118,9 @@ export default function BlogForm({
 
               // Set focus keyword if it exists
               if (data.focus_keyword) {
-                setFormData(prev => ({
+                setFormData((prev) => ({
                   ...prev,
-                  focus_keyword: data.focus_keyword
+                  focus_keyword: data.focus_keyword,
                 }));
               }
               setCurrentBlogId(data.id);
@@ -123,7 +136,14 @@ export default function BlogForm({
 
       fetchBlogData();
     }
-  }, [blogId, handleEdit, isEditing, formData.article_name, formData.id, currentBlogId]);
+  }, [
+    blogId,
+    handleEdit,
+    isEditing,
+    formData.article_name,
+    formData.id,
+    currentBlogId,
+  ]);
 
   // Reset form when showForm changes
   useEffect(() => {
@@ -206,7 +226,7 @@ export default function BlogForm({
 
   const handleTagSelect = (e) => {
     // Handle both event objects and direct tag names
-    const tagName = typeof e === 'string' ? e : e.target.value;
+    const tagName = typeof e === "string" ? e : e.target.value;
     if (!tagName) return; // Don't process if no tag is selected
 
     const tag = tags.find((t) => t.name === tagName);
@@ -218,7 +238,7 @@ export default function BlogForm({
       }));
     }
     // Reset select value if it's an event
-    if (typeof e !== 'string' && e.target) {
+    if (typeof e !== "string" && e.target) {
       e.target.value = "";
     }
   };
@@ -253,8 +273,11 @@ export default function BlogForm({
         }
         totalChecks += 1;
 
-        const hasKeywordInTitle = formData.focus_keyword && 
-          formData.article_name?.toLowerCase().includes(formData.focus_keyword.toLowerCase());
+        const hasKeywordInTitle =
+          formData.focus_keyword &&
+          formData.article_name
+            ?.toLowerCase()
+            .includes(formData.focus_keyword.toLowerCase());
         if (hasKeywordInTitle) {
           score += 1;
         }
@@ -267,35 +290,55 @@ export default function BlogForm({
         }
         totalChecks += 1;
 
-        const hasKeywordInDesc = formData.focus_keyword && 
-          formData.description?.toLowerCase().includes(formData.focus_keyword.toLowerCase());
+        const hasKeywordInDesc =
+          formData.focus_keyword &&
+          formData.description
+            ?.toLowerCase()
+            .includes(formData.focus_keyword.toLowerCase());
         if (hasKeywordInDesc) {
           score += 1;
         }
         totalChecks += 1;
 
         // Content checks
-        const wordCount = editorContent?.split(/\s+/).filter(Boolean).length || 0;
+        const wordCount =
+          editorContent?.split(/\s+/).filter(Boolean).length || 0;
         if (wordCount >= 300) {
           score += 1;
         }
         totalChecks += 1;
 
-        const hasKeywordInContent = formData.focus_keyword && 
-          editorContent?.toLowerCase().includes(formData.focus_keyword.toLowerCase());
+        const hasKeywordInContent =
+          formData.focus_keyword &&
+          editorContent
+            ?.toLowerCase()
+            .includes(formData.focus_keyword.toLowerCase());
         if (hasKeywordInContent) {
           score += 1;
         }
         totalChecks += 1;
 
         // Calculate keyword density
-        const keywordDensity = formData.focus_keyword ? {
-          keyword: formData.focus_keyword,
-          density: editorContent ? ((editorContent.toLowerCase().match(new RegExp(formData.focus_keyword.toLowerCase(), 'g')) || []).length / wordCount) * 100 : 0
-        } : null;
+        const keywordDensity = formData.focus_keyword
+          ? {
+              keyword: formData.focus_keyword,
+              density: editorContent
+                ? ((
+                    editorContent
+                      .toLowerCase()
+                      .match(
+                        new RegExp(formData.focus_keyword.toLowerCase(), "g")
+                      ) || []
+                  ).length /
+                    wordCount) *
+                  100
+                : 0,
+            }
+          : null;
 
-        const hasGoodDensity = keywordDensity && 
-          keywordDensity.density >= 0.5 && 
+        const hasGoodDensity =
+          keywordDensity &&
+          keywordDensity.density >= 0.5 &&
           keywordDensity.density <= 2.5;
         if (hasGoodDensity) {
           score += 1;
@@ -303,10 +346,10 @@ export default function BlogForm({
         totalChecks += 1;
 
         // Content Structure Checks
-        const hasH1 = editorContent?.includes('<h1') || false;
-        const hasH2 = editorContent?.includes('<h2') || false;
-        const hasH3 = editorContent?.includes('<h3') || false;
-        
+        const hasH1 = editorContent?.includes("<h1") || false;
+        const hasH2 = editorContent?.includes("<h2") || false;
+        const hasH3 = editorContent?.includes("<h3") || false;
+
         // Check heading hierarchy
         if (hasH1 && hasH2) {
           score += 1;
@@ -314,8 +357,8 @@ export default function BlogForm({
         totalChecks += 1;
 
         // Check paragraph length
-        const paragraphs = editorContent?.split('</p>') || [];
-        const hasGoodParagraphLength = paragraphs.every(p => {
+        const paragraphs = editorContent?.split("</p>") || [];
+        const hasGoodParagraphLength = paragraphs.every((p) => {
           const words = p.split(/\s+/).filter(Boolean).length;
           return words <= 150; // Max 150 words per paragraph
         });
@@ -340,10 +383,11 @@ export default function BlogForm({
 
         // Readability Checks
         const sentences = editorContent?.split(/[.!?]+/).filter(Boolean) || [];
-        const avgSentenceLength = sentences.reduce((acc, sentence) => {
-          const words = sentence.split(/\s+/).filter(Boolean).length;
-          return acc + words;
-        }, 0) / sentences.length;
+        const avgSentenceLength =
+          sentences.reduce((acc, sentence) => {
+            const words = sentence.split(/\s+/).filter(Boolean).length;
+            return acc + words;
+          }, 0) / sentences.length;
 
         if (avgSentenceLength >= 10 && avgSentenceLength <= 20) {
           score += 1;
@@ -351,8 +395,17 @@ export default function BlogForm({
         totalChecks += 1;
 
         // Check for transition words
-        const transitionWords = ['however', 'moreover', 'furthermore', 'therefore', 'consequently', 'in addition', 'for example', 'in conclusion'];
-        const hasTransitionWords = transitionWords.some(word => 
+        const transitionWords = [
+          "however",
+          "moreover",
+          "furthermore",
+          "therefore",
+          "consequently",
+          "in addition",
+          "for example",
+          "in conclusion",
+        ];
+        const hasTransitionWords = transitionWords.some((word) =>
           editorContent?.toLowerCase().includes(word)
         );
         if (hasTransitionWords) {
@@ -363,10 +416,10 @@ export default function BlogForm({
         // Check for passive voice
         const passiveVoicePatterns = [
           /\b(is|are|was|were|be|been|being)\s+\w+ed\b/i,
-          /\b(has|have|had)\s+been\s+\w+ed\b/i
+          /\b(has|have|had)\s+been\s+\w+ed\b/i,
         ];
-        const hasPassiveVoice = passiveVoicePatterns.some(pattern => 
-          pattern.test(editorContent || '')
+        const hasPassiveVoice = passiveVoicePatterns.some((pattern) =>
+          pattern.test(editorContent || "")
         );
         if (!hasPassiveVoice) {
           score += 1;
@@ -415,7 +468,7 @@ export default function BlogForm({
         content: editorContent || formData.content || "",
         article_tags: JSON.stringify(selectedTags),
         focus_keyword: formData.focus_keyword || "",
-        seo_score: calculateSEOScore()
+        seo_score: calculateSEOScore(),
       };
 
       console.log("Updated formData:", updatedFormData);
@@ -462,7 +515,7 @@ export default function BlogForm({
           publish_option: "draft",
           scheduled_date: null,
           focus_keyword: "",
-          seo_score: 0
+          seo_score: 0,
         });
         setEditorContent("");
         setImageSource("upload");
@@ -551,38 +604,41 @@ export default function BlogForm({
 
   const handleImageUpload = async (file) => {
     if (!file) return;
-    
-    const loadingToast = toast.loading('Uploading image...');
+
+    const loadingToast = toast.loading("Uploading image...");
     try {
       // Get authentication token for ImageKit
-      const response = await fetch('/api/imagekit/auth');
-      if (!response.ok) throw new Error('Failed to get upload token');
+      const response = await fetch("/api/imagekit/auth");
+      if (!response.ok) throw new Error("Failed to get upload token");
       const authData = await response.json();
-      
-      if (!authData?.token) throw new Error('Failed to get upload token');
+
+      if (!authData?.token) throw new Error("Failed to get upload token");
 
       // Create form data for upload
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('fileName', file.name);
-      formData.append('token', authData.token);
-      formData.append('signature', authData.signature);
-      formData.append('expire', authData.expire);
-      formData.append('publicKey', authData.publicKey);
-      formData.append('folder', '/Blog');
+      formData.append("file", file);
+      formData.append("fileName", file.name);
+      formData.append("token", authData.token);
+      formData.append("signature", authData.signature);
+      formData.append("expire", authData.expire);
+      formData.append("publicKey", authData.publicKey);
+      formData.append("folder", "/Blog");
 
       // Upload to ImageKit
-      const uploadResponse = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
-        method: 'POST',
-        body: formData,
-      });
+      const uploadResponse = await fetch(
+        "https://upload.imagekit.io/api/v1/files/upload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
-      if (!uploadResponse.ok) throw new Error('Upload failed');
+      if (!uploadResponse.ok) throw new Error("Upload failed");
 
       const uploadData = await uploadResponse.json();
-      
+
       // Show success message
-      toast.success('Image uploaded successfully', {
+      toast.success("Image uploaded successfully", {
         id: loadingToast,
       });
 
@@ -591,11 +647,11 @@ export default function BlogForm({
         fileId: uploadData.fileId,
         name: file.name,
         url: uploadData.url,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
       };
     } catch (error) {
-      console.error('Error uploading image:', error);
-      toast.error('Failed to upload image', {
+      console.error("Error uploading image:", error);
+      toast.error("Failed to upload image", {
         id: loadingToast,
       });
       throw error;
@@ -606,14 +662,14 @@ export default function BlogForm({
     // Clear all image-related fields
     handleInputChange({
       target: {
-        name: 'multiple',
+        name: "multiple",
         value: {
           article_image: "",
           featured_image_url: "",
           featured_image_upload: "",
-          featured_image_library: ""
-        }
-      }
+          featured_image_library: "",
+        },
+      },
     });
     setUploadedImage(null);
     setImageSource("upload"); // Reset to upload tab
@@ -628,15 +684,26 @@ export default function BlogForm({
         mode={mode}
         width="max-w-5xl"
         rightElement={
-          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
-            getScoreBgColor(calculateSEOScore(formData, editorContent), mode)
-          }`}>
-            <span className={`text-sm font-medium ${getScoreColor(calculateSEOScore(formData, editorContent), mode)}`}>
+          <div
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${getScoreBgColor(
+              calculateSEOScore(formData, editorContent),
+              mode
+            )}`}
+          >
+            <span
+              className={`text-sm font-medium ${getScoreColor(
+                calculateSEOScore(formData, editorContent),
+                mode
+              )}`}
+            >
               Score: {calculateSEOScore(formData, editorContent)}%
             </span>
-            <Icon 
+            <Icon
               icon={getScoreIcon(calculateSEOScore(formData, editorContent))}
-              className={`w-4 h-4 ${getScoreColor(calculateSEOScore(formData, editorContent), mode)}`}
+              className={`w-4 h-4 ${getScoreColor(
+                calculateSEOScore(formData, editorContent),
+                mode
+              )}`}
             />
           </div>
         }
@@ -675,22 +742,35 @@ export default function BlogForm({
               onToggle={() => setIsSEOCollapsed(!isSEOCollapsed)}
               mode={mode}
               rightElement={
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
-                  getScoreBgColor(calculateSEOScore(formData, editorContent), mode)
-                }`}>
-                  <span className={`text-sm font-medium ${getScoreColor(calculateSEOScore(formData, editorContent), mode)}`}>
+                <div
+                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${getScoreBgColor(
+                    calculateSEOScore(formData, editorContent),
+                    mode
+                  )}`}
+                >
+                  <span
+                    className={`text-sm font-medium ${getScoreColor(
+                      calculateSEOScore(formData, editorContent),
+                      mode
+                    )}`}
+                  >
                     Score: {calculateSEOScore(formData, editorContent)}%
                   </span>
-                  <Icon 
-                    icon={getScoreIcon(calculateSEOScore(formData, editorContent))}
-                    className={`w-4 h-4 ${getScoreColor(calculateSEOScore(formData, editorContent), mode)}`}
+                  <Icon
+                    icon={getScoreIcon(
+                      calculateSEOScore(formData, editorContent)
+                    )}
+                    className={`w-4 h-4 ${getScoreColor(
+                      calculateSEOScore(formData, editorContent),
+                      mode
+                    )}`}
                   />
                 </div>
               }
             >
-              <SEOAccordion 
-                formData={formData} 
-                editorContent={editorContent} 
+              <SEOAccordion
+                formData={formData}
+                editorContent={editorContent}
                 mode={mode}
               />
             </CollapsibleSection>
@@ -861,11 +941,13 @@ export default function BlogForm({
                     Author
                     <span className="text-red-500">*</span>
                   </label>
-                  <div className={`px-4 py-2.5 rounded-xl border ${
-                    mode === "dark"
-                      ? "bg-gray-800 border-gray-700 text-gray-400"
-                      : "bg-gray-50 border-gray-300 text-gray-500"
-                  }`}>
+                  <div
+                    className={`px-4 py-2.5 rounded-xl border ${
+                      mode === "dark"
+                        ? "bg-gray-800 border-gray-700 text-gray-400"
+                        : "bg-gray-50 border-gray-300 text-gray-500"
+                    }`}
+                  >
                     {formData.author || "PAAN Admin"}
                   </div>
                 </div>
@@ -883,14 +965,16 @@ export default function BlogForm({
                   <div className="grid grid-cols-3 gap-3">
                     <button
                       type="button"
-                      onClick={() => handleInputChange({
-                        target: {
-                          name: 'publish_option',
-                          value: 'draft'
-                        }
-                      })}
+                      onClick={() =>
+                        handleInputChange({
+                          target: {
+                            name: "publish_option",
+                            value: "draft",
+                          },
+                        })
+                      }
                       className={`p-3 rounded-xl border transition-all duration-200 ${
-                        formData.publish_option === 'draft'
+                        formData.publish_option === "draft"
                           ? mode === "dark"
                             ? "bg-blue-900/30 border-blue-700 shadow-lg shadow-blue-500/10"
                             : "bg-blue-50 border-blue-200 shadow-lg shadow-blue-500/10"
@@ -900,19 +984,21 @@ export default function BlogForm({
                       }`}
                     >
                       <div className="flex flex-col items-center gap-2">
-                        <div className={`p-2 rounded-lg ${
-                          formData.publish_option === 'draft'
-                            ? mode === "dark"
-                              ? "bg-blue-900/50"
-                              : "bg-blue-100"
-                            : mode === "dark"
-                            ? "bg-gray-700"
-                            : "bg-gray-100"
-                        }`}>
-                          <Icon 
-                            icon="heroicons:document-text" 
+                        <div
+                          className={`p-2 rounded-lg ${
+                            formData.publish_option === "draft"
+                              ? mode === "dark"
+                                ? "bg-blue-900/50"
+                                : "bg-blue-100"
+                              : mode === "dark"
+                              ? "bg-gray-700"
+                              : "bg-gray-100"
+                          }`}
+                        >
+                          <Icon
+                            icon="heroicons:document-text"
                             className={`w-5 h-5 ${
-                              formData.publish_option === 'draft'
+                              formData.publish_option === "draft"
                                 ? mode === "dark"
                                   ? "text-blue-400"
                                   : "text-blue-600"
@@ -922,28 +1008,34 @@ export default function BlogForm({
                             }`}
                           />
                         </div>
-                        <span className={`text-sm font-medium ${
-                          formData.publish_option === 'draft'
-                            ? mode === "dark"
-                              ? "text-blue-400"
-                              : "text-blue-600"
-                            : mode === "dark"
-                            ? "text-gray-300"
-                            : "text-gray-700"
-                        }`}>Draft</span>
+                        <span
+                          className={`text-sm font-medium ${
+                            formData.publish_option === "draft"
+                              ? mode === "dark"
+                                ? "text-blue-400"
+                                : "text-blue-600"
+                              : mode === "dark"
+                              ? "text-gray-300"
+                              : "text-gray-700"
+                          }`}
+                        >
+                          Draft
+                        </span>
                       </div>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => handleInputChange({
-                        target: {
-                          name: 'publish_option',
-                          value: 'publish'
-                        }
-                      })}
+                      onClick={() =>
+                        handleInputChange({
+                          target: {
+                            name: "publish_option",
+                            value: "publish",
+                          },
+                        })
+                      }
                       className={`p-3 rounded-xl border transition-all duration-200 ${
-                        formData.publish_option === 'publish'
+                        formData.publish_option === "publish"
                           ? mode === "dark"
                             ? "bg-blue-900/30 border-blue-700 shadow-lg shadow-blue-500/10"
                             : "bg-blue-50 border-blue-200 shadow-lg shadow-blue-500/10"
@@ -953,19 +1045,21 @@ export default function BlogForm({
                       }`}
                     >
                       <div className="flex flex-col items-center gap-2">
-                        <div className={`p-2 rounded-lg ${
-                          formData.publish_option === 'publish'
-                            ? mode === "dark"
-                              ? "bg-blue-900/50"
-                              : "bg-blue-100"
-                            : mode === "dark"
-                            ? "bg-gray-700"
-                            : "bg-gray-100"
-                        }`}>
-                          <Icon 
-                            icon="heroicons:check-circle" 
+                        <div
+                          className={`p-2 rounded-lg ${
+                            formData.publish_option === "publish"
+                              ? mode === "dark"
+                                ? "bg-blue-900/50"
+                                : "bg-blue-100"
+                              : mode === "dark"
+                              ? "bg-gray-700"
+                              : "bg-gray-100"
+                          }`}
+                        >
+                          <Icon
+                            icon="heroicons:check-circle"
                             className={`w-5 h-5 ${
-                              formData.publish_option === 'publish'
+                              formData.publish_option === "publish"
                                 ? mode === "dark"
                                   ? "text-blue-400"
                                   : "text-blue-600"
@@ -975,28 +1069,34 @@ export default function BlogForm({
                             }`}
                           />
                         </div>
-                        <span className={`text-sm font-medium ${
-                          formData.publish_option === 'publish'
-                            ? mode === "dark"
-                              ? "text-blue-400"
-                              : "text-blue-600"
-                            : mode === "dark"
-                            ? "text-gray-300"
-                            : "text-gray-700"
-                        }`}>Publish Now</span>
+                        <span
+                          className={`text-sm font-medium ${
+                            formData.publish_option === "publish"
+                              ? mode === "dark"
+                                ? "text-blue-400"
+                                : "text-blue-600"
+                              : mode === "dark"
+                              ? "text-gray-300"
+                              : "text-gray-700"
+                          }`}
+                        >
+                          Publish Now
+                        </span>
                       </div>
                     </button>
 
                     <button
                       type="button"
-                      onClick={() => handleInputChange({
-                        target: {
-                          name: 'publish_option',
-                          value: 'schedule'
-                        }
-                      })}
+                      onClick={() =>
+                        handleInputChange({
+                          target: {
+                            name: "publish_option",
+                            value: "schedule",
+                          },
+                        })
+                      }
                       className={`p-3 rounded-xl border transition-all duration-200 ${
-                        formData.publish_option === 'schedule'
+                        formData.publish_option === "schedule"
                           ? mode === "dark"
                             ? "bg-blue-900/30 border-blue-700 shadow-lg shadow-blue-500/10"
                             : "bg-blue-50 border-blue-200 shadow-lg shadow-blue-500/10"
@@ -1006,19 +1106,21 @@ export default function BlogForm({
                       }`}
                     >
                       <div className="flex flex-col items-center gap-2">
-                        <div className={`p-2 rounded-lg ${
-                          formData.publish_option === 'schedule'
-                            ? mode === "dark"
-                              ? "bg-blue-900/50"
-                              : "bg-blue-100"
-                            : mode === "dark"
-                            ? "bg-gray-700"
-                            : "bg-gray-100"
-                        }`}>
-                          <Icon 
-                            icon="heroicons:clock" 
+                        <div
+                          className={`p-2 rounded-lg ${
+                            formData.publish_option === "schedule"
+                              ? mode === "dark"
+                                ? "bg-blue-900/50"
+                                : "bg-blue-100"
+                              : mode === "dark"
+                              ? "bg-gray-700"
+                              : "bg-gray-100"
+                          }`}
+                        >
+                          <Icon
+                            icon="heroicons:clock"
                             className={`w-5 h-5 ${
-                              formData.publish_option === 'schedule'
+                              formData.publish_option === "schedule"
                                 ? mode === "dark"
                                   ? "text-blue-400"
                                   : "text-blue-600"
@@ -1028,15 +1130,19 @@ export default function BlogForm({
                             }`}
                           />
                         </div>
-                        <span className={`text-sm font-medium ${
-                          formData.publish_option === 'schedule'
-                            ? mode === "dark"
-                              ? "text-blue-400"
-                              : "text-blue-600"
-                            : mode === "dark"
-                            ? "text-gray-300"
-                            : "text-gray-700"
-                        }`}>Schedule</span>
+                        <span
+                          className={`text-sm font-medium ${
+                            formData.publish_option === "schedule"
+                              ? mode === "dark"
+                                ? "text-blue-400"
+                                : "text-blue-600"
+                              : mode === "dark"
+                              ? "text-gray-300"
+                              : "text-gray-700"
+                          }`}
+                        >
+                          Schedule
+                        </span>
                       </div>
                     </button>
                   </div>
@@ -1044,7 +1150,7 @@ export default function BlogForm({
               </div>
 
               {/* Date Fields - Only show when schedule is selected */}
-              {formData.publish_option === 'schedule' && (
+              {formData.publish_option === "schedule" && (
                 <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
                   <div className="space-y-2">
                     <label
@@ -1240,12 +1346,12 @@ export default function BlogForm({
         onSelect={(selectedImage) => {
           handleInputChange({
             target: {
-              name: 'multiple',
+              name: "multiple",
               value: {
                 article_image: selectedImage.url,
                 featured_image_url: selectedImage.url,
                 featured_image_library: selectedImage.url,
-                featured_image_upload: '',
+                featured_image_upload: "",
               },
             },
           });

@@ -427,7 +427,34 @@ const TipTapEditor = memo(({
       Superscript,
       Subscript,
       Blockquote,
-      CustomImage,
+      CustomImage.configure({
+        HTMLAttributes: {
+          class: 'max-w-full h-auto',
+        },
+        draggable: true,
+        resizing: true,
+        allowBase64: true,
+        addAttributes() {
+          return {
+            ...this.parent?.(),
+            src: {
+              default: null,
+            },
+            alt: {
+              default: null,
+            },
+            title: {
+              default: null,
+            },
+            width: {
+              default: null,
+            },
+            height: {
+              default: null,
+            },
+          }
+        },
+      }),
       TaskList,
       TaskItem,
     ],
@@ -473,7 +500,10 @@ const TipTapEditor = memo(({
       }
 
       // Insert the image into the editor
-      editor.chain().focus().setImage({ src: data.url }).run();
+      editor.chain().focus().setImage({ 
+        src: data.url,
+        alt: data.name || 'Image'
+      }).run();
 
       toast.success("Image uploaded successfully", {
         id: loadingToast,
@@ -764,54 +794,14 @@ const TipTapEditor = memo(({
           isOpen={showImageLibrary}
           onClose={() => setShowImageLibrary(false)}
           mode={mode}
-          onUpload={async (file) => {
-            try {
-              setUploadingImage(true);
-              const loadingToast = toast.loading("Uploading image...");
-
-              const formData = new FormData();
-              formData.append("file", file);
-
-              const response = await fetch("/api/imagekit/upload-file", {
-                method: "POST",
-                body: formData,
-              });
-
-              const data = await response.json();
-
-              if (!response.ok) {
-                throw new Error(data.details || data.error || "Upload failed");
-              }
-
-              if (!data.url) {
-                throw new Error("No image URL received from server");
-              }
-
-              toast.success("Image uploaded successfully", {
-                id: loadingToast,
-              });
-
-              // Return the upload data without inserting
-              return {
-                fileId: data.fileId,
-                name: file.name,
-                url: data.url,
-                createdAt: new Date().toISOString()
-              };
-            } catch (error) {
-              console.error("Error uploading image:", error);
-              toast.error(`Failed to upload image: ${error.message}`, {
-                duration: 5000,
-              });
-              throw error;
-            } finally {
-              setUploadingImage(false);
-            }
-          }}
+          onUpload={handleImageUpload}
           uploading={uploadingImage}
           onSelect={(selectedImage) => {
             if (editor) {
-              editor.chain().focus().setImage({ src: selectedImage.url }).run();
+              editor.chain().focus().setImage({ 
+                src: selectedImage.url,
+                alt: selectedImage.name || 'Image'
+              }).run();
               setShowImageLibrary(false);
             }
           }}
@@ -839,6 +829,12 @@ function EditorComponent({
   const [viewMode, setViewMode] = useState(defaultView);
   const [showImageLibrary, setShowImageLibrary] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const editorRef = useRef(null);
+
+  // Update content when initialValue changes
+  useEffect(() => {
+    setContent(initialValue || "");
+  }, [initialValue]);
 
   const handleContentChange = useCallback((newContent) => {
     setContent(newContent);
@@ -910,10 +906,11 @@ function EditorComponent({
       {viewMode === "rich" ? (
         <div style={{ height: `${height}px` }}>
           <TipTapEditor
-            initialValue={initialValue}
+            initialValue={content}
             onChange={handleContentChange}
             placeholder={placeholder}
             mode={mode}
+            ref={editorRef}
           />
         </div>
       ) : (
@@ -932,8 +929,11 @@ function EditorComponent({
           onUpload={handleImageUpload}
           uploading={uploadingImage}
           onSelect={(selectedImage) => {
-            if (editor) {
-              editor.chain().focus().setImage({ src: selectedImage.url }).run();
+            if (editorRef.current) {
+              editorRef.current.chain().focus().setImage({ 
+                src: selectedImage.url,
+                alt: selectedImage.name || 'Image'
+              }).run();
               setShowImageLibrary(false);
             }
           }}

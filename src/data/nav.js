@@ -13,11 +13,7 @@ export const sidebarNav = [
     category: "Recruitment Tools",
     items: [
       { href: "/hr/jobs", icon: "mdi:briefcase", label: "EOI Postings" },
-      {
-        href: "/hr/applicants",
-        icon: "mdi:account-group",
-        label: "Applicants",
-      },
+
       {
         href: "/hr/interview-questions",
         icon: "mdi:account-question",
@@ -34,6 +30,16 @@ export const sidebarNav = [
         label: "Automations",
       },
       // { href: "/hr/recruiters", icon: "stash:search-box", label: "Recruiters" },
+    ],
+  },
+  {
+    category: "Member Management",
+    items: [
+      {
+        href: "/hr/applicants",
+        icon: "mdi:account-multiple",
+        label: "Applicants",
+      },
     ],
   },
   {
@@ -76,51 +82,8 @@ export const sidebarNav = [
       },
     ],
   },
-  {
-    category: "Member Management",
-    items: [
-      {
-        href: "/admin/members",
-        icon: "mdi:account-multiple",
-        label: "Member Profiles",
-      },
-      {
-        href: "/admin/tiers",
-        icon: "mdi:star-circle-outline",
-        label: "Membership Tiers",
-      },
-      {
-        href: "/admin/access-control",
-        icon: "mdi:lock-outline",
-        label: "Access Control",
-      },
-    ],
-  },
-  {
-    category: "Analytics",
-    items: [
-      {
-        href: "/admin/analytics/opportunities",
-        icon: "mdi:chart-bar",
-        label: "Opportunity Engagement",
-      },
-      {
-        href: "/admin/analytics/updates",
-        icon: "mdi:chart-pie",
-        label: "Updates Engagement",
-      },
-      {
-        href: "/admin/analytics/events",
-        icon: "mdi:chart-timeline",
-        label: "Event Engagement",
-      },
-      {
-        href: "/admin/analytics/tiers",
-        icon: "mdi:account-star-outline",
-        label: "Tier Activity",
-      },
-    ],
-  },
+
+  
   {
     category: "Notifications",
     items: [
@@ -129,21 +92,13 @@ export const sidebarNav = [
         icon: "mdi:bell-outline",
         label: "Push Notifications",
       },
-      {
-        href: "/admin/notification-history",
-        icon: "mdi:history",
-        label: "Notification History",
-      },
+      
     ],
   },
   {
     category: "Settings",
     items: [
-      {
-        href: "/admin/settings/general",
-        icon: "mdi:cog-outline",
-        label: "General Settings",
-      },
+      
       {
         href: "/admin/settings/categories",
         icon: "mdi:shape-outline",

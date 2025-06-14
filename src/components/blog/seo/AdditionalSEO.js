@@ -91,6 +91,15 @@ export default function AdditionalSEO({ formData, editorContent, mode }) {
       (editorContent?.toLowerCase().match(new RegExp(formData.focus_keyword.toLowerCase(), 'g')) || []).length : 0;
     const density = wordCount ? (keywordCount / wordCount) * 100 : 0;
     
+    console.log('AdditionalSEO - Keyword Density Calculation:', {
+      focusKeyword: formData.focus_keyword,
+      wordCount,
+      keywordCount,
+      density,
+      contentLength: editorContent?.length,
+      contentPreview: editorContent?.substring(0, 100)
+    });
+    
     checks.push({
       title: "Keyword Density",
       status: density >= 0.5 && density <= 2.5 ? "good" : density < 0.5 ? "error" : "warning",

@@ -82,14 +82,25 @@ const FieldSEOIndicator = ({ type, value, focusKeyword, mode }) => {
         const hasContentKeyword = focusKeyword && value?.toLowerCase().includes(focusKeyword.toLowerCase());
         const keywordDensity = focusKeyword ? {
           keyword: focusKeyword,
-          density: value ? ((value.toLowerCase().match(new RegExp(focusKeyword.toLowerCase(), 'g')) || []).length / value.length) * 100 : 0,
-          status: value ? ((value.toLowerCase().match(new RegExp(focusKeyword.toLowerCase(), 'g')) || []).length / value.length) * 100 >= 0.5 && ((value.toLowerCase().match(new RegExp(focusKeyword.toLowerCase(), 'g')) || []).length / value.length) * 100 <= 2.5 ? 'good' : ((value.toLowerCase().match(new RegExp(focusKeyword.toLowerCase(), 'g')) || []).length / value.length) * 100 < 0.5 ? 'too-low' : 'too-high' : 'missing'
+          wordCount: value ? value.split(/\s+/).filter(Boolean).length : 0,
+          keywordCount: value ? (value.toLowerCase().match(new RegExp(focusKeyword.toLowerCase(), 'g')) || []).length : 0,
+          density: value ? (() => {
+            const wordCount = value.split(/\s+/).filter(Boolean).length;
+            const keywordCount = (value.toLowerCase().match(new RegExp(focusKeyword.toLowerCase(), 'g')) || []).length;
+            return wordCount ? (keywordCount / wordCount) * 100 : 0;
+          })() : 0,
+          status: value ? (() => {
+            const wordCount = value.split(/\s+/).filter(Boolean).length;
+            const keywordCount = (value.toLowerCase().match(new RegExp(focusKeyword.toLowerCase(), 'g')) || []).length;
+            const density = wordCount ? (keywordCount / wordCount) * 100 : 0;
+            return density >= 0.5 && density <= 2.5 ? 'good' : density < 0.5 ? 'too-low' : 'too-high';
+          })() : 'missing'
         } : null;
         
         return [
           {
             status: contentLength >= 300 ? 'good' : 'too-short',
-            message: `Content length: ${contentLength}/300 Min. characters`,
+            message: `Content length: ${contentLength} characters`,
             progress: Math.min((contentLength / 300) * 100, 100),
             minLength: 300,
             maxLength: null
@@ -100,7 +111,7 @@ const FieldSEOIndicator = ({ type, value, focusKeyword, mode }) => {
           },
           keywordDensity && {
             status: keywordDensity.status,
-            message: `Keyword density: ${keywordDensity.density.toFixed(2)}% (${keywordDensity.status === 'good' ? 'good' : keywordDensity.status === 'too-low' ? 'too low' : 'too high'})`,
+            message: `Keyword density: ${keywordDensity.density.toFixed(2)}% (${keywordDensity.status === 'good' ? 'good' : keywordDensity.status === 'too-low' ? 'too low' : 'too high'}) maximum 2.5%`,
             progress: keywordDensity.status === 'good' ? 100 : keywordDensity.status === 'too-low' ? (keywordDensity.density / 0.5) * 100 : 100
           }
         ].filter(Boolean);

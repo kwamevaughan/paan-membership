@@ -325,45 +325,22 @@ export default function BlogForm({
         totalChecks += 1;
 
         // Content checks
-        const wordCount =
-          editorContent?.split(/\s+/).filter(Boolean).length || 0;
-        if (wordCount >= 300) {
-          score += 1;
-        }
-        totalChecks += 1;
+        const wordCount = editorContent?.split(/\s+/).filter(Boolean).length || 0;
+        const keywordCount = formData.focus_keyword ? 
+          (editorContent?.toLowerCase().match(new RegExp(formData.focus_keyword.toLowerCase(), 'g')) || []).length : 0;
+        const density = wordCount ? (keywordCount / wordCount) * 100 : 0;
 
-        const hasKeywordInContent =
-          formData.focus_keyword &&
-          editorContent
-            ?.toLowerCase()
-            .includes(formData.focus_keyword.toLowerCase());
-        if (hasKeywordInContent) {
-          score += 1;
-        }
-        totalChecks += 1;
-
-        // Calculate keyword density
-        const keywordDensity = formData.focus_keyword
-          ? {
-              keyword: formData.focus_keyword,
-              density: editorContent
-                ? ((
-                    editorContent
-                      .toLowerCase()
-                      .match(
-                        new RegExp(formData.focus_keyword.toLowerCase(), "g")
-                      ) || []
-                  ).length /
-                    wordCount) *
-                  100
-                : 0,
-            }
-          : null;
+        console.log('BlogForm - Keyword Density Calculation:', {
+          focusKeyword: formData.focus_keyword,
+          wordCount,
+          keywordCount,
+          density,
+          contentLength: editorContent?.length,
+          contentPreview: editorContent?.substring(0, 100)
+        });
 
         const hasGoodDensity =
-          keywordDensity &&
-          keywordDensity.density >= 0.5 &&
-          keywordDensity.density <= 2.5;
+          density >= 0.5 && density <= 2.5;
         if (hasGoodDensity) {
           score += 1;
         }
@@ -708,6 +685,7 @@ export default function BlogForm({
         title={isEditing ? "Edit Blog Post" : "Create Blog Post"}
         mode={mode}
         width="max-w-5xl"
+        hasUnsavedChanges={hasUnsavedChanges}
         rightElement={
           <div
             className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${getScoreBgColor(

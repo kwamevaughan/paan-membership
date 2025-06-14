@@ -105,6 +105,7 @@ const editorStyles = `
 
   .ProseMirror p {
     margin: 0.5em 0;
+    margin-bottom: 1.5em;
   }
 
   .ProseMirror p:last-child {

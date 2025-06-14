@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import { supabase } from "@/lib/supabase";
 import toast from "react-hot-toast";
 import ItemActionModal from "../ItemActionModal";
-import SEOOptimizer from "./SEOOptimizer";
+import CollapsibleSection from "../common/CollapsibleSection";
 
 const EditorComponent = dynamic(
   () => import("../EditorComponent"),
@@ -89,7 +89,7 @@ const FieldSEOIndicator = ({ type, value, focusKeyword, mode }) => {
         return [
           {
             status: contentLength >= 300 ? 'good' : 'too-short',
-            message: `Content length: ${contentLength}/300 characters`,
+            message: `Content length: ${contentLength}/300 Min. characters`,
             progress: Math.min((contentLength / 300) * 100, 100),
             minLength: 300,
             maxLength: null
@@ -217,6 +217,7 @@ export default function BlogFormFields({
     }
     return [];
   });
+  const [isMetaCollapsed, setIsMetaCollapsed] = useState(true);
 
   // Update keywords when formData changes
   useEffect(() => {
@@ -394,33 +395,6 @@ export default function BlogFormFields({
         />
       </div>
 
-      {/* Focus Keyword */}
-      <div>
-        <label
-          className={`block text-sm font-bold mb-2 ${
-            mode === "dark" ? "text-gray-300" : "text-gray-700"
-          }`}
-        >
-          Focus Keyword *
-        </label>
-        <input
-          type="text"
-          name="focus_keyword"
-          value={formData.focus_keyword || ""}
-          onChange={handleInputChange}
-          className={`w-full px-4 py-2 rounded-xl border ${
-            mode === "dark"
-              ? "bg-gray-800 border-gray-700 text-gray-100"
-              : "bg-white border-gray-300 text-gray-900"
-          } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-          placeholder="Enter focus keyword for SEO"
-          required
-        />
-        <p className={`mt-1 text-sm ${mode === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-          The main keyword you want to rank for. This will be used for SEO analysis.
-        </p>
-      </div>
-
       {/* Slug (editable) */}
       <div>
         <div className="flex items-center justify-between mb-2">
@@ -529,6 +503,33 @@ export default function BlogFormFields({
         />
       </div>
 
+      {/* Focus Keyword */}
+      <div>
+        <label
+          className={`block text-sm font-bold mb-2 ${
+            mode === "dark" ? "text-gray-300" : "text-gray-700"
+          }`}
+        >
+          Focus Keyword *
+        </label>
+        <input
+          type="text"
+          name="focus_keyword"
+          value={formData.focus_keyword || ""}
+          onChange={handleInputChange}
+          className={`w-full px-4 py-2 rounded-xl border ${
+            mode === "dark"
+              ? "bg-gray-800 border-gray-700 text-gray-100"
+              : "bg-white border-gray-300 text-gray-900"
+          } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+          placeholder="Enter focus keyword for SEO"
+          required
+        />
+        <p className={`mt-1 text-sm ${mode === "dark" ? "text-gray-400" : "text-gray-500"}`}>
+          The main keyword you want to rank for. This will be used for SEO analysis.
+        </p>
+      </div>
+
       {/* Content */}
       <div>
         <label
@@ -588,16 +589,193 @@ export default function BlogFormFields({
         />
       </div>
 
-      {/* Meta Information */}
-      <div className="space-y-6">
-        <h3
-          className={`text-lg font-medium ${
-            mode === "dark" ? "text-gray-200" : "text-gray-900"
-          }`}
-        >
-          Meta Information
-        </h3>
+      {/* Category and Tags in same row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Category */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label
+              className={`block text-sm font-bold ${
+                mode === "dark" ? "text-gray-300" : "text-gray-700"
+              }`}
+            >
+              Category *
+            </label>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onAddCategory();
+              }}
+              className={`text-sm flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all duration-200 ${
+                mode === "dark" 
+                  ? "text-blue-400 hover:bg-blue-900/30 hover:text-blue-300" 
+                  : "text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+              }`}
+            >
+              <Icon icon="heroicons:plus" className="w-4 h-4" />
+              Add New
+            </button>
+          </div>
+          <div className="relative">
+            <select
+              name="category_id"
+              value={formData.category_id || ""}
+              onChange={handleInputChange}
+              className={`w-full px-4 py-2.5 rounded-xl border appearance-none ${
+                mode === "dark"
+                  ? "bg-gray-800 border-gray-700 text-gray-100"
+                  : "bg-white border-gray-300 text-gray-900"
+              } focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10`}
+              required
+            >
+              <option value="">Select a category</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+              <Icon 
+                icon="heroicons:chevron-down" 
+                className={`w-5 h-5 ${
+                  mode === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              />
+            </div>
+          </div>
+          {formData.category_id && (
+            <div className="mt-2 flex items-center gap-2">
+              <Icon 
+                icon="heroicons:check-circle" 
+                className={`w-4 h-4 ${
+                  mode === "dark" ? "text-green-400" : "text-green-600"
+                }`}
+              />
+              <span className={`text-sm ${
+                mode === "dark" ? "text-gray-300" : "text-gray-600"
+              }`}>
+                Category selected
+              </span>
+            </div>
+          )}
+        </div>
 
+        {/* Tags */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <label
+              className={`block text-sm font-bold ${
+                mode === "dark" ? "text-gray-300" : "text-gray-700"
+              }`}
+            >
+              Tags
+            </label>
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onAddTag();
+              }}
+              className={`text-sm flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all duration-200 ${
+                mode === "dark" 
+                  ? "text-blue-400 hover:bg-blue-900/30 hover:text-blue-300" 
+                  : "text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+              }`}
+            >
+              <Icon icon="heroicons:plus" className="w-4 h-4" />
+              Add New
+            </button>
+          </div>
+          <div className="relative">
+            <select
+              name="tags"
+              onChange={handleTagChange}
+              value=""
+              className={`w-full px-4 py-2.5 rounded-xl border appearance-none ${
+                mode === "dark"
+                  ? "bg-gray-800 border-gray-700 text-gray-100"
+                  : "bg-white border-gray-300 text-gray-900"
+              } focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10`}
+            >
+              <option value="">Select tags</option>
+              {tags
+                .filter((tag) => !selectedTags.includes(tag.name))
+                .map((tag) => (
+                  <option key={tag.id} value={tag.name}>
+                    {tag.name}
+                  </option>
+                ))}
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none">
+              <Icon 
+                icon="heroicons:chevron-down" 
+                className={`w-5 h-5 ${
+                  mode === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              />
+            </div>
+          </div>
+          <div className="mt-3 space-y-2">
+            {selectedTags.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {selectedTags.map((tag) => (
+                  <span
+                    key={tag}
+                    className={`inline-flex items-center px-3 py-1.5 rounded-lg text-sm transition-all duration-200 ${
+                      mode === "dark"
+                        ? "bg-blue-900/50 text-blue-100 hover:bg-blue-900/70"
+                        : "bg-blue-100 text-blue-800 hover:bg-blue-200"
+                    }`}
+                  >
+                    <Icon 
+                      icon="heroicons:tag" 
+                      className="w-4 h-4 mr-1.5"
+                    />
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleTagRemove(tag);
+                      }}
+                      className="ml-2 p-0.5 rounded-full hover:bg-red-500/20 transition-colors duration-200"
+                    >
+                      <Icon 
+                        icon="heroicons:x-mark" 
+                        className={`w-3.5 h-3.5 ${
+                          mode === "dark" ? "text-blue-200" : "text-blue-600"
+                        }`}
+                      />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div className={`flex items-center gap-2 text-sm ${
+                mode === "dark" ? "text-gray-400" : "text-gray-500"
+              }`}>
+                <Icon icon="heroicons:information-circle" className="w-4 h-4" />
+                <span>No tags selected. Select tags from the dropdown above.</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Meta Information */}
+      <CollapsibleSection
+        title="Meta Information"
+        description="Optimize your content for search engines"
+        icon="heroicons:document-text"
+        isCollapsed={isMetaCollapsed}
+        onToggle={() => setIsMetaCollapsed(!isMetaCollapsed)}
+        mode={mode}
+      >
         {/* Meta Title */}
         <div>
           <label
@@ -628,7 +806,7 @@ export default function BlogFormFields({
         </div>
 
         {/* Meta Description */}
-        <div>
+        <div className="mt-6">
           <label
             className={`block text-sm font-bold mb-2 ${
               mode === "dark" ? "text-gray-300" : "text-gray-700"
@@ -657,7 +835,7 @@ export default function BlogFormFields({
         </div>
 
         {/* Meta Keywords */}
-        <div>
+        <div className="mt-6">
           <label
             className={`block text-sm font-bold mb-2 ${
               mode === "dark" ? "text-gray-300" : "text-gray-700"
@@ -702,492 +880,7 @@ export default function BlogFormFields({
             Press Enter or add a comma to create a keyword
           </p>
         </div>
-      </div>
-
-      {/* Category */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <label
-            className={`block text-sm font-bold ${
-              mode === "dark" ? "text-gray-300" : "text-gray-700"
-            }`}
-          >
-            Category *
-          </label>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onAddCategory();
-            }}
-            className={`text-sm flex items-center gap-1 ${
-              mode === "dark" ? "text-blue-400" : "text-blue-600"
-            } hover:underline`}
-          >
-            <Icon icon="heroicons:plus" className="w-4 h-4" />
-            Add New
-          </button>
-        </div>
-        <select
-          name="category_id"
-          value={formData.category_id || ""}
-          onChange={handleInputChange}
-          className={`w-full px-4 py-2 rounded-xl border ${
-            mode === "dark"
-              ? "bg-gray-800 border-gray-700 text-gray-100"
-              : "bg-white border-gray-300 text-gray-900"
-          } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-          required
-        >
-          <option value="">Select a category</option>
-          {categories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      {/* Tags */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <label
-            className={`block text-sm font-bold ${
-              mode === "dark" ? "text-gray-300" : "text-gray-700"
-            }`}
-          >
-            Tags
-          </label>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onAddTag();
-            }}
-            className={`text-sm flex items-center gap-1 ${
-              mode === "dark" ? "text-blue-400" : "text-blue-600"
-            } hover:underline`}
-          >
-            <Icon icon="heroicons:plus" className="w-4 h-4" />
-            Add New
-          </button>
-        </div>
-        <div className="flex flex-wrap gap-2 mb-2">
-          {selectedTags.map((tag) => (
-            <span
-              key={tag}
-              className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${
-                mode === "dark"
-                  ? "bg-blue-900 text-blue-100"
-                  : "bg-blue-100 text-blue-800"
-              }`}
-            >
-              {tag}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleTagRemove(tag);
-                }}
-                className="ml-2 hover:text-red-500"
-              >
-                <Icon icon="heroicons:x-mark" className="w-4 h-4" />
-              </button>
-            </span>
-          ))}
-        </div>
-        <select
-          name="tags"
-          onChange={handleTagChange}
-          value=""
-          className={`w-full px-4 py-2 rounded-xl border ${
-            mode === "dark"
-              ? "bg-gray-800 border-gray-700 text-gray-100"
-              : "bg-white border-gray-300 text-gray-900"
-          } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-        >
-          <option value="">Select tags</option>
-          {tags
-            .filter((tag) => !selectedTags.includes(tag.name))
-            .map((tag) => (
-              <option key={tag.id} value={tag.name}>
-                {tag.name}
-              </option>
-            ))}
-        </select>
-        <p className={`mt-1 text-sm ${mode === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-          You can select multiple tags. Click the X to remove a tag.
-        </p>
-      </div>
-
-      {/* Publishing Options */}
-      <div className="space-y-6">
-        <div className="flex items-center gap-2">
-          <Icon 
-            icon="heroicons:clock" 
-            className={`w-5 h-5 ${mode === "dark" ? "text-blue-400" : "text-blue-600"}`}
-          />
-          <h3
-            className={`text-lg font-medium ${
-              mode === "dark" ? "text-gray-200" : "text-gray-900"
-            }`}
-          >
-            Publishing Options
-          </h3>
-        </div>
-
-        <div className={`p-6 rounded-2xl border ${
-          mode === "dark" 
-            ? "bg-gray-800/50 border-gray-700" 
-            : "bg-white border-gray-200"
-        }`}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Author */}
-            <div className="space-y-2">
-              <label
-                className={`flex items-center gap-2 text-sm font-bold ${
-                  mode === "dark" ? "text-gray-300" : "text-gray-700"
-                }`}
-              >
-                <Icon icon="heroicons:user" className="w-4 h-4" />
-                Author
-                <span className="text-red-500">*</span>
-              </label>
-              <div className={`px-4 py-2.5 rounded-xl border ${
-                mode === "dark"
-                  ? "bg-gray-800 border-gray-700 text-gray-400"
-                  : "bg-gray-50 border-gray-300 text-gray-500"
-              }`}>
-                {formData.author || "PAAN Admin"}
-              </div>
-            </div>
-
-            {/* Publish Status */}
-            <div className="space-y-2">
-              <label
-                className={`flex items-center gap-2 text-sm font-bold ${
-                  mode === "dark" ? "text-gray-300" : "text-gray-700"
-                }`}
-              >
-                <Icon icon="heroicons:document-check" className="w-4 h-4" />
-                Publish Status
-              </label>
-              <div className="grid grid-cols-3 gap-3">
-                <button
-                  type="button"
-                  onClick={() => handleInputChange({
-                    target: {
-                      name: 'publish_option',
-                      value: 'draft'
-                    }
-                  })}
-                  className={`p-3 rounded-xl border transition-all duration-200 ${
-                    formData.publish_option === 'draft'
-                      ? mode === "dark"
-                        ? "bg-blue-900/30 border-blue-700 shadow-lg shadow-blue-500/10"
-                        : "bg-blue-50 border-blue-200 shadow-lg shadow-blue-500/10"
-                      : mode === "dark"
-                      ? "bg-gray-800 border-gray-700 hover:bg-gray-700"
-                      : "bg-white border-gray-200 hover:bg-gray-50"
-                  }`}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <div className={`p-2 rounded-lg ${
-                      formData.publish_option === 'draft'
-                        ? mode === "dark"
-                          ? "bg-blue-900/50"
-                          : "bg-blue-100"
-                        : mode === "dark"
-                        ? "bg-gray-700"
-                        : "bg-gray-100"
-                    }`}>
-                      <Icon 
-                        icon="heroicons:document-text" 
-                        className={`w-5 h-5 ${
-                          formData.publish_option === 'draft'
-                            ? mode === "dark"
-                              ? "text-blue-400"
-                              : "text-blue-600"
-                            : mode === "dark"
-                            ? "text-gray-400"
-                            : "text-gray-500"
-                        }`}
-                      />
-                    </div>
-                    <span className={`text-sm font-medium ${
-                      formData.publish_option === 'draft'
-                        ? mode === "dark"
-                          ? "text-blue-400"
-                          : "text-blue-600"
-                        : mode === "dark"
-                        ? "text-gray-300"
-                        : "text-gray-700"
-                    }`}>Draft</span>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleInputChange({
-                    target: {
-                      name: 'publish_option',
-                      value: 'publish'
-                    }
-                  })}
-                  className={`p-3 rounded-xl border transition-all duration-200 ${
-                    formData.publish_option === 'publish'
-                      ? mode === "dark"
-                        ? "bg-blue-900/30 border-blue-700 shadow-lg shadow-blue-500/10"
-                        : "bg-blue-50 border-blue-200 shadow-lg shadow-blue-500/10"
-                      : mode === "dark"
-                      ? "bg-gray-800 border-gray-700 hover:bg-gray-700"
-                      : "bg-white border-gray-200 hover:bg-gray-50"
-                  }`}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <div className={`p-2 rounded-lg ${
-                      formData.publish_option === 'publish'
-                        ? mode === "dark"
-                          ? "bg-blue-900/50"
-                          : "bg-blue-100"
-                        : mode === "dark"
-                        ? "bg-gray-700"
-                        : "bg-gray-100"
-                    }`}>
-                      <Icon 
-                        icon="heroicons:check-circle" 
-                        className={`w-5 h-5 ${
-                          formData.publish_option === 'publish'
-                            ? mode === "dark"
-                              ? "text-blue-400"
-                              : "text-blue-600"
-                            : mode === "dark"
-                            ? "text-gray-400"
-                            : "text-gray-500"
-                        }`}
-                      />
-                    </div>
-                    <span className={`text-sm font-medium ${
-                      formData.publish_option === 'publish'
-                        ? mode === "dark"
-                          ? "text-blue-400"
-                          : "text-blue-600"
-                        : mode === "dark"
-                        ? "text-gray-300"
-                        : "text-gray-700"
-                    }`}>Publish Now</span>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleInputChange({
-                    target: {
-                      name: 'publish_option',
-                      value: 'schedule'
-                    }
-                  })}
-                  className={`p-3 rounded-xl border transition-all duration-200 ${
-                    formData.publish_option === 'schedule'
-                      ? mode === "dark"
-                        ? "bg-blue-900/30 border-blue-700 shadow-lg shadow-blue-500/10"
-                        : "bg-blue-50 border-blue-200 shadow-lg shadow-blue-500/10"
-                      : mode === "dark"
-                      ? "bg-gray-800 border-gray-700 hover:bg-gray-700"
-                      : "bg-white border-gray-200 hover:bg-gray-50"
-                  }`}
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <div className={`p-2 rounded-lg ${
-                      formData.publish_option === 'schedule'
-                        ? mode === "dark"
-                          ? "bg-blue-900/50"
-                          : "bg-blue-100"
-                        : mode === "dark"
-                        ? "bg-gray-700"
-                        : "bg-gray-100"
-                    }`}>
-                      <Icon 
-                        icon="heroicons:clock" 
-                        className={`w-5 h-5 ${
-                          formData.publish_option === 'schedule'
-                            ? mode === "dark"
-                              ? "text-blue-400"
-                              : "text-blue-600"
-                            : mode === "dark"
-                            ? "text-gray-400"
-                            : "text-gray-500"
-                        }`}
-                      />
-                    </div>
-                    <span className={`text-sm font-medium ${
-                      formData.publish_option === 'schedule'
-                        ? mode === "dark"
-                          ? "text-blue-400"
-                          : "text-blue-600"
-                        : mode === "dark"
-                        ? "text-gray-300"
-                        : "text-gray-700"
-                    }`}>Schedule</span>
-                  </div>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Date Fields - Only show when schedule is selected */}
-          {formData.publish_option === 'schedule' && (
-            <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <div className="space-y-2">
-                <label
-                  className={`flex items-center gap-2 text-sm font-medium ${
-                    mode === "dark" ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  <Icon icon="heroicons:calendar" className="w-4 h-4" />
-                  Schedule Date
-                </label>
-                <input
-                  type="datetime-local"
-                  name="scheduled_date"
-                  value={formData.scheduled_date || ""}
-                  onChange={handleInputChange}
-                  className={`w-full px-4 py-2.5 rounded-xl border ${
-                    mode === "dark"
-                      ? "bg-gray-800 border-gray-700 text-gray-100"
-                      : "bg-white border-gray-300 text-gray-900"
-                  } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-                />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Add Category Modal */}
-      <ItemActionModal
-        isOpen={showAddCategory}
-        onClose={() => {
-          setShowAddCategory(false);
-          setNewCategoryName("");
-        }}
-        title="Add New Category"
-        mode={mode}
-      >
-        <form onSubmit={handleAddCategory} className="space-y-6" onClick={(e) => e.stopPropagation()}>
-          <div>
-            <label
-              className={`block text-sm font-medium mb-2 ${
-                mode === "dark" ? "text-gray-300" : "text-gray-700"
-              }`}
-            >
-              Category Name *
-            </label>
-            <input
-              type="text"
-              value={newCategoryName}
-              onChange={(e) => setNewCategoryName(e.target.value)}
-              className={`w-full px-4 py-2 rounded-xl border ${
-                mode === "dark"
-                  ? "bg-gray-800 border-gray-700 text-gray-100"
-                  : "bg-white border-gray-300 text-gray-900"
-              } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-              placeholder="Enter category name"
-              required
-            />
-          </div>
-
-          <div className="flex justify-end gap-4">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setShowAddCategory(false);
-                setNewCategoryName("");
-              }}
-              className={`px-6 py-3 rounded-xl ${
-                mode === "dark"
-                  ? "bg-gray-800 text-white hover:bg-gray-700"
-                  : "bg-gray-100 text-gray-900 hover:bg-gray-200"
-              }`}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className={`px-6 py-3 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              {loading ? "Adding..." : "Add Category"}
-            </button>
-          </div>
-        </form>
-      </ItemActionModal>
-
-      {/* Add Tag Modal */}
-      <ItemActionModal
-        isOpen={showAddTag}
-        onClose={() => {
-          setShowAddTag(false);
-          setNewTagName("");
-        }}
-        title="Add New Tag"
-        mode={mode}
-      >
-        <form onSubmit={handleAddTag} className="space-y-6" onClick={(e) => e.stopPropagation()}>
-          <div>
-            <label
-              className={`block text-sm font-medium mb-2 ${
-                mode === "dark" ? "text-gray-300" : "text-gray-700"
-              }`}
-            >
-              Tag Name *
-            </label>
-            <input
-              type="text"
-              value={newTagName}
-              onChange={(e) => setNewTagName(e.target.value)}
-              className={`w-full px-4 py-2 rounded-xl border ${
-                mode === "dark"
-                  ? "bg-gray-800 border-gray-700 text-gray-100"
-                  : "bg-white border-gray-300 text-gray-900"
-              } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-              placeholder="Enter tag name"
-              required
-            />
-          </div>
-
-          <div className="flex justify-end gap-4">
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setShowAddTag(false);
-                setNewTagName("");
-              }}
-              className={`px-6 py-3 rounded-xl ${
-                mode === "dark"
-                  ? "bg-gray-800 text-white hover:bg-gray-700"
-                  : "bg-gray-100 text-gray-900 hover:bg-gray-200"
-              }`}
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className={`px-6 py-3 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed`}
-            >
-              {loading ? "Adding..." : "Add Tag"}
-            </button>
-          </div>
-        </form>
-      </ItemActionModal>
+      </CollapsibleSection>
     </div>
   );
 } 

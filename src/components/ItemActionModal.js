@@ -7,6 +7,7 @@ export default function ItemActionModal({
   children,
   mode,
   width = "max-w-2xl",
+  rightElement,
 }) {
   if (!isOpen) return null;
 
@@ -72,20 +73,23 @@ export default function ItemActionModal({
               <h2 className="text-2xl font-bold text-white tracking-tight">
                 {title}
               </h2>
-              <button
-                type="button"
-                onClick={handleClose}
-                className="group p-3 rounded-2xl transition-all duration-300 hover:bg-white/20 hover:scale-110 active:scale-95"
-                style={{
-                  backdropFilter: "blur(4px)",
-                  background: "rgba(255, 255, 255, 0.1)",
-                }}
-              >
-                <Icon
-                  icon="heroicons:x-mark"
-                  className="h-6 w-6 text-white transition-transform duration-300 group-hover:rotate-90"
-                />
-              </button>
+              <div className="flex items-center gap-4">
+                {rightElement}
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="group p-3 rounded-2xl transition-all duration-300 hover:bg-white/20 hover:scale-110 active:scale-95"
+                  style={{
+                    backdropFilter: "blur(4px)",
+                    background: "rgba(255, 255, 255, 0.1)",
+                  }}
+                >
+                  <Icon
+                    icon="heroicons:x-mark"
+                    className="h-6 w-6 text-white transition-transform duration-300 group-hover:rotate-90"
+                  />
+                </button>
+              </div>
             </div>
           </div>
 

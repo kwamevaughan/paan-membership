@@ -9,8 +9,11 @@ import ImageUpload from "@/components/common/ImageUpload";
 import BlogFormFields from "./BlogFormFields";
 import ImageLibrary from "@/components/common/ImageLibrary";
 import ItemActionModal from "../ItemActionModal";
+import CollapsibleSection from "../common/CollapsibleSection";
 import { Icon } from "@iconify/react";
 import Image from "next/image";
+import SEOAccordion, { calculateTotalScore } from './seo/SEOTabs';
+import Preview from './seo/Preview';
 
 export default function BlogForm({
   mode,
@@ -48,6 +51,28 @@ export default function BlogForm({
   const [showImageLibrary, setShowImageLibrary] = useState(false);
   const [isLoadingBlog, setIsLoadingBlog] = useState(false);
   const [currentBlogId, setCurrentBlogId] = useState(null);
+  const [isSEOCollapsed, setIsSEOCollapsed] = useState(true);
+  const [isImageCollapsed, setIsImageCollapsed] = useState(true);
+  const [isPublishingCollapsed, setIsPublishingCollapsed] = useState(true);
+
+  // Helper functions for SEO score display
+  const getScoreBgColor = (score) => {
+    if (score >= 80) return mode === "dark" ? "bg-green-900/30" : "bg-green-50";
+    if (score >= 60) return mode === "dark" ? "bg-yellow-900/30" : "bg-yellow-50";
+    return mode === "dark" ? "bg-red-900/30" : "bg-red-50";
+  };
+
+  const getScoreColor = (score) => {
+    if (score >= 80) return mode === "dark" ? "text-green-400" : "text-green-600";
+    if (score >= 60) return mode === "dark" ? "text-yellow-400" : "text-yellow-600";
+    return mode === "dark" ? "text-red-400" : "text-red-600";
+  };
+
+  const getScoreIcon = (score) => {
+    if (score >= 80) return "heroicons:check-circle";
+    if (score >= 60) return "heroicons:exclamation-circle";
+    return "heroicons:x-circle";
+  };
 
   // Define isEditing before effects
   const isEditing = Boolean(blogId);
@@ -234,7 +259,163 @@ export default function BlogForm({
       console.log("BlogForm onSubmit - Starting submission");
       console.log("Initial formData:", formData);
 
-      // Construct updated formData with the correct image URL and editor content
+      // Calculate SEO score
+      const calculateSEOScore = () => {
+        let score = 0;
+        let totalChecks = 0;
+
+        // Title checks
+        const titleLength = formData.article_name?.length || 0;
+        if (titleLength >= 30 && titleLength <= 60) {
+          score += 1;
+        }
+        totalChecks += 1;
+
+        const hasKeywordInTitle = formData.focus_keyword && 
+          formData.article_name?.toLowerCase().includes(formData.focus_keyword.toLowerCase());
+        if (hasKeywordInTitle) {
+          score += 1;
+        }
+        totalChecks += 1;
+
+        // Description checks
+        const descLength = formData.description?.length || 0;
+        if (descLength >= 120 && descLength <= 160) {
+          score += 1;
+        }
+        totalChecks += 1;
+
+        const hasKeywordInDesc = formData.focus_keyword && 
+          formData.description?.toLowerCase().includes(formData.focus_keyword.toLowerCase());
+        if (hasKeywordInDesc) {
+          score += 1;
+        }
+        totalChecks += 1;
+
+        // Content checks
+        const wordCount = editorContent?.split(/\s+/).filter(Boolean).length || 0;
+        if (wordCount >= 300) {
+          score += 1;
+        }
+        totalChecks += 1;
+
+        const hasKeywordInContent = formData.focus_keyword && 
+          editorContent?.toLowerCase().includes(formData.focus_keyword.toLowerCase());
+        if (hasKeywordInContent) {
+          score += 1;
+        }
+        totalChecks += 1;
+
+        // Calculate keyword density
+        const keywordDensity = formData.focus_keyword ? {
+          keyword: formData.focus_keyword,
+          density: editorContent ? ((editorContent.toLowerCase().match(new RegExp(formData.focus_keyword.toLowerCase(), 'g')) || []).length / wordCount) * 100 : 0
+        } : null;
+
+        const hasGoodDensity = keywordDensity && 
+          keywordDensity.density >= 0.5 && 
+          keywordDensity.density <= 2.5;
+        if (hasGoodDensity) {
+          score += 1;
+        }
+        totalChecks += 1;
+
+        // Content Structure Checks
+        const hasH1 = editorContent?.includes('<h1') || false;
+        const hasH2 = editorContent?.includes('<h2') || false;
+        const hasH3 = editorContent?.includes('<h3') || false;
+        
+        // Check heading hierarchy
+        if (hasH1 && hasH2) {
+          score += 1;
+        }
+        totalChecks += 1;
+
+        // Check paragraph length
+        const paragraphs = editorContent?.split('</p>') || [];
+        const hasGoodParagraphLength = paragraphs.every(p => {
+          const words = p.split(/\s+/).filter(Boolean).length;
+          return words <= 150; // Max 150 words per paragraph
+        });
+        if (hasGoodParagraphLength) {
+          score += 1;
+        }
+        totalChecks += 1;
+
+        // Check for internal links
+        const hasInternalLinks = editorContent?.includes('href="/') || false;
+        if (hasInternalLinks) {
+          score += 1;
+        }
+        totalChecks += 1;
+
+        // Check for external links
+        const hasExternalLinks = editorContent?.includes('href="http') || false;
+        if (hasExternalLinks) {
+          score += 1;
+        }
+        totalChecks += 1;
+
+        // Readability Checks
+        const sentences = editorContent?.split(/[.!?]+/).filter(Boolean) || [];
+        const avgSentenceLength = sentences.reduce((acc, sentence) => {
+          const words = sentence.split(/\s+/).filter(Boolean).length;
+          return acc + words;
+        }, 0) / sentences.length;
+
+        if (avgSentenceLength >= 10 && avgSentenceLength <= 20) {
+          score += 1;
+        }
+        totalChecks += 1;
+
+        // Check for transition words
+        const transitionWords = ['however', 'moreover', 'furthermore', 'therefore', 'consequently', 'in addition', 'for example', 'in conclusion'];
+        const hasTransitionWords = transitionWords.some(word => 
+          editorContent?.toLowerCase().includes(word)
+        );
+        if (hasTransitionWords) {
+          score += 1;
+        }
+        totalChecks += 1;
+
+        // Check for passive voice
+        const passiveVoicePatterns = [
+          /\b(is|are|was|were|be|been|being)\s+\w+ed\b/i,
+          /\b(has|have|had)\s+been\s+\w+ed\b/i
+        ];
+        const hasPassiveVoice = passiveVoicePatterns.some(pattern => 
+          pattern.test(editorContent || '')
+        );
+        if (!hasPassiveVoice) {
+          score += 1;
+        }
+        totalChecks += 1;
+
+        // Technical SEO Checks
+        const hasMetaTitle = Boolean(formData.article_name);
+        if (hasMetaTitle) {
+          score += 1;
+        }
+        totalChecks += 1;
+
+        const hasMetaDescription = Boolean(formData.description);
+        if (hasMetaDescription) {
+          score += 1;
+        }
+        totalChecks += 1;
+
+        // Check for images with alt text
+        const hasImagesWithAlt = editorContent?.includes('alt="') || false;
+        if (hasImagesWithAlt) {
+          score += 1;
+        }
+        totalChecks += 1;
+
+        // Calculate percentage
+        return Math.round((score / totalChecks) * 100);
+      };
+
+      // Construct updated formData with the correct image URL, editor content, and SEO score
       const imageUrl =
         formData.featured_image_upload ||
         formData.featured_image_library ||
@@ -252,6 +433,7 @@ export default function BlogForm({
         content: editorContent || formData.content || "",
         article_tags: JSON.stringify(selectedTags),
         focus_keyword: formData.focus_keyword || "",
+        seo_score: calculateSEOScore()
       };
 
       console.log("Updated formData:", updatedFormData);
@@ -298,6 +480,7 @@ export default function BlogForm({
           publish_option: "draft",
           scheduled_date: null,
           focus_keyword: "",
+          seo_score: 0
         });
         setEditorContent("");
         setImageSource("upload");
@@ -473,6 +656,19 @@ export default function BlogForm({
         title={isEditing ? "Edit Blog Post" : "Create Blog Post"}
         mode={mode}
         width="max-w-5xl"
+        rightElement={
+          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
+            getScoreBgColor(calculateTotalScore(formData, editorContent))
+          }`}>
+            <span className={`text-sm font-medium ${getScoreColor(calculateTotalScore(formData, editorContent))}`}>
+              Score: {calculateTotalScore(formData, editorContent)}%
+            </span>
+            <Icon 
+              icon={getScoreIcon(calculateTotalScore(formData, editorContent))}
+              className={`w-4 h-4 ${getScoreColor(calculateTotalScore(formData, editorContent))}`}
+            />
+          </div>
+        }
       >
         {loading || isLoadingBlog ? (
           <div className="flex items-center justify-center p-8">
@@ -499,15 +695,44 @@ export default function BlogForm({
               onAddTag={() => setShowAddTag(true)}
             />
 
+            {/* SEO Analysis */}
+            <CollapsibleSection
+              title="SEO Analysis"
+              description="Optimize your content for better search results"
+              icon="heroicons:chart-bar"
+              isCollapsed={isSEOCollapsed}
+              onToggle={() => setIsSEOCollapsed(!isSEOCollapsed)}
+              mode={mode}
+              rightElement={
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
+                  getScoreBgColor(calculateTotalScore(formData, editorContent))
+                }`}>
+                  <span className={`text-sm font-medium ${getScoreColor(calculateTotalScore(formData, editorContent))}`}>
+                    Score: {calculateTotalScore(formData, editorContent)}%
+                  </span>
+                  <Icon 
+                    icon={getScoreIcon(calculateTotalScore(formData, editorContent))}
+                    className={`w-4 h-4 ${getScoreColor(calculateTotalScore(formData, editorContent))}`}
+                  />
+                </div>
+              }
+            >
+              <SEOAccordion 
+                formData={formData} 
+                editorContent={editorContent} 
+                mode={mode}
+              />
+            </CollapsibleSection>
+
             {/* Featured Image */}
-            <div>
-              <label
-                className={`block text-sm font-bold mb-2 ${
-                  mode === "dark" ? "text-gray-300" : "text-gray-700"
-                }`}
-              >
-                Featured Image
-              </label>
+            <CollapsibleSection
+              title="Featured Image"
+              description="Add a featured image for your blog post"
+              icon="heroicons:photo"
+              isCollapsed={isImageCollapsed}
+              onToggle={() => setIsImageCollapsed(!isImageCollapsed)}
+              mode={mode}
+            >
               <div className="space-y-4">
                 <div className="flex items-center space-x-4">
                   <button
@@ -642,9 +867,240 @@ export default function BlogForm({
                   </div>
                 )}
               </div>
-            </div>
+            </CollapsibleSection>
 
-            <div className="flex justify-end gap-4 sticky bottom-0 ">
+            {/* Publishing Options */}
+            <CollapsibleSection
+              title="Publishing Options"
+              description="Configure when and how to publish your blog post"
+              icon="heroicons:clock"
+              isCollapsed={isPublishingCollapsed}
+              onToggle={() => setIsPublishingCollapsed(!isPublishingCollapsed)}
+              mode={mode}
+            >
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Author */}
+                <div className="space-y-2">
+                  <label
+                    className={`flex items-center gap-2 text-sm font-bold ${
+                      mode === "dark" ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    <Icon icon="heroicons:user" className="w-4 h-4" />
+                    Author
+                    <span className="text-red-500">*</span>
+                  </label>
+                  <div className={`px-4 py-2.5 rounded-xl border ${
+                    mode === "dark"
+                      ? "bg-gray-800 border-gray-700 text-gray-400"
+                      : "bg-gray-50 border-gray-300 text-gray-500"
+                  }`}>
+                    {formData.author || "PAAN Admin"}
+                  </div>
+                </div>
+
+                {/* Publish Status */}
+                <div className="space-y-2">
+                  <label
+                    className={`flex items-center gap-2 text-sm font-bold ${
+                      mode === "dark" ? "text-gray-300" : "text-gray-700"
+                    }`}
+                  >
+                    <Icon icon="heroicons:document-check" className="w-4 h-4" />
+                    Publish Status
+                  </label>
+                  <div className="grid grid-cols-3 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => handleInputChange({
+                        target: {
+                          name: 'publish_option',
+                          value: 'draft'
+                        }
+                      })}
+                      className={`p-3 rounded-xl border transition-all duration-200 ${
+                        formData.publish_option === 'draft'
+                          ? mode === "dark"
+                            ? "bg-blue-900/30 border-blue-700 shadow-lg shadow-blue-500/10"
+                            : "bg-blue-50 border-blue-200 shadow-lg shadow-blue-500/10"
+                          : mode === "dark"
+                          ? "bg-gray-800 border-gray-700 hover:bg-gray-700"
+                          : "bg-white border-gray-200 hover:bg-gray-50"
+                      }`}
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <div className={`p-2 rounded-lg ${
+                          formData.publish_option === 'draft'
+                            ? mode === "dark"
+                              ? "bg-blue-900/50"
+                              : "bg-blue-100"
+                            : mode === "dark"
+                            ? "bg-gray-700"
+                            : "bg-gray-100"
+                        }`}>
+                          <Icon 
+                            icon="heroicons:document-text" 
+                            className={`w-5 h-5 ${
+                              formData.publish_option === 'draft'
+                                ? mode === "dark"
+                                  ? "text-blue-400"
+                                  : "text-blue-600"
+                                : mode === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-500"
+                            }`}
+                          />
+                        </div>
+                        <span className={`text-sm font-medium ${
+                          formData.publish_option === 'draft'
+                            ? mode === "dark"
+                              ? "text-blue-400"
+                              : "text-blue-600"
+                            : mode === "dark"
+                            ? "text-gray-300"
+                            : "text-gray-700"
+                        }`}>Draft</span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleInputChange({
+                        target: {
+                          name: 'publish_option',
+                          value: 'publish'
+                        }
+                      })}
+                      className={`p-3 rounded-xl border transition-all duration-200 ${
+                        formData.publish_option === 'publish'
+                          ? mode === "dark"
+                            ? "bg-blue-900/30 border-blue-700 shadow-lg shadow-blue-500/10"
+                            : "bg-blue-50 border-blue-200 shadow-lg shadow-blue-500/10"
+                          : mode === "dark"
+                          ? "bg-gray-800 border-gray-700 hover:bg-gray-700"
+                          : "bg-white border-gray-200 hover:bg-gray-50"
+                      }`}
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <div className={`p-2 rounded-lg ${
+                          formData.publish_option === 'publish'
+                            ? mode === "dark"
+                              ? "bg-blue-900/50"
+                              : "bg-blue-100"
+                            : mode === "dark"
+                            ? "bg-gray-700"
+                            : "bg-gray-100"
+                        }`}>
+                          <Icon 
+                            icon="heroicons:check-circle" 
+                            className={`w-5 h-5 ${
+                              formData.publish_option === 'publish'
+                                ? mode === "dark"
+                                  ? "text-blue-400"
+                                  : "text-blue-600"
+                                : mode === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-500"
+                            }`}
+                          />
+                        </div>
+                        <span className={`text-sm font-medium ${
+                          formData.publish_option === 'publish'
+                            ? mode === "dark"
+                              ? "text-blue-400"
+                              : "text-blue-600"
+                            : mode === "dark"
+                            ? "text-gray-300"
+                            : "text-gray-700"
+                        }`}>Publish Now</span>
+                      </div>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleInputChange({
+                        target: {
+                          name: 'publish_option',
+                          value: 'schedule'
+                        }
+                      })}
+                      className={`p-3 rounded-xl border transition-all duration-200 ${
+                        formData.publish_option === 'schedule'
+                          ? mode === "dark"
+                            ? "bg-blue-900/30 border-blue-700 shadow-lg shadow-blue-500/10"
+                            : "bg-blue-50 border-blue-200 shadow-lg shadow-blue-500/10"
+                          : mode === "dark"
+                          ? "bg-gray-800 border-gray-700 hover:bg-gray-700"
+                          : "bg-white border-gray-200 hover:bg-gray-50"
+                      }`}
+                    >
+                      <div className="flex flex-col items-center gap-2">
+                        <div className={`p-2 rounded-lg ${
+                          formData.publish_option === 'schedule'
+                            ? mode === "dark"
+                              ? "bg-blue-900/50"
+                              : "bg-blue-100"
+                            : mode === "dark"
+                            ? "bg-gray-700"
+                            : "bg-gray-100"
+                        }`}>
+                          <Icon 
+                            icon="heroicons:clock" 
+                            className={`w-5 h-5 ${
+                              formData.publish_option === 'schedule'
+                                ? mode === "dark"
+                                  ? "text-blue-400"
+                                  : "text-blue-600"
+                                : mode === "dark"
+                                ? "text-gray-400"
+                                : "text-gray-500"
+                            }`}
+                          />
+                        </div>
+                        <span className={`text-sm font-medium ${
+                          formData.publish_option === 'schedule'
+                            ? mode === "dark"
+                              ? "text-blue-400"
+                              : "text-blue-600"
+                            : mode === "dark"
+                            ? "text-gray-300"
+                            : "text-gray-700"
+                        }`}>Schedule</span>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Date Fields - Only show when schedule is selected */}
+              {formData.publish_option === 'schedule' && (
+                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+                  <div className="space-y-2">
+                    <label
+                      className={`flex items-center gap-2 text-sm font-medium ${
+                        mode === "dark" ? "text-gray-300" : "text-gray-700"
+                      }`}
+                    >
+                      <Icon icon="heroicons:calendar" className="w-4 h-4" />
+                      Schedule Date
+                    </label>
+                    <input
+                      type="datetime-local"
+                      name="scheduled_date"
+                      value={formData.scheduled_date || ""}
+                      onChange={handleInputChange}
+                      className={`w-full px-4 py-2.5 rounded-xl border ${
+                        mode === "dark"
+                          ? "bg-gray-800 border-gray-700 text-gray-100"
+                          : "bg-white border-gray-300 text-gray-900"
+                      } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
+                    />
+                  </div>
+                </div>
+              )}
+            </CollapsibleSection>
+
+            <div className="flex justify-end gap-4 sticky bottom-0">
               <button
                 type="button"
                 onClick={(e) => {

@@ -42,7 +42,7 @@ export default function useAuthSession() {
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        console.log("[useAuthSession] Auth State Change:", { event, session });
+        // console.log("[useAuthSession] Auth State Change:", { event, session });
         if (event === "SIGNED_OUT" || !session) {
           router.push("/hr/login");
         }

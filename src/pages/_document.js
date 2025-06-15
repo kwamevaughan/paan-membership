@@ -6,13 +6,13 @@ class MyDocument extends Document {
     return (
       <Html lang="en">
         <Head>
-          {/* Preload Google Fonts for Questrial */}
+          {/* Google Fonts for Questrial */}
           <link
-            rel="preload"
+            rel="preload stylesheet"
             href="https://fonts.googleapis.com/css2?family=Questrial&display=swap"
-            as="font"
-            type="font/woff2"
+            as="style"
             crossOrigin="anonymous"
+            onLoad="this.rel='stylesheet'"
           />
 
           {/* Google tag (gtag.js) */}
@@ -34,14 +34,8 @@ class MyDocument extends Document {
             }}
           />
 
-          {/* Add Google Fonts for Questrial */}
-          <link
-            href="https://fonts.googleapis.com/css2?family=Questrial&display=swap"
-            rel="stylesheet"
-          />
-
           {/* Favicon Links */}
-          <link rel="icon" href="/favicon.png" />
+          <link rel="icon" href="/favicon.ico" />
           <link
             rel="apple-touch-icon"
             sizes="180x180"

@@ -4,10 +4,26 @@ import { createClient } from "@supabase/supabase-js";
 
 config();
 
+// Validate environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('Missing required environment variables:', {
+    supabaseUrl: !!supabaseUrl,
+    supabaseServiceKey: !!supabaseServiceKey
+  });
+}
+
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-  { auth: { autoRefreshToken: false, persistSession: false } }
+  supabaseUrl,
+  supabaseServiceKey,
+  { 
+    auth: { 
+      autoRefreshToken: false, 
+      persistSession: false 
+    }
+  }
 );
 
 export default async function handler(req, res) {
@@ -26,6 +42,7 @@ export default async function handler(req, res) {
     const { data: users, error: listError } =
       await supabase.auth.admin.listUsers();
     if (listError) {
+      console.error('List users error:', listError);
       throw new Error(`Failed to list users: ${listError.message}`);
     }
 
@@ -55,6 +72,7 @@ export default async function handler(req, res) {
         });
 
       if (createError) {
+        console.error('Create user error:', createError);
         throw new Error(`Failed to create user: ${createError.message}`);
       }
 
@@ -84,6 +102,7 @@ export default async function handler(req, res) {
       );
 
       if (updateError) {
+        console.error('Update password error:', updateError);
         throw new Error(`Failed to update password: ${updateError.message}`);
       }
 

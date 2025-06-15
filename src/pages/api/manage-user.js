@@ -1,6 +1,8 @@
 // pages/api/manage-user.js
-require("dotenv").config();
-const { createClient } = require("@supabase/supabase-js");
+import { config } from 'dotenv';
+import { createClient } from "@supabase/supabase-js";
+
+config();
 
 const supabase = createClient(
   process.env.SUPABASE_URL,

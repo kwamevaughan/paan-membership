@@ -23,6 +23,7 @@ import countriesGeoJson from "../../data/countries.js";
 import OverviewBoxes from "@/components/OverviewBoxes";
 import RecentActivities from "@/components/RecentActivities";
 import SubscribersLog from "@/components/SubscribersLog";
+import { getHROverviewProps } from "../../../utils/getPropsUtils";
 
 const CountryChart = dynamic(() => import("@/components/CountryChart"), {
   ssr: false,
@@ -40,6 +41,7 @@ export default function HROverview({
   initialJobOpenings,
   initialQuestions,
   breadcrumbs,
+  userName,
 }) {
   const { subscribers, loading: subscribersLoading } = useSubscribers();
   const [candidates, setCandidates] = useState(initialCandidates || []);
@@ -242,6 +244,7 @@ export default function HROverview({
               }
               mode={mode}
               isMobile={isMobile}
+              user={{ name: userName }}
             />
 
             <OverviewBoxes
@@ -334,85 +337,4 @@ export default function HROverview({
   );
 }
 
-export async function getServerSideProps({ req, res }) {
-  console.log(
-    "[getServerSideProps] Starting session check at",
-    new Date().toISOString()
-  );
-  try {
-    const supabaseServer = createSupabaseServerClient(req, res);
-
-    const {
-      data: { session },
-      error: sessionError,
-    } = await supabaseServer.auth.getSession();
-
-    console.log("[getServerSideProps] Session Response:", {
-      session: session ? "present" : null,
-      sessionError: sessionError ? sessionError.message : null,
-    });
-
-    if (sessionError || !session) {
-      console.log(
-        "[getServerSideProps] No valid Supabase session, redirecting to login"
-      );
-      return {
-        redirect: {
-          destination: "/hr/login",
-          permanent: false,
-        },
-      };
-    }
-
-    const { data: hrUser, error: hrUserError } = await supabaseServer
-      .from("hr_users")
-      .select("id")
-      .eq("id", session.user.id)
-      .single();
-    console.log("[getServerSideProps] HR User Check:", {
-      hrUser,
-      hrUserError: hrUserError ? hrUserError.message : null,
-    });
-
-    if (hrUserError || !hrUser) {
-      console.error(
-        "[getServerSideProps] HR User Error:",
-        hrUserError?.message || "User not in hr_users"
-      );
-      await supabaseServer.auth.signOut();
-      return {
-        redirect: {
-          destination: "/hr/login",
-          permanent: false,
-        },
-      };
-    }
-
-    console.time("fetchHRData");
-    const data = await fetchHRData({
-      supabaseClient: supabaseServer,
-      fetchCandidates: true,
-      fetchQuestions: true,
-    });
-    console.timeEnd("fetchHRData");
-    return {
-      props: {
-        initialCandidates: data.initialCandidates || [],
-        initialJobOpenings: data.initialJobOpenings || [],
-        initialQuestions: data.initialQuestions || [],
-        breadcrumbs: [
-          { label: "Dashboard", href: "/admin" },
-          { label: "Overview" },
-        ],
-      },
-    };
-  } catch (error) {
-    console.error("[getServerSideProps] Error:", error.message);
-    return {
-      redirect: {
-        destination: "/hr/login",
-        permanent: false,
-      },
-    };
-  }
-}
+export { getHROverviewProps as getServerSideProps };

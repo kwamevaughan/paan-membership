@@ -7,6 +7,7 @@ export default function WelcomeCard({
   pendingReviews = 0,
   mode,
   isMobile,
+  user,
 }) {
   return (
     <div className="relative mt-6 mb-10 group w-full">
@@ -70,7 +71,7 @@ export default function WelcomeCard({
                   mode === "dark" ? "text-white" : "text-slate-900"
                 }`}
               >
-                Welcome back, Admin! 👋
+                Welcome back, {user.name}! 👋
               </h2>
 
               <p

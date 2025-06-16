@@ -666,3 +666,70 @@ export async function getAdminOffersProps({ req, res }) {
     };
   }
 }
+
+export async function getHROverviewProps({ req, res }) {
+  console.log(
+    "[getHROverviewProps] Starting at",
+    new Date().toISOString()
+  );
+
+  // Authenticate and authorize
+  const authResult = await withAuth(req, res);
+  if (authResult.redirect) {
+    return authResult;
+  }
+
+  const { supabaseServer, session } = authResult;
+
+  try {
+    // Fetch hr user data
+    const { data: hrUser, error: hrUserError } = await supabaseServer
+      .from("hr_users")
+      .select("id, name")
+      .eq("id", session.user.id)
+      .single();
+
+    if (hrUserError || !hrUser) {
+      console.error(
+        "[getHROverviewProps] HR User Error:",
+        hrUserError?.message || "User not in hr_users"
+      );
+      await supabaseServer.auth.signOut();
+      return {
+        redirect: {
+          destination: "/hr/login",
+          permanent: false,
+        },
+      };
+    }
+
+    console.time("fetchHRData");
+    const data = await fetchHRData({
+      supabaseClient: supabaseServer,
+      fetchCandidates: true,
+      fetchQuestions: true,
+    });
+    console.timeEnd("fetchHRData");
+
+    return {
+      props: {
+        initialCandidates: data.initialCandidates || [],
+        initialJobOpenings: data.initialJobOpenings || [],
+        initialQuestions: data.initialQuestions || [],
+        breadcrumbs: [
+          { label: "Dashboard", href: "/admin" },
+          { label: "Overview" },
+        ],
+        userName: hrUser.name,
+      },
+    };
+  } catch (error) {
+    console.error("[getHROverviewProps] Error:", error.message);
+    return {
+      redirect: {
+        destination: "/hr/login",
+        permanent: false,
+      },
+    };
+  }
+}

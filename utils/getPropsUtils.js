@@ -1,6 +1,75 @@
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { fetchHRData } from "utils/hrData";
 
+// Common error handler for database operations
+const handleDBError = (error, context) => {
+  console.error(`[${context}] Error:`, error.message);
+  return {
+    redirect: {
+      destination: "/hr/login",
+      permanent: false,
+    },
+  };
+};
+
+// Common props structure with breadcrumbs
+const createProps = (data, breadcrumbs) => ({
+  props: {
+    ...data,
+    breadcrumbs: breadcrumbs || [
+      { label: "Dashboard", href: "/admin" },
+      { label: "Overview" },
+    ],
+  },
+});
+
+// Common function to fetch HR user data
+const fetchHRUser = async (supabaseServer, userId) => {
+  const { data: hrUser, error: hrUserError } = await supabaseServer
+    .from("hr_users")
+    .select("id, name")
+    .eq("id", userId)
+    .single();
+
+  if (hrUserError || !hrUser) {
+    throw new Error(hrUserError?.message || "User not in hr_users");
+  }
+
+  return hrUser;
+};
+
+// Common function to fetch candidates map
+const fetchCandidatesMap = async (supabaseServer) => {
+  const { data: candidatesData, error: candidatesError } = await supabaseServer
+    .from("candidates")
+    .select("id, auth_user_id, primaryContactName");
+
+  if (candidatesError) {
+    throw new Error(`Failed to fetch candidates: ${candidatesError.message}`);
+  }
+
+  return candidatesData.reduce((acc, candidate) => {
+    if (candidate.auth_user_id) {
+      acc[candidate.auth_user_id] = candidate.primaryContactName || "Unknown";
+    }
+    return acc;
+  }, {});
+};
+
+// Common function to fetch tiers
+const fetchTiers = async (supabaseServer) => {
+  const { data: tiers, error: tiersError } = await supabaseServer
+    .from("tiers")
+    .select("*")
+    .order("id");
+
+  if (tiersError) {
+    throw new Error(`Failed to fetch tiers: ${tiersError.message}`);
+  }
+
+  return tiers || [];
+};
+
 export async function withAuth(req, res, options = {}) {
   const { redirectTo = "/hr/login" } = options;
   console.log(
@@ -10,19 +79,12 @@ export async function withAuth(req, res, options = {}) {
   try {
     const supabaseServer = createSupabaseServerClient(req, res);
 
-    // Check session
     const {
       data: { session },
       error: sessionError,
     } = await supabaseServer.auth.getSession();
 
-    console.log("[withAuth] Session Response:", {
-      session: session ? "present" : null,
-      sessionError: sessionError ? sessionError.message : null,
-    });
-
     if (sessionError || !session) {
-      console.log("[withAuth] No valid Supabase session, redirecting to login");
       return {
         redirect: {
           destination: redirectTo,
@@ -31,33 +93,8 @@ export async function withAuth(req, res, options = {}) {
       };
     }
 
-    // Verify user is in hr_users
-    const { data: hrUser, error: hrUserError } = await supabaseServer
-      .from("hr_users")
-      .select("id")
-      .eq("id", session.user.id)
-      .single();
-
-    console.log("[withAuth] HR User Check:", {
-      hrUser,
-      hrUserError: hrUserError ? hrUserError.message : null,
-    });
-
-    if (hrUserError || !hrUser) {
-      console.error(
-        "[withAuth] HR User Error:",
-        hrUserError?.message || "User not in hr_users"
-      );
-      await supabaseServer.auth.signOut();
-      return {
-        redirect: {
-          destination: redirectTo,
-          permanent: false,
-        },
-      };
-    }
-
-    return { session, supabaseServer };
+    const hrUser = await fetchHRUser(supabaseServer, session.user.id);
+    return { session, supabaseServer, hrUser };
   } catch (error) {
     console.error("[withAuth] Error:", error.message);
     return {
@@ -69,79 +106,65 @@ export async function withAuth(req, res, options = {}) {
   }
 }
 
-export async function getAdminBusinessOpportunitiesProps({ req, res }) {
-  console.log(
-    "[getAdminBusinessOpportunitiesProps] Starting at",
-    new Date().toISOString()
-  );
-
-  // Authenticate and authorize
-  const authResult = await withAuth(req, res);
-  if (authResult.redirect) {
-    return authResult;
-  }
-
-  const { supabaseServer } = authResult;
+export async function getHROverviewProps({ req, res }) {
+  console.log("[getHROverviewProps] Starting at", new Date().toISOString());
 
   try {
-    // Fetch tiers
-    const { data: tiersData, error: tiersError } = await supabaseServer
-      .from("candidates")
-      .select("selected_tier")
-      .neq("selected_tier", null);
+    const authResult = await withAuth(req, res);
+    if (authResult.redirect) return authResult;
 
-    if (tiersError) {
-      console.error(
-        "[getAdminBusinessOpportunitiesProps] Tiers Error:",
-        tiersError.message
-      );
-      throw new Error(`Failed to fetch tiers: ${tiersError.message}`);
-    }
+    const { supabaseServer, hrUser } = authResult;
 
-    // Get unique, sorted tiers
-    const tiers = [
-      ...new Set(
-        tiersData
-          .map((item) => item.selected_tier)
-          .filter(
-            (tier) => tier && typeof tier === "string" && tier.trim() !== ""
-          )
-      ),
-    ].sort();
+    console.time("fetchHRData");
+    const data = await fetchHRData({
+      supabaseClient: supabaseServer,
+      fetchCandidates: true,
+      fetchQuestions: true,
+    });
+    console.timeEnd("fetchHRData");
 
-    return {
-      props: {
-        tiers,
-        breadcrumbs: [
-          { label: "Dashboard", href: "/admin" },
-          { label: "Business Opportunities" },
-        ],
-      },
-    };
+    return createProps({
+      initialCandidates: data.initialCandidates || [],
+      initialJobOpenings: data.initialJobOpenings || [],
+      initialQuestions: data.initialQuestions || [],
+      userName: hrUser.name,
+    });
   } catch (error) {
-    console.error("[getAdminBusinessOpportunitiesProps] Error:", error.message);
-    return {
-      redirect: {
-        destination: "/hr/login",
-        permanent: false,
-      },
-    };
+    return handleDBError(error, "getHROverviewProps");
+  }
+}
+
+export async function getAdminBusinessOpportunitiesProps({ req, res }) {
+  console.log("[getAdminBusinessOpportunitiesProps] Starting at", new Date().toISOString());
+
+  try {
+    const authResult = await withAuth(req, res);
+    if (authResult.redirect) return authResult;
+
+    const { supabaseServer } = authResult;
+    const tiers = await fetchTiers(supabaseServer);
+
+    return createProps(
+      { tiers },
+      [
+        { label: "Dashboard", href: "/admin" },
+        { label: "Business Opportunities" },
+      ]
+    );
+  } catch (error) {
+    return handleDBError(error, "getAdminBusinessOpportunitiesProps");
   }
 }
 
 export async function getAdminBusinessUpdatesProps({ req, res }) {
   console.log("[getAdminBusinessUpdatesProps] Starting at", new Date().toISOString());
 
-  // Authenticate and authorize
-  const authResult = await withAuth(req, res);
-  if (authResult.redirect) {
-    return authResult;
-  }
-
-  const { supabaseServer } = authResult;
-
   try {
-    // Fetch updates
+    const authResult = await withAuth(req, res);
+    if (authResult.redirect) return authResult;
+
+    const { supabaseServer } = authResult;
+
     const { data: updatesData, error: updatesError } = await supabaseServer
       .from("updates")
       .select(
@@ -150,30 +173,18 @@ export async function getAdminBusinessUpdatesProps({ req, res }) {
       .order("created_at", { ascending: false });
 
     if (updatesError) {
-      console.error(
-        "[getAdminBusinessUpdatesProps] Updates Error:",
-        updatesError.message
-      );
       throw new Error(`Failed to fetch updates: ${updatesError.message}`);
     }
 
-    return {
-      props: {
-        initialUpdates: updatesData || [],
-        breadcrumbs: [
-          { label: "Dashboard", href: "/admin" },
-          { label: "Updates" },
-        ],
-      },
-    };
+    return createProps(
+      { initialUpdates: updatesData || [] },
+      [
+        { label: "Dashboard", href: "/admin" },
+        { label: "Updates" },
+      ]
+    );
   } catch (error) {
-    console.error("[getAdminUpdatesProps] Error:", error.message);
-    return {
-      redirect: {
-        destination: "/hr/login",
-        permanent: false,
-      },
-    };
+    return handleDBError(error, "getAdminBusinessUpdatesProps");
   }
 }
 
@@ -199,36 +210,19 @@ export async function getInterviewPageProps({ req, res, query }) {
 
     if (error) throw error;
 
-    return {
-      props: {
-        initialQuestions: questions || [],
-        job_type: normalizedJobType,
-        opening: query.opening ? decodeURIComponent(query.opening) : "",
-        opening_id: query.opening_id
-          ? decodeURIComponent(query.opening_id)
-          : "",
-      },
-    };
+    return createProps({
+      initialQuestions: questions || [],
+      job_type: normalizedJobType,
+      opening: query.opening ? decodeURIComponent(query.opening) : "",
+      opening_id: query.opening_id ? decodeURIComponent(query.opening_id) : "",
+    });
   } catch (error) {
-    console.error("[getInterviewPageProps] Error fetching questions:", error);
-    return {
-      props: {
-        initialQuestions: [],
-        job_type: normalizedJobType,
-        opening: query.opening ? decodeURIComponent(query.opening) : "",
-        opening_id: query.opening_id
-          ? decodeURIComponent(query.opening_id)
-          : "",
-      },
-    };
+    return handleDBError(error, "getInterviewPageProps");
   }
 }
 
 export async function getAgenciesPageStaticProps() {
-  console.log(
-    "[getAgenciesPageStaticProps] Starting at",
-    new Date().toISOString()
-  );
+  console.log("[getAgenciesPageStaticProps] Starting at", new Date().toISOString());
 
   const supabaseServer = createSupabaseServerClient();
 
@@ -245,27 +239,15 @@ export async function getAgenciesPageStaticProps() {
       props: {
         initialOpenings: data || [],
       },
-      revalidate: 600, // Revalidate every 10 minutes
-    };
-  } catch (error) {
-    console.error(
-      "[getAgenciesPageStaticProps] Error fetching openings:",
-      error
-    );
-    return {
-      props: {
-        initialOpenings: [],
-      },
       revalidate: 600,
     };
+  } catch (error) {
+    return handleDBError(error, "getAgenciesPageStaticProps");
   }
 }
 
 export async function getFreelancersPageStaticProps() {
-  console.log(
-    "[getFreelancersPageStaticProps] Starting at",
-    new Date().toISOString()
-  );
+  console.log("[getFreelancersPageStaticProps] Starting at", new Date().toISOString());
 
   const supabaseServer = createSupabaseServerClient();
 
@@ -282,34 +264,22 @@ export async function getFreelancersPageStaticProps() {
       props: {
         initialOpenings: data || [],
       },
-      revalidate: 600, // Revalidate every 10 minutes
-    };
-  } catch (error) {
-    console.error(
-      "[getFreelancersPageStaticProps] Error fetching openings:",
-      error
-    );
-    return {
-      props: {
-        initialOpenings: [],
-      },
       revalidate: 600,
     };
+  } catch (error) {
+    return handleDBError(error, "getFreelancersPageStaticProps");
   }
 }
 
 export async function getInterviewQuestionsProps({ req, res }) {
   console.log("[getInterviewQuestionsProps] Starting at", new Date().toISOString());
 
-  // Authenticate and authorize
-  const authResult = await withAuth(req, res);
-  if (authResult.redirect) {
-    return authResult;
-  }
-
-  const { supabaseServer } = authResult;
-
   try {
+    const authResult = await withAuth(req, res);
+    if (authResult.redirect) return authResult;
+
+    const { supabaseServer } = authResult;
+
     const { data: questions, error: questionsError } = await supabaseServer
       .from("interview_questions")
       .select(
@@ -326,39 +296,30 @@ export async function getInterviewQuestionsProps({ req, res }) {
 
     if (catError) throw catError;
 
-    return {
-      props: {
+    return createProps(
+      {
         initialQuestions: questions || [],
         initialCategories: categories || [],
-        breadcrumbs: [
-          { label: "Dashboard", href: "/admin" },
-          { label: "Interview Questions" },
-        ],
       },
-    };
+      [
+        { label: "Dashboard", href: "/admin" },
+        { label: "Interview Questions" },
+      ]
+    );
   } catch (error) {
-    console.error("[getInterviewQuestionsProps] Error:", error.message);
-    return {
-      redirect: {
-        destination: "/hr/login",
-        permanent: false,
-      },
-    };
+    return handleDBError(error, "getInterviewQuestionsProps");
   }
 }
 
 export async function getApplicantsProps({ req, res }) {
   console.log("[getApplicantsProps] Starting at", new Date().toISOString());
 
-  // Authenticate and authorize
-  const authResult = await withAuth(req, res);
-  if (authResult.redirect) {
-    return authResult;
-  }
-
-  const { supabaseServer } = authResult;
-
   try {
+    const authResult = await withAuth(req, res);
+    if (authResult.redirect) return authResult;
+
+    const { supabaseServer } = authResult;
+
     console.time("fetchHRData");
     const data = await fetchHRData({
       supabaseClient: supabaseServer,
@@ -367,92 +328,52 @@ export async function getApplicantsProps({ req, res }) {
     });
     console.timeEnd("fetchHRData");
 
-    return {
-      props: {
+    return createProps(
+      {
         initialCandidates: data.initialCandidates || [],
         initialQuestions: data.initialQuestions || [],
-        breadcrumbs: [
-          { label: "Dashboard", href: "/admin" },
-          { label: "Applicants" },
-        ],
       },
-    };
+      [
+        { label: "Dashboard", href: "/admin" },
+        { label: "Applicants" },
+      ]
+    );
   } catch (error) {
-    console.error("[getApplicantsProps] Error:", error.message);
-    return {
-      redirect: {
-        destination: "/hr/login",
-        permanent: false,
-      },
-    };
+    return handleDBError(error, "getApplicantsProps");
   }
 }
 
 export async function getAdminMarketIntelProps({ req, res }) {
   console.log("[getAdminMarketIntelProps] Starting at", new Date().toISOString());
 
-  // Authenticate and authorize
-  const authResult = await withAuth(req, res);
-  if (authResult.redirect) {
-    return authResult;
-  }
-
-  const { supabaseServer } = authResult;
-
   try {
-    // Fetch candidates
-    const { data: candidatesData, error: candidatesError } = await supabaseServer
-      .from("candidates")
-      .select("id, auth_user_id, primaryContactName");
+    const authResult = await withAuth(req, res);
+    if (authResult.redirect) return authResult;
 
-    if (candidatesError) {
-      console.error(
-        "[getAdminMarketIntelProps] Candidates Error:",
-        candidatesError.message
-      );
-      throw new Error(`Failed to fetch candidates: ${candidatesError.message}`);
-    }
+    const { supabaseServer } = authResult;
+    const candidatesMap = await fetchCandidatesMap(supabaseServer);
 
-    const candidatesMap = candidatesData.reduce((acc, candidate) => {
-      if (candidate.auth_user_id) {
-        acc[candidate.auth_user_id] = candidate.primaryContactName || "Unknown";
-      }
-      return acc;
-    }, {});
-
-    return {
-      props: {
-        initialCandidates: candidatesMap,
-        breadcrumbs: [
-          { label: "HR Dashboard", href: "/hr/dashboard" },
-          { label: "Market Intel" },
-        ],
-      },
-    };
+    return createProps(
+      { initialCandidates: candidatesMap },
+      [
+        { label: "HR Dashboard", href: "/hr/dashboard" },
+        { label: "Market Intel" },
+      ]
+    );
   } catch (error) {
-    console.error("[getAdminMarketIntelProps] Error:", error.message);
-    return {
-      redirect: {
-        destination: "/hr/login",
-        permanent: false,
-      },
-    };
+    return handleDBError(error, "getAdminMarketIntelProps");
   }
 }
 
 export async function getAdminBlogProps({ req, res }) {
   console.log("[getAdminBlogProps] Starting at", new Date().toISOString());
 
-  // Authenticate and authorize
-  const authResult = await withAuth(req, res);
-  if (authResult.redirect) {
-    return authResult;
-  }
-
-  const { supabaseServer, session } = authResult;
-
   try {
-    // Fetch blogs with their categories and tags
+    const authResult = await withAuth(req, res);
+    if (authResult.redirect) return authResult;
+
+    const { supabaseServer, hrUser } = authResult;
+
     const { data: blogs, error: blogsError } = await supabaseServer
       .from("blogs")
       .select(`
@@ -465,21 +386,7 @@ export async function getAdminBlogProps({ req, res }) {
       `)
       .order("created_at", { ascending: false });
 
-    if (blogsError) {
-      console.error("Error fetching blogs:", blogsError);
-      return {
-        props: {
-          initialBlogs: [],
-          categories: [],
-          tags: [],
-          breadcrumbs: [
-            { name: "Home", href: "/admin" },
-            { name: "Blog", href: "/admin/blog" },
-          ],
-          hrUser: null,
-        },
-      };
-    }
+    if (blogsError) throw blogsError;
 
     const transformedBlogs = blogs.map((blog) => ({
       ...blog,
@@ -488,248 +395,87 @@ export async function getAdminBlogProps({ req, res }) {
       author: blog.author_details?.name || blog.author_details?.username || "PAAN Admin"
     }));
 
-    // Fetch all categories
     const { data: categoriesData, error: categoriesError } = await supabaseServer
       .from("blog_categories")
       .select("id, name, slug")
       .order("name");
 
-    if (categoriesError) {
-      console.error(
-        "[getAdminBlogProps] Categories Error:",
-        categoriesError.message
-      );
-      throw new Error(`Failed to fetch categories: ${categoriesError.message}`);
-    }
+    if (categoriesError) throw categoriesError;
 
-    // Fetch all tags
     const { data: tagsData, error: tagsError } = await supabaseServer
       .from("blog_tags")
       .select("id, name, slug")
       .order("name");
 
-    if (tagsError) {
-      console.error(
-        "[getAdminBlogProps] Tags Error:",
-        tagsError.message
-      );
-      throw new Error(`Failed to fetch tags: ${tagsError.message}`);
-    }
+    if (tagsError) throw tagsError;
 
-    // Fetch hr user data
-    const { data: hrUser, error: hrUserError } = await supabaseServer
-      .from("hr_users")
-      .select("id, name, username")
-      .eq("id", session.user.id)
-      .single();
-
-    if (hrUserError) {
-      console.error(
-        "[getAdminBlogProps] HR User Error:",
-        hrUserError.message
-      );
-      throw new Error(`Failed to fetch HR user: ${hrUserError.message}`);
-    }
-
-    return {
-      props: {
+    return createProps(
+      {
         initialBlogs: transformedBlogs || [],
         categories: categoriesData || [],
         tags: tagsData || [],
-        hrUser: hrUser,
-        breadcrumbs: [
-          { label: "Dashboard", href: "/admin" },
-          { label: "Blog" },
-        ],
+        hrUser,
       },
-    };
+      [
+        { label: "Dashboard", href: "/admin" },
+        { label: "Blog" },
+      ]
+    );
   } catch (error) {
-    console.error("[getAdminBlogProps] Error:", error.message);
-    return {
-      redirect: {
-        destination: "/hr/login",
-        permanent: false,
-      },
-    };
+    return handleDBError(error, "getAdminBlogProps");
   }
 }
 
 export async function getAdminEventsProps({ req, res }) {
-  // Authenticate and authorize
-  const authResult = await withAuth(req, res, { redirectTo: "/hr/login" });
-  if (authResult.redirect) {
-    return authResult;
+  console.log("[getAdminEventsProps] Starting at", new Date().toISOString());
+
+  try {
+    const authResult = await withAuth(req, res, { redirectTo: "/hr/login" });
+    if (authResult.redirect) return authResult;
+
+    const { supabaseServer } = authResult;
+    const tiers = await fetchTiers(supabaseServer);
+
+    return createProps({ tiers });
+  } catch (error) {
+    return handleDBError(error, "getAdminEventsProps");
   }
-
-  const { supabaseServer } = authResult;
-
-  // Fetch tiers
-  const { data: tiers, error: tiersError } = await supabaseServer
-    .from("tiers")
-    .select("*")
-    .order("id");
-
-  if (tiersError) {
-    return {
-      props: {
-        tiers: [],
-      },
-    };
-  }
-
-  return {
-    props: {
-      tiers: tiers || [],
-    },
-  };
 }
 
 export async function getAdminResourcesProps({ req, res }) {
-  // Authenticate and authorize
-  const authResult = await withAuth(req, res, { redirectTo: "/hr/login" });
-  if (authResult.redirect) {
-    return authResult;
+  console.log("[getAdminResourcesProps] Starting at", new Date().toISOString());
+
+  try {
+    const authResult = await withAuth(req, res, { redirectTo: "/hr/login" });
+    if (authResult.redirect) return authResult;
+
+    const { supabaseServer } = authResult;
+    const tiers = await fetchTiers(supabaseServer);
+
+    return createProps({ tiers });
+  } catch (error) {
+    return handleDBError(error, "getAdminResourcesProps");
   }
-
-  const { supabaseServer } = authResult;
-
-  // Fetch tiers
-  const { data: tiers, error: tiersError } = await supabaseServer
-    .from("tiers")
-    .select("*")
-    .order("id");
-
-  if (tiersError) {
-    return {
-      props: {
-        tiers: [],
-      },
-    };
-  }
-
-  return {
-    props: {
-      tiers: tiers || [],
-    },
-  };
 }
-
 
 export async function getAdminOffersProps({ req, res }) {
   console.log("[getAdminOffersProps] Starting at", new Date().toISOString());
 
-  // Authenticate and authorize
-  const authResult = await withAuth(req, res);
-  if (authResult.redirect) {
-    return authResult;
-  }
-
-  const { supabaseServer } = authResult;
-
   try {
-    // Fetch candidates
-    const { data: candidatesData, error: candidatesError } = await supabaseServer
-      .from("candidates")
-      .select("id, auth_user_id, primaryContactName");
+    const authResult = await withAuth(req, res);
+    if (authResult.redirect) return authResult;
 
-    if (candidatesError) {
-      console.error(
-        "[getAdminOffersProps] Candidates Error:",
-        candidatesError.message
-      );
-      throw new Error(`Failed to fetch candidates: ${candidatesError.message}`);
-    }
+    const { supabaseServer } = authResult;
+    const candidatesMap = await fetchCandidatesMap(supabaseServer);
 
-    const candidatesMap = candidatesData.reduce((acc, candidate) => {
-      if (candidate.auth_user_id) {
-        acc[candidate.auth_user_id] = candidate.primaryContactName || "Unknown";
-      }
-      return acc;
-    }, {});
-
-    return {
-      props: {
-        initialCandidates: candidatesMap,
-        breadcrumbs: [
-          { label: "Dashboard", href: "/admin" },
-          { label: "Offers" },
-        ],
-      },
-    };
+    return createProps(
+      { initialCandidates: candidatesMap },
+      [
+        { label: "Dashboard", href: "/admin" },
+        { label: "Offers" },
+      ]
+    );
   } catch (error) {
-    console.error("[getAdminOffersProps] Error:", error.message);
-    return {
-      redirect: {
-        destination: "/hr/login",
-        permanent: false,
-      },
-    };
-  }
-}
-
-export async function getHROverviewProps({ req, res }) {
-  console.log(
-    "[getHROverviewProps] Starting at",
-    new Date().toISOString()
-  );
-
-  // Authenticate and authorize
-  const authResult = await withAuth(req, res);
-  if (authResult.redirect) {
-    return authResult;
-  }
-
-  const { supabaseServer, session } = authResult;
-
-  try {
-    // Fetch hr user data
-    const { data: hrUser, error: hrUserError } = await supabaseServer
-      .from("hr_users")
-      .select("id, name")
-      .eq("id", session.user.id)
-      .single();
-
-    if (hrUserError || !hrUser) {
-      console.error(
-        "[getHROverviewProps] HR User Error:",
-        hrUserError?.message || "User not in hr_users"
-      );
-      await supabaseServer.auth.signOut();
-      return {
-        redirect: {
-          destination: "/hr/login",
-          permanent: false,
-        },
-      };
-    }
-
-    console.time("fetchHRData");
-    const data = await fetchHRData({
-      supabaseClient: supabaseServer,
-      fetchCandidates: true,
-      fetchQuestions: true,
-    });
-    console.timeEnd("fetchHRData");
-
-    return {
-      props: {
-        initialCandidates: data.initialCandidates || [],
-        initialJobOpenings: data.initialJobOpenings || [],
-        initialQuestions: data.initialQuestions || [],
-        breadcrumbs: [
-          { label: "Dashboard", href: "/admin" },
-          { label: "Overview" },
-        ],
-        userName: hrUser.name,
-      },
-    };
-  } catch (error) {
-    console.error("[getHROverviewProps] Error:", error.message);
-    return {
-      redirect: {
-        destination: "/hr/login",
-        permanent: false,
-      },
-    };
+    return handleDBError(error, "getAdminOffersProps");
   }
 }

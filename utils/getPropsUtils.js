@@ -141,11 +141,8 @@ export async function getAdminBusinessOpportunitiesProps({ req, res }) {
     const authResult = await withAuth(req, res);
     if (authResult.redirect) return authResult;
 
-    const { supabaseServer } = authResult;
-    const tiers = await fetchTiers(supabaseServer);
-
     return createProps(
-      { tiers },
+      {},
       [
         { label: "Dashboard", href: "/admin" },
         { label: "Business Opportunities" },
@@ -433,10 +430,7 @@ export async function getAdminEventsProps({ req, res }) {
     const authResult = await withAuth(req, res, { redirectTo: "/hr/login" });
     if (authResult.redirect) return authResult;
 
-    const { supabaseServer } = authResult;
-    const tiers = await fetchTiers(supabaseServer);
-
-    return createProps({ tiers });
+    return createProps({});
   } catch (error) {
     return handleDBError(error, "getAdminEventsProps");
   }
@@ -449,10 +443,7 @@ export async function getAdminResourcesProps({ req, res }) {
     const authResult = await withAuth(req, res, { redirectTo: "/hr/login" });
     if (authResult.redirect) return authResult;
 
-    const { supabaseServer } = authResult;
-    const tiers = await fetchTiers(supabaseServer);
-
-    return createProps({ tiers });
+    return createProps({});
   } catch (error) {
     return handleDBError(error, "getAdminResourcesProps");
   }

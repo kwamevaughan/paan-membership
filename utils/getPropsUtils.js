@@ -141,8 +141,11 @@ export async function getAdminBusinessOpportunitiesProps({ req, res }) {
     const authResult = await withAuth(req, res);
     if (authResult.redirect) return authResult;
 
+    // Define the available tiers
+    const tiers = ["Gold Member", "Full Member", "Associate Member", "Free Member"];
+
     return createProps(
-      {},
+      { tiers },
       [
         { label: "Dashboard", href: "/admin" },
         { label: "Business Opportunities" },

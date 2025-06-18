@@ -28,11 +28,11 @@ export default function QuestionCard({
   handleTextInputChange,
 }) {
   const { countryOptions } = useCountry();
-  const inputStyles = `w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-800 transition ${
+  const inputStyles = `w-full p-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-paan-blue transition ${
     mode === "dark"
       ? "bg-gray-700 border-gray-600 text-white"
       : "bg-gray-50 border-gray-300 text-[#231812]"
-  } ${!isComplete ? "border-red-500" : ""} min-h-[40px] resize-none`;
+  } ${!isComplete ? "border-paan-red" : ""} min-h-[40px] resize-none`;
 
   // Debounced toast function
   const debouncedToast = useRef(
@@ -380,10 +380,10 @@ export default function QuestionCard({
     >
       <div className="mb-6">
         <div className="flex items-start gap-4 mb-4">
-          <div className={`p-3 rounded-xl ${mode === "dark" ? "bg-gradient-to-br from-blue-500/20 to-purple-500/20" : "bg-gradient-to-br from-blue-50 to-purple-50"} backdrop-blur-sm`}>
+          <div className={`p-3 rounded-xl ${mode === "dark" ? "bg-paan-blue/10" : "bg-paan-blue/10"} backdrop-blur-sm`}>
             <Icon
               icon="mdi:question-mark-circle"
-              className={`w-7 h-7 ${mode === "dark" ? "text-blue-400" : "text-blue-600"}`}
+              className={`w-7 h-7 ${mode === "dark" ? "text-paan-blue" : "text-paan-blue"}`}
             />
           </div>
           <div className="flex-1">
@@ -545,7 +545,7 @@ export default function QuestionCard({
                                 e.target.value
                               )
                             }
-                            className={`${inputStyles} focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300`}
+                            className={`${inputStyles} focus:ring-2 focus:ring-paan-blue focus:border-transparent transition-all duration-300`}
                             placeholder={`Enter ${field.name}`}
                             id={`q-${q.id}-${idx + 1}-${field.name.toLowerCase()}`}
                             aria-labelledby={`q-${q.id}-${idx + 1}-${field.name.toLowerCase()}-label`}
@@ -582,7 +582,7 @@ export default function QuestionCard({
             <textarea
               value={dynamicAnswers[q.id]?.[0]?.text || ""}
               onChange={(e) => handleSingleAnswerChange(q.id, e.target.value)}
-              className={`${inputStyles} min-h-[120px] resize-y focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300`}
+              className={`${inputStyles} min-h-[120px] resize-y focus:ring-2 focus:ring-paan-blue focus:border-transparent transition-all duration-300`}
               placeholder="Enter your answer"
               id={`q-${q.id}-input`}
               aria-labelledby={`q-${q.id}-label`}
@@ -624,7 +624,7 @@ export default function QuestionCard({
                         text: e.target.value,
                       })
                     }
-                    className={`${inputStyles} min-h-[120px] resize-y focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300`}
+                    className={`${inputStyles} min-h-[120px] resize-y focus:ring-2 focus:ring-paan-blue focus:border-transparent transition-all duration-300`}
                     placeholder={`Answer ${idx + 1}`}
                     aria-labelledby={`q-${q.id}-label-${idx}`}
                   />
@@ -652,7 +652,7 @@ export default function QuestionCard({
                         })
                       }
                       onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
-                      className={`${inputStyles} min-h-0 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300`}
+                      className={`${inputStyles} min-h-0 focus:ring-2 focus:ring-paan-blue focus:border-transparent transition-all duration-300`}
                       placeholder={`Link for answer ${idx + 1} (optional)`}
                       aria-labelledby={`q-${q.id}-label-${idx}`}
                     />
@@ -742,7 +742,7 @@ export default function QuestionCard({
                       onChange={(e) =>
                         handleOtherInputChange(q.id, e.target.value)
                       }
-                      className={`${inputStyles} min-h-[120px] resize-y w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300`}
+                      className={`${inputStyles} min-h-[120px] resize-y w-full focus:ring-2 focus:ring-paan-blue focus:border-transparent transition-all duration-300`}
                       placeholder={q.other_option_text || "Please specify"}
                       required
                       aria-label={`Specify ${opt} details`}
@@ -773,7 +773,7 @@ export default function QuestionCard({
                     onChange={(e) =>
                       handleTextInputChange(q.id, idx, e.target.value)
                     }
-                    className={`${inputStyles} min-h-[120px] resize-y w-full focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300`}
+                    className={`${inputStyles} min-h-[120px] resize-y w-full focus:ring-2 focus:ring-paan-blue focus:border-transparent transition-all duration-300`}
                     placeholder={
                       q.text_input_option?.placeholder || "Please specify"
                     }

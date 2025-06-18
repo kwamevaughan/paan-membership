@@ -555,23 +555,23 @@ export default function Step2Questions({
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <div className="relative">
-              <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#f05d23]"></div>
+              <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-paan-blue"></div>
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                <Icon icon="mdi:loading" className="w-8 h-8 text-[#f05d23]" />
+                <Icon icon="mdi:loading" className="w-8 h-8 text-blue" />
               </div>
             </div>
           </div>
         ) : (
           <div className="flex items-center gap-4 mb-8">
-            <div className={`p-3 rounded-xl ${mode === "dark" ? "bg-gradient-to-br from-blue-500/20 to-purple-500/20" : "bg-gradient-to-br from-blue-50 to-purple-50"} backdrop-blur-sm`}>
+            <div className={`p-3 rounded-xl ${mode === "dark" ? "bg-paan-blue/10" : "bg-paan-blue/10"} backdrop-blur-sm`}>
               <Icon
                 icon="mdi:folder-outline"
-                className={`w-7 h-7 ${mode === "dark" ? "text-blue-400" : "text-blue-600"}`}
+                className={`w-7 h-7 ${mode === "dark" ? "text-paan-deep-blue" : "text-paan-deep-blue"}`}
               />
             </div>
             <div>
               <span
-                className={`text-2xl font-bold bg-gradient-to-r ${mode === "dark" ? "from-gray-100 to-gray-300" : "from-gray-900 to-gray-700"} bg-clip-text text-transparent`}
+                className={`text-2xl font-semibold  ${mode === "dark" ? "text-paan-deep-blue" : "text-paan-deep-blue"} `}
               >
                 {currentCategory?.name || "Category"}
               </span>

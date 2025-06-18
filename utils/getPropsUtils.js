@@ -203,10 +203,17 @@ export async function getInterviewPageProps({ req, res, query }) {
       : "freelancer";
 
   try {
-    const { data: questions, error } = await supabaseServer
+    // Add timeout to prevent long-running queries
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Database query timeout')), 5000)
+    );
+
+    const queryPromise = supabaseServer
       .from("interview_questions")
       .select("*, max_answers")
       .order("id", { ascending: true });
+
+    const { data: questions, error } = await Promise.race([queryPromise, timeoutPromise]);
 
     if (error) throw error;
 
@@ -217,7 +224,14 @@ export async function getInterviewPageProps({ req, res, query }) {
       opening_id: query.opening_id ? decodeURIComponent(query.opening_id) : "",
     });
   } catch (error) {
-    return handleDBError(error, "getInterviewPageProps");
+    console.error("[getInterviewPageProps] Error:", error);
+    // Return fallback data instead of throwing to prevent page crashes
+    return createProps({
+      initialQuestions: [],
+      job_type: normalizedJobType,
+      opening: query.opening ? decodeURIComponent(query.opening) : "",
+      opening_id: query.opening_id ? decodeURIComponent(query.opening_id) : "",
+    });
   }
 }
 
@@ -227,11 +241,19 @@ export async function getAgenciesPageStaticProps() {
   const supabaseServer = createSupabaseServerClient();
 
   try {
-    const { data, error } = await supabaseServer
+    // Add timeout to prevent long-running queries
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Database query timeout')), 5000)
+    );
+
+    const queryPromise = supabaseServer
       .from("job_openings")
       .select("id, title, job_type")
       .eq("job_type", "agencies")
-      .gt("expires_on", new Date().toISOString());
+      .gt("expires_on", new Date().toISOString())
+      .limit(50); // Limit results to prevent large data sets
+
+    const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
 
     if (error) throw error;
 
@@ -239,10 +261,18 @@ export async function getAgenciesPageStaticProps() {
       props: {
         initialOpenings: data || [],
       },
-      revalidate: 600,
+      // Reduce revalidation time for better performance
+      revalidate: 300, // 5 minutes instead of 10
     };
   } catch (error) {
-    return handleDBError(error, "getAgenciesPageStaticProps");
+    console.error("[getAgenciesPageStaticProps] Error:", error);
+    // Return empty data instead of throwing to prevent page crashes
+    return {
+      props: {
+        initialOpenings: [],
+      },
+      revalidate: 60, // Shorter revalidation on error
+    };
   }
 }
 

@@ -6,10 +6,10 @@ class MyDocument extends Document {
     return (
       <Html lang="en">
         <Head>
-          {/* Google Fonts for Questrial */}
+          {/* Google Fonts for Poppins */}
           <link
             rel="preload stylesheet"
-            href="https://fonts.googleapis.com/css2?family=Questrial&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
             as="style"
             crossOrigin="anonymous"
             onLoad="this.rel='stylesheet'"

@@ -388,7 +388,7 @@ export default function QuestionCard({
           </div>
           <div className="flex-1">
             <span
-              className={`text-xl font-semibold leading-relaxed bg-gradient-to-r ${mode === "dark" ? "from-gray-100 to-gray-300" : "from-gray-900 to-gray-700"} bg-clip-text text-transparent`}
+              className={`text-xl font-normal leading-relaxed bg-gradient-to-r ${mode === "dark" ? "from-gray-100 to-gray-300" : "from-gray-900 to-gray-700"} bg-clip-text text-transparent`}
               dangerouslySetInnerHTML={{ __html: q.text }}
             />
             {q.description && (

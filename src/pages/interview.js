@@ -38,6 +38,7 @@ export default function InterviewPage({
   const [showProgressPopup, setShowProgressPopup] = useState(false);
   const [savedProgress, setSavedProgress] = useState(null);
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(true);
 
   const {
     formData,
@@ -68,6 +69,9 @@ export default function InterviewPage({
       opening: prev.opening || opening || "",
       opening_id: prev.opening_id || opening_id || "",
     }));
+    
+    // Set page loading to false after initialization
+    setIsPageLoading(false);
   }, [job_type, opening, opening_id, setFormData]);
 
   const isStep1Complete = () => {
@@ -420,6 +424,25 @@ export default function InterviewPage({
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [step, formData, saveProgress]);
+
+  // Show loading state while page is initializing
+  if (isPageLoading || !isInitialized) {
+    return (
+      <>
+        <Head>
+          <title>Loading... | PAAN Application</title>
+        </Head>
+        <div className={`min-h-screen flex items-center justify-center ${
+          mode === "dark" ? "bg-[#0f172a] text-white" : "bg-gray-200 text-gray-900"
+        }`}>
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-paan-yellow mx-auto mb-4"></div>
+            <p className="text-lg font-medium">Loading application...</p>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>

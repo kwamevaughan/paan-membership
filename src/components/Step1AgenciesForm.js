@@ -173,7 +173,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
               />
             </div>
             <div>
-              <h2 className="text-xl font-bold mb-1">Let&apos;s Get Started</h2>
+              <h2 className="text-xl font-semibold mb-1">Let&apos;s Get Started</h2>
               <p
                 className={`text-sm leading-relaxed ${
                   mode === "dark" ? "text-gray-300" : "text-gray-700"
@@ -186,7 +186,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
         </div>
 
         <div className="space-y-6 max-h-[60vh] overflow-y-auto">
-          <h3 className="text-lg font-bold">Agency Details</h3>
+          <h3 className="text-lg font-semibold">Agency Details</h3>
 
           {/* Agency Name and Year Established (Already on Same Row) */}
           <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
@@ -428,7 +428,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
             )}
           </div>
 
-          <h3 className="text-lg font-bold mt-8">Primary Contact Person</h3>
+          <h3 className="text-lg font-semibold mt-8">Primary Contact Person</h3>
 
           {/* Primary Contact Name and Role/Title (On Same Row) */}
           <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">

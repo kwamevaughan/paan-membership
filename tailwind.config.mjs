@@ -9,11 +9,15 @@ const config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ["Questrial", "system-ui", "sans-serif"],
+        sans: ["Poppins", "system-ui", "sans-serif"],
       },
       colors: {
         background: "var(--background)",
         foreground: "var(--foreground)",
+        'paan-yellow': '#F2B706',
+        'paan-blue': '#84C1D9',
+        'paan-dark-blue': '#172840',
+        'paan-red': '#F25849',
       },
       animation: {
         circularGradient: "circularGradient 6s linear infinite",

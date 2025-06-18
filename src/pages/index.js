@@ -2,29 +2,67 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SEO from "@/components/SEO";
 
 export default function Agencies({ initialOpenings }) {
   const router = useRouter();
   const [selectedOpening, setSelectedOpening] = useState("");
   const [openings] = useState(initialOpenings);
+  const [isNavigating, setIsNavigating] = useState(false);
+
+  // Pre-fetch interview page on component mount for better performance
+  useEffect(() => {
+    if (openings.length > 0) {
+      const firstOpening = openings[0];
+      router.prefetch(`/interview?opening=${encodeURIComponent(
+        firstOpening.title
+      )}&job_type=${encodeURIComponent(
+        firstOpening.job_type
+      )}&opening_id=${encodeURIComponent(firstOpening.id)}`);
+    }
+  }, [openings, router]);
 
   const handleOpeningChange = (e) => {
     const selectedTitle = e.target.value;
     const opening = openings.find((o) => o.title === selectedTitle);
     setSelectedOpening(opening || "");
+    
+    // Pre-fetch the selected opening's interview page
+    if (opening) {
+      router.prefetch(`/interview?opening=${encodeURIComponent(
+        opening.title
+      )}&job_type=${encodeURIComponent(
+        opening.job_type
+      )}&opening_id=${encodeURIComponent(opening.id)}`);
+    }
   };
 
-  const handleProceed = () => {
-    if (selectedOpening) {
-      router.push(
-        `/interview?opening=${encodeURIComponent(
-          selectedOpening.title
-        )}&job_type=${encodeURIComponent(
-          selectedOpening.job_type
-        )}&opening_id=${encodeURIComponent(selectedOpening.id)}`
-      );
+  const handleProceed = async () => {
+    if (selectedOpening && !isNavigating) {
+      setIsNavigating(true);
+      
+      try {
+        // Navigate to the interview page
+        await router.push(
+          `/interview?opening=${encodeURIComponent(
+            selectedOpening.title
+          )}&job_type=${encodeURIComponent(
+            selectedOpening.job_type
+          )}&opening_id=${encodeURIComponent(selectedOpening.id)}`
+        );
+      } catch (error) {
+        console.error("Navigation error:", error);
+        setIsNavigating(false);
+      }
+    }
+  };
+
+  // Prevent multiple rapid clicks
+  const handleProceedClick = (e) => {
+    e.preventDefault();
+    if (!isNavigating) {
+      handleProceed();
     }
   };
 
@@ -95,24 +133,22 @@ export default function Agencies({ initialOpenings }) {
 
             {/* Enhanced Typography */}
             <div className="text-center ">
-              <h1 className="text-4xl md:text-4xl font-bold text-white mb-6 leading-tight">
+              <h1 className="text-4xl md:text-4xl font-semibold text-white mb-6 leading-tight">
                 Welcome to the{" "}
-                <span className="bg-gradient-to-r from-blue-200 to-sky-600 bg-clip-text text-transparent">
-                  Pan-African
-                </span>{" "}
+                <span className="text-paan-yellow">Pan-African</span>
                 <br className="hidden sm:block" />
                 Agency Network
               </h1>
               <p className="text-lg text-gray-200 mb-8 max-w-3xl mx-auto leading-relaxed">
-                An alliance of agencies shaping the future of Africa's
+                An alliance of agencies shaping the future of Africa&apos;s
                 communication, marketing, PR, tech, research, digital, and
                 creative industries.
               </p>
 
               {/* Animated Divider */}
               <div className="relative mb-8">
-                <div className="h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent"></div>
-                <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                <div className="h-px bg-gradient-to-r from-transparent via-paan-yellow to-transparent"></div>
+                <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-paan-yellow rounded-full animate-pulse"></div>
               </div>
 
               <p className="text-lg text-gray-300 mb-8">
@@ -125,10 +161,10 @@ export default function Agencies({ initialOpenings }) {
             <div className="max-w-2xl mx-auto mb-12">
               <label
                 htmlFor="opening"
-                className="block text-lg font-semibold text-white mb-4 text-center"
+                className="block text-lg font-medium text-white mb-4 text-center"
                 aria-label="Select an Expression of Interest"
               >
-                Current EOIs <span className="text-orange-400">*</span>
+                Current EOIs <span className="text-paan-yellow">*</span>
               </label>
 
               {/* Custom Select with Modern Styling */}
@@ -137,7 +173,7 @@ export default function Agencies({ initialOpenings }) {
                   id="opening"
                   value={selectedOpening ? selectedOpening.title : ""}
                   onChange={handleOpeningChange}
-                  className="w-full p-4 bg-white/10 backdrop-blur-md border border-white/30 rounded-2xl text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 appearance-none cursor-pointer hover:bg-white/20"
+                  className="w-full p-4 bg-white/10 backdrop-blur-md border border-white/30 rounded-2xl text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-paan-blue focus:border-transparent transition-all duration-300 appearance-none cursor-pointer hover:bg-white/20"
                 >
                   <option
                     value=""
@@ -166,18 +202,26 @@ export default function Agencies({ initialOpenings }) {
               {selectedOpening && (
                 <div className="text-center">
                   <button
-                    onClick={handleProceed}
-                    className="group relative inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-400 to-sky-900 text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden"
+                    onClick={handleProceedClick}
+                    disabled={isNavigating}
+                    className="group relative inline-flex items-center px-8 py-4 bg-paan-dark-blue text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
                   >
                     {/* Button background animation */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                    <div className="absolute inset-0 bg-paan-blue transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                     <span className="relative z-10">
-                      Proceed to Application
+                      {isNavigating ? "Loading..." : "Proceed to Application"}
                     </span>
-                    <Icon
-                      icon="tabler:arrow-up-right"
-                      className="relative z-10 ml-2 w-5 h-5 group-hover:rotate-45 transition-transform duration-300"
-                    />
+                    {isNavigating ? (
+                      <Icon
+                        icon="tabler:loader-2"
+                        className="relative z-10 ml-2 w-5 h-5 animate-spin"
+                      />
+                    ) : (
+                      <Icon
+                        icon="tabler:arrow-up-right"
+                        className="relative z-10 ml-2 w-5 h-5 group-hover:rotate-45 transition-transform duration-300"
+                      />
+                    )}
                   </button>
                 </div>
               )}

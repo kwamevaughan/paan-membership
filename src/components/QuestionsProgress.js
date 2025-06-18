@@ -143,7 +143,7 @@ export default function QuestionsProgress({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3
-              className={`text-lg font-semibold ${
+              className={`text-lg font-normal ${
                 mode === 'dark' ? 'text-gray-100' : 'text-gray-900'
               }`}
             >
@@ -173,28 +173,28 @@ export default function QuestionsProgress({
         <div
           className={`p-4 rounded-xl ${
             mode === 'dark'
-              ? 'bg-blue-500/10 border border-blue-400/20'
-              : 'bg-blue-50 border border-blue-100'
+              ? 'bg-paan-blue border border-paan-blue'
+              : 'bg-paan-deep-blue border border-paan-deep-blue'
           }`}
         >
           <div className="flex items-center gap-3">
             <Icon
               icon="solar:clock-circle-bold-duotone"
               className={`w-5 h-5 ${
-                mode === 'dark' ? 'text-blue-400' : 'text-blue-600'
+                mode === 'dark' ? 'text-paan-blue' : 'text-paan-blue'
               }`}
             />
             <div>
               <p
-                className={`text-sm font-medium ${
-                  mode === 'dark' ? 'text-blue-300' : 'text-blue-700'
+                className={`text-sm font-normal ${
+                  mode === 'dark' ? 'text-paan -blue' : 'text-paan-blue'
                 }`}
               >
                 Estimated time to complete remaining questions
               </p>
               <p
-                className={`text-lg font-semibold ${
-                  mode === 'dark' ? 'text-blue-200' : 'text-blue-800'
+                className={`text-lg font-normal ${
+                  mode === 'dark' ? 'text-paan-blue' : 'text-paan-blue'
                 }`}
               >
                 {progress.estimatedMinutes} minutes
@@ -219,20 +219,20 @@ export default function QuestionsProgress({
                 key={category.id}
                 className={`p-3 rounded-lg ${
                   mode === 'dark'
-                    ? 'bg-green-500/20 border border-green-400/30'
-                    : 'bg-green-50 border border-green-200'
+                    ? 'bg-paan-blue/20 border border-paan-blue/30'
+                    : 'bg-paan-blue/10 border border-paan-blue'
                 }`}
               >
                 <div className="flex items-center gap-2">
                   <Icon
                     icon="mdi:check-circle"
                     className={`w-4 h-4 ${
-                      mode === 'dark' ? 'text-green-400' : 'text-green-600'
+                      mode === 'dark' ? 'text-paan-yellow' : 'text-paan-yellow'
                     }`}
                   />
                   <span
                     className={`text-sm font-medium ${
-                      mode === 'dark' ? 'text-green-300' : 'text-green-700'
+                      mode === 'dark' ? 'text-paan-blue' : 'text-paan-blue'
                     }`}
                   >
                     {category.name}
@@ -254,20 +254,20 @@ export default function QuestionsProgress({
                   <Icon
                     icon="solar:play-circle-bold-duotone"
                     className={`w-4 h-4 ${
-                      mode === 'dark' ? 'text-blue-400' : 'text-blue-600'
+                      mode === 'dark' ? 'text-paan-yellow' : 'text-paan-yellow'
                     }`}
                   />
                   <div className="flex-1">
                     <span
                       className={`text-sm font-medium ${
-                        mode === 'dark' ? 'text-blue-300' : 'text-blue-700'
+                        mode === 'dark' ? 'text-paan-yellow' : 'text-paan-yellow'
                       }`}
                     >
                       {categoryProgress.currentCategory.name}
                     </span>
                     <div className="mt-1 h-1 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                       <motion.div
-                        className="h-full bg-blue-500"
+                        className="h-full bg-paan-yellow"
                         initial={{ width: 0 }}
                         animate={{
                           width: `${categoryProgress.getCategoryCompletionStatus(

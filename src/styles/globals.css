@@ -3,12 +3,12 @@
 @tailwind utilities;
 
 :root {
-    --font-questrial: "Questrial", sans-serif;
+    --font-poppins: "Poppins", sans-serif;
 }
 
 @layer base {
     html {
-        font-family: var(--font-questrial), system-ui, sans-serif;
+        font-family: var(--font-poppins), system-ui, sans-serif;
     }
 }
 
@@ -16,7 +16,7 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
     background-color: #fafafa;
     font-size: 15px;
-    font-family: var(--font-questrial), system-ui, sans-serif;
+    font-family: var(--font-poppins), system-ui, sans-serif;
 }
 
 .font-orange {
@@ -265,7 +265,8 @@ body.sidebar-hidden .content-container {
 .goog-te-spinner-animation,
 .goog-te-banner-frame,
 .goog-tooltip,
-.goog-text-highlight {
+.goog-text-highlight,
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf-ti6hGc {
     display: none !important;
     visibility: hidden !important;
     opacity: 0 !important;

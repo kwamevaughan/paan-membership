@@ -3,15 +3,15 @@ import { useRouter } from "next/router";
 import toast, { Toaster } from "react-hot-toast";
 import "leaflet/dist/leaflet.css";
 import "../styles/globals.css";
-import { Questrial } from "next/font/google";
+import { Poppins } from "next/font/google";
 import { sidebarNav } from "@/data/nav";
 import '@/styles/editor.css';
 
-const questrial = Questrial({
-  weight: "400",
+const poppins = Poppins({
+  weight: ["300", "400", "500", "600", "700"],
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-questrial",
+  variable: "--font-poppins",
 });
 
 function MyApp({ Component, pageProps }) {
@@ -126,7 +126,7 @@ function MyApp({ Component, pageProps }) {
   })();
 
   return (
-    <div className={`${mode === "dark" ? "dark" : ""} ${questrial.variable} font-sans`}>
+    <div className={`${mode === "dark" ? "dark" : ""} ${poppins.variable} font-sans`}>
       <Toaster position="top-center" reverseOrder={false} />
       <Component
         {...pageProps}

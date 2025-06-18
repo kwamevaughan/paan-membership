@@ -187,7 +187,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
               />
             </div>
             <div>
-              <h2 className="text-xl font-bold mb-1">Let's Get Started</h2>
+              <h2 className="text-xl font-semibold mb-1">Let&apos;s Get Started</h2>
               <p
                 className={`text-sm leading-relaxed ${
                   mode === "dark" ? "text-gray-300" : "text-gray-700"

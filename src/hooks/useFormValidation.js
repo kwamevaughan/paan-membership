@@ -3,7 +3,7 @@ import { useState } from "react";
 export const useFormValidation = () => {
   const [errors, setErrors] = useState({});
 
-  const nameRegex = /^[a-zA-Z\s'-]{2,}$/;
+  const nameRegex = /^[a-zA-Z0-9\s'-]{2,}$/;
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   const phoneRegex = /^\+\d{1,4}\s?\d{7,}$/;
   const urlRegex = /^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w-./?%&=]*)?$/;

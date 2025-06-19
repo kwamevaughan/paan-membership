@@ -43,7 +43,7 @@ export default function AgencyInstructions({ mode }) {
             <div className="flex items-start gap-3">
               <Icon
                 icon="lucide:file-text"
-                className="w-5 h-5 text-blue-500 mt-0.5"
+                className="w-5 h-5 text-paan-blue mt-0.5"
               />
               <div>
                 <h5 className={`font-medium mb-1 ${mode === "dark" ? "text-gray-100" : "text-gray-900"}`}>Company Registration</h5>
@@ -65,7 +65,7 @@ export default function AgencyInstructions({ mode }) {
             <div className="flex items-start gap-3">
               <Icon
                 icon="lucide:file-text"
-                className="w-5 h-5 text-blue-500 mt-0.5"
+                className="w-5 h-5 text-paan-blue mt-0.5"
               />
               <div>
                 <h5 className={`font-medium mb-1 ${mode === "dark" ? "text-gray-100" : "text-gray-900"}`}>Company Profile</h5>
@@ -88,7 +88,7 @@ export default function AgencyInstructions({ mode }) {
             <div className="flex items-start gap-3">
               <Icon
                 icon="lucide:file-text"
-                className="w-5 h-5 text-blue-500 mt-0.5"
+                className="w-5 h-5 text-paan-blue mt-0.5"
               />
               <div>
                 <h5 className={`font-medium mb-1 ${mode === "dark" ? "text-gray-100" : "text-gray-900"}`}>Portfolio</h5>
@@ -187,8 +187,8 @@ export default function AgencyInstructions({ mode }) {
               href="mailto:support@paan.africa"
               className={`${
                 mode === "dark" 
-                  ? "text-blue-400 hover:text-blue-300" 
-                  : "text-blue-500 hover:text-blue-600"
+                  ? "text-paan-blue hover:text-paan-blue" 
+                  : "text-paan-blue hover:text-paan-blue"
               } underline`}
             >
               support@paan.africa

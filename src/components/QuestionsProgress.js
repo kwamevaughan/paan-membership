@@ -161,7 +161,7 @@ export default function QuestionsProgress({
           {/* Progress Bar */}
           <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
             <motion.div
-              className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-sky-600"
+              className="absolute top-0 left-0 h-full bg-paan-blue"
               initial={{ width: 0 }}
               animate={{ width: `${progress.progressPercentage}%` }}
               transition={{ duration: 0.5 }}
@@ -246,8 +246,8 @@ export default function QuestionsProgress({
               <div
                 className={`p-3 rounded-lg ${
                   mode === 'dark'
-                    ? 'bg-blue-500/20 border border-blue-400/30'
-                    : 'bg-blue-50 border border-blue-200'
+                    ? 'bg-paan-blue/20 border border-paan-blue/30'
+                    : 'bg-paan-blue/10 border border-paan-blue/20'
                 }`}
               >
                 <div className="flex items-center gap-2">

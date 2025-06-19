@@ -497,7 +497,7 @@ export default function QuestionCard({
                         e.target.value
                       )
                     }
-                    className={`${inputStyles} focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300`}
+                    className={`${inputStyles} focus:ring-2 focus:ring-paan-blue focus:border-transparent transition-all duration-300`}
                     placeholder={`Enter ${field.name}`}
                     id={`q-${q.id}-0-${field.name.toLowerCase()}`}
                     aria-labelledby={`q-${q.id}-0-${field.name.toLowerCase()}-label`}
@@ -561,7 +561,7 @@ export default function QuestionCard({
               (dynamicAnswers[q.id]?.length || 0) < q.max_answers && (
                 <button
                   onClick={() => handleAddAnswer(q.id, q.max_answers)}
-                  className="mt-2 text-blue-500 hover:text-blue-700 font-semibold flex items-center gap-2 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="mt-2 text-paan-blue hover:text-paan-blue font-semibold flex items-center gap-2 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
                   aria-label="Add reference"
                 >
                   <Icon icon="mdi:plus" width={20} />
@@ -673,7 +673,7 @@ export default function QuestionCard({
               (dynamicAnswers[q.id]?.length || 0) < q.max_answers && (
                 <button
                   onClick={() => handleAddAnswer(q.id, q.max_answers)}
-                  className="mt-2 text-blue-500 hover:text-blue-700 font-semibold flex items-center gap-2 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+                  className="mt-2 text-paan-blue hover:text-paan-blue font-semibold flex items-center gap-2 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
                   aria-label="Add answer"
                 >
                   <Icon icon="mdi:plus" width={20} />
@@ -710,12 +710,12 @@ export default function QuestionCard({
                           : undefined
                       );
                     }}
-                    className={`w-full p-4 rounded-xl border text-left text-sm font-medium transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] border-blue-400 ${
+                    className={`w-full p-4 rounded-xl border text-left text-sm font-normal transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] border-paan-blue ${
                       isSelected
-                        ? "bg-gradient-to-r from-blue-300 to-sky-500 border-blue-500 text-white shadow-md"
+                        ? "bg-gradient-to-r from-paan-blue to-paan-blue border-paan-blue text-white shadow-md"
                         : mode === "dark"
-                        ? "bg-gradient-to-br from-gray-700/50 to-gray-800/50 text-white hover:from-gray-600 hover:to-gray-700 hover:border-blue-500"
-                        : "bg-gradient-to-br from-gray-50 to-gray-100 text-[#231812] hover:from-gray-100 hover:to-gray-200 hover:border-blue-500"
+                        ? "bg-gradient-to-br from-gray-700/50 to-gray-800/50 text-white hover:from-gray-600 hover:to-gray-700 hover:border-paan-blue"
+                        : "bg-gradient-to-br from-gray-50 to-gray-100 text-[#231812] hover:from-gray-100 hover:to-gray-200 hover:border-paan-blue"
                     }`}
                   >
                     <div className="flex items-center">
@@ -798,7 +798,7 @@ export default function QuestionCard({
                     onClick={() =>
                       handleAddTextInputAnswer(q.id, q.text_input_max_answers)
                     }
-                    className="mt-2 text-blue-500 hover:text-blue-700 font-semibold flex items-center gap-2 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+                    className="mt-2 text-paan-blue hover:text-paan-blue font-semibold flex items-center gap-2 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
                     aria-label="Add text input"
                   >
                     <Icon icon="mdi:plus" width={20} />
@@ -813,7 +813,7 @@ export default function QuestionCard({
       {q.skippable && (
         <button
           onClick={() => handleSkip(q.id)}
-          className="mt-6 text-blue-500 hover:text-blue-700 font-semibold flex items-center gap-2 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
+          className="mt-6 text-paan-blue hover:text-paan-blue font-semibold flex items-center gap-2 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
           aria-label="Skip question"
         >
           <Icon icon="mdi:skip-next" width={20} />

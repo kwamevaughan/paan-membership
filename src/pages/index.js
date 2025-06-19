@@ -88,7 +88,7 @@ export default function Agencies({ initialOpenings }) {
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-transparent"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
         {/* Animated gradient accent */}
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 via-transparent to-blue-500/10 animate-pulse"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-paan-yellow/10 via-transparent to-paan-blue/10 animate-pulse"></div>
       </div>
 
       {/* Floating Navigation Elements */}
@@ -126,7 +126,7 @@ export default function Agencies({ initialOpenings }) {
                     className="mx-auto transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-2xl"
                   />
                   {/* Glow effect on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500/30 to-blue-500/30 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-paan-yellow/30 to-paan-blue/30 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"></div>
                 </div>
               </a>
             </div>
@@ -232,15 +232,15 @@ export default function Agencies({ initialOpenings }) {
               {[
                 {
                   text: "Collaborate",
-                  color: "from-yellow-400 to-yellow-500",
+                  color: "paan-yellow",
                 },
                 {
                   text: "Innovate",
-                  color: "from-blue-400 to-blue-500",
+                  color: "paan-blue",
                 },
                 {
                   text: "Dominate",
-                  color: "from-red-400 to-red-500",
+                  color: "paan-red",
                 },
               ].map((item, index) => (
                 <div
@@ -254,7 +254,7 @@ export default function Agencies({ initialOpenings }) {
                     {item.text}
                   </span>
                   <div
-                    className={`w-4 h-4 bg-gradient-to-r ${item.color} rounded-full flex items-center justify-center shadow-lg`}
+                    className={`w-4 h-4 bg-${item.color} rounded-full flex items-center justify-center shadow-lg`}
                   ></div>
                 </div>
               ))}
@@ -311,9 +311,9 @@ export default function Agencies({ initialOpenings }) {
       </div>
 
       {/* Decorative Elements */}
-      <div className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-r from-orange-500/20 to-transparent rounded-full blur-xl animate-pulse"></div>
+      <div className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-r from-paan-yellow/20 to-transparent rounded-full blur-xl animate-pulse"></div>
       <div
-        className="absolute bottom-32 right-16 w-32 h-32 bg-gradient-to-r from-blue-500/20 to-transparent rounded-full blur-xl animate-pulse"
+        className="absolute bottom-32 right-16 w-32 h-32 bg-gradient-to-r from-paan-blue/20 to-transparent rounded-full blur-xl animate-pulse"
         style={{ animationDelay: "1s" }}
       ></div>
     </div>

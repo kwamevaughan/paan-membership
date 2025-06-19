@@ -9,6 +9,7 @@ export default function Freelancers({ initialOpenings }) {
   const router = useRouter();
   const [selectedOpening, setSelectedOpening] = useState("");
   const [openings] = useState(initialOpenings);
+  const [isNavigating, setIsNavigating] = useState(false);
 
   const handleOpeningChange = (e) => {
     const selectedTitle = e.target.value;
@@ -16,15 +17,31 @@ export default function Freelancers({ initialOpenings }) {
     setSelectedOpening(opening || "");
   };
 
-  const handleProceed = () => {
-    if (selectedOpening) {
-      router.push(
-        `/interview?opening=${encodeURIComponent(
-          selectedOpening.title
-        )}&job_type=${encodeURIComponent(
-          selectedOpening.job_type
-        )}&opening_id=${encodeURIComponent(selectedOpening.id)}`
-      );
+  const handleProceed = async () => {
+    if (selectedOpening && !isNavigating) {
+      setIsNavigating(true);
+
+      try {
+        // Navigate to the interview page
+        await router.push(
+          `/interview?opening=${encodeURIComponent(
+            selectedOpening.title
+          )}&job_type=${encodeURIComponent(
+            selectedOpening.job_type
+          )}&opening_id=${encodeURIComponent(selectedOpening.id)}`
+        );
+      } catch (error) {
+        console.error("Navigation error:", error);
+        setIsNavigating(false);
+      }
+    }
+  };
+
+  // Prevent multiple rapid clicks
+  const handleProceedClick = (e) => {
+    e.preventDefault();
+    if (!isNavigating) {
+      handleProceed();
     }
   };
 
@@ -50,7 +67,7 @@ export default function Freelancers({ initialOpenings }) {
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-transparent"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
         {/* Animated gradient accent */}
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 via-transparent to-blue-500/10 animate-pulse"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-paan-yellow/10 via-transparent to-paan-blue/10 animate-pulse"></div>
       </div>
 
       {/* Floating Navigation Elements */}
@@ -88,18 +105,16 @@ export default function Freelancers({ initialOpenings }) {
                     className="mx-auto transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-2xl"
                   />
                   {/* Glow effect on hover */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500/30 to-blue-500/30 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-paan-yellow/30 to-paan-blue/30 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"></div>
                 </div>
               </a>
             </div>
 
             {/* Enhanced Typography */}
             <div className="text-center">
-              <h1 className="text-4xl md:text-4xl font-bold text-white mb-6 leading-tight">
+              <h1 className="text-4xl md:text-4xl font-semibold text-white mb-6 leading-tight">
                 PAAN{" "}
-                <span className="bg-gradient-to-r from-blue-200 to-sky-600 bg-clip-text text-transparent">
-                  Certified Freelancers
-                </span>{" "}
+                <span className="text-paan-yellow">Certified Freelancers</span>{" "}
                 Program
               </h1>
               <p className="text-lg text-gray-200 mb-8 max-w-3xl mx-auto leading-relaxed">
@@ -113,8 +128,8 @@ export default function Freelancers({ initialOpenings }) {
 
               {/* Animated Divider */}
               <div className="relative mb-8">
-                <div className="h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent"></div>
-                <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                <div className="h-px bg-gradient-to-r from-transparent via-paan-yellow to-transparent"></div>
+                <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-paan-yellow rounded-full animate-pulse"></div>
               </div>
               <p className="text-lg text-gray-300 mb-8">
                 Please fill out the form expression of interest (EOI) to
@@ -126,10 +141,10 @@ export default function Freelancers({ initialOpenings }) {
             <div className="max-w-2xl mx-auto mb-12">
               <label
                 htmlFor="opening"
-                className="block text-lg font-semibold text-white mb-4 text-center"
+                className="block text-lg font-medium text-white mb-4 text-center"
                 aria-label="Select an Expression of Interest"
               >
-                Current EOIs <span className="text-orange-400">*</span>
+                Current EOIs <span className="text-paan-yellow">*</span>
               </label>
 
               {/* Custom Select with Modern Styling */}
@@ -138,7 +153,7 @@ export default function Freelancers({ initialOpenings }) {
                   id="opening"
                   value={selectedOpening ? selectedOpening.title : ""}
                   onChange={handleOpeningChange}
-                  className="w-full p-4 bg-white/10 backdrop-blur-md border border-white/30 rounded-2xl text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 appearance-none cursor-pointer hover:bg-white/20"
+                  className="w-full p-4 bg-white/10 backdrop-blur-md border border-white/30 rounded-2xl text-white placeholder-gray-300 focus:outline-none focus:ring-2 focus:ring-paan-blue focus:border-transparent transition-all duration-300 appearance-none cursor-pointer hover:bg-white/20"
                 >
                   <option
                     value=""
@@ -167,18 +182,26 @@ export default function Freelancers({ initialOpenings }) {
               {selectedOpening && (
                 <div className="text-center">
                   <button
-                    onClick={handleProceed}
-                    className="group relative inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-400 to-sky-900 text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden"
+                    onClick={handleProceedClick}
+                    disabled={isNavigating}
+                    className="group relative inline-flex items-center px-8 py-4 bg-paan-dark-blue text-white font-semibold rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
                   >
                     {/* Button background animation */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                    <div className="absolute inset-0 bg-paan-blue transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                     <span className="relative z-10">
-                      Proceed to Application
+                      {isNavigating ? "Loading..." : "Proceed to Application"}
                     </span>
-                    <Icon
-                      icon="tabler:arrow-up-right"
-                      className="relative z-10 ml-2 w-5 h-5 group-hover:rotate-45 transition-transform duration-300"
-                    />
+                    {isNavigating ? (
+                      <Icon
+                        icon="tabler:loader-2"
+                        className="relative z-10 ml-2 w-5 h-5 animate-spin"
+                      />
+                    ) : (
+                      <Icon
+                        icon="tabler:arrow-up-right"
+                        className="relative z-10 ml-2 w-5 h-5 group-hover:rotate-45 transition-transform duration-300"
+                      />
+                    )}
                   </button>
                 </div>
               )}
@@ -189,15 +212,15 @@ export default function Freelancers({ initialOpenings }) {
               {[
                 {
                   text: "Collaborate",
-                  color: "from-yellow-400 to-yellow-500",
+                  color: "paan-yellow",
                 },
                 {
                   text: "Innovate",
-                  color: "from-blue-400 to-blue-500",
+                  color: "paan-blue",
                 },
                 {
                   text: "Dominate",
-                  color: "from-red-400 to-red-500",
+                  color: "paan-red",
                 },
               ].map((item, index) => (
                 <div
@@ -211,7 +234,7 @@ export default function Freelancers({ initialOpenings }) {
                     {item.text}
                   </span>
                   <div
-                    className={`w-4 h-4 bg-gradient-to-r ${item.color} rounded-full flex items-center justify-center shadow-lg`}
+                    className={`w-4 h-4 bg-${item.color} rounded-full flex items-center justify-center shadow-lg`}
                   ></div>
                 </div>
               ))}
@@ -268,9 +291,9 @@ export default function Freelancers({ initialOpenings }) {
       </div>
 
       {/* Decorative Elements */}
-      <div className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-r from-orange-500/20 to-transparent rounded-full blur-xl animate-pulse"></div>
+      <div className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-r from-paan-yellow/20 to-transparent rounded-full blur-xl animate-pulse"></div>
       <div
-        className="absolute bottom-32 right-16 w-32 h-32 bg-gradient-to-r from-blue-500/20 to-transparent rounded-full blur-xl animate-pulse"
+        className="absolute bottom-32 right-16 w-32 h-32 bg-gradient-to-r from-paan-blue/20 to-transparent rounded-full blur-xl animate-pulse"
         style={{ animationDelay: "1s" }}
       ></div>
     </div>

@@ -11,11 +11,11 @@ export default function FreelancerInstructions({ mode }) {
     >
       {/* Header Section */}
       <div className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-gray-700">
-        <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
+        <div className="p-2 bg-paan-blue rounded-lg">
           <Icon icon="lucide:file-text" className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h3 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent">
+          <h3 className="text-xl font-normal text-paan-deep-blue">
             Prepare for Your Application
           </h3>
           <p
@@ -43,7 +43,7 @@ export default function FreelancerInstructions({ mode }) {
             <div className="flex items-start gap-3">
               <Icon
                 icon="lucide:file-text"
-                className="w-5 h-5 text-blue-500 mt-0.5"
+                className="w-5 h-5 text-paan-blue mt-0.5"
               />
               <div>
                 <h5 className={`font-medium mb-1 ${mode === "dark" ? "text-gray-100" : "text-gray-900"}`}>Portfolio</h5>
@@ -65,7 +65,7 @@ export default function FreelancerInstructions({ mode }) {
             <div className="flex items-start gap-3">
               <Icon
                 icon="lucide:file-text"
-                className="w-5 h-5 text-blue-500 mt-0.5"
+                className="w-5 h-5 text-paan-blue mt-0.5"
               />
               <div>
                 <h5 className={`font-medium mb-1 ${mode === "dark" ? "text-gray-100" : "text-gray-900"}`}>Resume/CV</h5>
@@ -85,7 +85,7 @@ export default function FreelancerInstructions({ mode }) {
       {/* Process Information */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 mb-3">
-          <Icon icon="lucide:info" className="w-5 h-5 text-blue-500" />
+          <Icon icon="lucide:info" className="w-5 h-5 text-paan-blue" />
           <h4 className={`font-semibold ${mode === "dark" ? "text-gray-100" : "text-gray-900"}`}>Process Information</h4>
         </div>
         <div
@@ -99,11 +99,11 @@ export default function FreelancerInstructions({ mode }) {
             <li className="flex items-start gap-2">
               <Icon
                 icon="lucide:clock"
-                className="w-5 h-5 text-blue-500 mt-0.5"
+                className="w-5 h-5 text-paan-blue mt-0.5"
               />
               <p
                 className={`text-sm ${
-                  mode === "dark" ? "text-blue-300" : "text-blue-700"
+                  mode === "dark" ? "text-paan-deep-blue" : "text-paan-deepblue"
                 }`}
               >
                 <strong>Time Estimate:</strong> Complete the form in about 10
@@ -113,11 +113,11 @@ export default function FreelancerInstructions({ mode }) {
             <li className="flex items-start gap-2">
               <Icon
                 icon="lucide:save"
-                className="w-5 h-5 text-blue-500 mt-0.5"
+                className="w-5 h-5 text-paan-blue mt-0.5"
               />
               <p
                 className={`text-sm ${
-                  mode === "dark" ? "text-blue-300" : "text-blue-700"
+                  mode === "dark" ? "text-paan-deep-blue" : "text-paan-deep-blue"
                 }`}
               >
                 <strong>Auto-Save:</strong> Your progress is automatically saved
@@ -126,11 +126,11 @@ export default function FreelancerInstructions({ mode }) {
             <li className="flex items-start gap-2">
               <Icon
                 icon="lucide:shield-check"
-                className="w-5 h-5 text-blue-500 mt-0.5"
+                className="w-5 h-5 text-paan-blue mt-0.5"
               />
               <p
                 className={`text-sm ${
-                  mode === "dark" ? "text-blue-300" : "text-blue-700"
+                  mode === "dark" ? "text-paan-deep-blue" : "text-paan-deep-blue"
                 }`}
               >
                 <strong>Secure:</strong> Your information is encrypted and
@@ -144,7 +144,7 @@ export default function FreelancerInstructions({ mode }) {
       {/* Contact Section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 mb-3">
-          <Icon icon="lucide:help-circle" className="w-5 h-5 text-blue-500" />
+          <Icon icon="lucide:help-circle" className="w-5 h-5 text-paan-blue" />
           <h4 className={`font-semibold ${mode === "dark" ? "text-gray-100" : "text-gray-900"}`}>Need Help?</h4>
         </div>
         <div
@@ -164,8 +164,8 @@ export default function FreelancerInstructions({ mode }) {
               href="mailto:support@paan.africa"
               className={`${
                 mode === "dark" 
-                  ? "text-blue-400 hover:text-blue-300" 
-                  : "text-blue-500 hover:text-blue-600"
+                  ? "text-paan-blue hover:text-paan-blue" 
+                  : "text-paan-blue hover:text-paan-blue"
               } underline`}
             >
               support@paan.africa

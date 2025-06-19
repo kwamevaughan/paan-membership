@@ -161,14 +161,14 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
             <div
               className={`p-3 rounded-xl ${
                 mode === "dark"
-                  ? "bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-400/30"
-                  : "bg-gradient-to-br from-blue-100 to-purple-100 border border-blue-200"
+                  ? "bg-gradient-to-br from-paan-blue/20 to-paan-blue/20 border border-paan-blue/30"
+                  : "bg-gradient-to-br from-paan-blue/10 to-paan-blue/10 border border-paan-blue/20"
               }`}
             >
               <Icon
                 icon="mdi:handshake"
                 className={`w-6 h-6 ${
-                  mode === "dark" ? "text-blue-400" : "text-blue-600"
+                  mode === "dark" ? "text-paan-blue" : "text-paan-blue"
                 }`}
               />
             </div>
@@ -201,7 +201,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
               <div className="flex items-center">
                 <Icon
                   icon="mdi:office-building"
-                  className="absolute left-3 text-blue-400 w-5 h-5"
+                  className="absolute left-3 text-paan-blue w-5 h-5"
                 />
                 <input
                   type="text"
@@ -216,12 +216,12 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                       ? `bg-gray-700 text-white border-gray-600 ${
                           errors.agencyName
                             ? "border-red-500"
-                            : "focus:border-blue-500"
+                            : "focus:border-paan-blue"
                         }`
                       : `bg-gray-50 text-[#231812] border-blue-300 ${
                           errors.agencyName
                             ? "border-red-500"
-                            : "focus:border-blue-500"
+                            : "focus:border-paan-blue"
                         }`
                   }`}
                 />
@@ -245,7 +245,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
               <div className="flex items-center">
                 <Icon
                   icon="mdi:calendar"
-                  className="absolute left-3 text-blue-400 w-5 h-5"
+                  className="absolute left-3 text-paan-blue w-5 h-5"
                 />
                 <input
                   type="number"
@@ -260,12 +260,12 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                       ? `bg-gray-700 text-white border-gray-600 ${
                           errors.yearEstablished
                             ? "border-red-500"
-                            : "focus:border-blue-400"
+                            : "focus:border-paan-blue"
                         }`
                       : `bg-gray-50 text-[#231812] border-blue-300 ${
                           errors.yearEstablished
                             ? "border-red-500"
-                            : "focus:border-blue-400"
+                            : "focus:border-paan-blue"
                         }`
                   }`}
                 />
@@ -293,18 +293,18 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                   ? `bg-gray-700 text-white border-gray-600 ${
                       errors.headquartersLocation
                         ? "border-red-500"
-                        : "focus:border-blue-400"
+                        : "focus:border-paan-blue"
                     }`
                   : `bg-gray-50 text-[#231812] border-blue-300 ${
                       errors.headquartersLocation
                         ? "border-red-500"
-                        : "focus:border-blue-400"
+                        : "focus:border-paan-blue"
                     }`
               }`}
             >
               <Icon
                 icon="mdi:map-marker"
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400 w-5 h-5 z-10"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-paan-blue w-5 h-5 z-10"
               />
               <Select
                 id="headquarters-location-select"
@@ -345,7 +345,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
             <div className="flex items-center">
               <Icon
                 icon="mdi:home"
-                className="absolute left-3 text-blue-400 w-5 h-5"
+                className="absolute left-3 text-paan-blue w-5 h-5"
               />
               <input
                 type="text"
@@ -360,12 +360,12 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                     ? `bg-gray-700 text-white border-gray-600 ${
                         errors.registeredOfficeAddress
                           ? "border-red-500"
-                          : "focus:border-blue-400"
+                          : "focus:border-paan-blue"
                       }`
                     : `bg-gray-50 text-[#231812] border-blue-300 ${
                         errors.registeredOfficeAddress
                           ? "border-red-500"
-                          : "focus:border-blue-400"
+                          : "focus:border-paan-blue"
                       }`
                 }`}
               />
@@ -392,16 +392,16 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                   ? `bg-gray-700 text-white border-gray-600 ${
                       errors.websiteUrl
                         ? "border-red-500"
-                        : "focus-within:border-blue-400"
+                        : "focus-within:border-paan-blue"
                     }`
                   : `bg-gray-50 text-[#231812] border-blue-300 ${
                       errors.websiteUrl
                         ? "border-red-500"
-                        : "focus-within:border-blue-400"
+                        : "focus-within:border-paan-blue"
                     }`
               }`}
             >
-              <Icon icon="mdi:web" className="text-blue-400 w-5 h-5" />
+              <Icon icon="mdi:web" className="text-paan-blue w-5 h-5" />
               <span className="text-sm text-gray-500 pl-3 pr-1">https://</span>
               <input
                 type="text"
@@ -443,7 +443,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
               <div className="flex items-center">
                 <Icon
                   icon="mdi:user"
-                  className="absolute left-3 text-blue-400 w-5 h-5"
+                  className="absolute left-3 text-paan-blue w-5 h-5"
                 />
                 <input
                   type="text"
@@ -458,12 +458,12 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                       ? `bg-gray-700 text-white border-gray-600 ${
                           errors.primaryContactName
                             ? "border-red-500"
-                            : "focus:border-blue-400"
+                            : "focus:border-paan-blue"
                         }`
                       : `bg-gray-50 text-[#231812] border-blue-300 ${
                           errors.primaryContactName
                             ? "border-red-500"
-                            : "focus:border-blue-400"
+                            : "focus:border-paan-blue"
                         }`
                   }`}
                 />
@@ -487,7 +487,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
               <div className="flex items-center">
                 <Icon
                   icon="mdi:briefcase"
-                  className="absolute left-3 text-blue-400 w-5 h-5"
+                  className="absolute left-3 text-paan-blue w-5 h-5"
                 />
                 <input
                   type="text"
@@ -502,12 +502,12 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                       ? `bg-gray-700 text-white border-gray-600 ${
                           errors.primaryContactRole
                             ? "border-red-500"
-                            : "focus:border-blue-400"
+                            : "focus:border-paan-blue"
                         }`
                       : `bg-gray-50 text-[#231812] border-blue-300 ${
                           errors.primaryContactRole
                             ? "border-red-500"
-                            : "focus:border-blue-400"
+                            : "focus:border-paan-blue"
                         }`
                   }`}
                 />
@@ -534,7 +534,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
               <div className="flex items-center">
                 <Icon
                   icon="mdi:email"
-                  className="absolute left-3 text-blue-400 w-5 h-5"
+                  className="absolute left-3 text-paan-blue w-5 h-5"
                 />
                 <input
                   type="email"
@@ -549,12 +549,12 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                       ? `bg-gray-700 text-white border-gray-600 ${
                           errors.primaryContactEmail
                             ? "border-red-500"
-                            : "focus:border-blue-400"
+                            : "focus:border-paan-blue"
                         }`
                       : `bg-gray-50 text-[#231812] border-blue-300 ${
                           errors.primaryContactEmail
                             ? "border-red-500"
-                            : "focus:border-blue-400"
+                            : "focus:border-paan-blue"
                         }`
                   }`}
                 />
@@ -578,7 +578,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
               <div className="flex items-center">
                 <Icon
                   icon="mdi:phone"
-                  className="absolute left-3 text-blue-400 w-5 h-5"
+                  className="absolute left-3 text-paan-blue w-5 h-5"
                 />
                 <input
                   type="tel"
@@ -596,12 +596,12 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                       ? `bg-gray-700 text-white border-gray-600 ${
                           errors.primaryContactPhone
                             ? "border-red-500"
-                            : "focus:border-blue-400"
+                            : "focus:border-paan-blue"
                         }`
                       : `bg-gray-50 text-[#231812] border-blue-300 ${
                           errors.primaryContactPhone
                             ? "border-red-500"
-                            : "focus:border-blue-400"
+                            : "focus:border-paan-blue"
                         }`
                   }`}
                 />
@@ -629,16 +629,16 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                   ? `bg-gray-700 text-white border-gray-600 ${
                       errors.primaryContactLinkedin
                         ? "border-red-500"
-                        : "focus-within:border-blue-400"
+                        : "focus-within:border-paan-blue"
                     }`
                   : `bg-gray-50 text-[#231812] border-blue-300 ${
                       errors.primaryContactLinkedin
                         ? "border-red-500"
-                        : "focus-within:border-blue-400"
+                        : "focus-within:border-paan-blue"
                     }`
               }`}
             >
-              <Icon icon="mdi:linkedin" className="text-blue-400 w-5 h-5" />
+              <Icon icon="mdi:linkedin" className="text-paan-blue w-5 h-5" />
               <span className="text-sm text-gray-500 pl-3 pr-1">https://</span>
               <input
                 type="text"
@@ -678,7 +678,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
             <div className="flex items-center">
               <Icon
                 icon="mdi:briefcase"
-                className="absolute left-3 text-blue-400 w-5 h-5"
+                className="absolute left-3 text-paan-blue w-5 h-5"
               />
               <input
                 type="text"
@@ -696,7 +696,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
             </div>
             {!formData.opening && (
               <div className="text-center mt-2">
-                <Link href="/" className="text-blue-400 underline">
+                <Link href="/" className="text-paan-blue underline">
                   Click here to return to the landing page
                 </Link>
               </div>

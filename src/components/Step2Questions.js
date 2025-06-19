@@ -571,7 +571,7 @@ export default function Step2Questions({
             </div>
             <div>
               <span
-                className={`text-2xl font-semibold  ${mode === "dark" ? "text-paan-deep-blue" : "text-paan-deep-blue"} `}
+                className={`text-2xl font-medium  ${mode === "dark" ? "text-paan-deep-blue" : "text-paan-deep-blue"} `}
               >
                 {currentCategory?.name || "Category"}
               </span>

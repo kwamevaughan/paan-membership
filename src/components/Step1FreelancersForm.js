@@ -175,14 +175,14 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
             <div
               className={`p-3 rounded-xl ${
                 mode === "dark"
-                  ? "bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-400/30"
-                  : "bg-gradient-to-br from-blue-100 to-purple-100 border border-blue-200"
+                  ? "bg-gradient-to-br from-paan-blue/20 to-paan-blue/20 border border-paan-blue/30"
+                  : "bg-gradient-to-br from-paan-blue/10 to-paan-blue/10 border border-paan-blue/20"
               }`}
             >
               <Icon
                 icon="mdi:handshake"
                 className={`w-6 h-6 ${
-                  mode === "dark" ? "text-blue-400" : "text-blue-600"
+                  mode === "dark" ? "text-paan-blue" : "text-paan-blue"
                 }`}
               />
             </div>
@@ -217,7 +217,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
         </div>
 
         <div className="space-y-6 max-h-[65vh] overflow-y-auto">
-          <h3 className="text-lg font-bold">Personal information</h3>
+          <h3 className="text-lg font-semibold">Personal Information</h3>
 
           {/* Full Name */}
           <div className="relative">
@@ -230,7 +230,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
             <div className="flex items-center">
               <Icon
                 icon="mdi:user"
-                className="absolute left-3 text-blue-400 w-5 h-5"
+                className="absolute left-3 text-paan-blue w-5 h-5"
               />
               <input
                 type="text"
@@ -245,12 +245,12 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
                     ? `bg-gray-700 text-white border-gray-600 ${
                         errors.primaryContactName
                           ? "border-red-500"
-                          : "focus:border-blue-400"
+                          : "focus:border-paan-blue"
                       }`
                     : `bg-gray-50 text-[#231812] border-blue-300 ${
                         errors.primaryContactName
                           ? "border-red-500"
-                          : "focus:border-blue-400"
+                          : "focus:border-paan-blue"
                       }`
                 }`}
               />
@@ -274,7 +274,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
             <div className="flex items-center">
               <Icon
                 icon="mdi:email"
-                className="absolute left-3 text-blue-400 w-5 h-5"
+                className="absolute left-3 text-paan-blue w-5 h-5"
               />
               <input
                 type="email"
@@ -289,12 +289,12 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
                     ? `bg-gray-700 text-white border-gray-600 ${
                         errors.primaryContactEmail
                           ? "border-red-500"
-                          : "focus:border-blue-400"
+                          : "focus:border-paan-blue"
                       }`
                     : `bg-gray-50 text-[#231812] border-blue-300 ${
                         errors.primaryContactEmail
                           ? "border-red-500"
-                          : "focus:border-blue-400"
+                          : "focus:border-paan-blue"
                       }`
                 }`}
               />
@@ -321,18 +321,18 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
                   ? `bg-gray-700 text-white border-gray-600 ${
                       errors.countryOfResidence
                         ? "border-red-500"
-                        : "focus:border-blue-400"
+                        : "focus:border-paan-blue"
                     }`
                   : `bg-gray-50 text-[#231812] border-blue-300 ${
                       errors.countryOfResidence
                         ? "border-red-500"
-                        : "focus:border-blue-400"
+                        : "focus:border-paan-blue"
                     }`
               }`}
             >
               <Icon
                 icon="mdi:map-marker"
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400 w-5 h-5 z-10"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-paan-blue w-5 h-5 z-10"
               />
               <Select
                 id="country-of-residence-select"
@@ -374,7 +374,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
             <div className="flex items-center">
               <Icon
                 icon="mdi:phone"
-                className="absolute left-3 text-blue-400 w-5 h-5"
+                className="absolute left-3 text-paan-blue w-5 h-5"
               />
               <input
                 type="tel"
@@ -394,12 +394,12 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
                     ? `bg-gray-700 text-white border-gray-600 ${
                         errors.phoneNumber
                           ? "border-red-500"
-                          : "focus:border-blue-400"
+                          : "focus:border-paan-blue"
                       }`
                     : `bg-gray-50 text-[#231812] border-blue-300 ${
                         errors.phoneNumber
                           ? "border-red-500"
-                          : "focus:border-blue-400"
+                          : "focus:border-paan-blue"
                       }`
                 }`}
               />
@@ -439,10 +439,10 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
                         borderColors[idx % borderColors.length]
                       } ${
                         isSelected
-                          ? "bg-blue-100 border-blue-200 shadow-md"
+                          ? "bg-paan-blue/10 border-paan-blue/20 shadow-md"
                           : mode === "dark"
-                          ? "bg-gray-700 text-white hover:bg-gray-600 hover:border-blue-400"
-                          : "bg-gray-50 text-[#231812] hover:bg-gray-100 hover:border-blue-400"
+                          ? "bg-gray-700 text-white hover:bg-gray-600 hover:border-paan-blue"
+                          : "bg-gray-50 text-[#231812] hover:bg-gray-100 hover:border-paan-blue"
                       }`}
                     >
                       <div className="flex items-center">
@@ -469,9 +469,9 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
                         }
                         className={`p-2 border rounded-lg ${
                           mode === "dark"
-                            ? "bg-gray-700 text-white border-gray-600 focus:border-blue-600"
-                            : "bg-gray-50 text-[#231812] border-blue-300 focus:border-blue-600"
-                        } focus:outline-none focus:ring-2 focus:ring-blue-600`}
+                            ? "bg-gray-700 text-white border-gray-600 focus:border-paan-blue"
+                            : "bg-gray-50 text-[#231812] border-blue-300 focus:border-paan-blue"
+                        } focus:outline-none focus:ring-2 focus:ring-paan-blue`}
                       >
                         {proficiencyLevels.map((level) => (
                           <option key={level} value={level}>
@@ -500,7 +500,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
             <div className="flex items-center">
               <Icon
                 icon="mdi:briefcase"
-                className="absolute left-3 text-blue-400 w-5 h-5"
+                className="absolute left-3 text-paan-blue w-5 h-5"
               />
               <input
                 type="text"
@@ -518,7 +518,7 @@ export default function Step1FreelancersForm({ formData, handleChange, mode }) {
             </div>
             {!formData.opening && (
               <div className="text-center mt-2">
-                <Link href="/freelancers" className="text-blue-400 underline">
+                <Link href="/freelancers" className="text-paan-blue underline">
                   Click here to return to the freelancers page
                 </Link>
               </div>

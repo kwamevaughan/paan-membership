@@ -76,10 +76,10 @@ const Header = ({
       ${mode === "dark" ? "border-slate-800/70" : "border-slate-200/70"} `}
     >
       {/* Animated gradient bar */}
-      <div className="h-1 w-full bg-gradient-to-r from-blue-200 via-blue-400 to-blue-600 bg-[length:200%_auto] animate-gradient"></div>
+      <div className="h-1 w-full bg-paan-blue bg-[length:200%_auto] animate-gradient"></div>
 
       <div className="container mx-auto px-4 sm:px-6 py-4 md:py-5">
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between">
           {/* Logo */}
           <div className="flex-shrink-0">
             <Link
@@ -121,7 +121,7 @@ const Header = ({
                 {/* Step Progress Bar */}
                 <div className="absolute top-6 left-0 w-full h-1 bg-gray-200/60 dark:bg-gray-800/60 -z-10"></div>
                 <div
-                  className="absolute top-6 left-0 h-1 bg-gradient-to-r from-blue-400 to-sky-900 -z-10 transition-all duration-1000 ease-in-out"
+                  className="absolute top-6 left-0 h-1 bg-paan-blue -z-10 transition-all duration-1000 ease-in-out"
                   style={{
                     width: `${((step - 1) / (steps.length - 1)) * 100}%`,
                   }}
@@ -145,11 +145,11 @@ const Header = ({
                             className={`flex items-center justify-center h-10 w-10 rounded-full border-2 transition-all duration-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#f05d23]
                   ${
                     isCompleted
-                      ? "bg-blue-400 border-transparent text-white shadow-lg"
+                      ? "bg-paan-blue border-transparent text-white shadow-lg"
                       : isCurrent
                       ? mode === "dark"
-                        ? "bg-slate-800/90 border-blue-400 text-white shadow-md"
-                        : "bg-white/90 border-blue-400 text-slate-700 shadow-md"
+                        ? "bg-slate-800/90 border-paan-blue text-white shadow-md"
+                        : "bg-white/90 border-paan-blue text-slate-700 shadow-md"
                       : mode === "dark"
                       ? "bg-slate-800/90 border-slate-700/60 text-slate-500"
                       : "bg-white/90 border-slate-200/60 text-slate-400"
@@ -192,7 +192,7 @@ const Header = ({
                   ${isCurrent ? "font-bold" : ""}
                   ${
                     hoverStep === i
-                      ? "scale-105 bg-clip-text text-transparent bg-gradient-to-r from-[#f25849] to-[#84c1d9]"
+                      ? "scale-105 bg-clip-text text-transparent bg-paan-blue"
                       : ""
                   }
                   hidden sm:block
@@ -224,7 +224,7 @@ const Header = ({
                 {/* Progress Bar Below Steps */}
                 <div className="mt-6 w-full h-3.5 bg-gray-100 rounded-full overflow-hidden dark:bg-gray-800/70 backdrop-blur-md shadow-inner relative">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-blue-200 via-blue-400 to-blue-600 bg-[length:200%_auto] animate-gradient transition-all duration-1000 ease-in-out relative"
+                    className="h-full rounded-full bg-paan-blue bg-[length:200%_auto] animate-gradient transition-all duration-1000 ease-in-out relative"
                     style={{ width: `${progressPercentage}%` }}
                   >
                     <span

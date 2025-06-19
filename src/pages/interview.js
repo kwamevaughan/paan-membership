@@ -537,7 +537,7 @@ export default function InterviewPage({
                   }`}
                 >
                   Your PAAN Expression of Interest is saved at{" "}
-                  <span className="font-semibold text-blue-400">
+                  <span className="font-semibold text-paan-blue">
                     Step {savedProgress?.step}
                   </span>
                   . Continue your application or start over with fresh
@@ -591,7 +591,7 @@ export default function InterviewPage({
 
             <button
               onClick={handleResumeProgress}
-              className="group flex items-center justify-center w-full px-5 py-3 bg-gradient-to-r from-blue-400 to-sky-900 text-white rounded-xl font-medium hover:from-blue-600 hover:to-sky-900 transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden"
+              className="group flex items-center justify-center w-full px-5 py-3 bg-paan-dark-blue text-white rounded-xl font-medium hover:from-paan-blue hover:to-paan-deep-blue transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden"
             >
               <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl"></div>
               <Icon
@@ -613,13 +613,13 @@ export default function InterviewPage({
             <Icon
               icon="solar:lightbulb-bolt-linear"
               className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
-                mode === "dark" ? "text-blue-400" : "text-blue-600"
+                mode === "dark" ? "text-paan-dark-blue" : "text-paan-dark-blue"
               }`}
               aria-hidden="true"
             />
             <p
               className={`text-sm leading-relaxed ${
-                mode === "dark" ? "text-blue-300" : "text-blue-700"
+                mode === "dark" ? "text-paan-dark-blue" : "text-paan-dark-blue"
               }`}
             >
               <strong>Secure & Private:</strong> Your EOI information is

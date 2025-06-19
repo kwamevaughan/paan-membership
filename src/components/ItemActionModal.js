@@ -76,7 +76,7 @@ export default function ItemActionModal({
             {/* Premium Header with Gradient Overlay */}
             <div
               className={`relative px-8 py-3 overflow-hidden ${
-                mode === "dark" ? "bg-blue-600" : "bg-blue-500"
+                mode === "dark" ? "bg-paan-blue" : "bg-paan-blue"
               }`}
               style={{
                 backdropFilter: "blur(8px)"
@@ -186,7 +186,7 @@ export default function ItemActionModal({
               onClick={(e) => e.stopPropagation()}
             >
               <div className={`relative px-8 py-3 overflow-hidden rounded-t-3xl ${
-                mode === "dark" ? "bg-blue-600" : "bg-blue-500"
+                mode === "dark" ? "bg-paan-blue" : "bg-paan-blue"
               }`}>
                 <h2 className="text-xl font-bold text-white tracking-tight">
                   Unsaved Changes

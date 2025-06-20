@@ -118,7 +118,7 @@ const HRSidebar = ({
             {shouldAppearExpanded ? (
               <>
                 <Image
-                  src={"/assets/images/paan-logo-white.svg"}
+                  src={"/assets/images/logo-white.svg"}
                   alt="PAAN Logo"
                   width={120}
                   height={75}

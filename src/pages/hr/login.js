@@ -216,13 +216,13 @@ export default function HRLogin() {
         />
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-transparent"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-        <div className="absolute inset-0 bg-gradient-to-r from-orange-500/10 via-transparent to-blue-500/10 animate-pulse"></div>
+        <div className="absolute inset-0 bg-gradient-to-r from-paan-yellow/10 via-transparent to-paan-blue/10 animate-pulse"></div>
       </div>
 
       {/* Decorative Elements */}
-      <div className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-r from-orange-500/20 to-transparent rounded-full blur-xl animate-pulse"></div>
+      <div className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-r from-paan-yellow/20 to-transparent rounded-full blur-xl animate-pulse"></div>
       <div
-        className="absolute bottom-32 right-16 w-32 h-32 bg-gradient-to-r from-blue-500/20 to-transparent rounded-full blur-xl animate-pulse"
+        className="absolute bottom-32 right-16 w-32 h-32 bg-gradient-to-r from-paan-blue/20 to-transparent rounded-full blur-xl animate-pulse"
         style={{ animationDelay: "1s" }}
       ></div>
 
@@ -247,16 +247,16 @@ export default function HRLogin() {
                     height={180}
                     className="mx-auto transition-all duration-500 group-hover:scale-110 group-hover:drop-shadow-2xl"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-r from-orange-500/30 to-blue-500/30 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"></div>
+                  <div className="absolute inset-0 bg-gradient-to-r from-paan-yellow/30 to-paan-blue/30 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10"></div>
                 </div>
               </a>
             </div>
 
             {/* Enhanced Typography */}
             <div className="text-center mb-8">
-              <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              <h1 className="text-3xl md:text-4xl font-semibold text-white mb-4">
                 Welcome to{" "}
-                <span className="bg-gradient-to-r from-blue-200 to-sky-600 bg-clip-text text-transparent">
+                <span className="text-paan-yellow">
                   PAAN
                 </span>{" "}
                 Dashboard
@@ -266,8 +266,8 @@ export default function HRLogin() {
                 Dashboard
               </p>
               <div className="relative mb-6">
-                <div className="h-px bg-gradient-to-r from-transparent via-orange-500 to-transparent"></div>
-                <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
+                <div className="h-px bg-gradient-to-r from-transparent via-paan-yellow to-transparent"></div>
+                <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-paan-yellow rounded-full animate-pulse"></div>
               </div>
             </div>
 
@@ -286,8 +286,8 @@ export default function HRLogin() {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-3 py-3 bg-white/10 backdrop-blur-md border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 text-white placeholder-gray-300 hover:bg-white/20"
-                    placeholder="Enter GCG email"
+                    className="w-full pl-10 pr-3 py-3 bg-white/10 backdrop-blur-md border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-paan-blue focus:border-transparent transition-all duration-300 text-white placeholder-gray-300 hover:bg-white/20"
+                    placeholder="Enter support email"
                     required
                   />
                 </div>
@@ -307,14 +307,14 @@ export default function HRLogin() {
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="w-full pl-10 pr-10 py-3 bg-white/10 backdrop-blur-md border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all duration-300 text-white placeholder-gray-300 hover:bg-white/20"
+                      className="w-full pl-10 pr-10 py-3 bg-white/10 backdrop-blur-md border border-white/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-paan-blue focus:border-transparent transition-all duration-300 text-white placeholder-gray-300 hover:bg-white/20"
                       placeholder="Enter your password"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 text-white hover:text-blue-400 focus:outline-none transition-colors"
+                      className="absolute right-3 text-white hover:text-paan-blue focus:outline-none transition-colors"
                     >
                       <Icon
                         icon={showPassword ? "mdi:eye-off" : "mdi:eye"}
@@ -333,7 +333,7 @@ export default function HRLogin() {
                         type="checkbox"
                         checked={rememberMe}
                         onChange={(e) => setRememberMe(e.target.checked)}
-                        className="mr-2 h-4 w-4 text-blue-400 focus:ring-blue-400 border-white/30 rounded bg-white/10"
+                        className="mr-2 h-4 w-4 text-paan-blue focus:ring-paan-blue border-white/30 rounded bg-white/10"
                       />
                       Remember me
                     </label>
@@ -357,9 +357,9 @@ export default function HRLogin() {
                 <div className="flex justify-between gap-4">
                   <button
                     type="submit"
-                    className="group relative flex-1 py-3 px-4 bg-gradient-to-r from-blue-400 to-sky-600 text-white font-semibold rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden flex items-center justify-center gap-2"
+                    className="group relative flex-1 py-3 px-4 bg-paan-blue text-white font-semibold rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden flex items-center justify-center gap-2"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                    <div className="absolute inset-0 bg-paan-blue transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                     <span className="relative z-10">Sign In</span>
                     <Icon
                       icon="mdi:login"
@@ -368,9 +368,9 @@ export default function HRLogin() {
                   </button>
                   <Link
                     href="/"
-                    className="group relative flex-1 py-3 px-4 bg-gradient-to-r from-gray-700 to-gray-900 text-white font-semibold rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden flex items-center justify-center gap-2"
+                    className="group relative flex-1 py-3 px-4 bg-paan-dark-blue text-white font-semibold rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden flex items-center justify-center gap-2"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-gray-900 to-gray-700 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                    <div className="absolute inset-0 bg-paan-red transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                     <span className="relative z-10">Return</span>
                     <Icon
                       icon="mdi:arrow-left"
@@ -381,9 +381,9 @@ export default function HRLogin() {
               ) : (
                 <button
                   type="submit"
-                  className="group relative w-full py-3 px-4 bg-gradient-to-r from-blue-400 to-sky-600 text-white font-semibold rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden flex items-center justify-center gap-2"
+                  className="group relative w-full py-3 px-4 bg-paan-blue text-white font-semibold rounded-lg shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300 overflow-hidden flex items-center justify-center gap-2"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-blue-700 transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
+                  <div className="absolute inset-0 bg-paan-blue transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left"></div>
                   <span className="relative z-10">Send Magic Link</span>
                   <Icon
                     icon="mdi:email-fast"
@@ -396,7 +396,7 @@ export default function HRLogin() {
                 <button
                   type="button"
                   onClick={() => setShowPasswordField(!showPasswordField)}
-                  className="text-base text-blue-400 hover:text-blue-300 transition-colors"
+                  className="text-base text-paan-blue hover:text-paan-blue transition-colors"
                 >
                   {showPasswordField
                     ? "Sign in using magic link"
@@ -411,7 +411,7 @@ export default function HRLogin() {
                 href="https://paan.africa"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-400 font-medium hover:text-blue-300 transition-colors"
+                className="text-paan-blue font-medium hover:text-paan-blue transition-colors"
               >
                 Pan-African Agency Network (PAAN)
               </a>

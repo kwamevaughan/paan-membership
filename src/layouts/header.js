@@ -103,7 +103,7 @@ const Header = ({
                 <Image
                   src={
                     mode === "dark"
-                      ? "/assets/images/paan-logo-white.svg"
+                      ? "/assets/images/logo-white.svg"
                       : "/assets/images/logo.svg"
                   }
                   alt="PAAN Logo"

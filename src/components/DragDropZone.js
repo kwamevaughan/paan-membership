@@ -35,7 +35,7 @@ export default function DragDropZone({
       onDragLeave={(e) => handleDragLeave(e, type)}
       className={`p-6 flex justify-center border-2 border-dashed rounded-xl transition-all duration-300 transform ${
         isDragging
-          ? "border-blue-400 bg-blue-50 scale-105"
+          ? "border-paan-blue bg-paan-blue/10 scale-105"
           : mode === "dark"
           ? "border-gray-600 bg-gray-700"
           : "border-gray-300 bg-white"
@@ -49,8 +49,8 @@ export default function DragDropZone({
           <span
             className={`inline-flex justify-center items-center w-12 h-12 rounded-full mb-4 ${
               mode === "dark"
-                ? "bg-gray-600 text-blue-400"
-                : "bg-gray-100 text-blue-500"
+                ? "bg-gray-600 text-paan-blue"
+                : "bg-gray-100 text-paan-blue"
             }`}
           >
             <Icon icon="mdi:upload" className="w-6 h-6" />
@@ -66,9 +66,9 @@ export default function DragDropZone({
               }`}
             >
               {fileTypeDescription[type]}{" "}
-              <span className="text-red-500">*</span> - Drop your file here or{" "}
+              <span className="text-paan-red">*</span> - Drop your file here or{" "}
             </span>
-            <span className="font-semibold text-blue-400 hover:text-blue-600 transition">
+            <span className="font-semibold text-paan-blue hover:text-paan-blue/80 transition">
               browse
             </span>
           </div>
@@ -102,8 +102,8 @@ export default function DragDropZone({
               <span
                 className={`w-10 h-10 flex justify-center items-center border rounded-lg ${
                   mode === "dark"
-                    ? "border-gray-500 text-[#f05d23]"
-                    : "border-gray-200 text-[#f05d23]"
+                    ? "border-gray-500 text-paan-red"
+                    : "border-gray-200 text-paan-red"
                 }`}
               >
                 {fileName && fileName.endsWith(".pdf") ? (
@@ -133,8 +133,8 @@ export default function DragDropZone({
               onClick={() => removeFile(type)}
               className={`transition ${
                 mode === "dark"
-                  ? "text-gray-300 hover:text-[#f05d23]"
-                  : "text-gray-500 hover:text-[#f05d23]"
+                  ? "text-gray-300 hover:text-paan-red"
+                  : "text-gray-500 hover:text-paan-red"
               }`}
             >
               <Icon icon="mdi:trash-can-outline" className="w-5 h-5" />
@@ -148,7 +148,7 @@ export default function DragDropZone({
                 }`}
               >
                 <div
-                  className="h-full bg-[#f05d23] rounded-full transition-all duration-500"
+                  className="h-full bg-paan-red rounded-full transition-all duration-500"
                   style={{ width: `${uploadProgress[type]}%` }}
                 />
               </div>

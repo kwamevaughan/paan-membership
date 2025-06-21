@@ -67,7 +67,7 @@ export default function ConfirmationProgress({ submissionStatus, referenceNumber
 
   return (
     <div className={`p-6 rounded-lg ${bgColor} shadow-lg`}>
-      <h3 className={`text-xl font-bold mb-6 ${textColor}`}>Application Progress</h3>
+      <h3 className={`text-xl font-semibold mb-6 ${textColor}`}>Application Progress</h3>
       
       <div className="space-y-6">
         {steps.map((step, index) => (
@@ -82,7 +82,7 @@ export default function ConfirmationProgress({ submissionStatus, referenceNumber
             {index !== steps.length - 1 && (
               <div className={`absolute left-4 top-8 bottom-0 w-0.5 ${
                 step.status === "complete" 
-                  ? isDark ? "bg-blue-400" : "bg-blue-500"
+                  ? isDark ? "bg-paan-blue" : "bg-paan-blue"
                   : isDark ? "bg-gray-600" : "bg-gray-300"
               }`} />
             )}
@@ -91,9 +91,9 @@ export default function ConfirmationProgress({ submissionStatus, referenceNumber
               {/* Icon Circle */}
               <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
                 step.status === "complete"
-                  ? isDark ? "bg-blue-400" : "bg-blue-500"
+                  ? isDark ? "bg-paan-blue" : "bg-paan-blue"
                   : step.status === "error"
-                  ? "bg-red-500"
+                  ? "bg-paan-red"
                   : isDark ? "bg-gray-600" : "bg-gray-300"
               }`}>
                 <Icon 
@@ -111,13 +111,13 @@ export default function ConfirmationProgress({ submissionStatus, referenceNumber
                 <h4 className={`font-semibold ${textColor}`}>{step.title}</h4>
                 <p className={`text-sm ${subTextColor}`}>{step.description}</p>
                 {step.status === "complete" && (
-                  <span className="inline-flex items-center mt-1 text-xs text-green-500">
+                  <span className="inline-flex items-center mt-1 text-xs text-paan-yellow">
                     <Icon icon="mdi:check" className="w-4 h-4 mr-1" />
                     Completed
                   </span>
                 )}
                 {step.status === "error" && (
-                  <span className="inline-flex items-center mt-1 text-xs text-red-500">
+                  <span className="inline-flex items-center mt-1 text-xs text-paan-red">
                     <Icon icon="mdi:alert" className="w-4 h-4 mr-1" />
                     Error
                   </span>

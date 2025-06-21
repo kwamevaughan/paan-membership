@@ -53,7 +53,7 @@ export default function DocumentsProgress({
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3
-              className={`text-lg font-semibold ${
+              className={`text-lg font-medium ${
                 mode === 'dark' ? 'text-gray-100' : 'text-gray-900'
               }`}
             >
@@ -71,7 +71,7 @@ export default function DocumentsProgress({
           {/* Progress Bar */}
           <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
             <motion.div
-              className="absolute top-0 left-0 h-full bg-gradient-to-r from-blue-500 to-sky-600"
+              className="absolute top-0 left-0 h-full bg-paan-blue"
               initial={{ width: 0 }}
               animate={{ width: `${progress.progressPercentage}%` }}
               transition={{ duration: 0.5 }}
@@ -102,8 +102,8 @@ export default function DocumentsProgress({
                   className={`p-3 rounded-lg ${
                     isCompleted
                       ? mode === 'dark'
-                        ? 'bg-green-500/20 border border-green-400/30'
-                        : 'bg-green-50 border border-green-200'
+                        ? 'bg-paan-blue/20 border border-paan-blue/30'
+                        : 'bg-paan-blue/10 border border-paan-yellow/20'
                       : mode === 'dark'
                         ? 'bg-gray-700/50 border border-gray-600'
                         : 'bg-gray-50 border border-gray-200'
@@ -115,8 +115,8 @@ export default function DocumentsProgress({
                       className={`w-4 h-4 ${
                         isCompleted
                           ? mode === 'dark'
-                            ? 'text-green-400'
-                            : 'text-green-600'
+                            ? 'text-paan-blue'
+                            : 'text-paan-yellow'
                           : mode === 'dark'
                             ? 'text-gray-400'
                             : 'text-gray-500'
@@ -126,8 +126,8 @@ export default function DocumentsProgress({
                       className={`text-sm ${
                         isCompleted
                           ? mode === 'dark'
-                            ? 'text-green-300'
-                            : 'text-green-700'
+                            ? 'text-paan-blue'
+                            : 'text-paan-yellow'
                           : mode === 'dark'
                             ? 'text-gray-300'
                             : 'text-gray-600'
@@ -161,8 +161,8 @@ export default function DocumentsProgress({
                 className={`p-3 rounded-lg ${
                   checked
                     ? mode === 'dark'
-                      ? 'bg-green-500/20 border border-green-400/30'
-                      : 'bg-green-50 border border-green-200'
+                      ? 'bg-paan-blue/20 border border-paan-blue/30'
+                      : 'bg-paan-blue/10 border border-paan-yellow/20'
                     : mode === 'dark'
                       ? 'bg-gray-700/50 border border-gray-600'
                       : 'bg-gray-50 border border-gray-200'
@@ -174,8 +174,8 @@ export default function DocumentsProgress({
                     className={`w-4 h-4 ${
                       checked
                         ? mode === 'dark'
-                          ? 'text-green-400'
-                          : 'text-green-600'
+                          ? 'text-paan-blue'
+                          : 'text-paan-yellow'
                         : mode === 'dark'
                           ? 'text-gray-400'
                           : 'text-gray-500'
@@ -185,8 +185,8 @@ export default function DocumentsProgress({
                     className={`text-sm ${
                       checked
                         ? mode === 'dark'
-                          ? 'text-green-300'
-                          : 'text-green-700'
+                          ? 'text-paan-blue'
+                          : 'text-paan-yellow'
                         : mode === 'dark'
                           ? 'text-gray-300'
                           : 'text-gray-600'

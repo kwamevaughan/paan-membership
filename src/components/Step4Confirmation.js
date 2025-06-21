@@ -242,7 +242,7 @@ export default function Step4Confirmation({
                     }`}
                   />
                 </div>
-                <h2 className={`text-3xl font-bold mb-3 ${textColor}`}>
+                <h2 className={`text-3xl font-semibold mb-3 ${textColor}`}>
                   {submissionStatus.status === "success"
                     ? `Thank You, ${
                         formData.primaryContactName || "Applicant"
@@ -255,16 +255,16 @@ export default function Step4Confirmation({
                     : "Something went wrong. Please try again."}
                 </p>
                 {submissionStatus.status === "success" && (
-                  <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mx-auto max-w-md rounded text-left">
+                  <div className="bg-paan-blue/10 border-l-4 border-paan-blue p-4 mx-auto max-w-md rounded text-left">
                     <div className="flex">
                       <div className="flex-shrink-0">
                         <Icon
                           icon="mdi:email-outline"
-                          className="h-5 w-5 text-blue-400"
+                          className="h-5 w-5 text-paan-blue"
                         />
                       </div>
                       <div className="ml-3">
-                        <p className="text-sm text-blue-700">
+                        <p className="text-sm text-paan-dark-blue">
                           We&apos;ve sent a confirmation email to{" "}
                           <span className="font-semibold">
                             {formData.primaryContactEmail || "your email"}
@@ -277,16 +277,16 @@ export default function Step4Confirmation({
                   </div>
                 )}
                 {submissionStatus.status !== "success" && (
-                  <div className="bg-red-50 border-l-4 border-red-400 p-4 mx-auto max-w-md rounded text-left">
+                  <div className="bg-paan-red/10 border-l-4 border-paan-red p-4 mx-auto max-w-md rounded text-left">
                     <div className="flex">
                       <div className="flex-shrink-0">
                         <Icon
                           icon="mdi:alert-outline"
-                          className="h-5 w-5 text-red-400"
+                          className="h-5 w-5 text-paan-red"
                         />
                       </div>
                       <div className="ml-3">
-                        <p className="text-sm text-red-700">
+                        <p className="text-sm text-paan-red">
                           {submissionStatus.message ||
                             "An unexpected error occurred. Please try again or contact support."}
                         </p>
@@ -366,7 +366,7 @@ export default function Step4Confirmation({
                     <div className="flex items-start">
                       <Icon
                         icon="mdi:information-outline"
-                        className="flex-shrink-0 w-5 h-5 mt-1 text-[#f05d23]"
+                        className="flex-shrink-0 w-5 h-5 mt-1 text-paan-red"
                       />
                       <div className="ml-3">
                         <p className={`text-sm ${subTextColor}`}>
@@ -384,7 +384,7 @@ export default function Step4Confirmation({
               <div className="px-6 py-6 flex flex-col sm:flex-row gap-4 justify-center border-t border-gray-200">
                 <button
                   onClick={() => router.reload()}
-                  className="bg-blue-400 text-white font-semibold px-6 py-3 rounded-xl hover:bg-blue-500 transition-all transform hover:scale-105 flex items-center justify-center"
+                  className="bg-paan-red text-white font-semibold px-6 py-3 rounded-xl hover:bg-paan-red/80 transition-all transform hover:scale-105 flex items-center justify-center"
                 >
                   <Icon icon="mdi:refresh" className="mr-2 w-5 h-5" />
                   Return to Forms
@@ -394,7 +394,7 @@ export default function Step4Confirmation({
                   className={`${
                     isDark
                       ? "bg-gray-600 hover:bg-gray-500"
-                      : "bg-blue-600 hover:bg-sky-800"
+                      : "bg-paan-blue hover:bg-paan-blue/80"
                   } text-white font-semibold px-6 py-3 rounded-xl transition-all transform hover:scale-105 flex items-center justify-center`}
                 >
                   <Icon
@@ -408,7 +408,7 @@ export default function Step4Confirmation({
                     className={`${
                       isDark
                         ? "bg-gray-600 hover:bg-gray-500"
-                        : "bg-gray-700 hover:bg-gray-800"
+                        : "bg-paan-dark-blue hover:bg-paan-dark-blue/80"
                     } text-white font-semibold px-6 py-3 rounded-xl transition-all transform hover:scale-105 flex items-center justify-center`}
                   >
                     <Icon icon="mdi:web" className="mr-2 w-5 h-5" />

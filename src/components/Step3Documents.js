@@ -312,11 +312,11 @@ export default function Step3Documents({
         {/* Main Content */}
         <div className="lg:col-span-2">
           <div
-            className={`shadow-lg rounded-lg p-6 border-t-4 border-blue-400 ${bgColor} ${textColor}`}
+            className={`shadow-lg rounded-lg p-6 border-t-4 border-paan-blue ${bgColor} ${textColor}`}
           >
             <div className="flex items-center justify-center mb-6">
-              <Icon icon="mdi:upload" className="w-8 h-8 text-blue-400 mr-2" />
-              <h2 className="text-3xl font-bold text-center">
+              <Icon icon="mdi:upload" className="w-8 h-8 text-paan-blue mr-2" />
+              <h2 className="text-3xl font-medium text-center">
                 Submit Your Documents
               </h2>
             </div>
@@ -335,9 +335,9 @@ export default function Step3Documents({
                     className={`w-8 h-8 rounded-full flex items-center justify-center cursor-pointer transition-colors
                       ${
                         getCompletionStatus(index) === "complete"
-                          ? "bg-blue-400 text-white"
+                          ? "bg-paan-blue text-white"
                           : getCompletionStatus(index) === "active"
-                          ? "bg-blue-400 text-white"
+                          ? "bg-paan-blue text-white"
                           : `${
                               mode === "dark" ? "bg-gray-700" : "bg-gray-200"
                             } ${secondaryTextColor}`
@@ -361,7 +361,7 @@ export default function Step3Documents({
                     )}
                   </motion.div>
                   <span
-                    className={`text-xs mt-1 ${secondaryTextColor} hidden sm:block group-hover:text-blue-400 transition-colors`}
+                    className={`text-xs mt-1 ${secondaryTextColor} hidden sm:block group-hover:text-paan-blue transition-colors`}
                   >
                     {file.title}
                   </span>
@@ -381,7 +381,7 @@ export default function Step3Documents({
                 transition={{ duration: 0.3 }}
                 className="mb-6"
               >
-                <h3 className="text-xl font-bold mb-2">
+                <h3 className="text-xl font-medium mb-2">
                   {fileTypes[memoizedActiveFileIndex].title}
                   {fileTypes[memoizedActiveFileIndex].isOptional && (
                     <span className="text-sm font-normal text-gray-500 ml-2">(Optional)</span>
@@ -435,7 +435,7 @@ export default function Step3Documents({
                                   mode === "dark" 
                                     ? "bg-gray-700 border-gray-600 text-white" 
                                     : "bg-white border-gray-300 text-gray-900"
-                                } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                                } focus:outline-none focus:ring-2 focus:ring-paan-blue`}
                               />
                             </div>
                             <button
@@ -443,7 +443,7 @@ export default function Step3Documents({
                               disabled={!link.url.trim()}
                               className={`p-2 rounded-lg ${
                                 link.url.trim()
-                                  ? "text-green-500 hover:text-green-700"
+                                  ? "text-paan-yellow hover:text-paan-yellow/80"
                                   : "text-gray-400 cursor-not-allowed"
                               }`}
                             >
@@ -451,7 +451,7 @@ export default function Step3Documents({
                             </button>
                             <button
                               onClick={() => removePortfolioLink(index)}
-                              className="p-2 text-red-500 hover:text-red-700"
+                              className="p-2 text-paan-red hover:text-paan-red/80"
                             >
                               <Icon icon="mdi:close" className="w-5 h-5" />
                             </button>
@@ -460,7 +460,7 @@ export default function Step3Documents({
                         <div className="flex gap-3">
                           <button
                             onClick={addPortfolioLink}
-                            className="flex items-center text-blue-500 hover:text-blue-700"
+                            className="flex items-center text-paan-blue hover:text-paan-blue/80"
                           >
                             <Icon icon="mdi:plus" className="w-5 h-5 mr-1" />
                             Add another link field
@@ -470,7 +470,7 @@ export default function Step3Documents({
                             disabled={!hasValidUrls()}
                             className={`flex items-center ${
                               hasValidUrls()
-                                ? "text-green-500 hover:text-green-700"
+                                ? "text-paan-yellow hover:text-paan-yellow/80"
                                 : "text-gray-400 cursor-not-allowed"
                             }`}
                           >
@@ -496,14 +496,14 @@ export default function Step3Documents({
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className={`text-sm hover:underline ${
-                                    mode === "dark" ? "text-blue-400" : "text-blue-600"
+                                    mode === "dark" ? "text-paan-blue" : "text-paan-blue"
                                   }`}
                                 >
                                   {link.url}
                                 </a>
                                 <button
                                   onClick={() => removeUrlFromFormData(index)}
-                                  className="p-1 text-red-500 hover:text-red-700"
+                                  className="p-1 text-paan-red hover:text-paan-red/80"
                                 >
                                   <Icon icon="mdi:close" className="w-4 h-4" />
                                 </button>
@@ -557,7 +557,7 @@ export default function Step3Documents({
                 <h4 className="font-semibold mb-2 flex items-center">
                   <Icon
                     icon="mdi:file-document-multiple"
-                    className="w-5 h-5 mr-2 text-blue-500"
+                    className="w-5 h-5 mr-2 text-paan-blue"
                   />
                   Uploaded Documents ({memoizedCompletedFiles.length}/{fileTypes.length}) -
                   Total Size: {formatFileSize(getTotalFileSize())}
@@ -568,7 +568,7 @@ export default function Step3Documents({
                       <div
                         className={`w-4 h-4 rounded-full mr-2 ${
                           memoizedCompletedFiles.includes(file.id)
-                            ? "bg-blue-400"
+                            ? "bg-paan-blue"
                             : "bg-gray-300"
                         }`}
                       ></div>
@@ -585,7 +585,7 @@ export default function Step3Documents({
                           {file.id === "portfolioWork" && formData.portfolioLinks && formData.portfolioLinks.length > 0 && (
                             <>
                               <button
-                                className="text-xs underline text-blue-500 hover:text-blue-700"
+                                className="text-xs underline text-paan-blue hover:text-paan-blue/80"
                                 onClick={startEditingPortfolio}
                               >
                                 Edit
@@ -594,7 +594,7 @@ export default function Step3Documents({
                             </>
                           )}
                           <button
-                            className="text-xs underline text-red-500 hover:text-red-700"
+                            className="text-xs underline text-paan-red hover:text-paan-red/80"
                             onClick={() => {
                               if (file.id === "portfolioWork") {
                                 setFormData(prev => ({
@@ -635,7 +635,7 @@ export default function Step3Documents({
                   <div className="flex gap-2">
                     <button
                       onClick={savePortfolioLinks}
-                      className="px-3 py-1 text-sm bg-green-500 text-white rounded hover:bg-green-600"
+                      className="px-3 py-1 text-sm bg-paan-yellow text-white rounded hover:bg-paan-yellow/80"
                     >
                       Save Changes
                     </button>
@@ -663,12 +663,12 @@ export default function Step3Documents({
                             mode === "dark" 
                               ? "bg-gray-700 border-gray-600 text-white" 
                               : "bg-white border-gray-300 text-gray-900"
-                          } focus:outline-none focus:ring-2 focus:ring-blue-500`}
+                          } focus:outline-none focus:ring-2 focus:ring-paan-blue`}
                         />
                       </div>
                       <button
                         onClick={() => removePortfolioLink(index)}
-                        className="p-2 text-red-500 hover:text-red-700"
+                        className="p-2 text-paan-red hover:text-paan-red/80"
                       >
                         <Icon icon="mdi:close" className="w-5 h-5" />
                       </button>
@@ -676,7 +676,7 @@ export default function Step3Documents({
                   ))}
                   <button
                     onClick={addPortfolioLink}
-                    className="flex items-center text-blue-500 hover:text-blue-700"
+                    className="flex items-center text-paan-blue hover:text-paan-blue/80"
                   >
                     <Icon icon="mdi:plus" className="w-5 h-5 mr-1" />
                     Add another link field
@@ -695,7 +695,7 @@ export default function Step3Documents({
               <h4 className="font-bold mb-3 flex items-center">
                 <Icon
                   icon="mdi:clipboard-check"
-                  className="w-5 h-5 mr-2 text-blue-500"
+                  className="w-5 h-5 mr-2 text-paan-blue"
                 />
                 Declaration
               </h4>
@@ -707,14 +707,14 @@ export default function Step3Documents({
                       <input
                         id={declaration.id}
                         type="checkbox"
-                        className="w-4 h-4 border-gray-300 rounded text-[#f05d23] focus:ring-[#f05d23]"
+                        className="w-4 h-4 border-gray-300 rounded text-paan-blue focus:ring-paan-blue"
                         checked={declarationChecks[declaration.id]}
                         onChange={() => handleDeclarationChange(declaration.id)}
                       />
                     </div>
                     <label
                       htmlFor={declaration.id}
-                      className={`ml-2 text-sm ${secondaryTextColor} cursor-pointer hover:text-[#f05d23] transition-colors`}
+                      className={`ml-2 text-sm ${secondaryTextColor} cursor-pointer hover:text-paan-red transition-colors`}
                     >
                       {declaration.text}
                     </label>
@@ -723,7 +723,7 @@ export default function Step3Documents({
               </div>
 
               {!areAllDeclarationsChecked() && (
-                <p className="text-red-500 text-xs mt-2 italic">
+                <p className="text-paan-red text-xs mt-2 italic">
                   * All declarations must be checked before submitting
                 </p>
               )}

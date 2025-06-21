@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 
 export default function ConnectingDotsBackground({
-  color = "#f05d23",
+  color = "paan-red",
   secondaryColor = "#505050",
   dotCount = 10, // Reduced dot count
   lineDistance = 180,
@@ -23,11 +23,12 @@ export default function ConnectingDotsBackground({
 
   const getRandomColor = () => {
     const colors = [
-      "#f05d23", // Orange
-      "#4CAF50", // Green
-      "#2196F3", // Blue
-      "#FF9800", // Amber
-      "#E91E63", // Pink
+      "#F25849", // paan-red
+      "#84C1D9", // paan-blue
+      "#F2B706", // paan-yellow
+      "#172840", // paan-dark-blue
+      "#F25849", // paan-red
+      "#84C1D9", // paan-blue
     ];
     return colors[Math.floor(Math.random() * colors.length)];
   };

@@ -31,7 +31,7 @@ export default function FreelancerInstructions({ mode }) {
       {/* Required Documents Section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 mb-3">
-          <Icon icon="lucide:check-circle" className="w-5 h-5 text-green-500" />
+          <Icon icon="lucide:check-circle" className="w-5 h-5 text-paan-yellow" />
           <h4 className={`font-semibold ${mode === "dark" ? "text-gray-100" : "text-gray-900"}`}>Required Documents</h4>
         </div>
         <div className="grid gap-3">

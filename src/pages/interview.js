@@ -509,14 +509,14 @@ export default function InterviewPage({
               <div
                 className={`flex-shrink-0 p-3 rounded-xl ${
                   mode === "dark"
-                    ? "bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-400/30"
-                    : "bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200"
+                    ? "bg-gradient-to-br from-paan-blue/20 to-paan-blue/20 border border-paan-blue/30"
+                    : "bg-gradient-to-br from-paan-blue/10 to-paan-blue/10 border border-paan-blue/20"
                 }`}
               >
                 <Icon
                   icon="solar:bookmark-check-bold-duotone"
                   className={`w-6 h-6 ${
-                    mode === "dark" ? "text-blue-400" : "text-blue-600"
+                    mode === "dark" ? "text-paan-blue" : "text-paan-blue"
                   }`}
                   aria-hidden="true"
                 />
@@ -606,8 +606,8 @@ export default function InterviewPage({
           <div
             className={`flex items-start gap-3 p-4 rounded-xl ${
               mode === "dark"
-                ? "bg-blue-500/10 border border-blue-400/20"
-                : "bg-blue-50 border border-blue-100"
+                ? "bg-paan-dark-blue/10 border border-paan-dark-blue/20"
+                : "bg-paan-blue/10 border border-paan-blue/20"
             }`}
           >
             <Icon
@@ -643,13 +643,13 @@ export default function InterviewPage({
 
       <div
         className={`flex flex-col items-center relative ${
-          mode === "dark" ? "bg-[#0f172a]" : "bg-gray-200"
+          mode === "dark" ? "bg-paan-dark-blue" : "bg-gray-200"
         }`}
       >
         <div className="absolute inset-0 z-10 pointer-events-none">
           <ConnectingDotsBackground
-            color="#f05d23"
-            secondaryColor={mode === "dark" ? "#f05d23" : "#505050"}
+            color="paan-red"
+            secondaryColor={mode === "dark" ? "paan-red" : "#505050"}
             dotCount={50}
             dotSize={2.2}
             lineDistance={180}

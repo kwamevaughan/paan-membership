@@ -31,7 +31,7 @@ export default function AgencyInstructions({ mode }) {
       {/* Required Documents Section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2 mb-3">
-          <Icon icon="lucide:check-circle" className="w-5 h-5 text-green-500" />
+          <Icon icon="lucide:check-circle" className="w-5 h-5 text-paan-yellow" />
           <h4 className={`font-semibold text-paan-deep-blue`}>Required Documents</h4>
         </div>
         <div className="grid gap-3">

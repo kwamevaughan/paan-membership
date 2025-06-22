@@ -2,7 +2,7 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import { Icon } from "@iconify/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SEO from "@/components/SEO";
 
 export default function Freelancers({ initialOpenings }) {
@@ -11,15 +11,49 @@ export default function Freelancers({ initialOpenings }) {
   const [openings] = useState(initialOpenings);
   const [isNavigating, setIsNavigating] = useState(false);
 
+  // Meta Pixel tracking for page view
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.fbq) {
+      window.fbq('track', 'PageView');
+      window.fbq('track', 'ViewContent', {
+        content_name: 'PAAN Freelancers Page',
+        content_category: 'Freelancers',
+        content_type: 'page'
+      });
+    }
+  }, []);
+
   const handleOpeningChange = (e) => {
     const selectedTitle = e.target.value;
     const opening = openings.find((o) => o.title === selectedTitle);
     setSelectedOpening(opening || "");
+
+    // Meta Pixel tracking for opening selection
+    if (opening && typeof window !== 'undefined' && window.fbq) {
+      window.fbq('track', 'AddToCart', {
+        content_name: opening.title,
+        content_category: 'EOI Selection',
+        content_type: 'opening',
+        value: 1,
+        currency: 'USD'
+      });
+    }
   };
 
   const handleProceed = async () => {
     if (selectedOpening && !isNavigating) {
       setIsNavigating(true);
+
+      // Meta Pixel tracking for proceeding to application
+      if (typeof window !== 'undefined' && window.fbq) {
+        window.fbq('track', 'InitiateCheckout', {
+          content_name: selectedOpening.title,
+          content_category: 'Application',
+          content_type: 'opening',
+          value: 1,
+          currency: 'USD'
+        });
+      }
 
       try {
         // Navigate to the interview page

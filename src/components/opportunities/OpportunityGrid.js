@@ -19,6 +19,7 @@ export default function OpportunityGrid({
   selectedIndustry,
   selectedJobType,
   selectedTier,
+  selectedTenderType,
   selectedIds = [],
   onSelect,
   onSelectAll,
@@ -56,9 +57,14 @@ export default function OpportunityGrid({
       const matchesTier =
         selectedTier === "All" || opportunity.tier_restriction === selectedTier;
       
-      return matchesSearch && matchesLocation && matchesServiceType && matchesIndustry && matchesJobType && matchesTier;
+      const matchesTenderType =
+        selectedTenderType === "All" || 
+        (selectedTenderType === "Tender" && opportunity.is_tender) ||
+        (selectedTenderType === "Regular" && !opportunity.is_tender);
+      
+      return matchesSearch && matchesLocation && matchesServiceType && matchesIndustry && matchesJobType && matchesTier && matchesTenderType;
     });
-  }, [opportunities, filterTerm, selectedLocation, selectedServiceType, selectedIndustry, selectedJobType, selectedTier]);
+  }, [opportunities, filterTerm, selectedLocation, selectedServiceType, selectedIndustry, selectedJobType, selectedTier, selectedTenderType]);
 
   const sortedOpportunities = useMemo(() => {
     return [...(filteredOpportunities || [])].sort((a, b) => {
@@ -373,7 +379,7 @@ export default function OpportunityGrid({
             mode === "dark" ? "text-gray-400" : "text-gray-500"
           }`}
         >
-          {filterTerm || selectedLocation !== "All" || selectedServiceType.length > 0 || selectedIndustry !== "All" || selectedJobType !== "All" || selectedTier !== "All"
+          {filterTerm || selectedLocation !== "All" || selectedServiceType.length > 0 || selectedIndustry !== "All" || selectedJobType !== "All" || selectedTier !== "All" || selectedTenderType !== "All"
             ? "Try adjusting your filters."
             : "Create a new opportunity to get started!"}
         </p>

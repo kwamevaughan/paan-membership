@@ -12,11 +12,14 @@ export default function OpportunityFilters({
   onJobTypeChange,
   selectedTier,
   onTierChange,
+  selectedTenderType,
+  onTenderTypeChange,
   locations = [],
   serviceTypes = [],
   industries = [],
   jobTypes = [],
   tiers = [],
+  tenderTypes = [],
   mode = "light",
   loading = false,
   opportunities = [],
@@ -54,7 +57,12 @@ export default function OpportunityFilters({
       const matchesTier =
         selectedTier === "All" || opportunity.tier_restriction === selectedTier;
       
-      return matchesSearch && matchesLocation && matchesServiceType && matchesIndustry && matchesJobType && matchesTier;
+      const matchesTenderType =
+        selectedTenderType === "All" || 
+        (selectedTenderType === "Tender" && opportunity.is_tender) ||
+        (selectedTenderType === "Regular" && !opportunity.is_tender);
+      
+      return matchesSearch && matchesLocation && matchesServiceType && matchesIndustry && matchesJobType && matchesTier && matchesTenderType;
     }).sort((a, b) => {
       const dateA = new Date(a.created_at);
       const dateB = new Date(b.created_at);
@@ -68,11 +76,12 @@ export default function OpportunityFilters({
     selectedIndustry,
     selectedJobType,
     selectedTier,
+    selectedTenderType,
     sortOrder
   ]);
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 w-full">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 w-full">
       <div className="w-full">
         <SelectFilter
           label="Location"
@@ -131,6 +140,18 @@ export default function OpportunityFilters({
           disabled={loading}
           mode={mode}
           id="opportunities-tier"
+        />
+      </div>
+
+      <div className="w-full">
+        <SelectFilter
+          label="Type"
+          value={selectedTenderType}
+          onChange={onTenderTypeChange}
+          options={tenderTypes}
+          disabled={loading}
+          mode={mode}
+          id="opportunities-tender-type"
         />
       </div>
     </div>

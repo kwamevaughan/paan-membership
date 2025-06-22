@@ -15,6 +15,7 @@ export default function OpportunityForm({
   isEditing,
   tiers,
   mode,
+  handleBulkSubmit,
 }) {
   const [jobType, setJobType] = useState(formData.job_type || "Agency");
   const [projectTypes, setProjectTypes] = useState([]);
@@ -269,6 +270,7 @@ export default function OpportunityForm({
             setUploadedFile={setUploadedFile}
             handleFileUpload={handleFileUpload}
             tiers={tiers}
+            handleBulkSubmit={handleBulkSubmit}
           />
         ) : (
           <RegularFormSection

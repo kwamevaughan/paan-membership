@@ -86,11 +86,11 @@ export const useOpportunities = () => {
   };
 
   const handleSubmit = async (e, id = null) => {
-    e.preventDefault();
-    try {
-      setLoading(true);
-      console.log("[useOpportunities] Starting form submission...");
+    if (e) e.preventDefault();
+    setLoading(true);
 
+    try {
+      if (!supabase) throw new Error("Supabase client is not initialized");
       const {
         data: { user },
         error: userError,
@@ -104,19 +104,17 @@ export const useOpportunities = () => {
         .single();
       if (hrError || !hrUser) throw new Error("User not authorized");
 
-      // Tender validation
+      // Validate tender fields if this is a tender opportunity
       if (formData.is_tender) {
-        const requiredFields = [
-          { field: 'tender_organization', name: 'Organization' },
-          { field: 'tender_category', name: 'Category' },
-          { field: 'tender_issued', name: 'Issued Date' },
-          { field: 'tender_closing', name: 'Closing Date' },
-          { field: 'tender_access_link', name: 'Access Link' }
+        const tenderFields = [
+          { name: 'Organization', field: 'tender_organization', value: formData.tender_organization },
+          { name: 'Category', field: 'tender_category', value: formData.tender_category },
+          { name: 'Issued Date', field: 'tender_issued', value: formData.tender_issued },
+          { name: 'Closing Date', field: 'tender_closing', value: formData.tender_closing },
+          { name: 'Access Link', field: 'tender_access_link', value: formData.tender_access_link },
         ];
-        
-        const missingFields = requiredFields.filter(({ field }) => {
-          const value = formData[field];
-          // For date fields, check if they have a value
+
+        const missingFields = tenderFields.filter(({ value, field }) => {
           if (field === 'tender_issued' || field === 'tender_closing') {
             return !value || value === '';
           }
@@ -222,6 +220,94 @@ export const useOpportunities = () => {
     } catch (error) {
       console.error("[useOpportunities] Error in handleSubmit:", error);
       toast.error(`Error saving opportunity: ${error.message}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle bulk tender creation
+  const handleBulkSubmit = async (tenders, tierRestriction) => {
+    setLoading(true);
+
+    try {
+      if (!supabase) throw new Error("Supabase client is not initialized");
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
+      if (userError || !user) throw new Error("User not authenticated");
+
+      const { data: hrUser, error: hrError } = await supabase
+        .from("hr_users")
+        .select("id")
+        .eq("id", user.id)
+        .single();
+      if (hrError || !hrUser) throw new Error("User not authorized");
+
+      if (!tenders || tenders.length === 0) {
+        throw new Error("No tenders to create");
+      }
+
+      if (!tierRestriction) {
+        throw new Error("Membership tier is required for bulk creation");
+      }
+
+      // Validate bulk tender data
+      const invalidTenders = tenders.filter(tender => {
+        return !tender.organization || !tender.category || !tender.closing || !tender.accessLink;
+      });
+
+      if (invalidTenders.length > 0) {
+        throw new Error(`${invalidTenders.length} tenders are missing required fields (Organization, Category, Closing Date, Access Link)`);
+      }
+
+      // Prepare bulk payload
+      const bulkPayload = tenders.map(tender => ({
+        title: tender.organization || "Tender Opportunity",
+        description: tender.description || `Tender opportunity from ${tender.organization} in the ${tender.category} category.`,
+        location: null,
+        deadline: tender.closing || null,
+        tier_restriction: tierRestriction,
+        service_type: null,
+        industry: null,
+        project_type: null,
+        application_link: null,
+        job_type: "Agency",
+        skills_required: [],
+        estimated_duration: null,
+        budget_range: null,
+        remote_work: false,
+        attachment_url: null,
+        attachment_name: null,
+        attachment_type: null,
+        attachment_size: null,
+        is_tender: true,
+        tender_organization: tender.organization || null,
+        tender_category: tender.category || null,
+        tender_issued: tender.issued || null,
+        tender_closing: tender.closing || null,
+        tender_access_link: tender.accessLink || null,
+      }));
+
+      // Create all tenders
+      const { data, error } = await supabase
+        .from("business_opportunities")
+        .insert(bulkPayload)
+        .select();
+
+      if (error) {
+        console.error("[useOpportunities] Supabase error:", error);
+        throw new Error(`Database error: ${error.message}`);
+      }
+
+      toast.success(`${data.length} tenders created successfully!`);
+      setOpportunities((prev) => [...prev, ...data]);
+      
+      return data;
+    } catch (error) {
+      console.error("[useOpportunities] Error in handleBulkSubmit:", error);
+      toast.error(`Error creating tenders: ${error.message}`);
+      throw error;
     } finally {
       setLoading(false);
     }
@@ -367,5 +453,6 @@ export const useOpportunities = () => {
     handleDelete,
     resetForm,
     fetchOpportunities,
+    handleBulkSubmit,
   };
 };

@@ -27,7 +27,7 @@ export default function BaseFilters({
     return (
       filterTerm !== "" || // Search term is not empty
       sortOrder !== "newest" || // Sort is not default
-      (filteredItems.length !== items.length) // Any other filters are active
+      (filteredItems && items && filteredItems.length !== items.length) // Filtered results differ from total
     );
   };
 

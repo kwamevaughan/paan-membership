@@ -37,6 +37,7 @@ export default function AdminBusinessOpportunities({
   const [selectedIndustry, setSelectedIndustry] = useState("All");
   const [selectedJobType, setSelectedJobType] = useState("All");
   const [selectedTier, setSelectedTier] = useState("All");
+  const [selectedTenderType, setSelectedTenderType] = useState("All");
   const [selectedOpportunityId, setSelectedOpportunityId] = useState(null);
   const [isUsersModalOpen, setIsUsersModalOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
@@ -66,6 +67,7 @@ export default function AdminBusinessOpportunities({
     handleEdit,
     handleDelete,
     resetForm,
+    handleBulkSubmit,
   } = useOpportunities();
 
   // State for delete confirmation modal
@@ -95,6 +97,68 @@ export default function AdminBusinessOpportunities({
         : [...prev, id]
     );
   }, []);
+
+  // Function to reset all filters
+  const resetFilters = useCallback(() => {
+    setFilterTerm("");
+    setSortOrder("newest");
+    setSelectedLocation("All");
+    setSelectedServiceType("All");
+    setSelectedIndustry("All");
+    setSelectedJobType("All");
+    setSelectedTier("All");
+    setSelectedTenderType("All");
+  }, []);
+
+  // Function to check if there are active filters
+  const hasActiveFilters = useCallback(() => {
+    return (
+      filterTerm !== "" ||
+      sortOrder !== "newest" ||
+      selectedLocation !== "All" ||
+      selectedServiceType !== "All" ||
+      selectedIndustry !== "All" ||
+      selectedJobType !== "All" ||
+      selectedTier !== "All" ||
+      selectedTenderType !== "All"
+    );
+  }, [filterTerm, sortOrder, selectedLocation, selectedServiceType, selectedIndustry, selectedJobType, selectedTier, selectedTenderType]);
+
+  // Create filtered opportunities for BaseFilters
+  const filteredOpportunities = useMemo(() => {
+    if (!opportunities) return [];
+    
+    return opportunities.filter((opportunity) => {
+      if (!opportunity) return false;
+      
+      const matchesSearch =
+        !filterTerm ||
+        (opportunity.title && opportunity.title.toLowerCase().includes(filterTerm.toLowerCase())) ||
+        (opportunity.description && opportunity.description.toLowerCase().includes(filterTerm.toLowerCase()));
+      
+      const matchesLocation =
+        selectedLocation === "All" || opportunity.location === selectedLocation;
+      
+      const matchesServiceType =
+        selectedServiceType === "All" || opportunity.service_type === selectedServiceType;
+      
+      const matchesIndustry =
+        selectedIndustry === "All" || opportunity.industry === selectedIndustry;
+      
+      const matchesJobType =
+        selectedJobType === "All" || opportunity.job_type === selectedJobType;
+      
+      const matchesTier =
+        selectedTier === "All" || opportunity.tier_restriction === selectedTier;
+      
+      const matchesTenderType =
+        selectedTenderType === "All" || 
+        (selectedTenderType === "Tender" && opportunity.is_tender) ||
+        (selectedTenderType === "Regular" && !opportunity.is_tender);
+      
+      return matchesSearch && matchesLocation && matchesServiceType && matchesIndustry && matchesJobType && matchesTier && matchesTenderType;
+    });
+  }, [opportunities, filterTerm, selectedLocation, selectedServiceType, selectedIndustry, selectedJobType, selectedTier, selectedTenderType]);
 
   // Function to open delete confirmation modal
   const openDeleteModal = (id) => {
@@ -172,13 +236,15 @@ export default function AdminBusinessOpportunities({
     const industries = [...new Set(opportunities.map(opp => opp.industry))].filter(Boolean);
     const jobTypes = [...new Set(opportunities.map(opp => opp.job_type))].filter(Boolean);
     const tiers = [...new Set(opportunities.map(opp => opp.tier_restriction))].filter(Boolean);
+    const tenderTypes = ["Regular", "Tender"]; // Static options for tender type
 
     return {
       locations,
       serviceTypes,
       industries,
       jobTypes,
-      tiers
+      tiers,
+      tenderTypes
     };
   }, [opportunities]);
 
@@ -330,7 +396,8 @@ export default function AdminBusinessOpportunities({
                       showFilters={showFilters}
                       setShowFilters={setShowFilters}
                       items={opportunities}
-                      filteredItems={opportunities}
+                      filteredItems={filteredOpportunities}
+                      onResetFilters={resetFilters}
                       onOpenUsersModal={modalActions.openUsersModal}
                       filterStatus={filterStatus}
                       setFilterStatus={setFilterStatus}
@@ -349,11 +416,14 @@ export default function AdminBusinessOpportunities({
                         onJobTypeChange={setSelectedJobType}
                         selectedTier={selectedTier}
                         onTierChange={setSelectedTier}
+                        selectedTenderType={selectedTenderType}
+                        onTenderTypeChange={setSelectedTenderType}
                         locations={filterOptions.locations}
                         serviceTypes={filterOptions.serviceTypes}
                         industries={filterOptions.industries}
                         jobTypes={filterOptions.jobTypes}
                         tiers={filterOptions.tiers}
+                        tenderTypes={filterOptions.tenderTypes}
                         mode={mode}
                         loading={loading}
                         opportunities={opportunities}
@@ -378,6 +448,7 @@ export default function AdminBusinessOpportunities({
                       selectedIndustry={selectedIndustry}
                       selectedJobType={selectedJobType}
                       selectedTier={selectedTier}
+                      selectedTenderType={selectedTenderType}
                       selectedIds={selectedIds}
                       onSelect={handleSelect}
                       onSelectAll={handleSelectAll}
@@ -428,6 +499,7 @@ export default function AdminBusinessOpportunities({
                 isEditing={isEditing}
                 tiers={tiers}
                 mode={mode}
+                handleBulkSubmit={handleBulkSubmit}
               />
             </ItemActionModal>
 

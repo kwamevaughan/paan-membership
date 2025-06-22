@@ -10,6 +10,25 @@ export default function OpportunityCard({
   className = "",
 }) {
   const isAgency = opportunity.job_type === "Agency";
+  const isTender = opportunity.is_tender;
+
+  const getFileIcon = (fileType) => {
+    if (fileType?.includes('pdf')) return 'heroicons:document-text';
+    if (fileType?.includes('word') || fileType?.includes('document')) return 'heroicons:document';
+    if (fileType?.includes('excel') || fileType?.includes('spreadsheet')) return 'heroicons:table-cells';
+    if (fileType?.includes('powerpoint') || fileType?.includes('presentation')) return 'heroicons:presentation-chart-line';
+    if (fileType?.includes('zip') || fileType?.includes('compressed')) return 'heroicons:archive-box';
+    if (fileType?.includes('text')) return 'heroicons:document-text';
+    return 'heroicons:document';
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes || bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
 
   return (
     <motion.div
@@ -31,7 +50,11 @@ export default function OpportunityCard({
             <div className="flex items-center gap-2 mb-3">
               <span
                 className={`px-2 py-1 text-xs font-medium rounded-full ${
-                  isAgency
+                  isTender
+                    ? mode === "dark"
+                      ? "bg-orange-900/30 text-orange-300"
+                      : "bg-orange-100 text-orange-600"
+                    : isAgency
                     ? mode === "dark"
                       ? "bg-blue-900/30 text-blue-300"
                       : "bg-blue-100 text-blue-600"
@@ -40,9 +63,9 @@ export default function OpportunityCard({
                     : "bg-purple-100 text-purple-600"
                 }`}
               >
-                {opportunity.job_type}
+                {isTender ? "Tender" : opportunity.job_type}
               </span>
-              {opportunity.service_type && (
+              {!isTender && opportunity.service_type && (
                 <span
                   className={`px-2 py-1 text-xs font-medium rounded-full ${
                     mode === "dark"
@@ -58,7 +81,7 @@ export default function OpportunityCard({
         </div>
 
         <p
-          className={`text-sm mb-4 line-clamp-3 ${
+          className={`text-sm mb-4 line-clamp-2 ${
             mode === "dark" ? "text-gray-300" : "text-gray-600"
           }`}
         >
@@ -66,107 +89,253 @@ export default function OpportunityCard({
         </p>
 
         <div className="space-y-3">
-          <div className="flex items-center gap-2">
-            <Icon
-              icon="heroicons:map-pin"
-              className={`w-4 h-4 ${
-                mode === "dark" ? "text-gray-400" : "text-gray-500"
-              }`}
-            />
-            <span className="text-sm">{opportunity.location}</span>
-          </div>
+          {/* Tender-specific information */}
+          {isTender ? (
+            <>
+              {opportunity.tender_organization && (
+                <div className="flex items-center gap-2">
+                  <Icon
+                    icon="heroicons:building-office"
+                    className={`w-4 h-4 ${
+                      mode === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  />
+                  <span className="text-sm">
+                    {opportunity.tender_organization}
+                  </span>
+                </div>
+              )}
 
-          <div className="flex items-center gap-2">
-            <Icon
-              icon="heroicons:calendar"
-              className={`w-4 h-4 ${
-                mode === "dark" ? "text-gray-400" : "text-gray-500"
-              }`}
-            />
-            <span className="text-sm">
-              Deadline:{" "}
-              {new Date(opportunity.deadline).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-                year: "numeric",
-              })}
-            </span>
-          </div>
+              {opportunity.tender_category && (
+                <div className="flex items-center gap-2">
+                  <Icon
+                    icon="heroicons:tag"
+                    className={`w-4 h-4 ${
+                      mode === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  />
+                  <span className="text-sm">{opportunity.tender_category}</span>
+                </div>
+              )}
 
-          {opportunity.tier_restriction && (
-            <div className="flex items-center gap-2">
-              <Icon
-                icon="heroicons:academic-cap"
-                className={`w-4 h-4 ${
-                  mode === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              />
-              <span className="text-sm">{opportunity.tier_restriction}</span>
-            </div>
-          )}
+              {opportunity.tender_issued && (
+                <div className="flex items-center gap-2">
+                  <Icon
+                    icon="heroicons:calendar-days"
+                    className={`w-4 h-4 ${
+                      mode === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  />
+                  <span className="text-sm">
+                    Issued:{" "}
+                    {new Date(opportunity.tender_issued).toLocaleDateString(
+                      "en-US",
+                      {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      }
+                    )}
+                  </span>
+                </div>
+              )}
 
-          {opportunity.industry && (
-            <div className="flex items-center gap-2">
-              <Icon
-                icon="heroicons:building-office"
-                className={`w-4 h-4 ${
-                  mode === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              />
-              <span className="text-sm">{opportunity.industry}</span>
-            </div>
-          )}
+              {opportunity.tender_closing && (
+                <div className="flex items-center gap-2">
+                  <Icon
+                    icon="heroicons:calendar"
+                    className={`w-4 h-4 ${
+                      mode === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  />
+                  <span className="text-sm">
+                    Deadline:{" "}
+                    {new Date(opportunity.tender_closing).toLocaleDateString(
+                      "en-US",
+                      {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      }
+                    )}
+                  </span>
+                </div>
+              )}
 
-          {!isAgency && opportunity.skills_required?.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {opportunity.skills_required.map((skill) => (
-                <span
-                  key={skill}
-                  className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    mode === "dark"
-                      ? "bg-gray-700 text-gray-300"
-                      : "bg-gray-100 text-gray-600"
+              {opportunity.tender_access_link && (
+                <div className="flex items-center gap-2">
+                  <Icon
+                    icon="heroicons:link"
+                    className={`w-4 h-4 ${
+                      mode === "dark" ? "text-blue-400" : "text-blue-600"
+                    }`}
+                  />
+                  <a
+                    href={opportunity.tender_access_link}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`text-sm font-medium hover:underline ${
+                      mode === "dark" ? "text-blue-400" : "text-blue-600"
+                    }`}
+                  >
+                    View Tender Details
+                  </a>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              {/* Regular opportunity information */}
+              <div className="flex items-center gap-2">
+                <Icon
+                  icon="heroicons:map-pin"
+                  className={`w-4 h-4 ${
+                    mode === "dark" ? "text-gray-400" : "text-gray-500"
                   }`}
-                >
-                  {skill}
+                />
+                <span className="text-sm">
+                  {opportunity.location || "Remote"}
                 </span>
-              ))}
-            </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Icon
+                  icon="heroicons:calendar"
+                  className={`w-4 h-4 ${
+                    mode === "dark" ? "text-gray-400" : "text-gray-500"
+                  }`}
+                />
+                <span className="text-sm">
+                  Deadline:{" "}
+                  {new Date(opportunity.deadline).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </span>
+              </div>
+
+              {opportunity.tier_restriction && (
+                <div className="flex items-center gap-2">
+                  <Icon
+                    icon="heroicons:academic-cap"
+                    className={`w-4 h-4 ${
+                      mode === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  />
+                  <span className="text-sm">
+                    {opportunity.tier_restriction}
+                  </span>
+                </div>
+              )}
+
+              {opportunity.industry && (
+                <div className="flex items-center gap-2">
+                  <Icon
+                    icon="heroicons:building-office"
+                    className={`w-4 h-4 ${
+                      mode === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  />
+                  <span className="text-sm">{opportunity.industry}</span>
+                </div>
+              )}
+
+              {!isAgency && opportunity.skills_required?.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    <Icon
+                      icon="heroicons:tag"
+                      className={`w-4 h-4 ${
+                        mode === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}
+                    />
+                  <span className="text-sm">Skills:</span>
+                  {opportunity.skills_required.map((skill) => (
+                    <span
+                      key={skill}
+                      className={`px-2 py-1 text-xs font-medium rounded-full ${
+                        mode === "dark"
+                          ? "bg-gray-700 text-gray-300"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {!isAgency && opportunity.budget_range && (
+                <div className="flex items-center gap-2">
+                  <Icon
+                    icon="heroicons:currency-dollar"
+                    className={`w-4 h-4 ${
+                      mode === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  />
+                  <span className="text-sm">{opportunity.budget_range}</span>
+                </div>
+              )}
+
+              {!isAgency && opportunity.estimated_duration && (
+                <div className="flex items-center gap-2">
+                  <Icon
+                    icon="heroicons:clock"
+                    className={`w-4 h-4 ${
+                      mode === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  />
+                  <span className="text-sm">
+                    {opportunity.estimated_duration}
+                  </span>
+                </div>
+              )}
+
+              {opportunity.remote_work && (
+                <div className="flex items-center gap-2">
+                  <Icon
+                    icon="heroicons:computer-desktop"
+                    className={`w-4 h-4 ${
+                      mode === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  />
+                  <span className="text-sm">Remote Work Available</span>
+                </div>
+              )}
+            </>
           )}
 
-          {!isAgency && opportunity.budget_range && (
+          {/* Attachment Display (for both types) */}
+          {opportunity.attachment_url && (
             <div className="flex items-center gap-2">
               <Icon
-                icon="heroicons:currency-dollar"
+                icon={getFileIcon(opportunity.attachment_type)}
                 className={`w-4 h-4 ${
-                  mode === "dark" ? "text-gray-400" : "text-gray-500"
+                  mode === "dark" ? "text-blue-400" : "text-blue-600"
                 }`}
               />
-              <span className="text-sm">{opportunity.budget_range}</span>
-            </div>
-          )}
-
-          {!isAgency && opportunity.estimated_duration && (
-            <div className="flex items-center gap-2">
-              <Icon
-                icon="heroicons:clock"
-                className={`w-4 h-4 ${
-                  mode === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              />
-              <span className="text-sm">{opportunity.estimated_duration}</span>
-            </div>
-          )}
-
-          {opportunity.remote_work && (
-            <div className="flex items-center gap-2">
-              <Icon
-                icon="heroicons:computer-desktop"
-                className={`w-4 h-4 ${
-                  mode === "dark" ? "text-gray-400" : "text-gray-500"
-                }`}
-              />
-              <span className="text-sm">Remote Work Available</span>
+              <div className="flex items-center gap-2">
+                <a
+                  href={opportunity.attachment_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`text-sm font-medium hover:underline ${
+                    mode === "dark" ? "text-blue-400" : "text-blue-600"
+                  }`}
+                  title="View attachment"
+                >
+                  {opportunity.attachment_name || "Attachment"}
+                </a>
+                {opportunity.attachment_size && (
+                  <span
+                    className={`text-xs ${
+                      mode === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  >
+                    ({formatFileSize(opportunity.attachment_size)})
+                  </span>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -183,7 +352,8 @@ export default function OpportunityCard({
                 }`}
               />
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                Posted on {new Date(opportunity.created_at).toLocaleDateString("en-US", {
+                Posted on{" "}
+                {new Date(opportunity.created_at).toLocaleDateString("en-US", {
                   month: "short",
                   day: "numeric",
                   year: "numeric",
@@ -199,13 +369,13 @@ export default function OpportunityCard({
                 <Icon icon="heroicons:pencil-square" className="w-5 h-5" />
               </button>
               <button
-                onClick={() => onDelete(opportunity)}
+                onClick={() => onDelete(opportunity.id)}
                 className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition"
                 title="Delete opportunity"
               >
                 <Icon icon="heroicons:trash" className="w-5 h-5" />
               </button>
-              {isAgency && (
+              {isAgency && !isTender && (
                 <button
                   onClick={() => onViewUsers(opportunity.id)}
                   className="p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 transition"

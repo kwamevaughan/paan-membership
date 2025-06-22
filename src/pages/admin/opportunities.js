@@ -253,6 +253,7 @@ export default function AdminBusinessOpportunities({
                 title="Business Opportunities"
                 description="Manage and distribute business opportunities, freelance gigs, and project collaborations. Create targeted opportunities for specific membership tiers and track member engagement."
                 mode={mode}
+                className="capitalize"
                 stats={[
                   {
                     icon: "heroicons:briefcase",
@@ -271,13 +272,18 @@ export default function AdminBusinessOpportunities({
                           iconColor: "text-green-500",
                         },
                         {
+                          icon: "heroicons:document-text",
+                          value: `${opportunities.filter(opp => opp.is_tender).length} tender opportunities`,
+                          iconColor: "text-orange-500",
+                        },
+                        {
                           icon: "heroicons:clock",
                           value: `Last published ${new Date(Math.max(...opportunities.map(opp => new Date(opp.created_at)))).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
                             year: "numeric",
                           })}`,
-                          iconColor: "text-orange-500",
+                          iconColor: "text-blue-500",
                         },
                       ]
                     : []),
@@ -444,10 +450,10 @@ export default function AdminBusinessOpportunities({
                     ? "gig"
                     : "opportunity"}{" "}
                   <strong>
-                    "
+                    &ldquo;
                     {opportunities.find((opp) => opp.id === opportunityToDelete)
                       ?.title || ""}
-                    "
+                    &rdquo;
                   </strong>
                   ? This action cannot be undone.
                 </p>

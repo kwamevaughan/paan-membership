@@ -182,6 +182,20 @@ export default function OpportunityCard({
                   </a>
                 </div>
               )}
+
+              {opportunity.tier_restriction && (
+                <div className="flex items-center gap-2">
+                  <Icon
+                    icon="heroicons:academic-cap"
+                    className={`w-4 h-4 ${
+                      mode === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  />
+                  <span className="text-sm">
+                    {opportunity.tier_restriction}
+                  </span>
+                </div>
+              )}
             </>
           ) : (
             <>

@@ -8,6 +8,7 @@ export default function TenderFormSection({
   uploadedFile,
   setUploadedFile,
   handleFileUpload,
+  tiers,
 }) {
   const tenderCategories = [
     "Advertising and Market Research",
@@ -62,6 +63,35 @@ export default function TenderFormSection({
                 {category}
               </option>
             ))}
+          </select>
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+            <Icon icon="heroicons:chevron-down" className={`h-5 w-5 ${mode === "dark" ? "text-gray-300" : "text-gray-400"}`} />
+          </div>
+          <div className="absolute inset-0 rounded-xl border border-indigo-500 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
+        </div>
+      </div>
+      
+      <div className="col-span-1">
+        <label className={`block text-sm font-medium ${mode === "dark" ? "text-gray-300" : "text-gray-700"} mb-1.5`}>
+          Membership Tier <span className="text-rose-500">*</span>
+        </label>
+        <div className="relative group">
+          <select
+            name="tier_restriction"
+            value={formData.tier_restriction || ""}
+            onChange={handleInputChange}
+            required={true}
+            className={`appearance-none w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 ${
+              mode === "dark" ? "border-gray-700 bg-gray-800 text-white" : "border-gray-200 bg-white text-gray-900"
+            }`}
+          >
+            <option value="">Select Tier</option>
+            {tiers && tiers.length > 0 &&
+              tiers.map((tier) => (
+                <option key={tier} value={tier}>
+                  {tier}
+                </option>
+              ))}
           </select>
           <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
             <Icon icon="heroicons:chevron-down" className={`h-5 w-5 ${mode === "dark" ? "text-gray-300" : "text-gray-400"}`} />

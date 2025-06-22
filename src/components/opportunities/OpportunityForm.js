@@ -268,7 +268,8 @@ export default function OpportunityForm({
             uploadedFile={uploadedFile}
             setUploadedFile={setUploadedFile}
             handleFileUpload={handleFileUpload}
-                      />
+            tiers={tiers}
+          />
         ) : (
           <RegularFormSection
             formData={formData}

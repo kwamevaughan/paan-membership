@@ -171,7 +171,7 @@ export const useOpportunities = () => {
           formData.is_tender
             ? (formData.tender_closing && formData.tender_closing !== '' ? formData.tender_closing : null)
             : (formData.deadline && formData.deadline !== '' ? formData.deadline : null),
-        tier_restriction: job_type === "Agency" ? formData.tier_restriction : null,
+        tier_restriction: formData.tier_restriction || null,
         service_type: job_type === "Agency" ? safeServiceType : null,
         industry: job_type === "Agency" ? safeIndustry : null,
         project_type: formData.project_type || null,

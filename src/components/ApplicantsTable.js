@@ -88,7 +88,7 @@ const handleColumnResize = (e, columnKey) => {
   // Status badge renderer
   const getStatusBadge = (status) => {
     const baseStyle =
-      "inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-200 shadow-sm hover:scale-105";
+      "inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 shadow-sm hover:scale-105";
     switch (status) {
       case "Accepted":
         return (
@@ -419,7 +419,7 @@ const handleColumnResize = (e, columnKey) => {
                 <td className="p-4 space-x-3">
                   <button
                     onClick={() => onViewCandidate(candidate)}
-                    className={`px-4 py-2 rounded-lg inline-flex items-center gap-1.5 text-sm font-medium transition-all duration-200 transform hover:scale-105
+                    className={`px-4 py-2 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium transition-all duration-200 transform hover:scale-105
                       ${
                         isDark
                           ? "text-gray-100 bg-gray-700/80 hover:bg-gray-600/90 backdrop-blur-md"
@@ -431,7 +431,7 @@ const handleColumnResize = (e, columnKey) => {
                   </button>
                   <button
                     onClick={() => onDeleteCandidate(candidate.id)}
-                    className={`px-4 py-2 rounded-lg inline-flex items-center gap-1.5 text-sm font-medium transition-all duration-200 transform hover:scale-105
+                    className={`px-4 py-2 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium transition-all duration-200 transform hover:scale-105
                       ${
                         isDark
                           ? "text-red-100 bg-red-900/60 hover:bg-red-800/80 backdrop-blur-md"

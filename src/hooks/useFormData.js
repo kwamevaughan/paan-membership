@@ -213,6 +213,7 @@ export const useFormData = (questionCount = 0) => {
 
       const cleanedFormData = {
         ...formData,
+        opening: formData.opening ? formData.opening.trim() : "",
         answers: formData.answers.map((answer) =>
           Array.isArray(answer)
             ? answer.filter(

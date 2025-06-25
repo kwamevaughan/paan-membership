@@ -55,7 +55,7 @@ export default function OverviewBoxes({
                 width={20}
                 height={20}
               />
-              <h3 className="font-bold text-lg">Automations</h3>
+              <h3 className="font-medium text-lg">Automations</h3>
             </div>
             <p className="text-sm mt-1 text-gray-500 dark:text-gray-400">
               No running automations yet
@@ -92,7 +92,7 @@ export default function OverviewBoxes({
             {/* Card Header */}
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="font-bold text-lg mb-1 truncate pr-6 max-w-full">
+                <h3 className="font-medium text-lg mb-1 truncate pr-6 max-w-full">
                   {opening}
                 </h3>
                 <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">

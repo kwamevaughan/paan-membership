@@ -571,7 +571,7 @@ export default function CandidateModal({
                       mode === "dark" ? "bg-gray-800/60" : "bg-gray-50/60"
                     } p-6 rounded-xl shadow-md backdrop-blur-sm`}
                   >
-                    <h3 className="text-lg font-semibold mb-4">
+                    <h3 className="text-lg font-medium mb-4">
                       Update candidate status
                     </h3>
                     <div className="space-y-4">
@@ -629,7 +629,7 @@ export default function CandidateModal({
                                       : "bg-red-500"
                                   }`}
                                 ></div>
-                                <span className="font-medium">{status}</span>
+                                <span className="font-normal">{status}</span>
                               </div>
                               {candidate.status === status && (
                                 <Icon
@@ -650,9 +650,9 @@ export default function CandidateModal({
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <Icon icon="mdi:information" className="w-5 h-5" />
-                            <span className="font-medium">Current status</span>
+                            <span className="font-normal">Current status</span>
                           </div>
-                          <span className="font-bold">
+                          <span className="font-semibold">
                             {candidate.status || "Pending"}
                           </span>
                         </div>

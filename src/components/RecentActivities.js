@@ -217,7 +217,7 @@ export default function ModernTimeline({
                
               </motion.div>
               <div>
-                <h2 className={`text-2xl font-bold ${isDark ? "text-white" : "text-gray-900"}`}>
+                <h2 className={`text-2xl font-medium ${isDark ? "text-white" : "text-gray-900"}`}>
                   Activity Timeline
                 </h2>
                 <div className="flex items-center gap-2 mt-1">
@@ -257,7 +257,7 @@ export default function ModernTimeline({
                 onClick={() => handleFilter(category.id)}
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                className={`px-5 py-2.5 text-sm font-semibold rounded-2xl flex items-center gap-2 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 whitespace-nowrap ${
+                className={`px-5 py-2.5 text-sm font-medium rounded-2xl flex items-center gap-2 transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 whitespace-nowrap ${
                   activeFilter === category.id
                     ? `${isDark ? "bg-blue-500/20 text-blue-400" : "bg-blue-500/10 text-blue-600"} shadow-lg ring-2 ring-blue-500/20`
                     : isDark
@@ -315,7 +315,7 @@ export default function ModernTimeline({
                       transition={{ delay: dateIndex * 0.1 }}
                       className="sticky top-[4rem] z-10 mb-2"
                     >
-                      <div className={`inline-flex items-center gap-3 px-6 py-3 rounded-2xl font-bold shadow-xl backdrop-blur-sm border ${
+                      <div className={`inline-flex items-center gap-3 px-6 py-3 rounded-2xl font-medium shadow-xl backdrop-blur-sm border ${
                         isDark
                           ? "bg-gray-800/90 text-white shadow-black/30 border-gray-700/50"
                           : "bg-white/90 text-gray-900 shadow-gray-900/20 border-gray-200/50"
@@ -368,7 +368,7 @@ export default function ModernTimeline({
                               </div>
 
                               {/* Enhanced Time Marker */}
-                              <div className="min-w-[70px] text-xs font-bold mt-2">
+                              <div className="min-w-[70px] text-xs font-medium mt-2">
                                 <span className={`px-3 py-1 rounded-lg backdrop-blur-sm ${
                                   isDark
                                     ? "bg-gray-800/60 text-gray-300 border border-gray-700/50"
@@ -391,7 +391,7 @@ export default function ModernTimeline({
                                   onClick={() => handleActivityClick(activity)}
                                 >
                                   <div className="flex justify-between items-start mb-3">
-                                    <p className={`text-sm font-semibold leading-relaxed ${
+                                    <p className={`text-sm font-normal leading-relaxed ${
                                       isDark ? "text-gray-100" : "text-gray-900"
                                     }`}>
                                       {activity.description}
@@ -406,7 +406,7 @@ export default function ModernTimeline({
 
                                   {/* Enhanced Category Chip */}
                                   <div className="flex">
-                                    <span className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold rounded-xl backdrop-blur-sm border shadow-sm ${
+                                    <span className={`inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-xl backdrop-blur-sm border shadow-sm ${
                                       isDark
                                         ? `bg-gray-700/60 text-gray-200 border-gray-600/50`
                                         : `bg-gray-50/80 ${style.color} border-gray-200/50`
@@ -456,7 +456,7 @@ export default function ModernTimeline({
                   className={`w-12 h-12 ${isDark ? "text-gray-400" : "text-gray-600"}`}
                 />
               </motion.div>
-              <p className={`text-xl font-bold mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>
+              <p className={`text-xl font-medium mb-2 ${isDark ? "text-white" : "text-gray-900"}`}>
                 No activities found
               </p>
               <p className={`text-sm mb-8 ${isDark ? "text-gray-400" : "text-gray-600"}`}>
@@ -466,7 +466,7 @@ export default function ModernTimeline({
                 onClick={() => handleFilter("all")}
                 whileHover={{ scale: 1.05, y: -2 }}
                 whileTap={{ scale: 0.95 }}
-                className="px-6 py-3 rounded-2xl text-sm font-semibold bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg hover:shadow-xl transition-all backdrop-blur-sm"
+                className="px-6 py-3 rounded-2xl text-sm font-medium bg-gradient-to-r from-blue-500 to-purple-500 text-white shadow-lg hover:shadow-xl transition-all backdrop-blur-sm"
               >
                 <Icon icon="lucide:refresh-cw" className="w-4 h-4 inline mr-2" />
                 Reset all filters

@@ -178,7 +178,7 @@ export default function SubscribersLog({
             <div
               className={`p-3 rounded-xl shadow-lg transition-all duration-300 ${
                 mode === "dark"
-                  ? "bg-indigo-500/20 text-indigo-300 hover:bg-indigo-500/30"
+                  ? "bg-paan-blue/20 text-paan-blue hover:bg-paan-blue/30"
                   : "bg-blue-400/10 text-[#172840] hover:bg-blue-400/20"
               }`}
             >
@@ -188,7 +188,7 @@ export default function SubscribersLog({
               />
             </div>
             <div>
-              <h2 className="text-xl font-semibold tracking-tight">Subscribers</h2>
+              <h2 className="text-xl font-medium tracking-tight">Subscribers</h2>
               <p className="text-sm text-gray-400 mt-0.5">
                 {filteredSubscribers.length}{" "}
                 {filteredSubscribers.length === 1 ? "member" : "members"} total
@@ -257,8 +257,8 @@ export default function SubscribersLog({
             onChange={(e) => setSearchTerm(e.target.value)}
             className={`pl-10 pr-4 py-2.5 w-full rounded-lg text-sm focus:outline-none focus:ring-2 transition-all ${
               mode === "dark"
-                ? "bg-slate-800 border border-slate-700 focus:ring-indigo-500 text-white placeholder-gray-500"
-                : "bg-gray-50 border border-gray-200 focus:ring-indigo-300 text-gray-800 placeholder-gray-400"
+                ? "bg-slate-800 border border-slate-700 focus:ring-paan-blue text-white placeholder-gray-500"
+                : "bg-gray-50 border border-gray-200 focus:ring-paan-blue text-gray-800 placeholder-gray-400"
             }`}
           />
         </div>
@@ -273,19 +273,19 @@ export default function SubscribersLog({
               }`}
             >
               <tr>
-                <th className="text-left px-6 py-4 font-semibold text-gray-500 dark:text-gray-400">
+                <th className="text-left px-6 py-4 font-medium text-gray-500 dark:text-gray-400">
                   <button
                     onClick={() => handleSort("name")}
-                    className="flex items-center gap-1 hover:text-indigo-500 transition-colors"
+                    className="flex items-center gap-1 hover:text-paan-blue transition-colors"
                   >
                     Subscriber Info
                     <Icon icon={getSortIcon("name")} className="w-4 h-4" />
                   </button>
                 </th>
-                <th className="text-left px-6 py-4 font-semibold text-gray-500 dark:text-gray-400">
+                <th className="text-left px-6 py-4 font-medium text-gray-500 dark:text-gray-400">
                   <button
                     onClick={() => handleSort("created_at")}
-                    className="flex items-center gap-1 hover:text-indigo-500 transition-colors"
+                    className="flex items-center gap-1 hover:text-paan-blue transition-colors"
                   >
                     Joined
                     <Icon
@@ -333,15 +333,15 @@ export default function SubscribersLog({
                           <div
                             className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
                               mode === "dark"
-                                ? "bg-indigo-500/20 group-hover:bg-indigo-500/30"
-                                : "bg-[#84c1d9]/20 group-hover:bg-[#84c1d9]/30"
+                                ? "bg-paan-blue/20 group-hover:bg-paan-blue/30"
+                                : "bg-paan-blue/20 group-hover:bg-paan-blue/30"
                             } ${subscriber.name ? "" : "opacity-50"}`}
                           >
                             {subscriber.name ? (
                               <span
                                 className={`font-medium ${
                                   mode === "dark"
-                                    ? "text-indigo-300"
+                                    ? "text-paan-blue"
                                     : "text-[#172840]"
                                 }`}
                               >
@@ -352,13 +352,13 @@ export default function SubscribersLog({
                                 icon="mdi:account-circle"
                                 className={`w-4 h-4 ${
                                   mode === "dark"
-                                    ? "text-indigo-300"
-                                    : "text-indigo-600"
+                                    ? "text-paan-blue"
+                                    : "text-paan-blue"
                                 }`}
                               />
                             )}
                           </div>
-                          <span className="font-medium group-hover:text-indigo-500 transition-colors">
+                          <span className="font-medium group-hover:text-paan-blue transition-colors">
                             {subscriber.name || "—"}
                           </span>
                         </div>
@@ -440,8 +440,8 @@ export default function SubscribersLog({
                 disabled={currentPage === totalPages}
                 className={`px-3 py-1.5 text-sm rounded-md transition-all ${
                   mode === "dark"
-                    ? "bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
-                    : "bg-[#84c1d9] text-white hover:bg-indigo-600 disabled:opacity-50"
+                    ? "bg-paan-blue text-white hover:bg-paan-blue/80 disabled:opacity-50"
+                    : "bg-paan-blue text-white hover:bg-paan-blue/80 disabled:opacity-50"
                 } disabled:cursor-not-allowed`}
               >
                 Next

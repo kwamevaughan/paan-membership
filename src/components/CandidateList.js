@@ -66,7 +66,7 @@ export default function CandidateList({
             : "bg-gradient-to-br from-white to-gray-50 border-blue-100 text-gray-800"
         }`}
       >
-        <h3 className="text-lg font-semibold flex items-center">
+        <h3 className="text-lg font-medium flex items-center">
           <Icon icon="mdi:clock-outline" className="mr-2 text-2xl" />
           Pending Approval
         </h3>
@@ -101,7 +101,7 @@ export default function CandidateList({
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <h2 className={`text-xl font-bold text-[#172840]`}>
+              <h2 className={`text-xl font-medium text-[#172840]`}>
                 Pending Approval
               </h2>
               <span

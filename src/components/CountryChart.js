@@ -293,8 +293,8 @@ export default function CountryChart({ candidates, mode, onFilter }) {
               </div>
             </div>
             <div>
-              <h2 className={`text-xl font-bold text-[#172840] $`}>
-                Applicants by Country
+              <h2 className={`text-xl font-medium text-[#172840] $`}>
+                Applicants by Country & Device
               </h2>
               <div className="flex items-center gap-2 mt-1">
                 <span

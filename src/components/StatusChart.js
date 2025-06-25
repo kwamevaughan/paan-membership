@@ -536,7 +536,7 @@
               </div>
             </div>
             <h2
-              className={`text-lg sm:text-xl font-bold text-[#172840] truncate ${
+              className={`text-lg sm:text-xl font-medium text-[#172840] truncate ${
                 mode === "dark" ? "text-white" : "text-gray-800"
               }`}
             >
@@ -568,7 +568,7 @@
               />
             </button>
             <span
-              className={`text-sm sm:text-md font-bold ${
+              className={`text-sm sm:text-md font-medium ${
                 mode === "dark" ? "text-gray-300" : "text-[#231812]"
               }`}
             >
@@ -605,7 +605,7 @@
                 return (
                   <button
                     key={index}
-                    className={`flex items-center justify-center w-full md:w-auto p-3 my-2 rounded-lg shadow-md font-extrabold text-left transition-colors duration-200 min-h-[48px] md:whitespace-normal whitespace-nowrap ${
+                    className={`flex items-center justify-center w-full md:w-auto p-3 my-2 rounded-lg shadow-md font-medium text-left transition-colors duration-200 min-h-[48px] md:whitespace-normal whitespace-nowrap ${
                       isSelected
                         ? mode === "dark"
                           ? "bg-gray-600 text-white"

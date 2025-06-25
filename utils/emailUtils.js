@@ -28,13 +28,7 @@ export async function sendStatusEmail({
     throw new Error("Invalid email address");
   }
   
-  // Log email configuration (without sensitive data)
-  console.log('Email configuration:', {
-    host: process.env.EMAIL_HOST,
-    port: process.env.EMAIL_PORT,
-    secure: process.env.EMAIL_SECURE,
-    user: process.env.EMAIL_USER ? '***' : undefined
-  });
+  
 
   if (!process.env.EMAIL_HOST || !process.env.EMAIL_PORT || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     throw new Error("Missing email configuration. Please check environment variables.");
@@ -70,6 +64,7 @@ export async function sendStatusEmail({
     throw error;
   }
 }
+
 
 export async function sendEmails({
   agencyName,
@@ -293,12 +288,18 @@ export async function sendEmails({
     .replace(/\[Submission Date\]/g, formatDate(new Date(submittedAt)))
     .replace(/\[Selected Tier\]/g, selectedTier);
 
-  await transporter.sendMail({
-    from: `"Pan-African Agency Network (PAAN)" <${process.env.EMAIL_USER}>`,
-    to: primaryContactEmail,
-    subject: processedCandidateSubject,
-    html: candidateHtml,
-  });
+  
+
+  try {
+    await transporter.sendMail({
+      from: `"Pan-African Agency Network (PAAN)" <${process.env.EMAIL_USER}>`,
+      to: primaryContactEmail,
+      subject: processedCandidateSubject,
+      html: candidateHtml,
+    });
+  } catch (err) {
+    console.error("[sendEmails] Error sending candidate email:", err);
+  }
 
   const processedAdminSubject = (
     adminSubject ||
@@ -393,21 +394,21 @@ export async function sendEmails({
       ? process.env.FREELANCER_EMAIL
       : process.env.AGENCY_EMAIL;
 
-  await transporter.sendMail({
-    from: `"Pan-African Agency Network (PAAN)" <${process.env.EMAIL_USER}>`,
-    to: adminEmailRecipient,
-    subject: processedAdminSubject,
-    html: adminHtml,
-    attachments: [
-      {
-        filename: `PAAN_Responses_${referenceNumber}.pdf`,
-        content: pdfBuffer,
-        contentType: "application/pdf",
-      },
-    ],
-  });
-
-  console.log(
-    `Admin email sent to ${adminEmailRecipient} with subject: ${processedAdminSubject}`
-  );
+  try {
+    await transporter.sendMail({
+      from: `"Pan-African Agency Network (PAAN)" <${process.env.EMAIL_USER}>`,
+      to: adminEmailRecipient,
+      subject: processedAdminSubject,
+      html: adminHtml,
+      attachments: [
+        {
+          filename: `PAAN_Responses_${referenceNumber}.pdf`,
+          content: pdfBuffer,
+          contentType: "application/pdf",
+        },
+      ],
+    });
+  } catch (err) {
+    console.error("[sendEmails] Error sending admin email:", err);
+  }
 }

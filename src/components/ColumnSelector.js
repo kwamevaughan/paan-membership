@@ -20,7 +20,7 @@ export default function ColumnSelector({ allColumns, visibleColumns, setVisibleC
     return (
         <div className="relative group">
             <button
-                className={`px-4 py-2 rounded-lg flex items-center gap-2 transition duration-200 shadow-md ${
+                className={`px-4 py-2 rounded-lg flex items-center gap-2 transition duration-200 shadow-md text-sm ${
                     mode === "dark"
                         ? "bg-gray-700 hover:bg-gray-600"
                         : "bg-gray-200 hover:bg-gray-300"

@@ -425,7 +425,10 @@ export default async function handler(req, res) {
       res,
     };
 
-    console.log("Sending to upsertCandidate:", candidateData);
+    const candidateLog = { ...candidateData };
+    delete candidateLog.req;
+    delete candidateLog.res;
+    console.log("Sending to upsertCandidate:", candidateLog);
 
     const { userId, error: candidateError } = await upsertCandidate(
       candidateData

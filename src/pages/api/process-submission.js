@@ -121,31 +121,32 @@ export default async function handler(req, res) {
       referenceNumber,
     } = req.body;
 
-    console.log("Processing submission for:", {
-      primaryContactName,
-      primaryContactEmail,
-      opening,
-      job_type,
-      referenceNumber,
-    });
+    // Remove or comment out unnecessary logs
+    // console.log("Processing submission for:", {
+    //   primaryContactName,
+    //   primaryContactEmail,
+    //   opening,
+    //   job_type,
+    //   referenceNumber,
+    // });
 
     if (!job_type || !["agency", "freelancer"].includes(job_type)) {
       throw new Error("Valid job_type ('agency' or 'freelancer') is required");
     }
 
-    console.log("Received submittedAt:", submittedAt);
-    console.log("File inputs:", {
-      companyRegistration: companyRegistration
-        ? `base64 (${companyRegistration.length} chars)`
-        : "null",
-      portfolioWork: portfolioWork
-        ? `base64 (${portfolioWork.length} chars)`
-        : "null",
-      agencyProfile: agencyProfile
-        ? `base64 (${agencyProfile.length} chars)`
-        : "null",
-      portfolioLinks: portfolioLinks ? JSON.stringify(portfolioLinks) : "null"
-    });
+    // console.log("Received submittedAt:", submittedAt);
+    // console.log("File inputs:", {
+    //   companyRegistration: companyRegistration
+    //     ? `base64 (${companyRegistration.length} chars)`
+    //     : "null",
+    //   portfolioWork: portfolioWork
+    //     ? `base64 (${portfolioWork.length} chars)`
+    //     : "null",
+    //   agencyProfile: agencyProfile
+    //     ? `base64 (${agencyProfile.length} chars)`
+    //     : "null",
+    //   portfolioLinks: portfolioLinks ? JSON.stringify(portfolioLinks) : "null"
+    // });
 
     let companyRegistrationResult = { url: null, fileId: null };
     let portfolioWorkResult = { url: null, fileId: null };
@@ -226,7 +227,7 @@ export default async function handler(req, res) {
     }
 
     if (!filteredQuestions || filteredQuestions.length === 0) {
-      console.error(`No questions found for job_type: ${questionJobType}`);
+      // console.log("No questions found for job_type: ${questionJobType}");
       throw new Error(`No questions found for job_type: ${questionJobType}`);
     }
 
@@ -243,10 +244,10 @@ export default async function handler(req, res) {
           linkedinAnswer && linkedinAnswer !== "[]"
             ? formatAnswer(linkedinAnswer, linkedinQuestion)
             : null;
-        console.log(
-          `Extracted LinkedIn for ${primaryContactName}:`,
-          extractedLinkedin
-        );
+        // console.log(
+        //   `Extracted LinkedIn for ${primaryContactName}:",
+        //   extractedLinkedin
+        // );
       } else {
         console.warn(
           `No LinkedIn/Professional Profile question found for job_type: ${questionJobType}`
@@ -302,7 +303,7 @@ export default async function handler(req, res) {
     });
 
     if (candidateError) {
-      console.error("Update candidate error:", candidateError);
+      // console.log("Update candidate error:", candidateError);
       await supabaseServer.from("submission_errors").insert([
         {
           user_id: userId,
@@ -333,7 +334,7 @@ export default async function handler(req, res) {
     });
 
     if (responseError) {
-      console.error("Update response error:", responseError);
+      // console.log("Update response error:", responseError);
       await supabaseServer.from("submission_errors").insert([
         {
           user_id: userId,
@@ -430,6 +431,7 @@ export default async function handler(req, res) {
     );
     emailData.adminSubject = replaceTemplateTags(adminSubject, emailData);
 
+    
     await sendEmails(emailData);
 
     return res.status(200).json({ message: "Background processing completed" });

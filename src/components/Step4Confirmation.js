@@ -237,8 +237,8 @@ export default function Step4Confirmation({
                     }
                     className={`w-20 h-20 mx-auto ${
                       submissionStatus.status === "success"
-                        ? "text-blue-400 animate-pulse"
-                        : "text-red-500 animate-bounce"
+                        ? "text-paan-blue animate-pulse"
+                        : "text-paan-red animate-bounce"
                     }`}
                   />
                 </div>

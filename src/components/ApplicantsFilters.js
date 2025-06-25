@@ -288,7 +288,7 @@ export default function ApplicantsFilters({
                     <button
                       key={status}
                       onClick={() => setFilterStatus(status)}
-                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border ${getStatusStyle(
+                      className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-normal border ${getStatusStyle(
                         status
                       )} transition-colors hover:opacity-80`}
                     >

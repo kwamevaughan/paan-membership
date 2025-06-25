@@ -207,7 +207,7 @@ const handleColumnResize = (e, columnKey) => {
         className={`flex flex-col sm:flex-row justify-between items-center p-5 gap-4 border-b ${borderColor} ${secondaryBg} backdrop-blur-md relative z-[100]`}
       >
         <div className="flex items-center gap-4">
-          <h2 className={`text-2xl font-semibold ${textColor}`}>Applicants</h2>
+          <h2 className={`text-2xl font-medium ${textColor}`}>Applicants</h2>
           <span
             className={`bg-blue-400 text-white px-3 py-1 text-sm rounded-full font-medium shadow-md`}
           >
@@ -238,7 +238,7 @@ const handleColumnResize = (e, columnKey) => {
           />
           <button
             onClick={() => setIsExportModalOpen(true)}
-            className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-200 transform hover:scale-105 
+            className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-all duration-200 transform hover:scale-105 text-sm
               ${
                 isDark
                   ? "bg-gray-700/80 hover:bg-gray-600/90 backdrop-blur-md"

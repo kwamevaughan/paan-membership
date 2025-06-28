@@ -457,6 +457,7 @@ export default function AdminAccessHubs({
         style={{ isolation: 'isolate' }}
       >
         <AccessHubForm
+          key={currentAccessHub ? currentAccessHub.id : `new-${showForm}`}
           formData={currentAccessHub || formData}
           handleInputChange={handleInputChange}
           submitForm={handleFormSubmit}

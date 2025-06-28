@@ -768,7 +768,8 @@ export default function InterviewPage({
                   >
                     {step === 3 && formData.job_type === "agency" ? (
                       <>
-                        Upload & Submit
+                        {/* Upload & Submit */}
+                        Submit
                         <Icon icon="chevron-right" className="ml-2 h-4 w-4" />
                       </>
                     ) : step === 3 ? (

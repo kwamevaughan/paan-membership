@@ -315,14 +315,14 @@ export default function Step3Documents({
             className={`shadow-lg rounded-lg p-6 border-t-4 border-paan-blue ${bgColor} ${textColor}`}
           >
             <div className="flex items-center justify-center mb-6">
-              <Icon icon="mdi:upload" className="w-8 h-8 text-paan-blue mr-2" />
+              <Icon icon="mdi:clipboard-check" className="w-8 h-8 text-paan-blue mr-2" />
               <h2 className="text-3xl font-medium text-center">
-                Submit Your Documents
+                Declaration
               </h2>
             </div>
 
-            {/* Progress Indicators */}
-            <div className="flex justify-between mb-8 relative">
+            {/* Progress Indicators - COMMENTED OUT */}
+            {/* <div className="flex justify-between mb-8 relative">
               <div className="absolute top-1/2 left-0 right-0 h-1 bg-gray-300 -translate-y-1/2 z-0"></div>
 
               {fileTypes.map((file, index) => (
@@ -370,9 +370,10 @@ export default function Step3Documents({
                   </span>
                 </div>
               ))}
-            </div>
+            </div> */}
 
-            <AnimatePresence mode="wait">
+            {/* File Upload Section - COMMENTED OUT */}
+            {/* <AnimatePresence mode="wait">
               <motion.div
                 key={memoizedActiveFileIndex}
                 initial={{ opacity: 0, x: 20 }}
@@ -480,7 +481,6 @@ export default function Step3Documents({
                         </div>
                       </div>
 
-                      {/* Display added URLs */}
                       {formData.portfolioLinks && formData.portfolioLinks.length > 0 && (
                         <div className="mt-4">
                           <h5 className={`font-medium mb-2 ${mode === "dark" ? "text-gray-200" : "text-gray-700"}`}>
@@ -542,10 +542,10 @@ export default function Step3Documents({
                   />
                 )}
               </motion.div>
-            </AnimatePresence>
+            </AnimatePresence> */}
 
-            {/* Document Summary */}
-            {memoizedCompletedFiles.length > 0 && (
+            {/* Document Summary - COMMENTED OUT */}
+            {/* {memoizedCompletedFiles.length > 0 && (
               <motion.div
                 className={`mt-8 p-4 rounded-lg ${
                   mode === "dark" ? "bg-gray-700" : "bg-gray-100"
@@ -618,10 +618,10 @@ export default function Step3Documents({
                   ))}
                 </ul>
               </motion.div>
-            )}
+            )} */}
 
-            {/* Portfolio Links Editing Section */}
-            {isEditingPortfolio && (
+            {/* Portfolio Links Editing Section - COMMENTED OUT */}
+            {/* {isEditingPortfolio && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -683,7 +683,7 @@ export default function Step3Documents({
                   </button>
                 </div>
               </motion.div>
-            )}
+            )} */}
 
             {/* Declaration Checkboxes */}
             <motion.div

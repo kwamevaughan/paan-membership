@@ -23,13 +23,13 @@ export default function AgencyInstructions({ mode }) {
               mode === "dark" ? "text-gray-300" : "text-gray-600"
             }`}
           >
-            Submission takes less than 10 minutes
+            Submission takes less than 5 minutes
           </p>
         </div>
       </div>
 
       {/* Required Documents Section */}
-      <div className="space-y-4">
+      {/* <div className="space-y-4">
         <div className="flex items-center gap-2 mb-3">
           <Icon icon="lucide:check-circle" className="w-5 h-5 text-paan-yellow" />
           <h4 className={`font-semibold text-paan-deep-blue`}>Required Documents</h4>
@@ -103,7 +103,7 @@ export default function AgencyInstructions({ mode }) {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       {/* Process Information */}
       <div className="space-y-4">
@@ -129,7 +129,7 @@ export default function AgencyInstructions({ mode }) {
                   mode === "dark" ? "text-paan-deep-blue" : "text-paan-deep-blue"
                 }`}
               >
-                <strong>Time Estimate:</strong> Complete the form in about 10
+                <strong>Time Estimate:</strong> Complete the form in about 5
                 minutes
               </p>
             </li>

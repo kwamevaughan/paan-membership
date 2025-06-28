@@ -34,18 +34,18 @@ const Header = ({
       tooltip:
         job_type === "freelancer"
           ? "Provide your contact and personal details"
-          : "Provide your agency’s contact and registration details",
+          : "Provide your agency's contact and registration details",
     },
     {
       label: "Form Details",
       icon: "fluent:form-20-regular",
       tooltip: "Complete details on services, expertise, and qualifications",
     },
-    {
-      label: "Documents",
-      icon: "fluent:document-text-20-regular",
-      tooltip: "Upload required documents like registration and portfolio",
-    },
+    // {
+    //   label: "Documents",
+    //   icon: "fluent:document-text-20-regular",
+    //   tooltip: "Upload required documents like registration and portfolio",
+    // },
     {
       label: "Confirmation",
       icon: "fluent:checkmark-starburst-20-regular",
@@ -53,11 +53,13 @@ const Header = ({
     },
   ];
 
-  // Filter steps based on job_type
-  const steps =
-    job_type === "freelancer"
-      ? allSteps.filter((step) => step.label !== "Documents")
-      : allSteps;
+  // Filter steps based on job_type - COMMENTED OUT since documents step is removed
+  // const steps =
+  //   job_type === "freelancer"
+  //     ? allSteps.filter((step) => step.label !== "Documents")
+  //     : allSteps;
+  
+  const steps = allSteps;
 
   // Calculate progress
   let progressPercentage = 0;

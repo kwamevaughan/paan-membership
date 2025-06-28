@@ -9,21 +9,22 @@ export default function DocumentsProgress({
   mode,
 }) {
   const progress = useMemo(() => {
-    const totalItems = fileTypes.length + 3; // Documents + 3 declarations
+    // const totalItems = fileTypes.length + 3; // Documents + 3 declarations
+    const totalItems = 3; // Only 3 declarations
     let completedItems = 0;
 
-    // Count completed documents
-    fileTypes.forEach((type) => {
-      if (type.id === "portfolioWork") {
-        if ((formData[type.id] !== undefined && formData[type.id] !== null) || 
-            (formData.portfolioLinks && formData.portfolioLinks.length > 0 && 
-             formData.portfolioLinks.some(link => link.url.trim() !== ""))) {
-          completedItems++;
-        }
-      } else if (formData[type.id] !== undefined && formData[type.id] !== null) {
-        completedItems++;
-      }
-    });
+    // Count completed documents - COMMENTED OUT
+    // fileTypes.forEach((type) => {
+    //   if (type.id === "portfolioWork") {
+    //     if ((formData[type.id] !== undefined && formData[type.id] !== null) || 
+    //         (formData.portfolioLinks && formData.portfolioLinks.length > 0 && 
+    //          formData.portfolioLinks.some(link => link.url.trim() !== ""))) {
+    //       completedItems++;
+    //     }
+    //   } else if (formData[type.id] !== undefined && formData[type.id] !== null) {
+    //     completedItems++;
+    //   }
+    // });
 
     // Count completed declarations
     Object.values(declarationChecks).forEach((checked) => {
@@ -57,7 +58,7 @@ export default function DocumentsProgress({
                 mode === 'dark' ? 'text-gray-100' : 'text-gray-900'
               }`}
             >
-              Documents Progress
+              Declaration Progress
             </h3>
             <span
               className={`text-sm ${
@@ -79,8 +80,8 @@ export default function DocumentsProgress({
           </div>
         </div>
 
-        {/* Documents Status */}
-        <div className="space-y-4">
+        {/* Documents Status - COMMENTED OUT */}
+        {/* <div className="space-y-4">
           <h4
             className={`text-sm font-medium ${
               mode === 'dark' ? 'text-gray-400' : 'text-gray-600'
@@ -143,7 +144,7 @@ export default function DocumentsProgress({
               );
             })}
           </div>
-        </div>
+        </div> */}
 
         {/* Declarations Status */}
         <div className="space-y-4">

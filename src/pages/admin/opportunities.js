@@ -346,16 +346,18 @@ export default function AdminBusinessOpportunities({
                 description="Manage and distribute business opportunities, freelance gigs, and project collaborations. Create targeted opportunities for specific membership tiers and track member engagement."
                 mode={mode}
                 stats={[
-                  
                   {
                     icon: "heroicons:clock",
-                    value: opportunities.length > 0 ? `Last published ${new Date(
-                      sortedOpportunities[0].created_at
-                    ).toLocaleDateString("en-US", {
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    })}` : "No opportunities yet",
+                    value:
+                      opportunities.length > 0
+                        ? `Last published ${new Date(
+                            sortedOpportunities[0].created_at
+                          ).toLocaleDateString("en-US", {
+                            month: "long",
+                            day: "numeric",
+                            year: "numeric",
+                          })}`
+                        : "No opportunities yet",
                     iconColor: "text-purple-500",
                   },
                 ]}
@@ -375,34 +377,47 @@ export default function AdminBusinessOpportunities({
             <div className="mb-8">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {/* Total Opportunities Card */}
-                <div className={`relative group rounded-2xl border backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] ${
-                  mode === "dark"
-                    ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60 border-white/10"
-                    : "bg-gradient-to-br from-white/80 via-white/20 to-white/80 border-white/20"
-                } shadow-lg hover:shadow-xl`}>
+                <div
+                  className={`relative group rounded-2xl border backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] ${
+                    mode === "dark"
+                      ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60 border-white/10"
+                      : "bg-gradient-to-br from-white/80 via-white/20 to-white/80 border-white/20"
+                  } shadow-lg hover:shadow-xl`}
+                >
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        mode === "dark" ? "bg-blue-900/30" : "bg-blue-100"
-                      }`}>
-                        <Icon icon="heroicons:briefcase" className="w-6 h-6 text-blue-500" />
+                      <div
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                          mode === "dark" ? "bg-blue-900/30" : "bg-blue-100"
+                        }`}
+                      >
+                        <Icon
+                          icon="heroicons:briefcase"
+                          className="w-6 h-6 text-blue-500"
+                        />
                       </div>
-                      <div className={`text-right ${
-                        mode === "dark" ? "text-gray-400" : "text-gray-500"
-                      }`}>
+                      <div
+                        className={`text-right ${
+                          mode === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
                         <div className="text-xs font-medium">Total</div>
                         <div className="text-xs">Opportunities</div>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <div className={`text-2xl font-bold ${
-                        mode === "dark" ? "text-white" : "text-gray-900"
-                      }`}>
+                      <div
+                        className={`text-2xl font-semibold ${
+                          mode === "dark" ? "text-white" : "text-gray-900"
+                        }`}
+                      >
                         {opportunities.length}
                       </div>
-                      <div className={`text-sm ${
-                        mode === "dark" ? "text-gray-400" : "text-gray-600"
-                      }`}>
+                      <div
+                        className={`text-sm ${
+                          mode === "dark" ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
                         Active listings
                       </div>
                     </div>
@@ -410,75 +425,102 @@ export default function AdminBusinessOpportunities({
                 </div>
 
                 {/* Total Applications Card */}
-                <div 
+                <div
                   onClick={modalActions.openAllUsersModal}
                   className={`relative group rounded-2xl border backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer ${
                     mode === "dark"
                       ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60 border-white/10"
                       : "bg-gradient-to-br from-white/80 via-white/20 to-white/80 border-white/20"
-                  } shadow-lg hover:shadow-xl`}>
+                  } shadow-lg hover:shadow-xl`}
+                >
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        mode === "dark" ? "bg-red-900/30" : "bg-red-100"
-                      }`}>
-                        <Icon icon="heroicons:heart" className="w-6 h-6 text-red-500" />
+                      <div
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                          mode === "dark" ? "bg-red-900/30" : "bg-red-100"
+                        }`}
+                      >
+                        <Icon
+                          icon="solar:like-broken"
+                          className="w-6 h-6 text-paan-red"
+                        />
                       </div>
-                      <div className={`text-right ${
-                        mode === "dark" ? "text-gray-400" : "text-gray-500"
-                      }`}>
+                      <div
+                        className={`text-right ${
+                          mode === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
                         <div className="text-xs font-medium">Total</div>
                         <div className="text-xs">Applications</div>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <div className={`text-2xl font-bold ${
-                        mode === "dark" ? "text-white" : "text-gray-900"
-                      }`}>
+                      <div
+                        className={`text-2xl font-semibold ${
+                          mode === "dark" ? "text-white" : "text-gray-900"
+                        }`}
+                      >
                         {totalInterestsLoading ? "..." : totalInterests}
                       </div>
-                      <div className={`text-sm ${
-                        mode === "dark" ? "text-gray-400" : "text-gray-600"
-                      }`}>
-                        {totalInterestsLoading ? "Loading data..." : "Click to view all"}
+                      <div
+                        className={`text-sm ${
+                          mode === "dark" ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
+                        {totalInterestsLoading
+                          ? "Loading data..."
+                          : "Click to view all"}
                       </div>
                     </div>
                   </div>
                 </div>
 
-                
-
-                
-
                 {/* Freelance Gigs Card */}
-                <div className={`relative group rounded-2xl border backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] ${
-                  mode === "dark"
-                    ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60 border-white/10"
-                    : "bg-gradient-to-br from-white/80 via-white/20 to-white/80 border-white/20"
-                } shadow-lg hover:shadow-xl`}>
+                <div
+                  className={`relative group rounded-2xl border backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] ${
+                    mode === "dark"
+                      ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60 border-white/10"
+                      : "bg-gradient-to-br from-white/80 via-white/20 to-white/80 border-white/20"
+                  } shadow-lg hover:shadow-xl`}
+                >
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        mode === "dark" ? "bg-purple-900/30" : "bg-purple-100"
-                      }`}>
-                        <Icon icon="heroicons:user-group" className="w-6 h-6 text-purple-500" />
+                      <div
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                          mode === "dark" ? "bg-purple-900/30" : "bg-purple-100"
+                        }`}
+                      >
+                        <Icon
+                          icon="heroicons:user-group"
+                          className="w-6 h-6 text-purple-500"
+                        />
                       </div>
-                      <div className={`text-right ${
-                        mode === "dark" ? "text-gray-400" : "text-gray-500"
-                      }`}>
+                      <div
+                        className={`text-right ${
+                          mode === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
                         <div className="text-xs font-medium">Freelance</div>
                         <div className="text-xs">Gigs</div>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <div className={`text-2xl font-bold ${
-                        mode === "dark" ? "text-white" : "text-gray-900"
-                      }`}>
-                        {opportunities.filter(opp => opp.job_type === "Freelancer").length}
+                      <div
+                        className={`text-2xl font-semibold ${
+                          mode === "dark" ? "text-white" : "text-gray-900"
+                        }`}
+                      >
+                        {
+                          opportunities.filter(
+                            (opp) => opp.job_type === "Freelancer"
+                          ).length
+                        }
                       </div>
-                      <div className={`text-sm ${
-                        mode === "dark" ? "text-gray-400" : "text-gray-600"
-                      }`}>
+                      <div
+                        className={`text-sm ${
+                          mode === "dark" ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
                         Individual projects
                       </div>
                     </div>
@@ -486,43 +528,56 @@ export default function AdminBusinessOpportunities({
                 </div>
 
                 {/* Agency Opportunities Card */}
-                <div className={`relative group rounded-2xl border backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] ${
-                  mode === "dark"
-                    ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60 border-white/10"
-                    : "bg-gradient-to-br from-white/80 via-white/20 to-white/80 border-white/20"
-                } shadow-lg hover:shadow-xl`}>
+                <div
+                  className={`relative group rounded-2xl border backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] ${
+                    mode === "dark"
+                      ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60 border-white/10"
+                      : "bg-gradient-to-br from-white/80 via-white/20 to-white/80 border-white/20"
+                  } shadow-lg hover:shadow-xl`}
+                >
                   <div className="p-6">
                     <div className="flex items-center justify-between mb-4">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        mode === "dark" ? "bg-green-900/30" : "bg-green-100"
-                      }`}>
-                        <Icon icon="heroicons:building-office" className="w-6 h-6 text-green-500" />
+                      <div
+                        className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                          mode === "dark" ? "bg-green-900/30" : "bg-green-100"
+                        }`}
+                      >
+                        <Icon
+                          icon="heroicons:building-office"
+                          className="w-6 h-6 text-green-500"
+                        />
                       </div>
-                      <div className={`text-right ${
-                        mode === "dark" ? "text-gray-400" : "text-gray-500"
-                      }`}>
+                      <div
+                        className={`text-right ${
+                          mode === "dark" ? "text-gray-400" : "text-gray-500"
+                        }`}
+                      >
                         <div className="text-xs font-medium">Agency</div>
                         <div className="text-xs">Opportunities</div>
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <div className={`text-2xl font-bold ${
-                        mode === "dark" ? "text-white" : "text-gray-900"
-                      }`}>
-                        {opportunities.filter(opp => opp.job_type === "Agency").length}
+                      <div
+                        className={`text-2xl font-semibold ${
+                          mode === "dark" ? "text-white" : "text-gray-900"
+                        }`}
+                      >
+                        {
+                          opportunities.filter(
+                            (opp) => opp.job_type === "Agency"
+                          ).length
+                        }
                       </div>
-                      <div className={`text-sm ${
-                        mode === "dark" ? "text-gray-400" : "text-gray-600"
-                      }`}>
+                      <div
+                        className={`text-sm ${
+                          mode === "dark" ? "text-gray-400" : "text-gray-600"
+                        }`}
+                      >
                         Team projects
                       </div>
                     </div>
                   </div>
                 </div>
-
-                
-
-                
               </div>
             </div>
 
@@ -594,30 +649,29 @@ export default function AdminBusinessOpportunities({
                     </BaseFilters>
 
                     <div className="mt-8">
-                    <OpportunityGrid
-                      opportunities={opportunities}
-                      loading={loading}
-                      mode={mode}
-                      onEdit={modalActions.openModal}
-                      onDelete={openDeleteModal}
-                      onViewUsers={modalActions.openUsersModal}
-                      viewMode={viewMode}
-                      setViewMode={handleViewModeChange}
-                      filterTerm={filterTerm}
-                      selectedLocation={selectedLocation}
-                      selectedServiceType={selectedServiceType}
-                      selectedIndustry={selectedIndustry}
-                      selectedJobType={selectedJobType}
-                      selectedTier={selectedTier}
-                      selectedTenderType={selectedTenderType}
-                      selectedIds={selectedIds}
-                      onSelect={handleSelect}
-                      onSelectAll={handleSelectAll}
-                      isSelectable={true}
-                    />
+                      <OpportunityGrid
+                        opportunities={opportunities}
+                        loading={loading}
+                        mode={mode}
+                        onEdit={modalActions.openModal}
+                        onDelete={openDeleteModal}
+                        onViewUsers={modalActions.openUsersModal}
+                        viewMode={viewMode}
+                        setViewMode={handleViewModeChange}
+                        filterTerm={filterTerm}
+                        selectedLocation={selectedLocation}
+                        selectedServiceType={selectedServiceType}
+                        selectedIndustry={selectedIndustry}
+                        selectedJobType={selectedJobType}
+                        selectedTier={selectedTier}
+                        selectedTenderType={selectedTenderType}
+                        selectedIds={selectedIds}
+                        onSelect={handleSelect}
+                        onSelectAll={handleSelectAll}
+                        isSelectable={true}
+                      />
                     </div>
                   </div>
-                  
                 </div>
                 <div
                   className={`absolute bottom-0 left-0 right-0 h-1 ${

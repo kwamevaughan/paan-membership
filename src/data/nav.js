@@ -52,6 +52,11 @@ export const sidebarNav = [
         label: "Business Opportunities / Gigs",
       },
       {
+        href: "/admin/access-hubs",
+        icon: "mdi:access-point",
+        label: "Access Hubs",
+      },
+      {
         href: "/admin/updates",
         icon: "mdi:bullhorn-outline",
         label: "Updates",

@@ -16,7 +16,7 @@ export default function WelcomeCard({
       <div className="absolute inset-0 rounded-3xl backdrop-filter backdrop-blur-xl bg-white/10 dark:bg-black/10"></div>
       {/* Main content container */}
       <div
-        className={`relative overflow-hidden rounded-3xl border transition-all duration-500 group-hover:scale-[1.02] group-hover:shadow-2xl w-full ${
+        className={`relative overflow-hidden rounded-3xl border transition-all duration-500  w-full ${
           mode === "dark"
             ? "bg-gradient-to-br from-slate-900/90 to-slate-800/90 border-slate-700/50 shadow-xl"
             : "bg-gradient-to-br from-white/90 to-slate-50/90 border-slate-200/50 shadow-lg"
@@ -79,7 +79,7 @@ export default function WelcomeCard({
                   mode === "dark" ? "text-slate-300" : "text-slate-600"
                 }`}
               >
-                Here's your dashboard overview at a glance.
+                Here&apos;s your dashboard overview at a glance.
               </p>
 
               {/* Stats section */}
@@ -92,7 +92,7 @@ export default function WelcomeCard({
                   }`}
                 >
                   <span
-                    className={`text-xs sm:text-sm font-medium ${
+                    className={`text-xs sm:text-sm font-normal ${
                       mode === "dark" ? "text-paan-blue" : "text-paan-blue"
                     }`}
                   >
@@ -123,14 +123,14 @@ export default function WelcomeCard({
           <div className="flex justify-center sm:justify-end sm:ml-6">
             <Link href="/hr/applicants">
               <button
-                className={`group/btn relative px-4 py-2 sm:px-6 sm:py-3 rounded-2xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
+                className={`group/btn relative px-4 py-2 sm:px-6 sm:py-3 rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg ${
                   mode === "dark"
                     ? "bg-paan-blue text-white"
                     : "bg-paan-blue text-white"
                 }`}
               >
                 <span className="relative z-10 flex items-center space-x-2">
-                  <span className="text-sm sm:text-base">Take Action</span>
+                  <span className="font-medium">Take Action</span>
                   <Icon
                     icon="mdi:arrow-right"
                     width={isMobile ? 16 : 20}
@@ -139,8 +139,6 @@ export default function WelcomeCard({
                   />
                 </span>
 
-                {/* Button glow effect */}
-                <div className="absolute inset-0 rounded-2xl bg-paan-blue opacity-0 group-hover/btn:opacity-50 blur-xl transition-opacity duration-300"></div>
               </button>
             </Link>
           </div>

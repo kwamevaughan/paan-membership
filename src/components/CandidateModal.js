@@ -159,10 +159,10 @@ export default function CandidateModal({
     : "Candidate";
 
   const candidateTypeBadgeColor = isAgencyCandidate
-    ? "bg-blue-500/80"
+    ? "bg-paan-blue"
     : isFreelancerCandidate
-    ? "bg-green-500/80"
-    : "bg-purple-500/80";
+    ? "bg-paan-yellow"
+    : "bg-paan-blue";
 
   const documentList = [
     ...(isAgencyCandidate
@@ -250,11 +250,11 @@ export default function CandidateModal({
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h2 className="text-2xl font-bold text-white truncate">
+                    <h2 className="text-2xl font-medium text-white truncate">
                       {candidate.primaryContactName}
                     </h2>
                     <span
-                      className={`${candidateTypeBadgeColor} text-white text-xs px-2.5 py-1 rounded-full uppercase font-semibold shadow-sm backdrop-blur-sm`}
+                      className={`${candidateTypeBadgeColor} text-white text-xs px-2.5 py-1 rounded-full uppercase font-medium shadow-sm backdrop-blur-sm`}
                     >
                       {candidateTypeLabel}
                     </span>
@@ -398,7 +398,7 @@ export default function CandidateModal({
                           >
                             <Icon
                               icon={item.icon}
-                              className="w-6 h-6 text-blue-400"
+                              className="w-6 h-6 text-paan-blue"
                             />
                           </div>
                           <div>
@@ -412,12 +412,12 @@ export default function CandidateModal({
                                 href={item.value}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-blue-400 hover:text-sky-600 text-base font-medium break-all transition-colors duration-200"
+                                className="text-paan-blue hover:text-paan-dark-blue text-base font-normal break-all transition-colors duration-200"
                               >
                                 {item.value}
                               </a>
                             ) : (
-                              <p className="text-base font-medium break-all">
+                              <p className="text-base font-normal break-all">
                                 {item.value}
                               </p>
                             )}
@@ -449,7 +449,7 @@ export default function CandidateModal({
                         >
                           <div className="p-4 flex items-center gap-4">
                             <div
-                              className={`p-3 rounded-lg bg-blue-400/10 text-blue-400 shadow-sm`}
+                              className={`p-3 rounded-lg bg-paan-blue text-paan-blue shadow-sm`}
                             >
                               <Icon icon={doc.icon} className="w-6 h-6" />
                             </div>
@@ -508,7 +508,7 @@ export default function CandidateModal({
                           >
                             <Icon
                               icon="mdi:help-circle"
-                              className="w-5 h-5 text-blue-400"
+                              className="w-5 h-5 text-paan-blue"
                             />
                           </div>
                           <div>

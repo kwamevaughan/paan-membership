@@ -220,7 +220,7 @@ export default function EmailModal({
             </div>
 
             {/* Body */}
-            <div className="space-y-2 flex-1">
+            <div className="space-y-2">
               <label
                 className={`text-sm font-semibold flex items-center gap-2 ${
                   mode === "dark" ? "text-gray-200" : "text-gray-700"
@@ -230,19 +230,20 @@ export default function EmailModal({
                 Email Content
               </label>
               <div
-                className={`rounded-2xl border-2 overflow-hidden transition-all duration-200 min-h-[280px] backdrop-blur-sm ${
+                className={`rounded-2xl border-2 overflow-hidden transition-all duration-200 backdrop-blur-sm ${
                   mode === "dark"
                     ? "bg-gray-800/30 border-gray-700/30 focus-within:border-blue-500/50"
                     : "bg-white/40 border-gray-200/40 focus-within:border-blue-500/50"
                 }`}
               >
                 <EditorComponent
+                  key={`email-editor-${emailData?.email || 'new'}`}
                   initialValue={body}
                   onChange={(newContent) => setBody(newContent)}
                   onBlur={(newContent) => setBody(newContent)}
                   mode={mode}
                   holderId="jodit-editor-email-modal"
-                  height="250"
+                  height=""
                   className="w-full h-full"
                 />
               </div>

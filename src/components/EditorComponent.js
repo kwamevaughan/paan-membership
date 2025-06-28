@@ -34,6 +34,7 @@ const lowlight = createLowlight();
 const editorStyles = `
   .editor-container {
     height: auto;
+    min-height: 200px;
     overflow: visible;
     display: flex;
     flex-direction: column;
@@ -41,13 +42,17 @@ const editorStyles = `
   }
 
   .editor-container .ProseMirror {
-    overflow-y: auto;
+    height: auto;
+    min-height: 200px;
+    max-height: none;
+    overflow-y: visible;
     padding: 0.5rem;
     border: none;
     outline: none;
     background: rgb(255 255 255 / 53%);
     margin-top: 0.5rem;
-    min-height: 200px;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e0 #f7fafc;
   }
 
   /* Table styles for TipTap */
@@ -178,18 +183,12 @@ const editorStyles = `
     font-size: unset !important;
   }
 
-  /* Ensure the editor content area is scrollable */
-  .editor-container .ProseMirror {
-    max-height: 500px;
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #cbd5e0 #f7fafc;
+  /* Prevent scroll conflicts between modal and editor */
+  .editor-container .ProseMirror:focus-within {
+    scroll-behavior: smooth;
   }
 
-  .dark .editor-container .ProseMirror {
-    scrollbar-color: #4a5568 #2d3748;
-  }
-
+  /* Custom scrollbar styles */
   .editor-container .ProseMirror::-webkit-scrollbar {
     width: 8px;
   }
@@ -201,6 +200,14 @@ const editorStyles = `
   .editor-container .ProseMirror::-webkit-scrollbar-thumb {
     background-color: #cbd5e0;
     border-radius: 4px;
+  }
+
+  .editor-container .ProseMirror::-webkit-scrollbar-thumb:hover {
+    background-color: #a0aec0;
+  }
+
+  .dark .editor-container .ProseMirror {
+    scrollbar-color: #4a5568 #2d3748;
   }
 
   .dark .editor-container .ProseMirror::-webkit-scrollbar-track {
@@ -496,6 +503,35 @@ const TipTapEditor = memo(({
       }
     }
   }, [editor, initialValue]);
+
+  // Prevent scroll propagation when scrolling within the editor
+  useEffect(() => {
+    if (editor) {
+      const handleWheel = (e) => {
+        const editorElement = editor.view.dom;
+        const { scrollTop, scrollHeight, clientHeight } = editorElement;
+        
+        // Check if we're at the top or bottom of the editor
+        const isAtTop = scrollTop === 0;
+        const isAtBottom = scrollTop + clientHeight >= scrollHeight;
+        
+        // If scrolling up at the top or down at the bottom, allow the event to bubble
+        if ((e.deltaY < 0 && isAtTop) || (e.deltaY > 0 && isAtBottom)) {
+          return;
+        }
+        
+        // Otherwise, prevent the event from bubbling to the modal
+        e.stopPropagation();
+      };
+
+      const editorElement = editor.view.dom;
+      editorElement.addEventListener('wheel', handleWheel, { passive: false });
+
+      return () => {
+        editorElement.removeEventListener('wheel', handleWheel);
+      };
+    }
+  }, [editor]);
 
   const addLink = () => {
     const url = window.prompt('Enter URL:');
@@ -1200,7 +1236,7 @@ function EditorComponent({
         />
       </div>
       {viewMode === "rich" ? (
-        <div style={{ height: `${height}px` }}>
+        <div className="flex flex-col">
           <TipTapEditor
             initialValue={content}
             onChange={handleContentChange}

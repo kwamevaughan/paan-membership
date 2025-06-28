@@ -23,7 +23,7 @@ export default function AgencyInstructions({ mode }) {
               mode === "dark" ? "text-gray-300" : "text-gray-600"
             }`}
           >
-            Submission takes less than 5 minutes
+            Submission takes less than 10 minutes
           </p>
         </div>
       </div>
@@ -129,7 +129,7 @@ export default function AgencyInstructions({ mode }) {
                   mode === "dark" ? "text-paan-deep-blue" : "text-paan-deep-blue"
                 }`}
               >
-                <strong>Time Estimate:</strong> Complete the form in about 5
+                <strong>Time Estimate:</strong> Complete the form in about 10
                 minutes
               </p>
             </li>

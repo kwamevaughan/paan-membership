@@ -362,6 +362,26 @@ export default async function handler(req, res) {
           error: "A valid opening_id is required for agency submissions",
         });
       }
+      // Document validation checks - COMMENTED OUT since we're no longer uploading documents
+      // if (
+      //   !agencyName ||
+      //   !yearEstablished ||
+      //   !headquartersLocation ||
+      //   !websiteUrl ||
+      //   !opening ||
+      //   !primaryContactName ||
+      //   !primaryContactEmail ||
+      //   !companyRegistrationBase64 ||
+      //   !agencyProfileBase64 ||
+      //   (!portfolioWorkBase64 && (!data.portfolioLinks || data.portfolioLinks.length === 0))
+      // ) {
+      //   return res.status(400).json({
+      //     error:
+      //       "All fields (agencyName, yearEstablished, headquartersLocation, websiteUrl, opening, primaryContactName, primaryContactEmail, companyRegistration, agencyProfile, and either portfolioWork file or portfolioLinks) are required for agency submissions",
+      //   });
+      // }
+      
+      // Only validate non-document fields
       if (
         !agencyName ||
         !yearEstablished ||
@@ -369,14 +389,11 @@ export default async function handler(req, res) {
         !websiteUrl ||
         !opening ||
         !primaryContactName ||
-        !primaryContactEmail ||
-        !companyRegistrationBase64 ||
-        !agencyProfileBase64 ||
-        (!portfolioWorkBase64 && (!data.portfolioLinks || data.portfolioLinks.length === 0))
+        !primaryContactEmail
       ) {
         return res.status(400).json({
           error:
-            "All fields (agencyName, yearEstablished, headquartersLocation, websiteUrl, opening, primaryContactName, primaryContactEmail, companyRegistration, agencyProfile, and either portfolioWork file or portfolioLinks) are required for agency submissions",
+            "All fields (agencyName, yearEstablished, headquartersLocation, websiteUrl, opening, primaryContactName, primaryContactEmail) are required for agency submissions",
         });
       }
     } else if (job_type === "freelancer") {

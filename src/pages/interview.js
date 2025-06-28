@@ -276,26 +276,27 @@ export default function InterviewPage({
     } else if (step === 3) {
       setIsSubmitting(true);
       const maxFileSize = 5 * 1024 * 1024;
-      if (
-        formData.job_type === "agency" &&
-        (!formData.companyRegistration ||
-          !formData.agencyProfile)
-      ) {
-        toast.error("Please provide all required documents.", { icon: "❌" });
-        setIsSubmitting(false);
-        return;
-      }
-      if (
-        (formData.companyRegistration &&
-          formData.companyRegistration.size > maxFileSize) ||
-        (formData.portfolioWork &&
-          formData.portfolioWork.size > maxFileSize) ||
-        (formData.agencyProfile && formData.agencyProfile.size > maxFileSize)
-      ) {
-        toast.error("File size exceeds 5MB limit.", { icon: "❌" });
-        setIsSubmitting(false);
-        return;
-      }
+      // Document validation checks - COMMENTED OUT since we're no longer uploading documents
+      // if (
+      //   formData.job_type === "agency" &&
+      //   (!formData.companyRegistration ||
+      //     !formData.agencyProfile)
+      // ) {
+      //   toast.error("Please provide all required documents.", { icon: "❌" });
+      //   setIsSubmitting(false);
+      //   return;
+      // }
+      // if (
+      //   (formData.companyRegistration &&
+      //     formData.companyRegistration.size > maxFileSize) ||
+      //   (formData.portfolioWork &&
+      //     formData.portfolioWork.size > maxFileSize) ||
+      //   (formData.agencyProfile && formData.agencyProfile.size > maxFileSize)
+      // ) {
+      //   toast.error("File size exceeds 5MB limit.", { icon: "❌" });
+      //   setIsSubmitting(false);
+      //   return;
+      // }
       const submitToast = toast.loading("Submitting your application...");
       try {
         const result = await handleSubmit();

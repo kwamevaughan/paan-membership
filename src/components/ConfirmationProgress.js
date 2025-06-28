@@ -49,13 +49,13 @@ export default function ConfirmationProgress({ submissionStatus, referenceNumber
       icon: "mdi:help-circle",
       status: "complete"
     },
-    {
-      id: "documents",
-      title: "Documents",
-      description: "Required documentation and declarations",
-      icon: "mdi:file-document",
-      status: "complete"
-    },
+    // {
+    //   id: "documents",
+    //   title: "Documents",
+    //   description: "Required documentation and declarations",
+    //   icon: "mdi:file-document",
+    //   status: "complete"
+    // },
     {
       id: "confirmation",
       title: "Confirmation",

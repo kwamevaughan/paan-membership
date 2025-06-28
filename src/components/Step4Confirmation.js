@@ -264,7 +264,9 @@ export default function Step4Confirmation({
                         />
                       </div>
                       <div className="ml-3">
-                        <p className="text-sm text-paan-dark-blue">
+                        <p className={`text-sm ${
+                          mode === "dark" ? "text-gray-300" : "text-paan-dark-blue"
+                        }`}>
                           We&apos;ve sent a confirmation email to{" "}
                           <span className="font-semibold">
                             {formData.primaryContactEmail || "your email"}

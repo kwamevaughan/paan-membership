@@ -15,6 +15,7 @@ export default function EventForm({
   isEditing,
   tiers,
   mode,
+  openImageLibrary,
 }) {
   const eventTypes = ["Networking", "Workshop", "Conference", "Webinar"];
   const validTiers = [
@@ -763,7 +764,23 @@ export default function EventForm({
                 {imageSource === "library" && (
                   <button
                     type="button"
-                    onClick={() => setShowImageLibrary(true)}
+                    onClick={() => openImageLibrary({
+                      onSelect: (selectedImage) => {
+                        handleInputChange({
+                          target: {
+                            name: "banner_image",
+                            value: selectedImage.url,
+                          },
+                        });
+                        setLocalFormData((prev) => ({
+                          ...prev,
+                          banner_image: selectedImage.url,
+                        }));
+                        setImageSource("library");
+                      },
+                      onUpload: handleImageUpload,
+                      folder: "/Events",
+                    })}
                     className="w-full px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-500 transition-colors"
                   >
                     Open Image Library
@@ -816,29 +833,6 @@ export default function EventForm({
           </div>
         </form>
       </div>
-
-      {/* Image Library Modal */}
-      <ImageLibrary
-        isOpen={showImageLibrary}
-        onClose={() => setShowImageLibrary(false)}
-        onSelect={(selectedImage) => {
-          handleInputChange({
-            target: {
-              name: "banner_image",
-              value: selectedImage.url,
-            },
-          });
-          setLocalFormData((prev) => ({
-            ...prev,
-            banner_image: selectedImage.url,
-          }));
-          setImageSource("library");
-          setShowImageLibrary(false);
-        }}
-        mode={mode}
-        onUpload={handleImageUpload}
-        folder="/Events"
-      />
     </div>
   );
 }

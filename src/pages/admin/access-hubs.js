@@ -1,38 +1,39 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import toast, { Toaster } from "react-hot-toast";
-import { Icon } from "@iconify/react";
 import HRSidebar from "@/layouts/hrSidebar";
 import HRHeader from "@/layouts/hrHeader";
 import useSidebar from "@/hooks/useSidebar";
 import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
-import { useEvents } from "@/hooks/useEvents";
-import EventForm from "@/components/events/EventForm";
-import EventsGrid from "@/components/events/EventsGrid";
+import { useAccessHubs } from "@/hooks/useAccessHubs";
+import AccessHubForm from "@/components/access-hubs/AccessHubForm";
+import AccessHubsGrid from "@/components/access-hubs/AccessHubsGrid";
 import PendingRegistrations from "@/components/PendingRegistrations";
 import SimpleFooter from "@/layouts/simpleFooter";
-import { getAdminEventsProps } from "utils/getPropsUtils";
+import { getAdminAccessHubsProps } from "utils/getPropsUtils";
 import ItemActionModal from "@/components/ItemActionModal";
 import ExportModal from "@/components/ExportModal";
-import { supabase } from "@/lib/supabase";
 import PageHeader from "@/components/common/PageHeader";
-import EventFilters from "@/components/filters/EventFilters";
+import AccessHubFilters from "@/components/filters/AccessHubFilters";
 import BaseFilters from "@/components/filters/BaseFilters";
+import ImageLibrary from "@/components/common/ImageLibrary";
 
-export default function AdminEvents({
+export default function AdminAccessHubs({
   mode = "light",
   toggleMode,
   tiers = [],
   breadcrumbs,
 }) {
   const [showForm, setShowForm] = useState(false);
-  const [currentEvent, setCurrentEvent] = useState(null);
+  const [currentAccessHub, setCurrentAccessHub] = useState(null);
   const [showPendingRegistrations, setShowPendingRegistrations] =
     useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportData, setExportData] = useState([]);
-  const [selectedEventRegistrations, setSelectedEventRegistrations] = useState(null);
+  const [selectedAccessHubRegistrations, setSelectedAccessHubRegistrations] = useState(null);
+  const [showImageLibrary, setShowImageLibrary] = useState(false);
+  const [imageLibraryCallback, setImageLibraryCallback] = useState(null);
 
   const [viewMode, setViewMode] = useState("grid");
   const [filterTerm, setFilterTerm] = useState("");
@@ -40,12 +41,11 @@ export default function AdminEvents({
   const [showFilters, setShowFilters] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("All");
   const [selectedTier, setSelectedTier] = useState("All");
-  const [selectedType, setSelectedType] = useState("All");
+  const [selectedSpaceType, setSelectedSpaceType] = useState("All");
   const [selectedRegion, setSelectedRegion] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(12);
   const [selectedIds, setSelectedIds] = useState([]);
-  const [selectedEventType, setSelectedEventType] = useState("All");
   const [selectedDateRange, setSelectedDateRange] = useState("All");
   const [selectedLocation, setSelectedLocation] = useState("All");
   const [selectedVirtual, setSelectedVirtual] = useState("All");
@@ -65,23 +65,22 @@ export default function AdminEvents({
   } = useSidebar();
 
   const {
-    events,
-    registeredEvents,
+    accessHubs,
+    registeredAccessHubs,
     filterOptions = {
       categories: [],
       tiers: [],
-      types: [],
+      spaceTypes: [],
       regions: [],
-      eventTypes: [],
       dateRanges: [],
       locations: [],
       virtualOptions: []
     },
-    loading: eventsLoading,
+    loading: accessHubsLoading,
     error,
-    eventsLoading: registrationLoading,
-    handleEventRegistration,
-    fetchEvents,
+    accessHubsLoading: registrationLoading,
+    handleAccessHubRegistration,
+    fetchAccessHubs,
     handleRegistrationAction,
     fetchRegistrations,
     registrations,
@@ -89,30 +88,30 @@ export default function AdminEvents({
     handleSubmit,
     handleDelete,
     formData,
-  } = useEvents();
+  } = useAccessHubs();
 
   const handleLogout = useLogout();
   useAuthSession();
 
   useEffect(() => {
-    fetchEvents();
+    fetchAccessHubs();
   }, []);
 
   const handleResetFilters = () => {
-    setSelectedType("All");
+    setSelectedSpaceType("All");
     setSelectedTier("All");
     setSelectedRegion("All");
     setFilterTerm("");
     setSortOrder("newest");
   };
 
-  const handleCreateEvent = () => {
-    setCurrentEvent(null);
+  const handleCreateAccessHub = () => {
+    setCurrentAccessHub(null);
     setShowForm(true);
   };
 
-  const handleEditClick = async (event) => {
-    setCurrentEvent(event);
+  const handleEditClick = async (accessHub) => {
+    setCurrentAccessHub(accessHub);
     setShowForm(true);
   };
 
@@ -120,61 +119,59 @@ export default function AdminEvents({
     const success = await handleSubmit(formData);
     if (success) {
       setShowForm(false);
-      setCurrentEvent(null);
-      fetchEvents();
+      setCurrentAccessHub(null);
+      fetchAccessHubs();
     }
   };
 
   const handleDeleteClick = async (id) => {
     try {
       await handleDelete(id);
-      fetchEvents();
+      fetchAccessHubs();
     } catch (error) {
       toast.error(error.message);
     }
   };
 
-  const handleViewRegistrations = async (eventData) => {
+  const handleViewRegistrations = async (accessHubData) => {
     try {
-      console.log('View registrations clicked for event:', eventData);
+      console.log('View registrations clicked for access hub:', accessHubData);
       const fetchedRegistrations = await fetchRegistrations();
       console.log('Fetched registrations:', fetchedRegistrations);
       
-      // Ensure we have a valid event ID
-      if (!eventData || !eventData.id) {
-        console.error('Invalid event data:', eventData);
-        toast.error('Invalid event data');
+      // Ensure we have a valid access hub ID
+      if (!accessHubData || !accessHubData.id) {
+        console.error('Invalid access hub data:', accessHubData);
+        toast.error('Invalid access hub data');
         return;
       }
 
-      const eventRegistrations = fetchedRegistrations.filter(reg => {
+      const accessHubRegistrations = fetchedRegistrations.filter(reg => {
         console.log('Comparing:', { 
-          regEventId: reg.event_id, 
-          currentEventId: eventData.id,
-          match: reg.event_id === eventData.id 
+          regAccessHubId: reg.access_hub_id, 
+          currentAccessHubId: accessHubData.id,
+          match: reg.access_hub_id === accessHubData.id 
         });
-        return reg.event_id === eventData.id;
+        return reg.access_hub_id === accessHubData.id;
       });
 
-      console.log('Filtered registrations for event:', eventRegistrations);
+      console.log('Filtered registrations for access hub:', accessHubRegistrations);
       
-      setSelectedEventRegistrations({
-        event: {
-          id: eventData.id,
-          title: eventData.title,
-          description: eventData.description,
-          start_date: eventData.start_date,
-          end_date: eventData.end_date,
-          location: eventData.location,
-          event_type: eventData.event_type,
-          is_virtual: eventData.is_virtual,
-          tier_restriction: eventData.tier_restriction
+      setSelectedAccessHubRegistrations({
+        accessHub: {
+          id: accessHubData.id,
+          title: accessHubData.title,
+          description: accessHubData.description,
+          city: accessHubData.city,
+          country: accessHubData.country,
+          space_type: accessHubData.space_type,
+          tier_restriction: accessHubData.tier_restriction
         },
-        registrations: eventRegistrations
+        registrations: accessHubRegistrations
       });
       setShowPendingRegistrations(true);
     } catch (error) {
-      console.error("Error fetching event registrations:", error);
+      console.error("Error fetching access hub registrations:", error);
       toast.error("Failed to fetch registrations");
     }
   };
@@ -191,16 +188,14 @@ export default function AdminEvents({
   const handleViewPendingRegistrations = async () => {
     try {
       const fetchedRegistrations = await fetchRegistrations();
-      setSelectedEventRegistrations({
-        event: {
+      setSelectedAccessHubRegistrations({
+        accessHub: {
           id: 'all',
-          title: 'All Events',
+          title: 'All Access Hubs',
           description: 'View all pending registrations',
-          start_date: null,
-          end_date: null,
-          location: null,
-          event_type: null,
-          is_virtual: null,
+          city: null,
+          country: null,
+          space_type: null,
           tier_restriction: null
         },
         registrations: fetchedRegistrations
@@ -210,6 +205,10 @@ export default function AdminEvents({
       console.error("Error fetching registrations:", error);
       toast.error("Failed to fetch registrations");
     }
+  };
+
+  const handleImageUpload = async (files) => {
+    return null;
   };
 
   return (
@@ -228,8 +227,8 @@ export default function AdminEvents({
         mode={mode}
         toggleMode={toggleMode}
         onLogout={handleLogout}
-        pageName="Events"
-        pageDescription="Manage events for the PAAN community."
+        pageName="Access Hubs"
+        pageDescription="Manage access hubs for the PAAN community."
         breadcrumbs={breadcrumbs}
       />
       <div className="flex flex-1">
@@ -268,20 +267,20 @@ export default function AdminEvents({
                 } shadow-2xl group-hover:shadow-lg transition-all duration-500`}
               ></div>
               <PageHeader
-                title="Events"
-                description="Manage events for the PAAN community. Create targeted content for specific membership tiers and track member engagement."
+                title="Access Hubs"
+                description="Manage access hubs for the PAAN community. Create targeted content for specific membership tiers and track member engagement."
                 mode={mode}
                 stats={[
                   {
                     icon: "heroicons:calendar",
-                    value: `${events?.length || 0} total events`,
+                    value: `${accessHubs?.length || 0} total access hubs`,
                   },
-                  ...(events?.length > 0
+                  ...(accessHubs?.length > 0
                     ? [
                         {
                           icon: "heroicons:clock",
                           value: `Last published ${new Date(
-                            events[0].created_at
+                            accessHubs[0].created_at
                           ).toLocaleDateString("en-US", {
                             month: "long",
                             day: "numeric",
@@ -301,9 +300,9 @@ export default function AdminEvents({
                     variant: "secondary",
                   },
                   {
-                    label: "New Event",
+                    label: "New Access Hub",
                     icon: "heroicons:plus",
-                    onClick: handleCreateEvent,
+                    onClick: handleCreateAccessHub,
                     variant: "primary",
                   },
                 ]}
@@ -331,7 +330,7 @@ export default function AdminEvents({
                   <div className="p-6">
                     <BaseFilters
                       mode={mode}
-                      loading={eventsLoading}
+                      loading={accessHubsLoading}
                       viewMode={viewMode}
                       setViewMode={setViewMode}
                       filterTerm={filterTerm}
@@ -340,29 +339,29 @@ export default function AdminEvents({
                       setSortOrder={setSortOrder}
                       showFilters={showFilters}
                       setShowFilters={setShowFilters}
-                      type="event"
-                      items={events || []}
-                      filteredItems={events?.filter((event) => {
+                      type="access-hub"
+                      items={accessHubs || []}
+                      filteredItems={accessHubs?.filter((accessHub) => {
                         const matchesSearch =
                           !filterTerm ||
-                          event.title
+                          accessHub.title
                             .toLowerCase()
                             .includes(filterTerm.toLowerCase()) ||
-                          event.description
+                          accessHub.description
                             .toLowerCase()
                             .includes(filterTerm.toLowerCase());
                         const matchesCategory =
                           selectedCategory === "All" ||
-                          event.category === selectedCategory;
+                          accessHub.category === selectedCategory;
                         const matchesTier =
                           selectedTier === "All" ||
-                          event.tier_restriction === selectedTier;
+                          accessHub.tier_restriction === selectedTier;
                         const matchesType =
-                          selectedType === "All" ||
-                          event.type === selectedType;
+                          selectedSpaceType === "All" ||
+                          accessHub.space_type === selectedSpaceType;
                         const matchesRegion =
                           selectedRegion === "All" ||
-                          event.region === selectedRegion;
+                          accessHub.region === selectedRegion;
                         return (
                           matchesSearch &&
                           matchesCategory &&
@@ -373,17 +372,15 @@ export default function AdminEvents({
                       }) || []}
                       onResetFilters={handleResetFilters}
                     >
-                      <EventFilters
+                      <AccessHubFilters
                         selectedCategory={selectedCategory}
                         onCategoryChange={setSelectedCategory}
                         selectedTier={selectedTier}
                         onTierChange={setSelectedTier}
-                        selectedType={selectedType}
-                        onTypeChange={setSelectedType}
+                        selectedSpaceType={selectedSpaceType}
+                        onSpaceTypeChange={setSelectedSpaceType}
                         selectedRegion={selectedRegion}
                         onRegionChange={setSelectedRegion}
-                        selectedEventType={selectedEventType}
-                        onEventTypeChange={setSelectedEventType}
                         selectedDateRange={selectedDateRange}
                         onDateRangeChange={setSelectedDateRange}
                         selectedLocation={selectedLocation}
@@ -392,22 +389,21 @@ export default function AdminEvents({
                         onVirtualChange={setSelectedVirtual}
                         categories={filterOptions?.categories || []}
                         tiers={filterOptions?.tiers || tiers || []}
-                        types={filterOptions?.types || []}
+                        spaceTypes={filterOptions?.spaceTypes || []}
                         regions={filterOptions?.regions || []}
-                        eventTypes={filterOptions?.eventTypes || []}
                         dateRanges={filterOptions?.dateRanges || []}
                         locations={filterOptions?.locations || []}
                         virtualOptions={filterOptions?.virtualOptions || []}
                         mode={mode}
-                        loading={eventsLoading}
+                        loading={accessHubsLoading}
                       />
                     </BaseFilters>
 
                     <div className="mt-8">
-                      <EventsGrid
+                      <AccessHubsGrid
                         mode={mode}
-                        events={events || []}
-                        loading={eventsLoading}
+                        accessHubs={accessHubs || []}
+                        loading={accessHubsLoading}
                         selectedIds={selectedIds}
                         setSelectedIds={setSelectedIds}
                         handleEditClick={handleEditClick}
@@ -421,7 +417,7 @@ export default function AdminEvents({
                         filterTerm={filterTerm}
                         selectedCategory={selectedCategory}
                         selectedTier={selectedTier}
-                        selectedType={selectedType}
+                        selectedSpaceType={selectedSpaceType}
                         selectedRegion={selectedRegion}
                         filterOptions={filterOptions}
                       />
@@ -453,24 +449,27 @@ export default function AdminEvents({
         isOpen={showForm}
         onClose={() => {
           setShowForm(false);
-          setCurrentEvent(null);
+          setCurrentAccessHub(null);
         }}
-        title={currentEvent ? "Edit Event" : "Create New Event"}
+        title={currentAccessHub ? "Edit Access Hub" : "Create New Access Hub"}
         mode={mode}
         width="max-w-4xl"
         style={{ isolation: 'isolate' }}
       >
-        <EventForm
-          formData={currentEvent || formData}
+        <AccessHubForm
+          formData={currentAccessHub || formData}
           handleInputChange={handleInputChange}
           submitForm={handleFormSubmit}
           cancelForm={() => {
             setShowForm(false);
-            setCurrentEvent(null);
+            setCurrentAccessHub(null);
           }}
-          isEditing={!!currentEvent}
+          isEditing={!!currentAccessHub}
           tiers={tiers}
           mode={mode}
+          showImageLibrary={showImageLibrary}
+          setShowImageLibrary={setShowImageLibrary}
+          setImageLibraryCallback={setImageLibraryCallback}
         />
       </ItemActionModal>
 
@@ -478,14 +477,14 @@ export default function AdminEvents({
         isOpen={showPendingRegistrations}
         onClose={() => {
           setShowPendingRegistrations(false);
-          setSelectedEventRegistrations(null);
+          setSelectedAccessHubRegistrations(null);
         }}
-        title={selectedEventRegistrations ? `Registrations for ${selectedEventRegistrations.event.title}` : "Event Registrations"}
+        title={selectedAccessHubRegistrations ? `Registrations for ${selectedAccessHubRegistrations.accessHub.title}` : "Access Hub Registrations"}
         mode={mode}
         width="max-w-4xl"
       >
         <PendingRegistrations
-          registrations={selectedEventRegistrations?.registrations || registrations}
+          registrations={selectedAccessHubRegistrations?.registrations || registrations}
           onAction={handleRegistrationActionClick}
           mode={mode}
           loading={registrationLoading}
@@ -493,7 +492,8 @@ export default function AdminEvents({
             setExportData(data);
             setShowExportModal(true);
           }}
-          events={events}
+          accessHubs={accessHubs}
+          type="access_hubs"
         />
       </ItemActionModal>
 
@@ -502,12 +502,24 @@ export default function AdminEvents({
         onClose={() => setShowExportModal(false)}
         candidates={exportData}
         mode={mode}
-        type="events"
+        type="access-hubs"
+      />
+
+      <ImageLibrary
+        isOpen={showImageLibrary}
+        onClose={() => setShowImageLibrary(false)}
+        onSelect={(selectedImage) => {
+          if (imageLibraryCallback) imageLibraryCallback(selectedImage);
+          setShowImageLibrary(false);
+        }}
+        mode={mode}
+        onUpload={handleImageUpload}
+        folder="/AccessHubs"
       />
     </div>
   );
 }
 
 export async function getServerSideProps({ req, res }) {
-  return getAdminEventsProps({ req, res });
+  return getAdminAccessHubsProps({ req, res });
 }

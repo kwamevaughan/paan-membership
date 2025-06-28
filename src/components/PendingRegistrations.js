@@ -4,7 +4,16 @@ import DataTable from "./common/DataTable";
 import ItemActionModal from "./ItemActionModal";
 import toast from "react-hot-toast";
 
-const PendingRegistrations = ({ registrations, onAction, mode, loading, onExportClick, events }) => {
+const PendingRegistrations = ({ 
+  registrations, 
+  onAction, 
+  mode, 
+  loading, 
+  onExportClick, 
+  events,
+  accessHubs,
+  type = "events" // "events" or "access_hubs"
+}) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedIds, setSelectedIds] = useState([]);
@@ -21,7 +30,8 @@ const PendingRegistrations = ({ registrations, onAction, mode, loading, onExport
     const matchesSearch =
       reg.candidate_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       reg.candidate_email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      reg.event_title?.toLowerCase().includes(searchQuery.toLowerCase());
+      reg.event_title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      reg.access_hub_name?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   }) || [];
 
@@ -42,6 +52,21 @@ const PendingRegistrations = ({ registrations, onAction, mode, loading, onExport
     updated_at: event.updated_at ? new Date(event.updated_at).toLocaleString() : "-"
   })) || [];
 
+  // Transform access hubs data to match the format expected by ExportModal
+  const transformedAccessHubs = accessHubs?.map(accessHub => ({
+    title: accessHub.title || "-",
+    description: accessHub.description || "-",
+    space_type: accessHub.space_type || "-",
+    city: accessHub.city || "-",
+    country: accessHub.country || "-",
+    capacity: accessHub.capacity || "-",
+    pricing_per_day: accessHub.pricing_per_day || "-",
+    tier_restriction: accessHub.tier_restriction || "-",
+    is_available: accessHub.is_available ? "Yes" : "No",
+    created_at: accessHub.created_at ? new Date(accessHub.created_at).toLocaleString() : "-",
+    updated_at: accessHub.updated_at ? new Date(accessHub.updated_at).toLocaleString() : "-"
+  })) || [];
+
   // Transform registrations data to match the format expected by ExportModal
   const transformedRegistrations = filteredRegistrations?.map(reg => {
     console.log('Processing registration:', reg);
@@ -53,7 +78,8 @@ const PendingRegistrations = ({ registrations, onAction, mode, loading, onExport
       agencyName: reg.agency_name || "-",
       headquartersLocation: reg.headquarters_location || "-",
       registered_at: reg.registered_at ? new Date(reg.registered_at).toLocaleString() : "-",
-      status: reg.status || "-"
+      status: reg.status || "-",
+      item_title: reg.event_title || reg.access_hub_name || "-"
     };
   }) || [];
 
@@ -97,9 +123,14 @@ const PendingRegistrations = ({ registrations, onAction, mode, loading, onExport
     }
   };
 
-  const getEventTitle = (eventId) => {
-    const event = events?.find(e => e.id === eventId);
-    return event?.title || "Unknown Event";
+  const getItemTitle = (itemId) => {
+    if (type === "events") {
+      const event = events?.find(e => e.id === itemId);
+      return event?.title || "Unknown Event";
+    } else {
+      const accessHub = accessHubs?.find(a => a.id === itemId);
+      return accessHub?.title || "Unknown Access Hub";
+    }
   };
 
   const formatDate = (dateString) => {
@@ -113,6 +144,22 @@ const PendingRegistrations = ({ registrations, onAction, mode, loading, onExport
     });
   };
 
+  const getItemTypeLabel = () => {
+    return type === "events" ? "Event" : "Access Hub";
+  };
+
+  const getTitle = () => {
+    return type === "events" ? "Event Registrations" : "Access Hub Registrations";
+  };
+
+  const getEmptyStateMessage = () => {
+    if (type === "events") {
+      return "There are currently no event registrations to review. New registrations will appear here as members sign up for events.";
+    } else {
+      return "There are currently no access hub registrations to review. New registrations will appear here as members sign up for access hubs.";
+    }
+  };
+
   const columns = [
     {
       key: "candidate_name",
@@ -123,8 +170,8 @@ const PendingRegistrations = ({ registrations, onAction, mode, loading, onExport
       label: "Email",
     },
     {
-      key: "event_title",
-      label: "Event",
+      key: type === "events" ? "event_title" : "access_hub_name",
+      label: getItemTypeLabel(),
     },
     {
       key: "registered_at",
@@ -166,7 +213,7 @@ const PendingRegistrations = ({ registrations, onAction, mode, loading, onExport
         </div>
         <h3 className="text-lg font-medium mb-2">No Registrations Found</h3>
         <p className={`text-sm ${mode === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-          There are currently no event registrations to review. New registrations will appear here as members sign up for events.
+          {getEmptyStateMessage()}
         </p>
       </div>
     );
@@ -175,7 +222,7 @@ const PendingRegistrations = ({ registrations, onAction, mode, loading, onExport
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Event Registrations</h2>
+        <h2 className="text-xl font-semibold">{getTitle()}</h2>
         <button
           onClick={handleExport}
           className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 ${
@@ -194,7 +241,7 @@ const PendingRegistrations = ({ registrations, onAction, mode, loading, onExport
           <thead className={`${mode === "dark" ? "bg-gray-800" : "bg-gray-50"}`}>
             <tr>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Event
+                {getItemTypeLabel()}
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Member
@@ -220,7 +267,10 @@ const PendingRegistrations = ({ registrations, onAction, mode, loading, onExport
               <tr key={registration.id}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium">
-                    {getEventTitle(registration.event_id)}
+                    {type === "events" 
+                      ? getItemTitle(registration.event_id)
+                      : getItemTitle(registration.access_hub_id)
+                    }
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">

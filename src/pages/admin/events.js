@@ -19,6 +19,7 @@ import { supabase } from "@/lib/supabase";
 import PageHeader from "@/components/common/PageHeader";
 import EventFilters from "@/components/filters/EventFilters";
 import BaseFilters from "@/components/filters/BaseFilters";
+import ImageLibrary from "@/components/common/ImageLibrary";
 
 export default function AdminEvents({
   mode = "light",
@@ -33,6 +34,12 @@ export default function AdminEvents({
   const [showExportModal, setShowExportModal] = useState(false);
   const [exportData, setExportData] = useState([]);
   const [selectedEventRegistrations, setSelectedEventRegistrations] = useState(null);
+  const [showImageLibrary, setShowImageLibrary] = useState(false);
+  const [imageLibraryProps, setImageLibraryProps] = useState({
+    onSelect: () => {},
+    onUpload: () => {},
+    folder: "/Events",
+  });
 
   const [viewMode, setViewMode] = useState("grid");
   const [filterTerm, setFilterTerm] = useState("");
@@ -210,6 +217,15 @@ export default function AdminEvents({
       console.error("Error fetching registrations:", error);
       toast.error("Failed to fetch registrations");
     }
+  };
+
+  // Handler to open image library from EventForm
+  const openImageLibrary = (props = {}) => {
+    setImageLibraryProps({
+      ...imageLibraryProps,
+      ...props,
+    });
+    setShowImageLibrary(true);
   };
 
   return (
@@ -471,6 +487,7 @@ export default function AdminEvents({
           isEditing={!!currentEvent}
           tiers={tiers}
           mode={mode}
+          openImageLibrary={openImageLibrary}
         />
       </ItemActionModal>
 
@@ -504,6 +521,19 @@ export default function AdminEvents({
         mode={mode}
         type="events"
       />
+
+      {showImageLibrary && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="relative z-60 max-w-3xl w-full mx-auto">
+            <ImageLibrary
+              isOpen={showImageLibrary}
+              onClose={() => setShowImageLibrary(false)}
+              {...imageLibraryProps}
+              mode={mode}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

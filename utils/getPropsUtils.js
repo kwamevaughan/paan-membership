@@ -469,6 +469,20 @@ export async function getAdminEventsProps({ req, res }) {
   }
 }
 
+export async function getAdminAccessHubsProps({ req, res }) {
+  console.log("[getAdminAccessHubsProps] Starting at", new Date().toISOString());
+
+  try {
+    const authResult = await withAuth(req, res, { redirectTo: "/hr/login" });
+    if (authResult.redirect) return authResult;
+
+    return createProps({});
+  } catch (error) {
+    return handleDBError(error, "getAdminAccessHubsProps");
+  }
+}
+
+
 export async function getAdminResourcesProps({ req, res }) {
   console.log("[getAdminResourcesProps] Starting at", new Date().toISOString());
 

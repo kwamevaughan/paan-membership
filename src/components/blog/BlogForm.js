@@ -1375,7 +1375,7 @@ export default function BlogForm({
         }}
         mode={mode}
         onUpload={handleImageUpload}
-        uploading={loading}
+        folder="/Blog"
       />
     </>
   );

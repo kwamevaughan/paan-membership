@@ -194,7 +194,7 @@ export default function QuestionsProgress({
               </p>
               <p
                 className={`text-lg font-normal ${
-                  mode === 'dark' ? 'text-paan-blue' : 'text-paan-blue'
+                  mode === 'dark' ? 'text-gray-100' : 'text-paan-blue'
                 }`}
               >
                 {progress.estimatedMinutes} minutes

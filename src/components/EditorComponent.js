@@ -384,6 +384,7 @@ const HighlightPicker = ({ value, onChange, mode }) => {
 const TipTapEditor = memo(({ 
   initialValue,
   onChange,
+  onBlur,
   placeholder,
   mode,
   onImageUpload
@@ -468,6 +469,23 @@ const TipTapEditor = memo(({
       },
     },
   });
+
+  // Add blur event handling
+  useEffect(() => {
+    if (editor && onBlur) {
+      const handleBlur = () => {
+        onBlur(editor.getHTML());
+      };
+
+      // Add blur event listener to the editor DOM element
+      const editorElement = editor.view.dom;
+      editorElement.addEventListener('blur', handleBlur, true);
+
+      return () => {
+        editorElement.removeEventListener('blur', handleBlur, true);
+      };
+    }
+  }, [editor, onBlur]);
 
   const addLink = () => {
     const url = window.prompt('Enter URL:');
@@ -1176,6 +1194,7 @@ function EditorComponent({
           <TipTapEditor
             initialValue={content}
             onChange={handleContentChange}
+            onBlur={onBlur}
             placeholder={placeholder}
             mode={mode}
             ref={editorRef}

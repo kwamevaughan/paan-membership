@@ -443,11 +443,9 @@ export default function Step2Questions({
     }
     if (currentQuestionIndex < currentQuestions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
-      containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     } else if (currentCategoryIndex < validCategories.length - 1) {
       setCurrentCategoryIndex((prev) => prev + 1);
       setCurrentQuestionIndex(0);
-      containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -455,7 +453,6 @@ export default function Step2Questions({
     setErrorMessages({});
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex((prev) => prev - 1);
-      containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     } else if (currentCategoryIndex > 0) {
       setCurrentCategoryIndex((prev) => prev - 1);
       const prevCategory = validCategories[currentCategoryIndex - 1];
@@ -463,7 +460,6 @@ export default function Step2Questions({
         .filter((q) => q && q.id && q.text && q.category === prevCategory.id)
         .sort((a, b) => a.order - b.order);
       setCurrentQuestionIndex(prevQuestions.length - 1);
-      containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -492,11 +488,9 @@ export default function Step2Questions({
     const currentQuestionIndex = currentQuestions.findIndex(q => q.id === qId);
     if (currentQuestionIndex < currentQuestions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
-      containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     } else if (currentCategoryIndex < validCategories.length - 1) {
       setCurrentCategoryIndex((prev) => prev + 1);
       setCurrentQuestionIndex(0);
-      containerRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     } else {
       onComplete();
     }
@@ -522,6 +516,27 @@ export default function Step2Questions({
       onIndicesChange(currentCategoryIndex, currentQuestionIndex);
     }
   }, [currentCategoryIndex, currentQuestionIndex, onIndicesChange]);
+
+  // Auto-scroll to question content when question changes
+  useEffect(() => {
+    if (currentQuestions.length > 0 && currentQuestions[currentQuestionIndex]) {
+      const questionId = currentQuestions[currentQuestionIndex].id;
+      // Use setTimeout to ensure the DOM has updated with the new question
+      const scrollTimer = setTimeout(() => {
+        if (questionRefs.current[questionId]) {
+          questionRefs.current[questionId].scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        } else if (containerRef.current) {
+          // Fallback: scroll to top of container
+          containerRef.current.scrollTo({ top: 0, behavior: "smooth" });
+        }
+      }, 150); // Slightly longer delay to ensure DOM update and content rendering
+
+      return () => clearTimeout(scrollTimer);
+    }
+  }, [currentCategoryIndex, currentQuestionIndex, currentQuestions]);
 
   if (validCategories.length === 0 && !isLoading) {
     return (

@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 export default function MovingDotBorder({ children, mode, className = "" }) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [angle, setAngle] = useState(0);
-  const dotColor = "paan-red"; // The requested color
+  const dotColor = "#f25849"; // The requested color
   const dotSize = 8; // Size of the dot in pixels
 
   // Calculate the position of the dot along the border

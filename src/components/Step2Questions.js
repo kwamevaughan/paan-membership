@@ -551,40 +551,19 @@ export default function Step2Questions({
       // Check if the interaction is within the current question
       if (!questionElement.contains(e.target)) return;
 
-      // Get the container and question element positions
+      // Get the container and element positions
       const containerRect = containerRef.current.getBoundingClientRect();
-      const questionRect = questionElement.getBoundingClientRect();
+      const interactionElement = e.target;
+      const elementRect = interactionElement.getBoundingClientRect();
       
-      // Use container dimensions instead of full viewport
-      const containerHeight = containerRect.height; // This is 80vh
-      const containerBottom = containerRect.bottom;
-      const questionBottom = questionRect.bottom;
-      
-      // Only scroll if the question content actually extends significantly below the container
-      // and the user is interacting with elements in the lower part of the question
-      const interactionY = e.clientY;
-      const questionTop = questionRect.top;
-      const questionHeight = questionRect.height;
-      
-      // Check if the interaction is happening in the lower 60% of the question
-      const isLowerInteraction = (interactionY - questionTop) > (questionHeight * 0.4);
-      
-      // Only auto-scroll if:
-      // 1. The question extends below the container (80vh area)
-      // 2. The interaction is in the lower part of the question
-      // 3. There's actually more content to scroll to
-      if (questionBottom > containerBottom - 50 && isLowerInteraction) {
-        const scrollAmount = Math.min(
-          questionBottom - containerBottom + 100, // Scroll to show more content with buffer
-          containerRef.current.scrollHeight - containerRef.current.scrollTop - containerRef.current.clientHeight // Don't scroll past the end
-        );
-        
-        if (scrollAmount > 0) {
-          containerRef.current.scrollBy({
-            top: scrollAmount,
-            behavior: "smooth"
-          });
-        }
+      // Only scroll if the element extends below the container
+      if (elementRect.bottom > containerRect.bottom - 10) { // 10px buffer
+        // Use scrollIntoView to bring the element to the top of the container
+        interactionElement.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+          inline: "nearest"
+        });
       }
     };
 

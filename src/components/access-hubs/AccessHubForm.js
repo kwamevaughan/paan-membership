@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from "react";
 import { Icon } from "@iconify/react";
 import Image from "next/image";
+import Select from "react-select";
 import ImageLibrary from "../common/ImageLibrary";
 import toast from "react-hot-toast";
 import EditorComponent from "../EditorComponent";
+import countriesData from "../../../public/assets/misc/countries.json";
 
 export default function AccessHubForm({
   formData,
@@ -31,7 +33,7 @@ export default function AccessHubForm({
     space_type: "Boardroom",
     city: "",
     country: "",
-    is_available: false,
+    is_available: true,
     pricing_per_day: 0,
     amenities: [],
     images: [],
@@ -50,7 +52,7 @@ export default function AccessHubForm({
       space_type: "Boardroom",
       city: "",
       country: "",
-      is_available: false,
+      is_available: true,
       pricing_per_day: 0,
       amenities: [],
       images: [],
@@ -72,9 +74,31 @@ export default function AccessHubForm({
         setImageSource("library");
       }
     } else {
-      resetLocalForm();
+      // For new access hub creation, ensure we reset to default values
+      // and don't let external changes override our defaults
+      const defaultFormData = {
+        title: "",
+        description: "",
+        space_type: "Boardroom",
+        city: "",
+        country: "",
+        is_available: true,
+        pricing_per_day: 0,
+        amenities: [],
+        images: [],
+        capacity: 0,
+        tier_restriction: "Free Member",
+      };
+      setLocalFormData(defaultFormData);
+      setUploadedImage(null);
+      setImageSource("upload");
     }
   }, [formData]);
+
+  // Debug log to see what's happening with is_available
+  useEffect(() => {
+    console.log('localFormData.is_available:', localFormData.is_available);
+  }, [localFormData.is_available]);
 
   const handleLocalInputChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -250,7 +274,16 @@ export default function AccessHubForm({
       },
     };
 
+    // Submit the form
     submitForm(syntheticEvent);
+    
+    // Reset form after submission if not in editing mode
+    if (!isEditing) {
+      // Clear errors
+      setErrors({});
+      // Reset form to default values
+      resetLocalForm();
+    }
   };
 
   const handleCancel = () => {
@@ -382,19 +415,80 @@ export default function AccessHubForm({
               >
                 Country
               </label>
-              <input
-                type="text"
+              <Select
                 id="country"
                 name="country"
-                value={localFormData.country || ""}
-                onChange={handleLocalInputChange}
-                className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
-                  mode === "dark"
-                    ? "bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400"
-                    : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                }`}
-                placeholder="Enter country"
+                value={countriesData.find(country => country.name === localFormData.country) || null}
+                onChange={(selectedOption) => {
+                  const newValue = selectedOption ? selectedOption.name : "";
+                  setLocalFormData((prev) => ({
+                    ...prev,
+                    country: newValue,
+                  }));
+                  handleInputChange({
+                    target: { name: "country", value: newValue },
+                  });
+                }}
+                options={countriesData}
+                getOptionLabel={(option) => `${option.flag} ${option.name}`}
+                getOptionValue={(option) => option.name}
+                isClearable
+                isSearchable
+                placeholder="Select a country..."
+                className={`${errors.country ? "border-red-500" : ""}`}
+                classNamePrefix="react-select"
+                styles={{
+                  control: (provided, state) => ({
+                    ...provided,
+                    backgroundColor: mode === "dark" ? "#374151" : "#ffffff",
+                    borderColor: state.isFocused 
+                      ? "#3b82f6" 
+                      : errors.country 
+                        ? "#ef4444" 
+                        : mode === "dark" ? "#4b5563" : "#d1d5db",
+                    boxShadow: state.isFocused ? "0 0 0 1px #3b82f6" : "none",
+                    "&:hover": {
+                      borderColor: state.isFocused 
+                        ? "#3b82f6" 
+                        : errors.country 
+                          ? "#ef4444" 
+                          : mode === "dark" ? "#6b7280" : "#9ca3af"
+                    }
+                  }),
+                  menu: (provided) => ({
+                    ...provided,
+                    backgroundColor: mode === "dark" ? "#374151" : "#ffffff",
+                    border: `1px solid ${mode === "dark" ? "#4b5563" : "#d1d5db"}`,
+                  }),
+                  option: (provided, state) => ({
+                    ...provided,
+                    backgroundColor: state.isFocused 
+                      ? mode === "dark" ? "#4b5563" : "#f3f4f6" 
+                      : "transparent",
+                    color: mode === "dark" ? "#e5e7eb" : "#111827",
+                    "&:hover": {
+                      backgroundColor: mode === "dark" ? "#4b5563" : "#f3f4f6"
+                    }
+                  }),
+                  singleValue: (provided) => ({
+                    ...provided,
+                    color: mode === "dark" ? "#e5e7eb" : "#111827",
+                  }),
+                  input: (provided) => ({
+                    ...provided,
+                    color: mode === "dark" ? "#e5e7eb" : "#111827",
+                  }),
+                  placeholder: (provided) => ({
+                    ...provided,
+                    color: mode === "dark" ? "#9ca3af" : "#6b7280",
+                  }),
+                }}
               />
+              {errors.country && (
+                <p id="country-error" className="text-red-500 text-xs mt-1">
+                  {errors.country}
+                </p>
+              )}
             </div>
 
             {/* Tier Restriction */}
@@ -586,7 +680,7 @@ export default function AccessHubForm({
                 <input
                   type="checkbox"
                   name="is_available"
-                  checked={localFormData.is_available || false}
+                  checked={!isEditing && localFormData.is_available === undefined ? true : (localFormData.is_available === true)}
                   onChange={handleLocalInputChange}
                   className={`mr-2 h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 ${
                     mode === "dark" ? "bg-gray-700" : "bg-white"

@@ -458,7 +458,7 @@ export default function AdminAccessHubs({
       >
         <AccessHubForm
           key={currentAccessHub ? currentAccessHub.id : `new-${showForm}`}
-          formData={currentAccessHub || formData}
+          formData={currentAccessHub || null}
           handleInputChange={handleInputChange}
           submitForm={handleFormSubmit}
           cancelForm={() => {

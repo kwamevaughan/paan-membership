@@ -152,64 +152,65 @@ export default async function handler(req, res) {
     let portfolioWorkResult = { url: null, fileId: null };
     let agencyProfileResult = { url: null, fileId: null };
 
-    if (job_type === "agency") {
-      const { data: existingResponse, error: fetchError } = await supabaseServer
-        .from("responses")
-        .select(
-          "company_registration_file_id, portfolio_work_file_id, agency_profile_file_id"
-        )
-        .eq("user_id", userId)
-        .single();
+    // File upload logic - COMMENTED OUT since we're no longer uploading documents
+    // if (job_type === "agency") {
+    //   const { data: existingResponse, error: fetchError } = await supabaseServer
+    //     .from("responses")
+    //     .select(
+    //       "company_registration_file_id, portfolio_work_file_id, agency_profile_file_id"
+    //     )
+    //     .eq("user_id", userId)
+    //     .single();
 
-      if (fetchError && fetchError.code !== "PGRST116") {
-        console.error("Fetch existing response error:", fetchError);
-        throw new Error("Fetch existing response error");
-      }
+    //   if (fetchError && fetchError.code !== "PGRST116") {
+    //     console.error("Fetch existing response error:", fetchError);
+    //     throw new Error("Fetch existing response error");
+    //   }
 
-      const oldCompanyRegistrationFileId =
-        existingResponse?.company_registration_file_id;
-      const oldPortfolioWorkFileId = existingResponse?.portfolio_work_file_id;
-      const oldAgencyProfileFileId = existingResponse?.agency_profile_file_id;
+    //   const oldCompanyRegistrationFileId =
+    //     existingResponse?.company_registration_file_id;
+    //   const oldPortfolioWorkFileId = existingResponse?.portfolio_work_file_id;
+    //   const oldAgencyProfileFileId = existingResponse?.agency_profile_file_id;
 
-      const uploadPromises = [
-        companyRegistration && typeof companyRegistration === "string"
-          ? uploadFileToDrive(
-              primaryContactName,
-              opening,
-              companyRegistration,
-              "company-registration",
-              oldCompanyRegistrationFileId,
-              companyRegistrationMimeType || "application/pdf"
-            )
-          : Promise.resolve({ url: null, fileId: null }),
-        portfolioWork && typeof portfolioWork === "string"
-          ? uploadFileToDrive(
-              primaryContactName,
-              opening,
-              portfolioWork,
-              "portfolio-work",
-              oldPortfolioWorkFileId,
-              portfolioWorkMimeType || "application/pdf"
-            )
-          : Promise.resolve({ url: null, fileId: null }),
-        agencyProfile && typeof agencyProfile === "string"
-          ? uploadFileToDrive(
-              primaryContactName,
-              opening,
-              agencyProfile,
-              "agency-profile",
-              oldAgencyProfileFileId,
-              agencyProfileMimeType || "application/pdf"
-            )
-          : Promise.resolve({ url: null, fileId: null }),
-      ];
+    //   const uploadPromises = [
+    //     companyRegistration && typeof companyRegistration === "string"
+    //       ? uploadFileToDrive(
+    //           primaryContactName,
+    //           opening,
+    //           companyRegistration,
+    //           "company-registration",
+    //           oldCompanyRegistrationFileId,
+    //           companyRegistrationMimeType || "application/pdf"
+    //         )
+    //       : Promise.resolve({ url: null, fileId: null }),
+    //     portfolioWork && typeof portfolioWork === "string"
+    //       ? uploadFileToDrive(
+    //           primaryContactName,
+    //           opening,
+    //           portfolioWork,
+    //           "portfolio-work",
+    //           oldPortfolioWorkFileId,
+    //           portfolioWorkMimeType || "application/pdf"
+    //         )
+    //       : Promise.resolve({ url: null, fileId: null }),
+    //     agencyProfile && typeof agencyProfile === "string"
+    //       ? uploadFileToDrive(
+    //           primaryContactName,
+    //           opening,
+    //           agencyProfile,
+    //           "agency-profile",
+    //           oldAgencyProfileFileId,
+    //           agencyProfileMimeType || "application/pdf"
+    //         )
+    //       : Promise.resolve({ url: null, fileId: null }),
+    //   ];
 
-      [
-        companyRegistrationResult,
-        portfolioWorkResult,
-        agencyProfileResult,
-      ] = await Promise.all(uploadPromises);
-    }
+    //   [
+    //     companyRegistrationResult,
+    //     portfolioWorkResult,
+    //     agencyProfileResult,
+    //   ] = await Promise.all(uploadPromises);
+    // }
 
     // Use job_type directly
     const questionJobType = job_type;

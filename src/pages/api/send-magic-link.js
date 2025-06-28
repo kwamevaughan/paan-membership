@@ -30,7 +30,7 @@ export default async function handler(req, res) {
       text: `Forgot your password? No worries! Click this link to log in: ${magicLink}\n\nThis link will expire in 15 minutes.`,
       html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; color: #261914;">
-                <img src="https://www.paan.africa/assets/images/logo.png" alt="PAAN Logo" style="display: block; margin: 0 auto 20px; max-width: 150px;">
+                <img src="https://paan.africa/assets/images/logo.png" alt="PAAN Logo" style="display: block; margin: 0 auto 20px; max-width: 150px;">
                 
                 <h2 style="color: #f05d23; text-align: center;">Password Recovery - GCG Career Management Dashboard</h2>
                 

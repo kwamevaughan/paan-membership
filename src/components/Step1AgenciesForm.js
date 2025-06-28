@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import Select from "react-select";
@@ -9,6 +9,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
   const [isMounted, setIsMounted] = useState(false);
   const { countryOptions, getDialCode, loading } = useCountry();
   const { errors, validateField, validateForm } = useFormValidation();
+  const containerRef = useRef(null);
 
   useEffect(() => {
     setIsMounted(true);
@@ -28,6 +29,54 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
     getDialCode,
     handleChange,
   ]);
+
+  // Auto-scroll when user interacts with form elements and there are more fields below
+  useEffect(() => {
+    const handleFormInteraction = (e) => {
+      if (!containerRef.current) return;
+
+      // Check if the interaction is within the form container
+      if (!containerRef.current.contains(e.target)) return;
+
+      // Get the container and interaction positions
+      const containerRect = containerRef.current.getBoundingClientRect();
+      const interactionY = e.clientY;
+      
+      // Calculate if there's content below the current viewport
+      const containerBottom = containerRect.bottom;
+      const viewportHeight = window.innerHeight;
+      
+      // Only auto-scroll if the interaction is happening in the lower part of the form
+      // and there's content below the viewport
+      const isLowerInteraction = (interactionY - containerRect.top) > (containerRect.height * 0.6);
+      
+      if (containerBottom > viewportHeight - 50 && isLowerInteraction) {
+        const scrollAmount = Math.min(
+          containerBottom - viewportHeight + 100, // Scroll to show more content with buffer
+          containerRef.current.scrollHeight - containerRef.current.scrollTop - containerRef.current.clientHeight // Don't scroll past the end
+        );
+        
+        if (scrollAmount > 0) {
+          containerRef.current.scrollBy({
+            top: scrollAmount,
+            behavior: "smooth"
+          });
+        }
+      }
+    };
+
+    // Add event listeners for form interactions
+    const events = ['click', 'focus', 'input', 'change'];
+    events.forEach(event => {
+      document.addEventListener(event, handleFormInteraction, { passive: true });
+    });
+
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, handleFormInteraction);
+      });
+    };
+  }, []);
 
   if (!isMounted || loading) {
     return null;
@@ -185,7 +234,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
           </div>
         </div>
 
-        <div className="space-y-6 max-h-[60vh] overflow-y-auto">
+        <div className="space-y-6 max-h-[60vh] overflow-y-auto" ref={containerRef}>
           <h3 className="text-lg font-semibold">Agency Details</h3>
 
           {/* Agency Name and Year Established (Already on Same Row) */}

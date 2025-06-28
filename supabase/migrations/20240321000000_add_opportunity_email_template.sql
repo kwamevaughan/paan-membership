@@ -6,7 +6,7 @@ INSERT INTO email_templates (name, subject, body) VALUES (
     <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px;">
         <!-- Header with Logo -->
         <div style="text-align: center; padding: 20px 0; border-bottom: 1px solid #eee;">
-            <img src="https://www.paan.africa/assets/images/logo.png" alt="PAAN Logo" style="max-width: 150px;">
+            <img src="https://paan.africa/assets/images/logo.png" alt="PAAN Logo" style="max-width: 150px;">
         </div>
 
         <!-- Greeting -->
@@ -89,8 +89,8 @@ INSERT INTO email_templates (name, subject, body) VALUES (
                 <a href="https://www.instagram.com/paan_africa/" target="_blank" style="color: #f05d23; text-decoration: none; margin: 0 10px;">Instagram</a>
             </div>
             <div style="margin-top: 15px; font-size: 12px;">
-                <a href="https://www.paan.africa/privacy-policy" style="color: #f05d23; text-decoration: none;">Privacy Policy</a> |
-                <a href="https://www.paan.africa/terms" style="color: #f05d23; text-decoration: none;">Terms of Service</a>
+                <a href="https://paan.africa/privacy-policy" style="color: #f05d23; text-decoration: none;">Privacy Policy</a> |
+                <a href="https://paan.africa/terms" style="color: #f05d23; text-decoration: none;">Terms of Service</a>
             </div>
             <p style="margin-top: 15px; font-size: 12px; color: #ffffff;">© 2025 Pan-African Agency Network. All rights reserved.</p>
         </div>

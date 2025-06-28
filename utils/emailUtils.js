@@ -166,7 +166,7 @@ export async function sendEmails({
   let logoBuffer;
   try {
     const logoResponse = await fetch(
-      "https://www.paan.africa/assets/images/logo.png"
+      "https://paan.africa/assets/images/logo.png"
     );
     const arrayBuffer = await logoResponse.arrayBuffer();
     logoBuffer = Buffer.from(arrayBuffer);
@@ -261,7 +261,7 @@ export async function sendEmails({
       doc.fillColor("#ffffff");
       doc.font("Helvetica").fontSize(10);
       doc.text(
-        "Pan-African Agency Network | https://www.paan.africa",
+        "Pan-African Agency Network | https://paan.africa",
         margin,
         pageHeight - footerHeight + 10
       );

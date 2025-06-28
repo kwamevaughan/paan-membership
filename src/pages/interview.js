@@ -270,7 +270,8 @@ export default function InterviewPage({
           setIsSubmitting(false);
         }
       } else {
-        toast.success("Proceeding to document upload.", { icon: "📝" });
+        // toast.success("Proceeding to document upload.", { icon: "📝" });
+        toast.success("Proceeding to next step.", { icon: "📝" });
         setStep(3);
       }
     } else if (step === 3) {

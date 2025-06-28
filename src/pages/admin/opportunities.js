@@ -11,7 +11,7 @@ import useSidebar from "@/hooks/useSidebar";
 import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useOpportunities } from "@/hooks/useOpportunities";
-import { useOpportunityInterests } from "@/hooks/useOpportunityInterests";
+import { useOpportunityInterests, useTotalOpportunityInterests, useAllOpportunityInterests } from "@/hooks/useOpportunityInterests";
 import { Icon } from "@iconify/react";
 import PageHeader from "@/components/common/PageHeader";
 import OpportunityFilters from "@/components/filters/OpportunityFilters";
@@ -41,6 +41,7 @@ export default function AdminBusinessOpportunities({
   const [selectedOpportunityId, setSelectedOpportunityId] = useState(null);
   const [isUsersModalOpen, setIsUsersModalOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [isAllUsersModalOpen, setIsAllUsersModalOpen] = useState(false);
 
   useAuthSession();
 
@@ -216,6 +217,12 @@ export default function AdminBusinessOpportunities({
       setIsUsersModalOpen(false);
       setSelectedOpportunityId(null);
     },
+    openAllUsersModal: () => {
+      setIsAllUsersModalOpen(true);
+    },
+    closeAllUsersModal: () => {
+      setIsAllUsersModalOpen(false);
+    },
     submitForm: (e, id) => {
       handleSubmit(e, id);
       modalActions.closeModal();
@@ -227,7 +234,18 @@ export default function AdminBusinessOpportunities({
     loading: usersLoading,
     error: usersError,
   } = useOpportunityInterests(selectedOpportunityId);
-  
+
+  const {
+    totalInterests,
+    loading: totalInterestsLoading,
+    error: totalInterestsError,
+  } = useTotalOpportunityInterests();
+
+  const {
+    allInterestedUsers,
+    loading: allUsersLoading,
+    error: allUsersError,
+  } = useAllOpportunityInterests();
 
   // Extract unique values for filters
   const filterOptions = useMemo(() => {
@@ -246,6 +264,14 @@ export default function AdminBusinessOpportunities({
       tiers,
       tenderTypes
     };
+  }, [opportunities]);
+
+  const sortedOpportunities = useMemo(() => {
+    return [...opportunities].sort((a, b) => {
+      const dateA = new Date(a.created_at);
+      const dateB = new Date(b.created_at);
+      return dateB - dateA;
+    });
   }, [opportunities]);
 
   return (
@@ -319,41 +345,21 @@ export default function AdminBusinessOpportunities({
                 title="Business Opportunities"
                 description="Manage and distribute business opportunities, freelance gigs, and project collaborations. Create targeted opportunities for specific membership tiers and track member engagement."
                 mode={mode}
-                className="capitalize"
                 stats={[
+                  
                   {
-                    icon: "heroicons:briefcase",
-                    value: `${opportunities.length} total opportunities`,
+                    icon: "heroicons:clock",
+                    value: opportunities.length > 0 ? `Last published ${new Date(
+                      sortedOpportunities[0].created_at
+                    ).toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })}` : "No opportunities yet",
+                    iconColor: "text-purple-500",
                   },
-                  ...(opportunities.length > 0
-                    ? [
-                        {
-                          icon: "heroicons:user-group",
-                          value: `${opportunities.filter(opp => opp.job_type === "Freelancer").length} freelance gigs`,
-                          iconColor: "text-purple-500",
-                        },
-                        {
-                          icon: "heroicons:building-office",
-                          value: `${opportunities.filter(opp => opp.job_type === "Agency").length} agency opportunities`,
-                          iconColor: "text-green-500",
-                        },
-                        {
-                          icon: "heroicons:document-text",
-                          value: `${opportunities.filter(opp => opp.is_tender).length} tender opportunities`,
-                          iconColor: "text-orange-500",
-                        },
-                        {
-                          icon: "heroicons:clock",
-                          value: `Last published ${new Date(Math.max(...opportunities.map(opp => new Date(opp.created_at)))).toLocaleDateString("en-US", {
-                            month: "short",
-                            day: "numeric",
-                            year: "numeric",
-                          })}`,
-                          iconColor: "text-blue-500",
-                        },
-                      ]
-                    : []),
                 ]}
+                className="capitalize"
                 actions={[
                   {
                     label: "New Opportunity",
@@ -363,6 +369,161 @@ export default function AdminBusinessOpportunities({
                   },
                 ]}
               />
+            </div>
+
+            {/* Statistics Cards Section */}
+            <div className="mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {/* Total Opportunities Card */}
+                <div className={`relative group rounded-2xl border backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] ${
+                  mode === "dark"
+                    ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60 border-white/10"
+                    : "bg-gradient-to-br from-white/80 via-white/20 to-white/80 border-white/20"
+                } shadow-lg hover:shadow-xl`}>
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        mode === "dark" ? "bg-blue-900/30" : "bg-blue-100"
+                      }`}>
+                        <Icon icon="heroicons:briefcase" className="w-6 h-6 text-blue-500" />
+                      </div>
+                      <div className={`text-right ${
+                        mode === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}>
+                        <div className="text-xs font-medium">Total</div>
+                        <div className="text-xs">Opportunities</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className={`text-2xl font-bold ${
+                        mode === "dark" ? "text-white" : "text-gray-900"
+                      }`}>
+                        {opportunities.length}
+                      </div>
+                      <div className={`text-sm ${
+                        mode === "dark" ? "text-gray-400" : "text-gray-600"
+                      }`}>
+                        Active listings
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Total Applications Card */}
+                <div 
+                  onClick={modalActions.openAllUsersModal}
+                  className={`relative group rounded-2xl border backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] cursor-pointer ${
+                    mode === "dark"
+                      ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60 border-white/10"
+                      : "bg-gradient-to-br from-white/80 via-white/20 to-white/80 border-white/20"
+                  } shadow-lg hover:shadow-xl`}>
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        mode === "dark" ? "bg-red-900/30" : "bg-red-100"
+                      }`}>
+                        <Icon icon="heroicons:heart" className="w-6 h-6 text-red-500" />
+                      </div>
+                      <div className={`text-right ${
+                        mode === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}>
+                        <div className="text-xs font-medium">Total</div>
+                        <div className="text-xs">Applications</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className={`text-2xl font-bold ${
+                        mode === "dark" ? "text-white" : "text-gray-900"
+                      }`}>
+                        {totalInterestsLoading ? "..." : totalInterests}
+                      </div>
+                      <div className={`text-sm ${
+                        mode === "dark" ? "text-gray-400" : "text-gray-600"
+                      }`}>
+                        {totalInterestsLoading ? "Loading data..." : "Click to view all"}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                
+
+                
+
+                {/* Freelance Gigs Card */}
+                <div className={`relative group rounded-2xl border backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] ${
+                  mode === "dark"
+                    ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60 border-white/10"
+                    : "bg-gradient-to-br from-white/80 via-white/20 to-white/80 border-white/20"
+                } shadow-lg hover:shadow-xl`}>
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        mode === "dark" ? "bg-purple-900/30" : "bg-purple-100"
+                      }`}>
+                        <Icon icon="heroicons:user-group" className="w-6 h-6 text-purple-500" />
+                      </div>
+                      <div className={`text-right ${
+                        mode === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}>
+                        <div className="text-xs font-medium">Freelance</div>
+                        <div className="text-xs">Gigs</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className={`text-2xl font-bold ${
+                        mode === "dark" ? "text-white" : "text-gray-900"
+                      }`}>
+                        {opportunities.filter(opp => opp.job_type === "Freelancer").length}
+                      </div>
+                      <div className={`text-sm ${
+                        mode === "dark" ? "text-gray-400" : "text-gray-600"
+                      }`}>
+                        Individual projects
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Agency Opportunities Card */}
+                <div className={`relative group rounded-2xl border backdrop-blur-xl transition-all duration-300 hover:scale-[1.02] ${
+                  mode === "dark"
+                    ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60 border-white/10"
+                    : "bg-gradient-to-br from-white/80 via-white/20 to-white/80 border-white/20"
+                } shadow-lg hover:shadow-xl`}>
+                  <div className="p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                        mode === "dark" ? "bg-green-900/30" : "bg-green-100"
+                      }`}>
+                        <Icon icon="heroicons:building-office" className="w-6 h-6 text-green-500" />
+                      </div>
+                      <div className={`text-right ${
+                        mode === "dark" ? "text-gray-400" : "text-gray-500"
+                      }`}>
+                        <div className="text-xs font-medium">Agency</div>
+                        <div className="text-xs">Opportunities</div>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className={`text-2xl font-bold ${
+                        mode === "dark" ? "text-white" : "text-gray-900"
+                      }`}>
+                        {opportunities.filter(opp => opp.job_type === "Agency").length}
+                      </div>
+                      <div className={`text-sm ${
+                        mode === "dark" ? "text-gray-400" : "text-gray-600"
+                      }`}>
+                        Team projects
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                
+
+                
+              </div>
             </div>
 
             <div className="space-y-8">
@@ -563,6 +724,17 @@ export default function AdminBusinessOpportunities({
               error={usersError}
               mode={mode}
               opportunityId={selectedOpportunityId}
+            />
+
+            {/* All Interested Users Modal */}
+            <InterestedUsersModal
+              isOpen={isAllUsersModalOpen}
+              onClose={modalActions.closeAllUsersModal}
+              users={allInterestedUsers}
+              loading={allUsersLoading}
+              error={allUsersError}
+              mode={mode}
+              opportunityId={null}
             />
           </div>
           <SimpleFooter mode={mode} isSidebarOpen={isSidebarOpen} />

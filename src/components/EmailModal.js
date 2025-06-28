@@ -115,7 +115,7 @@ export default function EmailModal({
                 />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-white">Compose Email</h2>
+                <h2 className="text-2xl font-semibold text-white">Compose Email</h2>
                 <p className="text-white/80 text-sm">
                   To {emailData.fullName || "Candidate"}
                 </p>
@@ -238,6 +238,7 @@ export default function EmailModal({
               >
                 <EditorComponent
                   initialValue={body}
+                  onChange={(newContent) => setBody(newContent)}
                   onBlur={(newContent) => setBody(newContent)}
                   mode={mode}
                   holderId="jodit-editor-email-modal"

@@ -389,15 +389,13 @@ export default function OpportunityCard({
               >
                 <Icon icon="heroicons:trash" className="w-5 h-5" />
               </button>
-              {isAgency && !isTender && (
-                <button
-                  onClick={() => onViewUsers(opportunity.id)}
-                  className="p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 transition"
-                  title="View interested users"
-                >
-                  <Icon icon="heroicons:user-group" className="w-5 h-5" />
-                </button>
-              )}
+              <button
+                onClick={() => onViewUsers(opportunity.id)}
+                className="p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 transition"
+                title="View interested users"
+              >
+                <Icon icon="heroicons:user-group" className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>

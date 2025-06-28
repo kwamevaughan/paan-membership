@@ -487,6 +487,16 @@ const TipTapEditor = memo(({
     }
   }, [editor, onBlur]);
 
+  // Update editor content when initialValue changes
+  useEffect(() => {
+    if (editor && initialValue !== undefined) {
+      const currentContent = editor.getHTML();
+      if (currentContent !== initialValue) {
+        editor.commands.setContent(initialValue);
+      }
+    }
+  }, [editor, initialValue]);
+
   const addLink = () => {
     const url = window.prompt('Enter URL:');
     if (url) {

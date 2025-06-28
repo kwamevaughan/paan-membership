@@ -7,7 +7,7 @@ export default function ItemActionModal({
   title,
   children,
   mode,
-  width = "max-w-2xl",
+  width = "max-w-4xl",
   rightElement,
   hasUnsavedChanges = false,
 }) {

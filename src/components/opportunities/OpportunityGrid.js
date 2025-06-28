@@ -313,15 +313,13 @@ export default function OpportunityGrid({
         >
           <Icon icon="heroicons:trash" className="w-4 h-4" />
         </button>
-        {opportunity.job_type === "Agency" && (
-          <button
-            onClick={() => onViewUsers(opportunity.id)}
-            className="p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 transition"
-            title="View interested users"
-          >
-            <Icon icon="heroicons:user-group" className="w-4 h-4" />
-          </button>
-        )}
+        <button
+          onClick={() => onViewUsers(opportunity.id)}
+          className="p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 transition"
+          title="View interested users"
+        >
+          <Icon icon="heroicons:user-group" className="w-4 h-4" />
+        </button>
       </div>
     ),
     [onEdit, onDelete, onViewUsers]

@@ -11,12 +11,14 @@ const useOpportunity = (opportunityId, mode) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    const fetchOpportunity = async () => {
-      if (!opportunityId) {
-        setError("No opportunity selected.");
-        return;
-      }
+    if (!opportunityId) {
+      setOpportunity(null);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
 
+    const fetchOpportunity = async () => {
       setOpportunity(null);
       setError(null);
       setIsLoading(true);
@@ -57,7 +59,7 @@ const useOpportunity = (opportunityId, mode) => {
 };
 
 // Enhanced user card component
-const UserCard = ({ user, onEmailClick, mode, showTier = false }) => {
+const UserCard = ({ user, onEmailClick, mode, showTier = false, showOpportunity = false }) => {
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleString("en-US", {
       month: "short",
@@ -125,6 +127,24 @@ const UserCard = ({ user, onEmailClick, mode, showTier = false }) => {
               }`}
             >
               Tier: {user.tier}
+            </span>
+          </div>
+        )}
+
+        {showOpportunity && user.opportunity_title && (
+          <div className="flex items-center space-x-2">
+            <Icon
+              icon="mdi:briefcase"
+              className={`w-4 h-4 ${
+                mode === "dark" ? "text-green-400" : "text-green-500"
+              }`}
+            />
+            <span
+              className={`text-sm font-medium ${
+                mode === "dark" ? "text-gray-300" : "text-gray-700"
+              }`}
+            >
+              {user.opportunity_title}
             </span>
           </div>
         )}
@@ -355,10 +375,10 @@ const InterestedUsersModal = ({
   );
 
   // Memoized computed values
-  const isLoading = loading || isOpportunityLoading;
-  const hasError = error || (opportunityError && !opportunity);
-  const errorMessage = error || opportunityError;
-  const showTier = opportunity?.job_type !== "Freelancer";
+  const isLoading = loading || (opportunityId ? isOpportunityLoading : false);
+  const hasError = error || (opportunityId && opportunityError && !opportunity);
+  const errorMessage = error || (opportunityId ? opportunityError : null);
+  const showTier = opportunityId ? opportunity?.job_type !== "Freelancer" : true;
   const hasUsers = users.length > 0;
 
   const modalContent = useMemo(() => {
@@ -384,6 +404,7 @@ const InterestedUsersModal = ({
               onEmailClick={handleOpenEmailModal}
               mode={mode}
               showTier={showTier}
+              showOpportunity={user.opportunity_title ? true : false}
             />
           ))}
         </div>
@@ -408,7 +429,7 @@ const InterestedUsersModal = ({
         title={
           <div className="flex items-center space-x-3">
             <Icon icon="mdi:account-group" className="w-6 h-6" />
-            <span>Interested Users</span>
+            <span>{opportunityId ? "Interested Users" : "All Applications"}</span>
             {hasUsers && !isLoading && (
               <span
                 className={`px-3 py-1 rounded-full text-sm font-medium ${

@@ -6,6 +6,7 @@ export default function FormActions({
   loading,
   isEditing,
   isFreelancer,
+  buttonText,
 }) {
   return (
     <div className="col-span-2 mt-12 flex justify-end space-x-4">
@@ -34,9 +35,9 @@ export default function FormActions({
           icon={isEditing ? "heroicons:pencil" : "heroicons:plus"}
           className="h-4 w-4 mr-2"
         />
-        {isEditing
+        {buttonText || (isEditing
           ? `Update ${isFreelancer ? "Gig" : "Opportunity"}`
-          : `Create ${isFreelancer ? "Gig" : "Opportunity"}`}
+          : `Create ${isFreelancer ? "Gig" : "Opportunity"}`)}
       </button>
     </div>
   );

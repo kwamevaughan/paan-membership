@@ -16,6 +16,8 @@ export default function OpportunityForm({
   tiers,
   mode,
   handleBulkSubmit,
+  modalTitle,
+  modalButtonText,
 }) {
   const [jobType, setJobType] = useState(formData.job_type || "Agency");
   const [projectTypes, setProjectTypes] = useState([]);
@@ -303,6 +305,7 @@ export default function OpportunityForm({
           loading={loading}
           isEditing={isEditing}
           isFreelancer={isFreelancer}
+          buttonText={modalButtonText}
         />
       </form>
 
@@ -310,7 +313,7 @@ export default function OpportunityForm({
       <ItemActionModal
         isOpen={showNotificationConfirm}
         onClose={handleNotificationCancel}
-        title="Confirm Member Notification"
+        title={modalTitle || "Confirm Member Notification"}
         mode={mode}
       >
         <div className="space-y-6">

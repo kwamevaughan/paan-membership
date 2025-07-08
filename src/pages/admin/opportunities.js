@@ -43,6 +43,7 @@ export default function AdminBusinessOpportunities({
   const [selectedIds, setSelectedIds] = useState([]);
   const [isAllUsersModalOpen, setIsAllUsersModalOpen] = useState(false);
   // State for form modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
@@ -177,8 +178,11 @@ export default function AdminBusinessOpportunities({
   // Function to confirm deletion
   const confirmDelete = () => {
     if (opportunityToDelete) {
-      handleDelete(opportunityToDelete);
-      closeDeleteModal();
+      const loadingToastId = toast.loading('Please wait...');
+      Promise.resolve(handleDelete(opportunityToDelete)).finally(() => {
+        toast.dismiss(loadingToastId);
+        closeDeleteModal();
+      });
     }
   };
 
@@ -193,9 +197,10 @@ export default function AdminBusinessOpportunities({
         setEditingId(null);
         resetForm();
       }
-      setIsEditing(true);
+      setIsModalOpen(true);
     },
     closeModal: () => {
+      setIsModalOpen(false);
       setIsEditing(false);
       setEditingId(null);
       resetForm();
@@ -277,8 +282,9 @@ export default function AdminBusinessOpportunities({
     toast.success(`${ids.length} opportunities deleted successfully!`);
   };
 
-  // In the render, set modal title based on isEditing
+  // In the render, set modal title and button text based on isEditing
   const modalTitle = isEditing ? 'Edit Opportunity' : 'Add Opportunity';
+  const modalButtonText = isEditing ? 'Update Opportunity' : 'Create Opportunity';
 
   return (
     <div
@@ -698,7 +704,7 @@ export default function AdminBusinessOpportunities({
 
             {/* Form Modal */}
             <ItemActionModal
-              isOpen={isEditing}
+              isOpen={isModalOpen}
               onClose={modalActions.closeModal}
               title={modalTitle}
               mode={mode}
@@ -708,12 +714,9 @@ export default function AdminBusinessOpportunities({
                 handleInputChange={handleInputChange}
                 submitForm={async (e) => {
                   e.preventDefault();
-                  let loadingToastId;
-                  if (!isEditing) {
-                    loadingToastId = toast.loading('Please wait...');
-                  }
+                  let loadingToastId = toast.loading('Please wait...');
                   await handleSubmit(e);
-                  if (!isEditing && loadingToastId) {
+                  if (loadingToastId) {
                     toast.dismiss(loadingToastId);
                   }
                   modalActions.closeModal();
@@ -722,6 +725,8 @@ export default function AdminBusinessOpportunities({
                 isEditing={isEditing}
                 tiers={tiers}
                 mode={mode}
+                modalTitle={modalTitle}
+                modalButtonText={modalButtonText}
               />
             </ItemActionModal>
 

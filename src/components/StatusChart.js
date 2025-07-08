@@ -20,10 +20,16 @@
     const [isChartReady, setIsChartReady] = useState(false);
 
     const tiers = useMemo(() => {
-      // Get unique tier names from candidates
+      // Get unique tier names from candidates, stripping extra descriptions
       const uniqueTiers = [
         ...new Set(
-          candidates.map((candidate) => candidate.selected_tier).filter(Boolean)
+          candidates
+            .map((candidate) =>
+              candidate.selected_tier
+                ? candidate.selected_tier.split(" - ")[0].trim()
+                : null
+            )
+            .filter(Boolean)
         ),
       ];
       // Sort tiers based on the tier number
@@ -52,8 +58,11 @@
     const filteredCandidates = useMemo(
       () =>
         candidates.filter((candidate) => {
+          const candidateTier = candidate.selected_tier
+            ? candidate.selected_tier.split(" - ")[0].trim()
+            : "";
           const matchesTier = selectedTab
-            ? candidate.selected_tier === selectedTab
+            ? candidateTier === selectedTab
             : true;
           const candidateYear = candidate.submitted_at
             ? new Date(candidate.submitted_at).getFullYear().toString()

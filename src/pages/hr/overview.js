@@ -94,7 +94,7 @@ export default function HROverview({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           fullName: emailData.fullName,
-          email: emailData.email,
+          primaryContactEmail: emailData.primaryContactEmail,
           opening: emailData.opening,
           status: emailData.status,
           subject: emailData.subject,

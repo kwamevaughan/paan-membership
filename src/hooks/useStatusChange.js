@@ -224,7 +224,7 @@ const useStatusChange = ({
 
         const emailPayload = {
           fullName: candidate.primaryContactName || "Candidate",
-          email: candidate.email,
+          primaryContactEmail: candidate.primaryContactEmail,
           opening: candidate.opening || "Unknown Position",
           status: newStatus,
           subject,

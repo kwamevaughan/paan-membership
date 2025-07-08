@@ -312,10 +312,7 @@ export async function getServerSideProps({ req, res }) {
       error: sessionError,
     } = await supabaseServer.auth.getSession();
 
-    console.log("[EmailTemplates] Session Response:", {
-      session: session ? "present" : null,
-      sessionError: sessionError ? sessionError.message : null,
-    });
+    
 
     if (sessionError || !session) {
       console.log(
@@ -360,10 +357,7 @@ export async function getServerSideProps({ req, res }) {
       fetchEmailTemplates: true,
     });
     console.timeEnd("fetchHRData");
-    console.log("[EmailTemplates] Fetched Data:", {
-      emailTemplates: data.emailTemplates?.length || 0,
-      sampleTemplates: data.emailTemplates?.slice(0, 2) || [],
-    });
+    
 
     return {
       props: {

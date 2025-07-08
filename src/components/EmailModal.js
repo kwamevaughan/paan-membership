@@ -177,7 +177,7 @@ export default function EmailModal({
                         mode === "dark" ? "text-gray-400" : "text-gray-600"
                       }`}
                     >
-                      {emailData.email || ""}
+                      {emailData.primaryContactEmail || ""}
                     </p>
                   </div>
                   <Icon
@@ -237,7 +237,7 @@ export default function EmailModal({
                 }`}
               >
                 <EditorComponent
-                  key={`email-editor-${emailData?.email || 'new'}`}
+                  key={`email-editor-${emailData?.primaryContactEmail || 'new'}`}
                   initialValue={body}
                   onChange={(newContent) => setBody(newContent)}
                   onBlur={(newContent) => setBody(newContent)}

@@ -43,12 +43,6 @@
     }, [candidates]);
 
     useEffect(() => {
-      if (tiers.length > 0 && !selectedTab) {
-        setSelectedTab(tiers[0].name);
-      }
-    }, [tiers]);
-
-    useEffect(() => {
       if (typeof window !== "undefined") {
         const randomSuffix = Math.random().toString(36).substring(2, 11);
         setChartContainerId(`glassy-chart-${chartId}-${randomSuffix}`);
@@ -608,6 +602,24 @@
         <div className="flex flex-col md:flex-row">
           <div className="w-full md:w-1/5 p-2 sm:p-4 overflow-x-auto md:overflow-x-visible">
             <div className="flex md:flex-col gap-2">
+              {/* All Tiers Tab */}
+              <button
+                className={`flex items-center justify-center w-full md:w-auto p-3 my-2 rounded-lg shadow-md font-medium text-left transition-colors duration-200 min-h-[48px] md:whitespace-normal whitespace-nowrap ${
+                  selectedTab === null
+                    ? mode === "dark"
+                      ? "bg-gray-600 text-white"
+                      : "bg-sky-50 text-gray-800"
+                    : mode === "dark"
+                    ? "bg-gray-800 text-gray-200 hover:bg-gray-700"
+                    : "bg-white text-gray-800 hover:bg-gray-100"
+                }`}
+                onClick={() => setSelectedTab(null)}
+              >
+                <span className="break-words text-sm leading-tight">
+                  All Tiers
+                </span>
+              </button>
+              {/* Tier Tabs */}
               {tiers.map((tab, index) => {
                 const isSelected = selectedTab === tab.name;
                 const textColor = tierColors[index % tierColors.length];

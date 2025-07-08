@@ -5,7 +5,9 @@ import { supabase } from "@/lib/supabase";
 export const useOpportunities = () => {
   const [opportunities, setOpportunities] = useState([]);
   const [formData, setFormData] = useState({
-    title: "",
+    organization_name: "",
+    gig_title: "",
+    tender_title: "",
     description: "",
     location: "",
     deadline: "",
@@ -56,7 +58,7 @@ export const useOpportunities = () => {
         await supabase
           .from("business_opportunities")
           .select(
-            "id, title, description, location, deadline, tier_restriction, service_type, industry, project_type, application_link, job_type, skills_required, estimated_duration, budget_range, remote_work, attachment_url, attachment_name, attachment_type, attachment_size, is_tender, tender_organization, tender_category, tender_issued, tender_closing, tender_access_link, created_at, updated_at"
+            "id, organization_name, gig_title, tender_title, description, location, deadline, tier_restriction, service_type, industry, project_type, application_link, job_type, skills_required, estimated_duration, budget_range, remote_work, attachment_url, attachment_name, attachment_type, attachment_size, is_tender, tender_organization, tender_category, tender_issued, tender_closing, tender_access_link, created_at, updated_at"
           )
           .order("created_at", { ascending: false });
 
@@ -111,7 +113,6 @@ export const useOpportunities = () => {
           { name: 'Category', field: 'tender_category', value: formData.tender_category },
           { name: 'Issued Date', field: 'tender_issued', value: formData.tender_issued },
           { name: 'Closing Date', field: 'tender_closing', value: formData.tender_closing },
-          { name: 'Access Link', field: 'tender_access_link', value: formData.tender_access_link },
         ];
 
         const missingFields = tenderFields.filter(({ value, field }) => {
@@ -160,9 +161,9 @@ export const useOpportunities = () => {
         allowedServiceTypes.includes(formData.service_type) ? formData.service_type : allowedServiceTypes[0];
 
       const payload = {
-        title: formData.is_tender 
-          ? (formData.tender_organization ? formData.tender_organization : "Tender Opportunity")
-          : (typeof formData.title === "string" ? formData.title : ""),
+        organization_name: !formData.is_tender && formData.job_type !== "Freelancer" ? formData.organization_name : null,
+        gig_title: formData.job_type === "Freelancer" ? formData.gig_title : null,
+        tender_title: formData.is_tender ? formData.tender_title : null,
         description: typeof formData.description === "string" ? formData.description : "",
         location: formData.location || null,
         deadline:
@@ -263,7 +264,8 @@ export const useOpportunities = () => {
 
       // Prepare bulk payload
       const bulkPayload = tenders.map(tender => ({
-        title: tender.organization || "Tender Opportunity",
+        organization_name: tender.organization || null,
+        tender_title: tender.title || "",
         description: tender.description || `Tender opportunity from ${tender.organization} in the ${tender.category} category.`,
         location: null,
         deadline: tender.closing || null,
@@ -315,6 +317,8 @@ export const useOpportunities = () => {
 
   const handleEdit = (opp) => {
     console.log("[useOpportunities] handleEdit called with:", opp);
+    // Debug: Check if gig_title is present
+    console.log("[useOpportunities] gig_title value:", opp.gig_title);
     
     // Determine if this is actually a tender opportunity by checking tender fields
     const isActuallyTender = opp.is_tender || 
@@ -329,7 +333,9 @@ export const useOpportunities = () => {
     });
     
     const editData = {
-      title: opp.title || "",
+      organization_name: opp.organization_name || "",
+      gig_title: opp.gig_title || "",
+      tender_title: opp.tender_title || "",
       description: opp.description || "",
       location: opp.location || "",
       deadline: opp.deadline
@@ -395,7 +401,9 @@ export const useOpportunities = () => {
 
   const resetForm = () => {
     setFormData({
-      title: "",
+      organization_name: "",
+      gig_title: "",
+      tender_title: "",
       description: "",
       location: "",
       deadline: "",

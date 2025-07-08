@@ -3,6 +3,7 @@ import { Icon } from "@iconify/react";
 import ItemActionModal from "./ItemActionModal";
 import EmailModal from "./EmailModal";
 import { supabase } from "@/lib/supabase";
+import toast from "react-hot-toast";
 
 // Custom hooks for better separation of concerns
 const useOpportunity = (opportunityId, mode) => {
@@ -26,7 +27,7 @@ const useOpportunity = (opportunityId, mode) => {
       try {
         const { data, error } = await supabase
           .from("business_opportunities")
-          .select("title, job_type")
+          .select("tender_title, gig_title, organization_name, job_type")
           .eq("id", opportunityId)
           .single();
 
@@ -295,7 +296,7 @@ const InterestedUsersModal = ({
 
   // Memoized email template generator
   const generateEmailTemplate = useCallback((user, opportunity) => {
-    const opportunityTitle = opportunity?.title || "This Opportunity";
+    const opportunityTitle = opportunity?.tender_title || opportunity?.gig_title || opportunity?.organization_name || "This Opportunity";
     const jobType = opportunity?.job_type || "Opportunity";
 
     return {

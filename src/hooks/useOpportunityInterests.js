@@ -109,7 +109,9 @@ export const useAllOpportunityInterests = () => {
               job_type
             ),
             business_opportunities!opportunity_interests_opportunity_id_fkey(
-              title,
+              tender_title,
+              gig_title,
+              organization_name,
               job_type
             )
           `
@@ -125,7 +127,11 @@ export const useAllOpportunityInterests = () => {
           tier: interest.candidates?.selected_tier || "Free Member",
           job_type: interest.candidates?.job_type || "N/A",
           expressed_at: interest.created_at,
-          opportunity_title: interest.business_opportunities?.title || "Unknown Opportunity",
+          opportunity_title:
+            interest.business_opportunities?.tender_title ||
+            interest.business_opportunities?.gig_title ||
+            interest.business_opportunities?.organization_name ||
+            "Unknown Opportunity",
           opportunity_type: interest.business_opportunities?.job_type || "Opportunity",
         }));
 

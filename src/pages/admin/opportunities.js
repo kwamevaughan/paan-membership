@@ -715,7 +715,7 @@ export default function AdminBusinessOpportunities({
                 submitForm={async (e) => {
                   e.preventDefault();
                   let loadingToastId = toast.loading('Please wait...');
-                  await handleSubmit(e);
+                  await handleSubmit(e, editingId);
                   if (loadingToastId) {
                     toast.dismiss(loadingToastId);
                   }
@@ -750,8 +750,13 @@ export default function AdminBusinessOpportunities({
                     : "opportunity"} {" "}
                   <strong>
                     &ldquo;
-                    {opportunities.find((opp) => opp.id === opportunityToDelete)
-                      ?.title || ""}
+                    {(() => {
+                      const opp = opportunities.find((opp) => opp.id === opportunityToDelete);
+                      if (!opp) return "";
+                      if (opp.job_type === "Freelancer") return opp.gig_title || "";
+                      if (opp.is_tender) return opp.tender_title || opp.organization_name || "";
+                      return opp.organization_name || "";
+                    })()}
                     &rdquo;
                   </strong>
                   ? This action cannot be undone.

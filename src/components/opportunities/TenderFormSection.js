@@ -22,8 +22,6 @@ export default function TenderFormSection({
   const tenderCategories = [
     "Advertising and Market Research",
     "Photography and Videography",
-    "Research and Study",
-    "Review and Development",
     "Event Management and Logistics",
     "Event Coordinator",
     "Project Management",
@@ -39,7 +37,6 @@ export default function TenderFormSection({
     "Research and Study",
     "Design Work",
     "Videography",
-    "Research and Study",
     "Review and Development",
   ];
 
@@ -257,7 +254,22 @@ export default function TenderFormSection({
       {uploadMode === "manual" ? (
         /* Manual Entry Form */
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
-          {/* Tender-specific fields */}
+          {/* Tender Title field - NEW FIELD */}
+          <div className="col-span-2">
+            <label className={`block text-sm font-medium ${mode === "dark" ? "text-gray-300" : "text-gray-700"} mb-1.5`}>
+              Tender Title <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="tender_title"
+              value={formData.tender_title || ""}
+              onChange={handleInputChange}
+              required={true}
+              className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 ${mode === "dark" ? "border-gray-700 bg-gray-800 text-white" : "border-gray-200 bg-white text-gray-900"}`}
+              placeholder="Enter tender title"
+            />
+          </div>
+          {/* Organization field (existing) */}
           <div className="col-span-1">
             <label className={`block text-sm font-medium ${mode === "dark" ? "text-gray-300" : "text-gray-700"} mb-1.5`}>
               Organization <span className="text-rose-500">*</span>
@@ -362,14 +374,13 @@ export default function TenderFormSection({
           
           <div className="col-span-2">
             <label className={`block text-sm font-medium ${mode === "dark" ? "text-gray-300" : "text-gray-700"} mb-1.5`}>
-              Access Link <span className="text-rose-500">*</span>
+              Access Link <span className="text-xs text-gray-400">(optional)</span>
             </label>
             <input
               type="url"
               name="tender_access_link"
               value={formData.tender_access_link || ""}
               onChange={handleInputChange}
-              required={true}
               className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 ${mode === "dark" ? "border-gray-700 bg-gray-800 text-white" : "border-gray-200 bg-white text-gray-900"}`}
               placeholder="https://example.com/tender"
             />

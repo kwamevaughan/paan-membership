@@ -45,7 +45,12 @@ export default function OpportunityCard({
         <div className="flex items-start justify-between mb-4">
           <div className="flex-1">
             <h3 className="text-lg font-semibold mb-2 line-clamp-2">
-              {opportunity.title}
+              {isTender
+                ? (opportunity.tender_title || opportunity.organization_name)
+                : (opportunity.job_type === "Freelancer"
+                    ? opportunity.gig_title
+                    : opportunity.organization_name)
+              }
             </h3>
             <div className="flex items-center gap-2 mb-3">
               <span

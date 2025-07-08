@@ -77,15 +77,15 @@ export default function RegularFormSection({
 
       {/* Title */}
       <div className="col-span-1">
-        <label htmlFor="title" className={`block text-sm font-medium ${mode === "dark" ? "text-gray-300" : "text-gray-700"} mb-1.5`}>
+        <label htmlFor={isFreelancer ? "gig_title" : "organization_name"} className={`block text-sm font-medium ${mode === "dark" ? "text-gray-300" : "text-gray-700"} mb-1.5`}>
           {isFreelancer ? "Gig Title" : "Opportunity Title"} <span className="text-rose-500">*</span>
         </label>
         <div className="relative group">
           <input
             type="text"
-            name="title"
-            id="title"
-            value={formData.title || ""}
+            name={isFreelancer ? "gig_title" : "organization_name"}
+            id={isFreelancer ? "gig_title" : "organization_name"}
+            value={isFreelancer ? formData.gig_title || "" : formData.organization_name || ""}
             onChange={handleInputChange}
             required
             className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 placeholder:text-gray-400 ${

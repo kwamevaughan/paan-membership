@@ -10,6 +10,7 @@ export default function OpportunityGrid({
   loading,
   onEdit,
   onDelete,
+  onBulkDelete,
   onViewUsers,
   viewMode,
   setViewMode,
@@ -396,6 +397,7 @@ export default function OpportunityGrid({
       onSelect={onSelect}
       onSelectAll={onSelectAll}
       onDelete={onDelete}
+      onBulkDelete={onBulkDelete}
       handleEditClick={onEdit}
       hasMore={false}
       itemName="opportunity"

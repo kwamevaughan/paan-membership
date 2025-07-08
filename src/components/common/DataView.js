@@ -13,6 +13,7 @@ const DataView = memo(({
   onSelect,
   onSelectAll,
   onDelete,
+  onBulkDelete,
   onEdit,
   handleEditClick,
   hasMore,
@@ -99,6 +100,7 @@ const DataView = memo(({
           onSelectAll={onSelectAll}
           onSelectItem={onSelect}
           onDelete={handleDelete}
+          onBulkDelete={onBulkDelete}
           onEdit={handleEdit}
           mode={mode}
           hasMore={hasMoreItems}

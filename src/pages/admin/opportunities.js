@@ -42,6 +42,10 @@ export default function AdminBusinessOpportunities({
   const [isUsersModalOpen, setIsUsersModalOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
   const [isAllUsersModalOpen, setIsAllUsersModalOpen] = useState(false);
+  // State for form modal
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
 
   useAuthSession();
 
@@ -73,11 +77,7 @@ export default function AdminBusinessOpportunities({
 
   // State for delete confirmation modal
   const [opportunityToDelete, setOpportunityToDelete] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingId, setEditingId] = useState(null);
-  const [itemToDelete, setItemToDelete] = useState(null);
 
   const handleViewModeChange = useCallback((newViewMode) => {
     setViewMode(newViewMode);
@@ -163,27 +163,19 @@ export default function AdminBusinessOpportunities({
 
   // Function to open delete confirmation modal
   const openDeleteModal = (id) => {
-    console.log(
-      "[AdminBusinessOpportunities] Opening delete modal for ID:",
-      id
-    ); // Debug log
+    // Only open for single id
     setOpportunityToDelete(id);
     setIsDeleteModalOpen(true);
   };
 
   // Function to close delete confirmation modal
   const closeDeleteModal = () => {
-    console.log("[AdminBusinessOpportunities] Closing delete modal"); // Debug log
     setIsDeleteModalOpen(false);
     setOpportunityToDelete(null);
   };
 
   // Function to confirm deletion
   const confirmDelete = () => {
-    console.log(
-      "[AdminBusinessOpportunities] Confirming deletion for ID:",
-      opportunityToDelete
-    ); // Debug log
     if (opportunityToDelete) {
       handleDelete(opportunityToDelete);
       closeDeleteModal();
@@ -201,10 +193,9 @@ export default function AdminBusinessOpportunities({
         setEditingId(null);
         resetForm();
       }
-      setIsModalOpen(true);
+      setIsEditing(true);
     },
     closeModal: () => {
-      setIsModalOpen(false);
       setIsEditing(false);
       setEditingId(null);
       resetForm();
@@ -273,6 +264,21 @@ export default function AdminBusinessOpportunities({
       return dateB - dateA;
     });
   }, [opportunities]);
+
+  // Bulk delete function for selected opportunities
+  const handleBulkDelete = async (ids) => {
+    if (!ids || ids.length === 0) return;
+    setBulkDeleteLoading(true);
+    setSelectedIds([]); // Clear selection immediately to prevent modal issues
+    for (const id of ids) {
+      await handleDelete(id);
+    }
+    setBulkDeleteLoading(false);
+    toast.success(`${ids.length} opportunities deleted successfully!`);
+  };
+
+  // In the render, set modal title based on isEditing
+  const modalTitle = isEditing ? 'Edit Opportunity' : 'Add Opportunity';
 
   return (
     <div
@@ -655,6 +661,7 @@ export default function AdminBusinessOpportunities({
                         mode={mode}
                         onEdit={modalActions.openModal}
                         onDelete={openDeleteModal}
+                        onBulkDelete={handleBulkDelete}
                         onViewUsers={modalActions.openUsersModal}
                         viewMode={viewMode}
                         setViewMode={handleViewModeChange}
@@ -691,30 +698,30 @@ export default function AdminBusinessOpportunities({
 
             {/* Form Modal */}
             <ItemActionModal
-              isOpen={isModalOpen}
+              isOpen={isEditing}
               onClose={modalActions.closeModal}
-              title={
-                isEditing
-                  ? formData.job_type === "Freelancer"
-                    ? "Edit Gig"
-                    : "Edit Opportunity"
-                  : formData.job_type === "Freelancer"
-                  ? "Create Gig"
-                  : "Create Opportunity"
-              }
+              title={modalTitle}
               mode={mode}
             >
               <OpportunityForm
                 formData={formData}
                 handleInputChange={handleInputChange}
-                submitForm={(e) =>
-                  modalActions.submitForm(e, isEditing ? editingId : null)
-                }
+                submitForm={async (e) => {
+                  e.preventDefault();
+                  let loadingToastId;
+                  if (!isEditing) {
+                    loadingToastId = toast.loading('Please wait...');
+                  }
+                  await handleSubmit(e);
+                  if (!isEditing && loadingToastId) {
+                    toast.dismiss(loadingToastId);
+                  }
+                  modalActions.closeModal();
+                }}
                 cancelForm={modalActions.closeModal}
                 isEditing={isEditing}
                 tiers={tiers}
                 mode={mode}
-                handleBulkSubmit={handleBulkSubmit}
               />
             </ItemActionModal>
 
@@ -735,7 +742,7 @@ export default function AdminBusinessOpportunities({
                   {opportunities.find((opp) => opp.id === opportunityToDelete)
                     ?.job_type === "Freelancer"
                     ? "gig"
-                    : "opportunity"}{" "}
+                    : "opportunity"} {" "}
                   <strong>
                     &ldquo;
                     {opportunities.find((opp) => opp.id === opportunityToDelete)

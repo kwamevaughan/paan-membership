@@ -10,6 +10,7 @@ export default function ApplicantsFilters({
   const [searchQuery, setSearchQuery] = useState("");
   const [filterOpening, setFilterOpening] = useState(initialOpening || "all");
   const [filterStatus, setFilterStatus] = useState("all");
+  const [filterTier, setFilterTier] = useState("all");
   const [isExpanded, setIsExpanded] = useState(true);
   const hasAppliedInitialFilter = useRef(false);
   const searchTimeoutRef = useRef(null);
@@ -17,6 +18,19 @@ export default function ApplicantsFilters({
   // Extract unique openings and add 'all' option
   const uniqueOpenings = ["all", ...new Set(candidates.map((c) => c.opening))];
   const statuses = ["all", "Accepted", "Pending", "Reviewed", "Shortlisted", "Rejected"];
+  // Extract unique tiers and add 'all' option
+  const uniqueTiers = [
+    "all",
+    ...Array.from(
+      new Set(
+        candidates
+          .map((c) => c.selected_tier && typeof c.selected_tier === "string"
+            ? c.selected_tier.split(" - ")[0].trim()
+            : null)
+          .filter(Boolean)
+      )
+    ),
+  ];
 
   // Validate candidates
   const areCandidatesValid = candidates.every(
@@ -31,10 +45,12 @@ export default function ApplicantsFilters({
           ? initialOpening
           : localStorage.getItem("filterOpening") || "all";
       const savedStatus = localStorage.getItem("filterStatus") || "all";
+      const savedTier = localStorage.getItem("filterTier") || "all";
 
       setFilterOpening(savedOpening);
       setFilterStatus(savedStatus);
-      handleFilter(savedStatus, savedOpening);
+      setFilterTier(savedTier);
+      handleFilter(savedStatus, savedOpening, savedTier);
       hasAppliedInitialFilter.current = true;
     } else if (!areCandidatesValid) {
       console.warn("Invalid candidates detected:", candidates);
@@ -62,17 +78,19 @@ export default function ApplicantsFilters({
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [searchQuery, filterOpening, filterStatus, areCandidatesValid]);
+  }, [searchQuery, filterOpening, filterStatus, filterTier, areCandidatesValid]);
 
   const handleFilter = (
     statusOverride = filterStatus,
-    openingOverride = filterOpening
+    openingOverride = filterOpening,
+    tierOverride = filterTier
   ) => {
-    console.log("Applying filter:", { searchQuery, filterOpening: openingOverride, filterStatus: statusOverride });
+    console.log("Applying filter:", { searchQuery, filterOpening: openingOverride, filterStatus: statusOverride, filterTier: tierOverride });
     onFilterChange({
       searchQuery,
       filterOpening: openingOverride,
       filterStatus: statusOverride,
+      filterTier: tierOverride,
     });
   };
 
@@ -88,12 +106,20 @@ export default function ApplicantsFilters({
     localStorage.setItem("filterOpening", newOpening);
   };
 
+  const handleTierChange = (e) => {
+    const newTier = e.target.value;
+    setFilterTier(newTier);
+    localStorage.setItem("filterTier", newTier);
+  };
+
   const handleClearFilters = () => {
     setSearchQuery("");
     setFilterOpening("all");
     setFilterStatus("all");
+    setFilterTier("all");
     localStorage.removeItem("filterOpening");
     localStorage.removeItem("filterStatus");
+    localStorage.removeItem("filterTier");
   };
 
   // Get active filter count for badge
@@ -102,6 +128,7 @@ export default function ApplicantsFilters({
     if (searchQuery) count++;
     if (filterOpening !== "all") count++;
     if (filterStatus !== "all") count++;
+    if (filterTier !== "all") count++;
     return count;
   };
 
@@ -167,7 +194,7 @@ export default function ApplicantsFilters({
       {/* Filter Content */}
       {isExpanded && (
         <div className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Search Field */}
             <div>
               <label
@@ -243,6 +270,34 @@ export default function ApplicantsFilters({
                   {statuses.map((status) => (
                     <option key={status} value={status}>
                       {status === "all" ? "All Statuses" : status}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                  <Icon
+                    icon="heroicons:chevron-down"
+                    className={`w-4 h-4 ${mutedTextColor}`}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Tier Filter */}
+            <div>
+              <label
+                className={`block text-sm font-medium mb-1.5 ${mutedTextColor}`}
+              >
+                Tier
+              </label>
+              <div className="relative">
+                <select
+                  value={filterTier}
+                  onChange={handleTierChange}
+                  className={`block w-full rounded-md shadow-sm pl-3 pr-8 py-2 text-sm focus:ring-2 focus:ring-[#f05d23] focus:border-transparent ${inputBg} ${inputBorder} ${textColor} border appearance-none`}
+                >
+                  {uniqueTiers.map((tier) => (
+                    <option key={tier} value={tier}>
+                      {tier === "all" ? "All Tiers" : tier}
                     </option>
                   ))}
                 </select>

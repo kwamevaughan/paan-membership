@@ -6,6 +6,11 @@ export default async function handler(req, res) {
   }
 
   const { tier } = req.query;
+  // console.log('Received tier:', tier);
+  // console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+  // console.log('Supabase ANON KEY:', process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  // console.log('Supabase SERVICE KEY:', process.env.SUPABASE_SERVICE_KEY);
+  // console.log('Supabase SERVICE ROLE KEY:', process.env.SUPABASE_SERVICE_ROLE_KEY);
 
   if (!tier) {
     return res.status(400).json({ error: 'Tier parameter is required' });

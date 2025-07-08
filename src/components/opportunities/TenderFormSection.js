@@ -27,11 +27,14 @@ export default function TenderFormSection({
     "Event Management and Logistics",
     "Event Coordinator",
     "Project Management",
+    "Business Development",
     "Business Management",
     "Communication",
     "Digital Marketing",
     "Business Planning",
-    "Graphic Design"
+    "Graphic Design",
+    "Strategic Planning",
+    "Review and Development",
   ];
 
   // Parse CSV/Excel file

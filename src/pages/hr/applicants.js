@@ -94,11 +94,12 @@ export default function HRApplicants({
     setSelectedCandidate(null);
   };
 
-  const handleFilterChange = ({ searchQuery, filterOpening, filterStatus }) => {
+  const handleFilterChange = ({ searchQuery, filterOpening, filterStatus, filterTier }) => {
     console.log("handleFilterChange:", {
       searchQuery,
       filterOpening,
       filterStatus,
+      filterTier,
     });
     let result = [...candidates];
 
@@ -122,17 +123,32 @@ export default function HRApplicants({
       result = result.filter((c) => (c.status || "Pending") === filterStatus);
       console.log("After status filter:", result);
     }
+    if (filterTier !== "all") {
+      result = result.filter((c) => {
+        if (!c.selected_tier) return false;
+        // Normalize for possible 'Tier 1 - Requirement: ...' values
+        const tierValue = c.selected_tier.split(" - ")[0].trim();
+        return tierValue === filterTier;
+      });
+      console.log("After tier filter:", result);
+    }
 
     setFilteredCandidates(result);
     console.log("Final filtered candidates:", result);
 
     const currentOpening = localStorage.getItem("filterOpening") || "all";
     const currentStatus = localStorage.getItem("filterStatus") || "all";
+    const currentTier = localStorage.getItem("filterTier") || "all";
     const currentQueryOpening = router.query.opening || "all";
 
-    if (filterOpening !== currentOpening || filterStatus !== currentStatus) {
+    if (
+      filterOpening !== currentOpening ||
+      filterStatus !== currentStatus ||
+      filterTier !== currentTier
+    ) {
       localStorage.setItem("filterOpening", filterOpening);
       localStorage.setItem("filterStatus", filterStatus);
+      localStorage.setItem("filterTier", filterTier);
 
       if (filterOpening !== currentQueryOpening) {
         if (filterOpening !== "all") {
@@ -155,8 +171,12 @@ export default function HRApplicants({
     setSortDirection(newDirection);
 
     const sorted = [...filteredCandidates].sort((a, b) => {
-      const aValue = a[field] || "";
-      const bValue = b[field] || "";
+      let aValue = a[field] || "";
+      let bValue = b[field] || "";
+      if (field === "tier") {
+        aValue = a.selected_tier ? a.selected_tier.split(" - ")[0].trim().toLowerCase() : "";
+        bValue = b.selected_tier ? b.selected_tier.split(" - ")[0].trim().toLowerCase() : "";
+      }
       return newDirection === "asc"
         ? aValue.toString().localeCompare(bValue.toString())
         : bValue.toString().localeCompare(aValue.toString());

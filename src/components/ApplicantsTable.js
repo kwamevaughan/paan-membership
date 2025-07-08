@@ -23,6 +23,7 @@ export default function ApplicantsTable({
     status: true,
     primaryContactPhone: false,
     primaryContactLinkedin: false,
+    tier: true,
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -33,6 +34,7 @@ export default function ApplicantsTable({
     status: 150,
     primaryContactPhone: 150,
     primaryContactLinkedin: 150,
+    tier: 120,
   });
 
   const allColumns = [
@@ -42,6 +44,7 @@ export default function ApplicantsTable({
     { key: "status", label: "Status" },
     { key: "primaryContactPhone", label: "Phone" },
     { key: "primaryContactLinkedin", label: "LinkedIn" },
+    { key: "tier", label: "Tier" },
   ];
 
   // Selection handlers
@@ -195,6 +198,28 @@ const handleColumnResize = (e, columnKey) => {
     : "hover:bg-gray-100/90";
   const secondaryBg = isDark ? "bg-gray-800/70" : "bg-gray-50/70";
 
+  const handleSort = (field) => {
+    const newDirection =
+      sortField === field && sortDirection === "asc" ? "desc" : "asc";
+    onSort(field);
+
+    const sorted = [...candidates].sort((a, b) => {
+      let aValue = a[field] || "";
+      let bValue = b[field] || "";
+      if (field === "tier") {
+        aValue = a.selected_tier ? a.selected_tier.split(" - ")[0].trim().toLowerCase() : "";
+        bValue = b.selected_tier ? b.selected_tier.split(" - ")[0].trim().toLowerCase() : "";
+      }
+      return newDirection === "asc"
+        ? aValue.toString().localeCompare(bValue.toString())
+        : bValue.toString().localeCompare(aValue.toString());
+    });
+
+    // Update the candidates state
+    // Assuming you have a state to hold the sorted candidates
+    // setCandidates(sorted);
+  };
+
   return (
     <div
       className={`rounded-2xl overflow-hidden border ${borderColor} shadow-2xl ${cardBg} transition-all duration-300 animate-fade-in`}
@@ -288,7 +313,7 @@ const handleColumnResize = (e, columnKey) => {
                       <div className="flex items-center">
                         <button
                           className={`inline-flex items-center rounded-lg px-3 py-1.5 transition-all duration-200 ${buttonHoverBg} hover:shadow-sm`}
-                          onClick={() => onSort(col.key)}
+                          onClick={() => handleSort(col.key)}
                           title={`Sort by ${col.label}`}
                         >
                           {col.label} {getSortIcon(col.key)}
@@ -416,7 +441,19 @@ const handleColumnResize = (e, columnKey) => {
                     )}
                   </td>
                 )}
-                <td className="p-4 space-x-3">
+                {visibleColumns.tier && (
+                  <td
+                    className={`p-4 ${
+                      isDark ? "text-gray-300" : "text-gray-600"
+                    } text-sm`}
+                    style={{ width: columnWidths.tier }}
+                  >
+                    {candidate.selected_tier
+                      ? candidate.selected_tier.split(" - ")[0].trim()
+                      : "—"}
+                  </td>
+                )}
+                <td className="flex p-4 space-x-3">
                   <button
                     onClick={() => onViewCandidate(candidate)}
                     className={`px-4 py-2 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium transition-all duration-200 transform hover:scale-105

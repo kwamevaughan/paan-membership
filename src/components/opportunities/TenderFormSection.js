@@ -34,6 +34,12 @@ export default function TenderFormSection({
     "Business Planning",
     "Graphic Design",
     "Strategic Planning",
+    "Auditing",
+    "Policy Analysis",
+    "Research and Study",
+    "Design Work",
+    "Videography",
+    "Research and Study",
     "Review and Development",
   ];
 

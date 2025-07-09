@@ -43,3 +43,4 @@ build/
 generateHash.js
 
 scripts/align-users.js
+update-password.js

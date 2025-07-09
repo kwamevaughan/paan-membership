@@ -70,7 +70,7 @@ const useStatusChange = ({
       let plainPassword = null;
       let authUserId = candidate.auth_user_id;
 
-      if (newStatus === "Accepted") {
+      if (newStatus === "Accepted" && candidate.primaryContactEmail !== "support@paan.africa") {
         plainPassword = await generatePanAfricanPassword();
         if (!plainPassword) {
           throw new Error("Failed to generate password");
@@ -214,12 +214,15 @@ const useStatusChange = ({
           .replace("{{opening}}", candidate.opening || "Unknown Position")
           .replace("{{email}}", candidate.email || "your email address");
 
-        if (newStatus === "Accepted") {
+        if (newStatus === "Accepted" && candidate.primaryContactEmail !== "support@paan.africa") {
           if (!plainPassword) {
             console.warn(`No password generated for candidate ${candidateId}`);
             throw new Error("Password not generated for email");
           }
           body = body.replace("{{password}}", plainPassword);
+        } else if (newStatus === "Accepted" && candidate.primaryContactEmail === "support@paan.africa") {
+          // Remove or replace the password placeholder for admin account
+          body = body.replace("{{password}}", "[Admin account - password unchanged]");
         }
 
         const emailPayload = {

@@ -394,7 +394,7 @@ export default function ModernTimeline({
                                     <p className={`text-sm font-normal leading-relaxed ${
                                       isDark ? "text-gray-100" : "text-gray-900"
                                     }`}>
-                                      {activity.description}
+                                      {typeof activity.description === 'string' ? activity.description : activity.description}
                                     </p>
                                     <Icon
                                       icon="lucide:arrow-up-right"

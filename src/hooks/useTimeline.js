@@ -25,15 +25,33 @@ export function useTimeline(categoryFilter = "all") {
       Offers: `/admin/offers`,
     };
 
+    // Determine display title for business opportunities
+    let displayTitle = record.title;
+    if (type === "business_opportunities") {
+      displayTitle = record.tender_title || record.gig_title || record.organization_name || "Untitled";
+      return {
+        id: record.id,
+        time,
+        date,
+        rawDate: record.created_at, // Store raw ISO date string
+        type,
+        description: (
+          <>
+            New {type.replace(/_/g, " ")} posted for <span className="font-semibold">{record[tierField]}</span>: {displayTitle}.
+          </>
+        ),
+        category,
+        url: urlMap[category],
+      };
+    }
+
     return {
       id: record.id,
       time,
       date,
       rawDate: record.created_at, // Store raw ISO date string
       type,
-      description: `New ${type.replace(/_/g, " ")} posted for ${
-        record[tierField]
-      }: ${record.title}.`,
+      description: `New ${type.replace(/_/g, " ")} posted for <span class="font-bold">${record[tierField]}</span>: ${displayTitle}.`,
       category,
       url: urlMap[category],
     };
@@ -62,10 +80,10 @@ export function useTimeline(categoryFilter = "all") {
         {
           name: "business_opportunities",
           select:
-            "id, title, description, location, deadline, tier_restriction, service_type, industry, project_type, application_link, created_at, updated_at",
+            "id, organization_name, tender_title, gig_title, description, location, deadline, tier_restriction, service_type, industry, project_type, application_link, created_at, updated_at, is_tender",
           order: { field: "created_at", ascending: false },
           type: "business_opportunities",
-          tierField: "tier",
+          tierField: "tier_restriction", // fixed from 'tier'
           category: "Business Opportunities",
         },
         {

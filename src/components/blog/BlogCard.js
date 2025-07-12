@@ -154,7 +154,7 @@ export default function BlogCard({
               <Icon icon="heroicons:pencil-square" className="w-4 h-4" />
             </button>
             <a
-              href={`https://paan.africa/blog/${blog.slug}`}
+              href={`https://paan.africa/blogs/${blog.slug}`}
               target="_blank"
               rel="noopener noreferrer"
               className={`p-2 rounded-lg hover:bg-green-100 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 transition`}

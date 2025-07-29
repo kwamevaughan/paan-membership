@@ -21,9 +21,13 @@ export default function TenderFormSection({
 
   const tenderCategories = [
     "Advertising and Market Research",
+    "Auditing",
+    "Audio-Visual Training",
     "Photography and Videography",
     "Event Management and Logistics",
     "Event Coordinator",
+    "E-Learning Content Development",
+    "End Term Evaluation",
     "Project Management",
     "Business Development",
     "Business Management",
@@ -43,6 +47,8 @@ export default function TenderFormSection({
     "Design Work",
     "Videography",
     "Review and Development",
+    "Technical Assistance",
+    "Other",
   ];
 
   // Parse CSV/Excel file

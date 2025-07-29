@@ -384,6 +384,11 @@ export default function CandidateModal({
                           icon: "mdi:phone",
                         },
                         {
+                          label: "Country",
+                          value: candidate.countryOfResidence,
+                          icon: "mdi:earth",
+                        },
+                        {
                           label: "LinkedIn",
                           value: candidate.primaryContactLinkedin,
                           icon: "mdi:linkedin",

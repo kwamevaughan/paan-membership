@@ -17,7 +17,7 @@ export default function EventForm({
   mode,
   openImageLibrary,
 }) {
-  const eventTypes = ["Networking", "Workshop", "Conference", "Webinar"];
+  const eventTypes = ["Networking", "Workshop", "Conference", "Webinar", "Training", "Other"];
   const validTiers = [
     "Associate Member",
     "Full Member",
@@ -270,8 +270,12 @@ export default function EventForm({
     }
     const newErrors = {};
     if (!localFormData.title) newErrors.title = "Title is required";
-    if (!eventTypes.includes(localFormData.event_type))
+    
+    // Ensure event_type has a valid value
+    const eventType = localFormData.event_type || "Networking";
+    if (!eventTypes.includes(eventType)) {
       newErrors.event_type = "Please select a valid event type";
+    }
 
     if (!isEditing) {
       if (!startDate) newErrors.startDate = "Start date is required";
@@ -312,6 +316,7 @@ export default function EventForm({
           ...formData,
           ...localFormData,
           id: formData.id,
+          event_type: localFormData.event_type || "Networking",
           start_date: startDate ? startDate.toISOString() : formData.start_date,
           end_date: endDate ? endDate.toISOString() : formData.end_date,
           banner_image: localFormData.banner_image || formData.banner_image,
@@ -319,6 +324,7 @@ export default function EventForm({
         }
       : {
           ...localFormData,
+          event_type: localFormData.event_type || "Networking",
           start_date: startDate ? startDate.toISOString() : null,
           end_date: endDate ? endDate.toISOString() : null,
         };

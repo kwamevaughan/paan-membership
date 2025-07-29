@@ -25,6 +25,8 @@ export default function EventFilters({
     "Workshop",
     "Conference",
     "Webinar",
+    "Training",
+    "Other",
   ];
 
   return (

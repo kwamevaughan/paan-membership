@@ -215,20 +215,34 @@ export function useEvents() {
         "Workshop",
         "Conference",
         "Webinar",
+        "Training",
+        "Other",
       ];
-      if (!validEventTypes.includes(eventData.event_type)) {
+      
+      // Ensure event_type has a valid value
+      const eventType = eventData.event_type || "Networking";
+      if (!validEventTypes.includes(eventType)) {
         throw new Error(
           `Invalid event_type. Must be one of: ${validEventTypes.join(", ")}`
         );
       }
+      
+      // Update the eventData with the validated event_type
+      eventData.event_type = eventType;
 
       // Validate tier_restriction
-      const validTiers = ["Associate Member", "Full Member", "Gold Member", "Free Member", "All"];
-      if (!validTiers.includes(eventData.tier_restriction)) {
+      const validTiers = ["Associate Member", "Full Member", "Gold Member", "Free Member"];
+      
+      // Ensure tier_restriction has a valid value
+      const tierRestriction = eventData.tier_restriction || "Free Member";
+      if (!validTiers.includes(tierRestriction)) {
         throw new Error(
           `Invalid tier_restriction. Must be one of: ${validTiers.join(", ")}`
         );
       }
+      
+      // Update the eventData with the validated tier_restriction
+      eventData.tier_restriction = tierRestriction;
 
       // For new events, validate that dates are provided
       if (!id && (!eventData.start_date || !eventData.end_date)) {

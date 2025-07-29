@@ -23,6 +23,7 @@ export default function OfferFilters({
     "Workshop",
     "Service",
     "Discount",
+    "Other",
   ];
 
   return (

@@ -33,12 +33,7 @@ export default async function handler(req, res) {
     const now = Date.now();
     const expire = Math.floor(now / 1000) + 600; // 10 minutes
 
-    console.log("Generating ImageKit auth:", {
-      currentTime: new Date(now).toISOString(),
-      expireUnix: expire,
-      expireDate: new Date(expire * 1000).toISOString(),
-      folder: "/Blog", // Log intended folder
-    });
+    
 
     const signature = createHmac("sha1", privateKey)
       .update(token + expire)

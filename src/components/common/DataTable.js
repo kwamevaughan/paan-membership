@@ -63,13 +63,15 @@ const TableRow = memo(({ item, columns, selectedItems, onSelectItem, onEdit, onD
               >
                 <Icon icon="heroicons:pencil-square" className="w-4 h-4" />
               </button>
-              <button
-                onClick={handleDelete}
-                className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition"
-                title="Delete"
-              >
-                <Icon icon="heroicons:trash" className="w-4 h-4" />
-              </button>
+              {onDelete && (
+                <button
+                  onClick={handleDelete}
+                  className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 transition"
+                  title="Delete"
+                >
+                  <Icon icon="heroicons:trash" className="w-4 h-4" />
+                </button>
+              )}
             </>
           )}
         </div>

@@ -12,6 +12,7 @@ const MarketIntelGrid = memo(({
   onEdit,
   onDelete,
   onViewUsers,
+  fetchMarketIntel,
   viewMode,
   setViewMode,
   filterTerm,
@@ -64,8 +65,8 @@ const MarketIntelGrid = memo(({
     }
   }, [sortedMarketIntel, paginatedMarketIntel, onCountChange]);
 
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
+  const handleSelectAll = (checked) => {
+    if (checked) {
       setSelectedIds(marketIntel.map(item => item.id));
     } else {
       setSelectedIds([]);
@@ -88,17 +89,29 @@ const MarketIntelGrid = memo(({
     }
   };
 
-  const confirmDelete = async () => {
-    if (itemToDelete) {
-      try {
-        await onDelete(itemToDelete);
-        setIsDeleteModalOpen(false);
-        setItemToDelete(null);
-      } catch (error) {
-        console.error('Error deleting market intel:', error);
+  const handleBulkDelete = async (selectedIds) => {
+    try {
+      // Find the market intel items by their IDs
+      const itemsToDelete = marketIntel.filter(item => selectedIds.includes(item.id));
+      
+      // Delete each item using the API directly
+      for (const item of itemsToDelete) {
+        await onDelete(item.id);
       }
+      
+      // Refresh the data after successful deletion
+      if (fetchMarketIntel) {
+        await fetchMarketIntel();
+      }
+      
+      // Clear selection after successful deletion
+      setSelectedIds([]);
+    } catch (error) {
+      console.error('Error deleting market intel items:', error);
     }
   };
+
+
 
   const tableColumns = [
     {
@@ -161,6 +174,26 @@ const MarketIntelGrid = memo(({
     },
   ];
 
+  const handleIndividualDelete = (item) => {
+    setItemToDelete(item);
+    setIsDeleteModalOpen(true);
+  };
+
+  const confirmIndividualDelete = async () => {
+    if (itemToDelete) {
+      try {
+        await onDelete(itemToDelete.id);
+        if (fetchMarketIntel) {
+          await fetchMarketIntel();
+        }
+        setIsDeleteModalOpen(false);
+        setItemToDelete(null);
+      } catch (error) {
+        console.error('Error deleting market intel:', error);
+      }
+    }
+  };
+
   const renderMarketIntelCard = (item) => {
     return (
       <MarketIntelCard
@@ -171,8 +204,7 @@ const MarketIntelGrid = memo(({
           if (onEdit) onEdit(item);
         }}
         onDelete={(item) => {
-          setItemToDelete(item);
-          setIsDeleteModalOpen(true);
+          if (onDelete) handleIndividualDelete(item);
         }}
         onViewUsers={onViewUsers}
         className="h-full flex flex-col"
@@ -244,55 +276,6 @@ const MarketIntelGrid = memo(({
       transition={{ delay: 0.4 }}
       className="mb-12"
     >
-      {selectedIds.length > 0 && (
-        <div
-          className={`mb-4 p-4 rounded-lg flex items-center justify-between ${
-            mode === "dark" ? "bg-gray-800" : "bg-gray-100"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <Icon
-              icon="heroicons:check-circle"
-              className={`w-5 h-5 ${
-                mode === "dark" ? "text-blue-400" : "text-blue-600"
-              }`}
-            />
-            <span
-              className={`text-sm font-medium ${
-                mode === "dark" ? "text-gray-200" : "text-gray-700"
-              }`}
-            >
-              {selectedIds.length} item{selectedIds.length !== 1 ? "s" : ""}{" "}
-              selected
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setSelectedIds([])}
-              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 ${
-                mode === "dark"
-                  ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
-                  : "bg-gray-200 hover:bg-gray-300 text-gray-700"
-              } transition-colors duration-200`}
-            >
-              <Icon icon="heroicons:x-mark" className="w-4 h-4" />
-              Clear Selection
-            </button>
-            <button
-              onClick={() => setIsDeleteModalOpen(true)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 ${
-                mode === "dark"
-                  ? "bg-red-600 hover:bg-red-700 text-white"
-                  : "bg-red-500 hover:bg-red-600 text-white"
-              } transition-colors duration-200`}
-            >
-              <Icon icon="heroicons:trash" className="w-4 h-4" />
-              Delete Selected
-            </button>
-          </div>
-        </div>
-      )}
-
       <DataView
         data={sortedMarketIntel}
         columns={tableColumns}
@@ -303,6 +286,7 @@ const MarketIntelGrid = memo(({
         onSelect={handleSelectItem}
         onSelectAll={handleSelectAll}
         onDelete={onDelete}
+        onBulkDelete={handleBulkDelete}
         onEdit={onEdit}
         handleEditClick={onEdit}
         hasMore={hasMore}
@@ -320,25 +304,20 @@ const MarketIntelGrid = memo(({
         type="marketIntel"
       />
 
-      {/* Delete Modal */}
+      {/* Individual Delete Modal */}
       <ItemActionModal
         isOpen={isDeleteModalOpen}
         onClose={() => {
           setIsDeleteModalOpen(false);
           setItemToDelete(null);
         }}
-        title="Confirm Deletion"
+        title="Delete Market Intel"
         mode={mode}
+        width="max-w-md"
       >
-        <div className="space-y-6">
-          <p
-            className={`text-sm ${
-              mode === "dark" ? "text-gray-300" : "text-gray-600"
-            }`}
-          >
-            Are you sure you want to delete the market intel{" "}
-            <strong>&quot;{itemToDelete?.title}&quot;</strong>? This action
-            cannot be undone.
+        <div className="space-y-4">
+          <p className={`text-sm ${mode === "dark" ? "text-gray-300" : "text-gray-600"}`}>
+            Are you sure you want to delete &ldquo;{itemToDelete?.title}&rdquo;? This action cannot be undone.
           </p>
           <div className="flex justify-end space-x-4">
             <button
@@ -346,22 +325,18 @@ const MarketIntelGrid = memo(({
                 setIsDeleteModalOpen(false);
                 setItemToDelete(null);
               }}
-              className={`px-6 py-3 text-sm font-medium rounded-xl border transition-all duration-200 flex items-center shadow-sm ${
+              className={`px-4 py-2 text-sm font-medium rounded-lg border transition-all duration-200 ${
                 mode === "dark"
                   ? "border-gray-600 text-gray-200 bg-gray-800 hover:bg-gray-700"
                   : "border-gray-200 text-gray-700 bg-white hover:bg-gray-50"
               }`}
             >
-              <Icon icon="heroicons:x-mark" className="h-4 w-4 mr-2" />
               Cancel
             </button>
             <button
-              onClick={confirmDelete}
-              className={`px-6 py-3 text-sm font-medium rounded-xl text-white bg-red-600 hover:bg-red-700 transition-all duration-200 flex items-center shadow-sm ${
-                mode === "dark" ? "shadow-white/10" : "shadow-gray-200"
-              }`}
+              onClick={confirmIndividualDelete}
+              className="px-4 py-2 text-sm font-medium rounded-lg text-white bg-red-600 hover:bg-red-700 transition-all duration-200"
             >
-              <Icon icon="heroicons:trash" className="h-4 w-4 mr-2" />
               Delete
             </button>
           </div>

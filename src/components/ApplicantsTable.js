@@ -48,8 +48,8 @@ export default function ApplicantsTable({
   ];
 
   // Selection handlers
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
+  const handleSelectAll = (checked) => {
+    if (checked) {
       setSelectedIds(candidates.map((c) => c.id));
       toast.success(`Selected all ${candidates.length} candidates`, {
         icon: "✅",

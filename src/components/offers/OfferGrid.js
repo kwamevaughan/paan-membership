@@ -54,8 +54,8 @@ const OfferGrid = memo(({
     }
   }, [sortedOffers, paginatedOffers, onCountChange]);
 
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
+  const handleSelectAll = (checked) => {
+    if (checked) {
       setSelectedIds(offers.map(item => item.id));
     } else {
       setSelectedIds([]);

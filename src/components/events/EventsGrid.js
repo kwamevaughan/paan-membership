@@ -35,8 +35,8 @@ export default function EventsGrid({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [eventToDelete, setEventToDelete] = useState(null);
 
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
+  const handleSelectAll = (checked) => {
+    if (checked) {
       setSelectedIds(events.map(event => event.id));
     } else {
       setSelectedIds([]);
@@ -54,6 +54,23 @@ export default function EventsGrid({
 
   const handleLoadMore = () => {
     setCurrentPage(prev => prev + 1);
+  };
+
+  const handleBulkDelete = async (selectedIds) => {
+    try {
+      // Find the event items by their IDs
+      const itemsToDelete = events.filter(item => selectedIds.includes(item.id));
+      
+      // Delete each item
+      for (const item of itemsToDelete) {
+        await handleDelete(item);
+      }
+      
+      // Clear selection after successful deletion
+      setSelectedIds([]);
+    } catch (error) {
+      console.error('Error deleting event items:', error);
+    }
   };
 
   const confirmDelete = async () => {
@@ -545,55 +562,6 @@ export default function EventsGrid({
       transition={{ delay: 0.4 }}
       className="mb-12"
     >
-      {selectedIds.length > 0 && (
-        <div
-          className={`mb-4 p-4 rounded-lg flex items-center justify-between ${
-            mode === "dark" ? "bg-gray-800" : "bg-gray-100"
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <Icon
-              icon="heroicons:check-circle"
-              className={`w-5 h-5 ${
-                mode === "dark" ? "text-blue-400" : "text-blue-600"
-              }`}
-            />
-            <span
-              className={`text-sm font-medium ${
-                mode === "dark" ? "text-gray-200" : "text-gray-700"
-              }`}
-            >
-              {selectedIds.length} item{selectedIds.length !== 1 ? "s" : ""}{" "}
-              selected
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setSelectedIds([])}
-              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 ${
-                mode === "dark"
-                  ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
-                  : "bg-gray-200 hover:bg-gray-300 text-gray-700"
-              } transition-colors duration-200`}
-            >
-              <Icon icon="heroicons:x-mark" className="w-4 h-4" />
-              Clear Selection
-            </button>
-            <button
-              onClick={() => setIsDeleteModalOpen(true)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 ${
-                mode === "dark"
-                  ? "bg-red-600 hover:bg-red-700 text-white"
-                  : "bg-red-500 hover:bg-red-600 text-white"
-              } transition-colors duration-200`}
-            >
-              <Icon icon="heroicons:trash" className="w-4 h-4" />
-              Delete Selected
-            </button>
-          </div>
-        </div>
-      )}
-
       {viewMode === "table" ? (
         <DataTable
           data={paginatedEvents}
@@ -602,6 +570,7 @@ export default function EventsGrid({
           onSelectAll={handleSelectAll}
           onSelectItem={handleSelectItem}
           onDelete={handleDelete}
+          onBulkDelete={handleBulkDelete}
           onEdit={handleEditClick}
           mode={mode}
           hasMore={hasMore}

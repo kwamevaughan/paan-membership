@@ -364,7 +364,8 @@ export default function AdminMarketIntel({
                         selectedIds={selectedIds}
                         setSelectedIds={setSelectedIds}
                         onEdit={handleEditClick}
-                        onDelete={handleDeleteClick}
+                        onDelete={handleDelete}
+                        fetchMarketIntel={fetchMarketIntel}
                         viewMode={viewMode}
                         setViewMode={setViewMode}
                         filterTerm={searchQuery}

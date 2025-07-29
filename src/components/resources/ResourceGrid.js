@@ -54,8 +54,8 @@ const ResourceGrid = memo(({
     }
   }, [sortedResources, paginatedResources, onCountChange]);
 
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
+  const handleSelectAll = (checked) => {
+    if (checked) {
       setSelectedIds(resources.map(item => item.id));
     } else {
       setSelectedIds([]);

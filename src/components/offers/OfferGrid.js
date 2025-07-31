@@ -10,6 +10,7 @@ const OfferGrid = memo(({
   loading,
   onEdit,
   onDelete,
+  onBulkDelete,
   onViewUsers,
   viewMode,
   setViewMode,
@@ -243,6 +244,7 @@ const OfferGrid = memo(({
       totalCount={sortedOffers.length}
       onCountChange={onCountChange}
       currentPage={1}
+      onBulkDelete={onBulkDelete}
     />
   );
 });

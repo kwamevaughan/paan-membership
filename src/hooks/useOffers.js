@@ -222,11 +222,6 @@ export function useOffers(candidatesMap = {}) {
   };
 
   const handleDelete = async (offerId) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this offer?"
-    );
-    if (!confirmed) return;
-
     try {
       setLoading(true);
       const {
@@ -280,5 +275,6 @@ export function useOffers(candidatesMap = {}) {
     handleSubmit,
     handleEdit,
     handleDelete,
+    fetchOffers,
   };
 }

@@ -137,6 +137,28 @@ export default function AdminResources({
     }
   };
 
+  // Bulk delete handler
+  const handleBulkDelete = async (selectedIds) => {
+    try {
+      const itemsToDelete = resources.filter(item => selectedIds.includes(item.id));
+      for (const item of itemsToDelete) {
+        await handleDelete(item.id);
+      }
+      setSelectedIds([]);
+      await fetchResources();
+      toast.success("Selected resources deleted successfully");
+    } catch (error) {
+      console.error('Error deleting resources:', error);
+      toast.error("Failed to delete selected resources");
+    }
+  };
+
+  // Individual delete handler for DataTable
+  const handleIndividualDelete = (resource) => {
+    setCurrentResource(resource);
+    setShowDeleteModal(true);
+  };
+
   const filteredResources = useMemo(() => {
     if (!resources) return [];
 
@@ -362,7 +384,8 @@ export default function AdminResources({
                         selectedIds={selectedIds}
                         setSelectedIds={setSelectedIds}
                         onEdit={handleEditClick}
-                        onDelete={handleDeleteClick}
+                        onDelete={handleIndividualDelete}
+                        onBulkDelete={handleBulkDelete}
                         viewMode={viewMode}
                         setViewMode={setViewMode}
                         filterTerm={searchQuery}

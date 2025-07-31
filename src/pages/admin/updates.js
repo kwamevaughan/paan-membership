@@ -268,6 +268,29 @@ export default function AdminUpdates({
     }
   };
 
+  // Add bulk delete handler
+  const handleBulkDelete = async (selectedIds) => {
+    try {
+      // Find the update items by their IDs
+      const itemsToDelete = updates.filter(item => selectedIds.includes(item.id));
+      
+      // Delete each item
+      for (const item of itemsToDelete) {
+        await handleDelete(item.id);
+      }
+      
+      // Clear selection after successful deletion
+      setSelectedIds([]);
+    } catch (error) {
+      console.error('Error deleting update items:', error);
+    }
+  };
+
+  // Add individual delete handler for DataTable
+  const handleIndividualDelete = (update) => {
+    openDeleteModal(update);
+  };
+
   
 
 
@@ -438,7 +461,7 @@ export default function AdminUpdates({
                         loading={loading}
                         mode={mode}
                         onEdit={modalActions.openModal}
-                        onDelete={openDeleteModal}
+                        onDelete={handleIndividualDelete}
                         onViewUsers={modalActions.openUsersModal}
                         viewMode={viewMode}
                         setViewMode={handleViewModeChange}
@@ -453,6 +476,7 @@ export default function AdminUpdates({
                         onLoadMore={loadMore}
                         remainingCount={remainingCount}
                         onCountChange={handleCountChange}
+                        onBulkDelete={handleBulkDelete}
                       />
                     </div>
                   </div>

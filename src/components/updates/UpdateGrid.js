@@ -25,6 +25,7 @@ const UpdateGrid = memo(({
   remainingCount,
   customActions,
   onCountChange,
+  onBulkDelete,
 }) => {
   useEffect(() => {
     console.log('UpdateGrid - Initial updates:', updates?.length);
@@ -266,6 +267,7 @@ const UpdateGrid = memo(({
       totalCount={sortedUpdates.length}
       onCountChange={onCountChange}
       currentPage={1}
+      onBulkDelete={onBulkDelete}
     />
   );
 });

@@ -82,11 +82,12 @@ export default async function handler(req, res) {
     "seconds"
   );
 
-  // Get the oldest pending_email submission
+  // Get the oldest submission that needs email processing
   const { data: responses, error: fetchError } = await supabaseServer
     .from("responses")
     .select("*")
-    .or("status.eq.pending_email,status.eq.processing_email")
+    .eq("email_sent", false)
+    .not("email_data", "is", null)
     .order("submitted_at", { ascending: true })
     .limit(1);
 
@@ -124,14 +125,14 @@ export default async function handler(req, res) {
     "seconds"
   );
 
-  // Mark as processing
+  // Mark processing start time (don't change status - that's for application status)
   await supabaseServer
     .from("responses")
-    .update({ status: "processing_email" })
+    .update({ processed_at: new Date().toISOString() })
     .eq("user_id", response.user_id);
 
   console.log(
-    "[process-pending-submissions] Marked as processing_email:",
+    "[process-pending-submissions] Marked processing start:",
     (Date.now() - functionStart) / 1000,
     "seconds"
   );
@@ -313,11 +314,10 @@ export default async function handler(req, res) {
       "seconds"
     );
 
-    // Mark as completed
+    // Mark email as sent
     await supabaseServer
       .from("responses")
       .update({
-        status: "completed",
         email_sent: true,
         processed_at: new Date().toISOString(),
         error_message: null,
@@ -342,11 +342,10 @@ export default async function handler(req, res) {
       error.message
     );
 
-    // Mark as failed
+    // Mark processing as failed (don't change status - that's for application status)
     await supabaseServer
       .from("responses")
       .update({
-        status: "failed",
         processed_at: new Date().toISOString(),
         error_message: error.message,
       })

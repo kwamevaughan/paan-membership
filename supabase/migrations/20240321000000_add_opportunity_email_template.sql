@@ -6,7 +6,7 @@ INSERT INTO email_templates (name, subject, body) VALUES (
     <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; padding: 20px;">
         <!-- Header with Logo -->
         <div style="text-align: center; padding: 20px 0; border-bottom: 1px solid #eee;">
-            <img src="https://paan.africa/assets/images/logo.png" alt="PAAN Logo" style="max-width: 150px;">
+            <img src="https://membership.paan.africa/assets/images/logo.png" alt="PAAN Logo" style="max-width: 150px;">
         </div>
 
         <!-- Greeting -->

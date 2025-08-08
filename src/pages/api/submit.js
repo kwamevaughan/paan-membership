@@ -380,7 +380,7 @@ export default async function handler(req, res) {
       //       "All fields (agencyName, yearEstablished, headquartersLocation, websiteUrl, opening, primaryContactName, primaryContactEmail, companyRegistration, agencyProfile, and either portfolioWork file or portfolioLinks) are required for agency submissions",
       //   });
       // }
-      
+
       // Only validate non-document fields
       if (
         !agencyName ||
@@ -479,7 +479,7 @@ export default async function handler(req, res) {
         company_registration_file_id: null,
         portfolio_work_file_id: null,
         agency_profile_file_id: null,
-        portfolio_links: data.portfolioLinks || []
+        portfolio_links: data.portfolioLinks || [],
       });
     }
 
@@ -492,29 +492,23 @@ export default async function handler(req, res) {
         .json({ error: responseError.message, details: responseError.details });
     }
 
-   const isLocal = process.env.NODE_ENV === "development";
+    const isLocal = process.env.NODE_ENV === "development";
 
-// Try BASE_URL first, then fallback to 3000, then 3001
-let baseUrl;
+    // Try BASE_URL first, then fallback to 3000, then 3001
+    let baseUrl;
 
-if (isLocal) {
-  baseUrl =
-    process.env.BASE_URL ||
-    "http://localhost:3000"; // Default
+    if (isLocal) {
+      baseUrl = process.env.BASE_URL || "http://localhost:3000"; // Default
 
-  // Optional: try port 3001 if needed (manually override)
-  // You could allow it via an ENV or a custom check
-  const try3001 = process.env.TRY_PORT_3001 === "true";
-  if (try3001) {
-    baseUrl = "http://localhost:3001";
-  }
-} else {
-  baseUrl =
-    process.env.PRODUCTION_URL || "https://membership.paan.africa";
-}
-
-const processUrl = `${baseUrl}/api/process-submission`;
-console.log("Triggering background process at URL:", processUrl);
+      // Optional: try port 3001 if needed (manually override)
+      // You could allow it via an ENV or a custom check
+      const try3001 = process.env.TRY_PORT_3001 === "true";
+      if (try3001) {
+        baseUrl = "http://localhost:3001";
+      }
+    } else {
+      baseUrl = process.env.PRODUCTION_URL || "https://membership.paan.africa";
+    }
 
     const backgroundPayload = {
       userId,
@@ -548,16 +542,16 @@ console.log("Triggering background process at URL:", processUrl);
       referenceNumber,
     };
 
-    // Mark the response as pending_email for background processing
+    // Store email data for background processing (don't change status - that's for application status)
     await supabaseServer
       .from("responses")
-      .update({ 
-        status: "pending_email",
-        email_data: JSON.stringify(backgroundPayload)
+      .update({
+        email_data: JSON.stringify(backgroundPayload),
+        email_sent: false,
       })
       .eq("user_id", userId);
-    
-    console.log("Submission marked as pending_email for background processing");
+
+    console.log("Email data stored for background processing");
 
     // Trigger email processing (non-blocking)
     const triggerUrl = `${baseUrl}/api/trigger-email-processing`;

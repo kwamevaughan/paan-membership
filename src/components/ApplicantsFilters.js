@@ -17,16 +17,25 @@ export default function ApplicantsFilters({
 
   // Extract unique openings and add 'all' option
   const uniqueOpenings = ["all", ...new Set(candidates.map((c) => c.opening))];
-  const statuses = ["all", "Accepted", "Pending", "Reviewed", "Shortlisted", "Rejected"];
+  const statuses = [
+    "all",
+    "Accepted",
+    "Pending",
+    "Reviewed",
+    "Shortlisted",
+    "Rejected",
+  ];
   // Extract unique tiers and add 'all' option
   const uniqueTiers = [
     "all",
     ...Array.from(
       new Set(
         candidates
-          .map((c) => c.selected_tier && typeof c.selected_tier === "string"
-            ? c.selected_tier.split(" - ")[0].trim()
-            : null)
+          .map((c) =>
+            c.selected_tier && typeof c.selected_tier === "string"
+              ? c.selected_tier.split(" - ")[0].trim()
+              : null
+          )
           .filter(Boolean)
       )
     ),
@@ -34,12 +43,19 @@ export default function ApplicantsFilters({
 
   // Validate candidates
   const areCandidatesValid = candidates.every(
-    (c) => c && typeof c.primaryContactName === "string" && typeof c.primaryContactEmail === "string"
+    (c) =>
+      c &&
+      typeof c.primaryContactName === "string" &&
+      typeof c.primaryContactEmail === "string"
   );
 
   // Apply initial filter when component loads
   useEffect(() => {
-    if (!hasAppliedInitialFilter.current && candidates.length > 0 && areCandidatesValid) {
+    if (
+      !hasAppliedInitialFilter.current &&
+      candidates.length > 0 &&
+      areCandidatesValid
+    ) {
       const savedOpening =
         initialOpening !== "all"
           ? initialOpening
@@ -78,14 +94,25 @@ export default function ApplicantsFilters({
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [searchQuery, filterOpening, filterStatus, filterTier, areCandidatesValid]);
+  }, [
+    searchQuery,
+    filterOpening,
+    filterStatus,
+    filterTier,
+    areCandidatesValid,
+  ]);
 
   const handleFilter = (
     statusOverride = filterStatus,
     openingOverride = filterOpening,
     tierOverride = filterTier
   ) => {
-    console.log("Applying filter:", { searchQuery, filterOpening: openingOverride, filterStatus: statusOverride, filterTier: tierOverride });
+    console.log("Applying filter:", {
+      searchQuery,
+      filterOpening: openingOverride,
+      filterStatus: statusOverride,
+      filterTier: tierOverride,
+    });
     onFilterChange({
       searchQuery,
       filterOpening: openingOverride,
@@ -212,7 +239,7 @@ export default function ApplicantsFilters({
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Name, email, or keywords..."
+                  placeholder="Name, email, or reference number..."
                   className={`block w-full rounded-md shadow-sm pl-10 pr-3 py-2 text-sm focus:ring-2 focus:ring-[#f05d23] focus:border-transparent ${inputBg} ${inputBorder} ${textColor} border placeholder-gray-400`}
                 />
                 {searchQuery && (

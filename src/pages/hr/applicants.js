@@ -123,6 +123,9 @@ export default function HRApplicants({
             .includes(searchQuery.toLowerCase()) ||
           (c.primaryContactEmail || "")
             .toLowerCase()
+            .includes(searchQuery.toLowerCase()) ||
+          (c.reference_number || "")
+            .toLowerCase()
             .includes(searchQuery.toLowerCase())
       );
       console.log("After search filter:", result);

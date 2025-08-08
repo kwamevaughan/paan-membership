@@ -492,12 +492,29 @@ export default async function handler(req, res) {
         .json({ error: responseError.message, details: responseError.details });
     }
 
-    const isLocal = process.env.NODE_ENV === "development";
-    const baseUrl = isLocal
-      ? process.env.BASE_URL || "http://localhost:3000"
-      : process.env.PRODUCTION_URL || "https://membership.paan.africa";
-    const processUrl = `${baseUrl}/api/process-submission`;
-    console.log("Triggering background process at URL:", processUrl);
+   const isLocal = process.env.NODE_ENV === "development";
+
+// Try BASE_URL first, then fallback to 3000, then 3001
+let baseUrl;
+
+if (isLocal) {
+  baseUrl =
+    process.env.BASE_URL ||
+    "http://localhost:3000"; // Default
+
+  // Optional: try port 3001 if needed (manually override)
+  // You could allow it via an ENV or a custom check
+  const try3001 = process.env.TRY_PORT_3001 === "true";
+  if (try3001) {
+    baseUrl = "http://localhost:3001";
+  }
+} else {
+  baseUrl =
+    process.env.PRODUCTION_URL || "https://membership.paan.africa";
+}
+
+const processUrl = `${baseUrl}/api/process-submission`;
+console.log("Triggering background process at URL:", processUrl);
 
     const backgroundPayload = {
       userId,
@@ -536,12 +553,29 @@ export default async function handler(req, res) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(backgroundPayload),
       keepalive: true,
-    }).catch(async (error) => {
-      console.error("Background process failed:", error.message);
+    })
+    .then(async (response) => {
+      if (response.ok) {
+        console.log("Background process triggered successfully");
+      } else {
+        console.error("Background process HTTP error:", response.status, response.statusText);
+        const errorText = await response.text();
+        console.error("Background process error response:", errorText);
+        await supabaseServer.from("submission_errors").insert([
+          {
+            user_id: userId,
+            error_message: "Background process HTTP error",
+            error_details: { status: response.status, statusText: response.statusText, response: errorText },
+          },
+        ]);
+      }
+    })
+    .catch(async (error) => {
+      console.error("Background process fetch failed:", error.message);
       await supabaseServer.from("submission_errors").insert([
         {
           user_id: userId,
-          error_message: "Background process failed",
+          error_message: "Background process fetch failed",
           error_details: { message: error.message, stack: error.stack },
         },
       ]);

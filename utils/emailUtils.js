@@ -173,7 +173,7 @@ export async function sendEmails({
   try {
     console.log("[sendEmails] Fetching PAAN logo...");
     const logoResponse = await fetch(
-      "https://paan.africa/assets/images/logo.png"
+      "https://membership.paan.africa/assets/images/logo.png"
     );
     
     if (!logoResponse.ok) {

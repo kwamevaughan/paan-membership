@@ -81,7 +81,10 @@ function formatAnswer(answer, question) {
 }
 
 export default async function handler(req, res) {
+  console.log("[process-submission] Handler called at", new Date().toISOString());
+  
   if (req.method !== "POST") {
+    console.log("[process-submission] Method not allowed:", req.method);
     return res.status(405).json({ error: "Method not allowed" });
   }
 
@@ -89,6 +92,7 @@ export default async function handler(req, res) {
   const supabaseServer = createSupabaseServerClient(req, res);
 
   try {
+    console.log("[process-submission] Starting background processing for user:", req.body.primaryContactName);
     const {
       userId,
       agencyName,
@@ -432,12 +436,14 @@ export default async function handler(req, res) {
     );
     emailData.adminSubject = replaceTemplateTags(adminSubject, emailData);
 
-    
+    console.log("[process-submission] About to send emails for:", req.body.primaryContactName);
     await sendEmails(emailData);
+    console.log("[process-submission] Emails sent successfully for:", req.body.primaryContactName);
 
     return res.status(200).json({ message: "Background processing completed" });
   } catch (error) {
-    console.error("Background processing error:", error.message);
+    console.error("[process-submission] Background processing error:", error.message);
+    console.error("[process-submission] Error stack:", error.stack);
     await supabaseServer.from("submission_errors").insert([
       {
         user_id: req.body.userId,

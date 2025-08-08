@@ -294,7 +294,7 @@ export default function CandidateModal({
       {/* Modal Content */}
       <div className="flex min-h-full items-center justify-center p-4">
         <div
-          className={`relative w-full max-w-4xl rounded-3xl transform transition-all duration-500 max-h-[85vh] overflow-hidden
+          className={`relative w-full max-w-4xl rounded-3xl transform transition-all duration-500 max-h-[90vh] overflow-hidden
             shadow-2xl shadow-black/20
             ${
               mode === "dark"

@@ -171,28 +171,43 @@ export async function sendEmails({
 
   let logoBuffer;
   try {
+    console.log("[sendEmails] Fetching PAAN logo...");
     const logoResponse = await fetch(
       "https://paan.africa/assets/images/logo.png"
     );
+    
+    if (!logoResponse.ok) {
+      throw new Error(`Failed to fetch logo: ${logoResponse.status} ${logoResponse.statusText}`);
+    }
+    
     const arrayBuffer = await logoResponse.arrayBuffer();
     logoBuffer = Buffer.from(arrayBuffer);
+    console.log(`[sendEmails] Logo fetched successfully, size: ${logoBuffer.length} bytes`);
   } catch (error) {
-    console.error("Failed to fetch PAAN logo:", error.message);
+    console.error("[sendEmails] Failed to fetch PAAN logo:", error.message);
     logoBuffer = null;
   }
 
-  const pdfBuffer = await new Promise((resolve) => {
-    const doc = new PDFDocument({
-      margin: 50,
-      autoFirstPage: false,
-    });
-    const buffers = [];
+  let pdfBuffer;
+  try {
+    console.log("[sendEmails] Starting PDF generation...");
+    pdfBuffer = await new Promise((resolve, reject) => {
+      const doc = new PDFDocument({
+        margin: 50,
+        autoFirstPage: false,
+      });
+      const buffers = [];
 
-    doc.on("data", buffers.push.bind(buffers));
-    doc.on("end", () => {
-      const pdfData = Buffer.concat(buffers);
-      resolve(pdfData);
-    });
+      doc.on("data", buffers.push.bind(buffers));
+      doc.on("end", () => {
+        const pdfData = Buffer.concat(buffers);
+        console.log(`[sendEmails] PDF generated successfully, size: ${pdfData.length} bytes`);
+        resolve(pdfData);
+      });
+      doc.on("error", (error) => {
+        console.error("[sendEmails] PDF generation error:", error);
+        reject(error);
+      });
 
     doc.registerFont("Helvetica", "Helvetica");
     doc.registerFont("Helvetica-Bold", "Helvetica-Bold");
@@ -206,8 +221,13 @@ export async function sendEmails({
     doc.fillColor("#000000");
     doc.font("Helvetica-Bold").fontSize(14);
     if (logoBuffer) {
-      doc.image(logoBuffer, margin, 10, { width: 100 });
-      doc.text("PAAN Application Responses", margin + 120, 20);
+      try {
+        doc.image(logoBuffer, margin, 10, { width: 100 });
+        doc.text("PAAN Application Responses", margin + 120, 20);
+      } catch (imageError) {
+        console.error("[sendEmails] Error inserting logo into PDF:", imageError);
+        doc.text("PAAN Application Responses", margin, 20);
+      }
     } else {
       doc.text("PAAN Application Responses", margin, 20);
     }
@@ -239,8 +259,13 @@ export async function sendEmails({
         doc.fillColor("#000000");
         doc.font("Helvetica-Bold").fontSize(14);
         if (logoBuffer) {
-          doc.image(logoBuffer, margin, 10, { width: 100 });
-          doc.text("PAAN Application Responses", margin + 120, 20);
+          try {
+            doc.image(logoBuffer, margin, 10, { width: 100 });
+            doc.text("PAAN Application Responses", margin + 120, 20);
+          } catch (imageError) {
+            console.error("[sendEmails] Error inserting logo into PDF (page break):", imageError);
+            doc.text("PAAN Application Responses", margin, 20);
+          }
         } else {
           doc.text("PAAN Application Responses", margin, 20);
         }
@@ -278,8 +303,13 @@ export async function sendEmails({
       );
     });
 
-    doc.end();
-  });
+      doc.end();
+    });
+  } catch (pdfError) {
+    console.error("[sendEmails] PDF generation failed:", pdfError);
+    // Create a simple fallback PDF or skip PDF attachment
+    pdfBuffer = null;
+  }
 
   const processedCandidateSubject = candidateSubject
     .replace(/{{fullName}}/g, primaryContactName || "Applicant")
@@ -405,19 +435,28 @@ export async function sendEmails({
   console.log(`[sendEmails] Admin email recipient for ${job_type}: ${adminEmailRecipient}`);
 
   try {
-    const adminEmailResult = await transporter.sendMail({
+    const emailOptions = {
       from: `"Pan-African Agency Network (PAAN)" <${process.env.EMAIL_USER}>`,
       to: adminEmailRecipient,
       subject: processedAdminSubject,
       html: adminHtml,
-      attachments: [
+    };
+
+    // Only add PDF attachment if generation was successful
+    if (pdfBuffer) {
+      emailOptions.attachments = [
         {
           filename: `PAAN_Responses_${referenceNumber}.pdf`,
           content: pdfBuffer,
           contentType: "application/pdf",
         },
-      ],
-    });
+      ];
+      console.log("[sendEmails] PDF attachment added to admin email");
+    } else {
+      console.log("[sendEmails] Sending admin email without PDF attachment due to generation failure");
+    }
+
+    const adminEmailResult = await transporter.sendMail(emailOptions);
     console.log(`[sendEmails] Admin email sent successfully to ${adminEmailRecipient}. Message ID: ${adminEmailResult.messageId}`);
   } catch (err) {
     console.error("[sendEmails] Error sending admin email:", err);

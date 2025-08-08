@@ -242,7 +242,14 @@ export default function HRApplicants({
           ].filter((id) => id) // Filter out null/undefined IDs
         : [];
 
-      // Delete responses first to avoid foreign key constraint violation
+      // Delete submission errors first to avoid foreign key constraint violation
+      const { error: submissionErrorsError } = await supabase
+        .from("submission_errors")
+        .delete()
+        .eq("user_id", candidateToDelete);
+      if (submissionErrorsError) throw submissionErrorsError;
+
+      // Delete responses to avoid foreign key constraint violation
       const { error: responseError } = await supabase
         .from("responses")
         .delete()
@@ -370,7 +377,14 @@ export default function HRApplicants({
 
       console.log("File IDs to delete:", fileIdsToDelete);
 
-      // Delete responses first to avoid foreign key constraint violation
+      // Delete submission errors first to avoid foreign key constraint violation
+      const { error: submissionErrorsError } = await supabase
+        .from("submission_errors")
+        .delete()
+        .in("user_id", selectedIds);
+      if (submissionErrorsError) throw submissionErrorsError;
+
+      // Delete responses to avoid foreign key constraint violation
       const { error: responseError } = await supabase
         .from("responses")
         .delete()

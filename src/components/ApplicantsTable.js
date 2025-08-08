@@ -24,6 +24,7 @@ export default function ApplicantsTable({
     primaryContactPhone: false,
     primaryContactLinkedin: false,
     tier: true,
+    reference_number: false,
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -35,6 +36,7 @@ export default function ApplicantsTable({
     primaryContactPhone: 150,
     primaryContactLinkedin: 150,
     tier: 120,
+    reference_number: 150,
   });
 
   const allColumns = [
@@ -45,6 +47,7 @@ export default function ApplicantsTable({
     { key: "primaryContactPhone", label: "Phone" },
     { key: "primaryContactLinkedin", label: "LinkedIn" },
     { key: "tier", label: "Tier" },
+    { key: "reference_number", label: "Reference Number" },
   ];
 
   // Selection handlers
@@ -451,6 +454,16 @@ const handleColumnResize = (e, columnKey) => {
                     {candidate.selected_tier
                       ? candidate.selected_tier.split(" - ")[0].trim()
                       : "—"}
+                  </td>
+                )}
+                {visibleColumns.reference_number && (
+                  <td
+                    className={`p-4 ${
+                      isDark ? "text-gray-300" : "text-gray-600"
+                    } text-sm font-mono`}
+                    style={{ width: columnWidths.reference_number }}
+                  >
+                    {candidate.reference_number || "—"}
                   </td>
                 )}
                 <td className="flex p-4 space-x-3">

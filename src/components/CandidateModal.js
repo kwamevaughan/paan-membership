@@ -23,7 +23,7 @@ export default function CandidateModal({
         questionText: question.text,
         answer: candidate.answers[index] ?? null,
       }));
-      
+
       setQuestionAnswerPairs(pairs);
     } else {
       console.warn(`Missing data for candidate:`, candidate);
@@ -35,21 +35,21 @@ export default function CandidateModal({
 
   const handleDocumentPreview = (url) => {
     if (!url) {
-      console.warn('No document URL provided');
+      console.warn("No document URL provided");
       return;
     }
 
     try {
       const fileId = url.split("id=")[1]?.split("&")[0];
       if (!fileId) {
-        console.warn('Invalid Google Drive URL format');
+        console.warn("Invalid Google Drive URL format");
         return;
       }
       const previewUrl = `https://drive.google.com/file/d/${fileId}/preview`;
       setPreviewUrl(previewUrl);
       setIsPreviewModalOpen(true);
     } catch (error) {
-      console.error('Error processing document URL:', error);
+      console.error("Error processing document URL:", error);
     }
   };
 
@@ -63,7 +63,7 @@ export default function CandidateModal({
 
   const handleResendEmail = async (candidateId) => {
     const loadingToast = toast.loading("Queuing welcome email...");
-    
+
     try {
       // Immediately update UI to show processing state
       if (onCandidateUpdate && candidate) {
@@ -71,7 +71,7 @@ export default function CandidateModal({
           ...candidate,
           processed_at: new Date().toISOString(),
           email_sent: false,
-          error_message: null
+          error_message: null,
         });
       }
 
@@ -104,9 +104,9 @@ export default function CandidateModal({
             ...candidate,
             email_sent: true,
             processed_at: new Date().toISOString(),
-            error_message: null
+            error_message: null,
           });
-          
+
           // Show completion toast
           toast.success(
             `Welcome email sent to ${candidate.primaryContactName}!`,
@@ -117,19 +117,18 @@ export default function CandidateModal({
           );
         }, 12000); // Wait 12 seconds for processing (more realistic timing)
       }
-      
     } catch (error) {
       console.error("Error resending email:", error);
-      toast.error("Failed to queue welcome email. Please try again.", { 
+      toast.error("Failed to queue welcome email. Please try again.", {
         id: loadingToast,
-        duration: 5000 
+        duration: 5000,
       });
-      
+
       // Revert UI state on error
       if (onCandidateUpdate && candidate) {
         onCandidateUpdate({
           ...candidate,
-          error_message: error.message
+          error_message: error.message,
         });
       }
     }
@@ -682,7 +681,9 @@ export default function CandidateModal({
                           {candidate.processed_at && (
                             <p className="text-sm text-gray-500 dark:text-gray-400">
                               {candidate.email_sent ? "Sent" : "Processed"} on{" "}
-                              {new Date(candidate.processed_at).toLocaleString()}
+                              {new Date(
+                                candidate.processed_at
+                              ).toLocaleString()}
                             </p>
                           )}
                           {!candidate.processed_at && !candidate.email_sent && (
@@ -824,7 +825,6 @@ export default function CandidateModal({
             >
               Close
             </button>
-
           </div>
 
           {/* Subtle Border Enhancement */}

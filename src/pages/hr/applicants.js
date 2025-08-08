@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/router";
 import toast, { Toaster } from "react-hot-toast";
 import HRSidebar from "@/layouts/hrSidebar";
@@ -30,8 +30,8 @@ export default function HRApplicants({
   const [filteredCandidates, setFilteredCandidates] = useState(
     initialCandidates || []
   );
-  const [sortField, setSortField] = useState("primaryContactName");
-  const [sortDirection, setSortDirection] = useState("asc");
+  const [sortField, setSortField] = useState("submitted_at");
+  const [sortDirection, setSortDirection] = useState("desc");
   const router = useRouter();
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,6 +41,7 @@ export default function HRApplicants({
   const [emailData, setEmailData] = useState({ subject: "", body: "" });
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [candidateToDelete, setCandidateToDelete] = useState(null);
+  const hasAppliedInitialSort = useRef(false);
 
   useAuthSession();
 
@@ -68,9 +69,14 @@ export default function HRApplicants({
   });
 
   useEffect(() => {
+    if (hasAppliedInitialSort.current || candidates.length === 0) {
+      return;
+    }
+
     const { opening } = router.query;
     const savedOpening = localStorage.getItem("filterOpening") || "all";
     const savedStatus = localStorage.getItem("filterStatus") || "all";
+    const savedSort = localStorage.getItem("sortBy") || "latest";
 
     let initialFilter = [...candidates];
     if (opening && initialFilter.some((c) => c.opening === opening)) {
@@ -81,7 +87,10 @@ export default function HRApplicants({
     if (savedStatus !== "all") {
       initialFilter = initialFilter.filter((c) => c.status === savedStatus);
     }
-    setFilteredCandidates(initialFilter);
+    
+    // Apply initial sorting to the filtered data
+    handleSortChange(savedSort, initialFilter);
+    hasAppliedInitialSort.current = true;
   }, [router, candidates]);
 
   const handleViewCandidate = (candidate) => {
@@ -148,8 +157,30 @@ export default function HRApplicants({
       console.log("After tier filter:", result);
     }
 
-    setFilteredCandidates(result);
-    console.log("Final filtered candidates:", result);
+    // Apply current sort to the filtered data
+    const sortedResult = [...result].sort((a, b) => {
+      let aValue = a[sortField] || "";
+      let bValue = b[sortField] || "";
+      
+      if (sortField === "selected_tier") {
+        aValue = a.selected_tier ? a.selected_tier.split(" - ")[0].trim().toLowerCase() : "";
+        bValue = b.selected_tier ? b.selected_tier.split(" - ")[0].trim().toLowerCase() : "";
+      } else if (sortField === "submitted_at") {
+        aValue = new Date(a.submitted_at || a.created_at || 0);
+        bValue = new Date(b.submitted_at || b.created_at || 0);
+      }
+      
+      if (sortField === "submitted_at") {
+        return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
+      }
+      
+      return sortDirection === "asc"
+        ? aValue.toString().localeCompare(bValue.toString())
+        : bValue.toString().localeCompare(aValue.toString());
+    });
+    
+    setFilteredCandidates(sortedResult);
+    console.log("Final filtered and sorted candidates:", sortedResult);
 
     const currentOpening = localStorage.getItem("filterOpening") || "all";
     const currentStatus = localStorage.getItem("filterStatus") || "all";
@@ -196,6 +227,71 @@ export default function HRApplicants({
         ? aValue.toString().localeCompare(bValue.toString())
         : bValue.toString().localeCompare(aValue.toString());
     });
+    setFilteredCandidates(sorted);
+  };
+
+  const handleSortChange = (sortValue, dataToSort = null) => {
+    let field, direction;
+    
+    switch (sortValue) {
+      case "latest":
+        field = "submitted_at";
+        direction = "desc";
+        break;
+      case "oldest":
+        field = "submitted_at";
+        direction = "asc";
+        break;
+      case "name-asc":
+        field = "primaryContactName";
+        direction = "asc";
+        break;
+      case "name-desc":
+        field = "primaryContactName";
+        direction = "desc";
+        break;
+      case "status":
+        field = "status";
+        direction = "asc";
+        break;
+      case "tier":
+        field = "selected_tier";
+        direction = "asc";
+        break;
+      case "reference":
+        field = "reference_number";
+        direction = "desc";
+        break;
+      default:
+        field = "submitted_at";
+        direction = "desc";
+    }
+
+    setSortField(field);
+    setSortDirection(direction);
+
+    const dataToSortArray = dataToSort || filteredCandidates;
+    const sorted = [...dataToSortArray].sort((a, b) => {
+      let aValue = a[field] || "";
+      let bValue = b[field] || "";
+      
+      if (field === "selected_tier") {
+        aValue = a.selected_tier ? a.selected_tier.split(" - ")[0].trim().toLowerCase() : "";
+        bValue = b.selected_tier ? b.selected_tier.split(" - ")[0].trim().toLowerCase() : "";
+      } else if (field === "submitted_at") {
+        aValue = new Date(a.submitted_at || a.created_at || 0);
+        bValue = new Date(b.submitted_at || b.created_at || 0);
+      }
+      
+      if (field === "submitted_at") {
+        return direction === "asc" ? aValue - bValue : bValue - aValue;
+      }
+      
+      return direction === "asc"
+        ? aValue.toString().localeCompare(bValue.toString())
+        : bValue.toString().localeCompare(aValue.toString());
+    });
+    
     setFilteredCandidates(sorted);
   };
 
@@ -497,6 +593,7 @@ export default function HRApplicants({
             <ApplicantsFilters
               candidates={candidates}
               onFilterChange={handleFilterChange}
+              onSortChange={handleSortChange}
               mode={mode}
               initialOpening={router.query.opening || "all"}
             />

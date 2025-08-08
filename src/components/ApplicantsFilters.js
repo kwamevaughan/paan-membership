@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Icon } from "@iconify/react";
 
 export default function ApplicantsFilters({
   candidates,
   onFilterChange,
+  onSortChange,
   mode,
   initialOpening,
 }) {
@@ -11,6 +12,7 @@ export default function ApplicantsFilters({
   const [filterOpening, setFilterOpening] = useState(initialOpening || "all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterTier, setFilterTier] = useState("all");
+  const [sortBy, setSortBy] = useState("latest");
   const [isExpanded, setIsExpanded] = useState(true);
   const hasAppliedInitialFilter = useRef(false);
   const searchTimeoutRef = useRef(null);
@@ -24,6 +26,17 @@ export default function ApplicantsFilters({
     "Reviewed",
     "Shortlisted",
     "Rejected",
+  ];
+  
+  // Sorting options
+  const sortOptions = [
+    { value: "latest", label: "Latest Applications" },
+    { value: "oldest", label: "Oldest Applications" },
+    { value: "name-asc", label: "Name (A-Z)" },
+    { value: "name-desc", label: "Name (Z-A)" },
+    { value: "status", label: "Status" },
+    { value: "tier", label: "Tier" },
+    { value: "reference", label: "Reference Number" },
   ];
   // Extract unique tiers and add 'all' option
   const uniqueTiers = [
@@ -49,6 +62,25 @@ export default function ApplicantsFilters({
       typeof c.primaryContactEmail === "string"
   );
 
+  const handleFilter = useCallback((
+    statusOverride = filterStatus,
+    openingOverride = filterOpening,
+    tierOverride = filterTier
+  ) => {
+    console.log("Applying filter:", {
+      searchQuery,
+      filterOpening: openingOverride,
+      filterStatus: statusOverride,
+      filterTier: tierOverride,
+    });
+    onFilterChange({
+      searchQuery,
+      filterOpening: openingOverride,
+      filterStatus: statusOverride,
+      filterTier: tierOverride,
+    });
+  }, [searchQuery, filterStatus, filterOpening, filterTier, onFilterChange]);
+
   // Apply initial filter when component loads
   useEffect(() => {
     if (
@@ -62,10 +94,17 @@ export default function ApplicantsFilters({
           : localStorage.getItem("filterOpening") || "all";
       const savedStatus = localStorage.getItem("filterStatus") || "all";
       const savedTier = localStorage.getItem("filterTier") || "all";
+      const savedSort = localStorage.getItem("sortBy") || "latest";
 
       setFilterOpening(savedOpening);
       setFilterStatus(savedStatus);
       setFilterTier(savedTier);
+      setSortBy(savedSort);
+      
+      // Don't call onSortChange during initial load - let parent handle initial sort
+      // if (onSortChange) {
+      //   onSortChange(savedSort);
+      // }
       handleFilter(savedStatus, savedOpening, savedTier);
       hasAppliedInitialFilter.current = true;
     } else if (!areCandidatesValid) {
@@ -94,32 +133,7 @@ export default function ApplicantsFilters({
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [
-    searchQuery,
-    filterOpening,
-    filterStatus,
-    filterTier,
-    areCandidatesValid,
-  ]);
-
-  const handleFilter = (
-    statusOverride = filterStatus,
-    openingOverride = filterOpening,
-    tierOverride = filterTier
-  ) => {
-    console.log("Applying filter:", {
-      searchQuery,
-      filterOpening: openingOverride,
-      filterStatus: statusOverride,
-      filterTier: tierOverride,
-    });
-    onFilterChange({
-      searchQuery,
-      filterOpening: openingOverride,
-      filterStatus: statusOverride,
-      filterTier: tierOverride,
-    });
-  };
+  }, [searchQuery, filterOpening, filterStatus, filterTier, areCandidatesValid, candidates]);
 
   const handleStatusChange = (e) => {
     const newStatus = e.target.value;
@@ -139,14 +153,28 @@ export default function ApplicantsFilters({
     localStorage.setItem("filterTier", newTier);
   };
 
+  const handleSortChange = (e) => {
+    const newSort = e.target.value;
+    setSortBy(newSort);
+    localStorage.setItem("sortBy", newSort);
+    if (onSortChange) {
+      onSortChange(newSort);
+    }
+  };
+
   const handleClearFilters = () => {
     setSearchQuery("");
     setFilterOpening("all");
     setFilterStatus("all");
     setFilterTier("all");
+    setSortBy("latest");
     localStorage.removeItem("filterOpening");
     localStorage.removeItem("filterStatus");
     localStorage.removeItem("filterTier");
+    localStorage.removeItem("sortBy");
+    if (onSortChange) {
+      onSortChange("latest");
+    }
   };
 
   // Get active filter count for badge
@@ -156,6 +184,7 @@ export default function ApplicantsFilters({
     if (filterOpening !== "all") count++;
     if (filterStatus !== "all") count++;
     if (filterTier !== "all") count++;
+    if (sortBy !== "latest") count++; // Count non-default sorting as active filter
     return count;
   };
 
@@ -221,7 +250,7 @@ export default function ApplicantsFilters({
       {/* Filter Content */}
       {isExpanded && (
         <div className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             {/* Search Field */}
             <div>
               <label
@@ -331,6 +360,34 @@ export default function ApplicantsFilters({
                 <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                   <Icon
                     icon="heroicons:chevron-down"
+                    className={`w-4 h-4 ${mutedTextColor}`}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Sort By */}
+            <div>
+              <label
+                className={`block text-sm font-medium mb-1.5 ${mutedTextColor}`}
+              >
+                Sort By
+              </label>
+              <div className="relative">
+                <select
+                  value={sortBy}
+                  onChange={handleSortChange}
+                  className={`block w-full rounded-md shadow-sm pl-3 pr-8 py-2 text-sm focus:ring-2 focus:ring-[#f05d23] focus:border-transparent ${inputBg} ${inputBorder} ${textColor} border appearance-none`}
+                >
+                  {sortOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                  <Icon
+                    icon="heroicons:bars-arrow-down"
                     className={`w-4 h-4 ${mutedTextColor}`}
                   />
                 </div>

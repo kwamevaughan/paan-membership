@@ -548,37 +548,25 @@ console.log("Triggering background process at URL:", processUrl);
       referenceNumber,
     };
 
-    fetch(processUrl, {
+    // Mark the response as pending_email for background processing
+    await supabaseServer
+      .from("responses")
+      .update({ 
+        status: "pending_email",
+        email_data: JSON.stringify(backgroundPayload)
+      })
+      .eq("user_id", userId);
+    
+    console.log("Submission marked as pending_email for background processing");
+
+    // Trigger email processing (non-blocking)
+    const triggerUrl = `${baseUrl}/api/trigger-email-processing`;
+    fetch(triggerUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(backgroundPayload),
-      keepalive: true,
-    })
-    .then(async (response) => {
-      if (response.ok) {
-        console.log("Background process triggered successfully");
-      } else {
-        console.error("Background process HTTP error:", response.status, response.statusText);
-        const errorText = await response.text();
-        console.error("Background process error response:", errorText);
-        await supabaseServer.from("submission_errors").insert([
-          {
-            user_id: userId,
-            error_message: "Background process HTTP error",
-            error_details: { status: response.status, statusText: response.statusText, response: errorText },
-          },
-        ]);
-      }
-    })
-    .catch(async (error) => {
-      console.error("Background process fetch failed:", error.message);
-      await supabaseServer.from("submission_errors").insert([
-        {
-          user_id: userId,
-          error_message: "Background process fetch failed",
-          error_details: { message: error.message, stack: error.stack },
-        },
-      ]);
+    }).catch((error) => {
+      console.error("Failed to trigger email processing:", error.message);
+      // Don't throw - this is non-critical
     });
 
     return res.status(200).json({

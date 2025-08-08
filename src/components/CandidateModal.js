@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
+import toast from "react-hot-toast";
 
 export default function CandidateModal({
   candidate,
   isOpen,
   onClose,
   onStatusChange,
+  onCandidateUpdate,
   mode,
 }) {
   const [previewUrl, setPreviewUrl] = useState(null);
@@ -58,6 +60,80 @@ export default function CandidateModal({
 
   const openAnswersModal = () => setIsAnswersModalOpen(true);
   const closeAnswersModal = () => setIsAnswersModalOpen(false);
+
+  const handleResendEmail = async (candidateId) => {
+    const loadingToast = toast.loading("Queuing welcome email...");
+    
+    try {
+      // Immediately update UI to show processing state
+      if (onCandidateUpdate && candidate) {
+        onCandidateUpdate({
+          ...candidate,
+          processed_at: new Date().toISOString(),
+          email_sent: false,
+          error_message: null
+        });
+      }
+
+      const response = await fetch("/api/resend-welcome-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ candidateId }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to resend email");
+      }
+
+      toast.success(
+        `Email queued for ${result.candidateName}! Processing in background - you can navigate away.`,
+        {
+          id: loadingToast,
+          icon: "📧",
+          duration: 6000, // Show longer so they can read it
+        }
+      );
+
+      // Wait for email processing to complete, then update the status
+      if (onCandidateUpdate) {
+        setTimeout(() => {
+          // Update the candidate with email sent status
+          onCandidateUpdate({
+            ...candidate,
+            email_sent: true,
+            processed_at: new Date().toISOString(),
+            error_message: null
+          });
+          
+          // Show completion toast
+          toast.success(
+            `Welcome email sent to ${candidate.primaryContactName}!`,
+            {
+              icon: "✅",
+              duration: 4000,
+            }
+          );
+        }, 12000); // Wait 12 seconds for processing (more realistic timing)
+      }
+      
+    } catch (error) {
+      console.error("Error resending email:", error);
+      toast.error("Failed to queue welcome email. Please try again.", { 
+        id: loadingToast,
+        duration: 5000 
+      });
+      
+      // Revert UI state on error
+      if (onCandidateUpdate && candidate) {
+        onCandidateUpdate({
+          ...candidate,
+          error_message: error.message
+        });
+      }
+    }
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -571,13 +647,73 @@ export default function CandidateModal({
 
               {activeTab === "status" && (
                 <div className="space-y-6 animate-fade-in">
+                  {/* Email Status Section */}
                   <div
                     className={`${
                       mode === "dark" ? "bg-gray-800/60" : "bg-gray-50/60"
                     } p-6 rounded-xl shadow-md backdrop-blur-sm`}
                   >
                     <h3 className="text-lg font-medium mb-4">
-                      Update candidate status
+                      Welcome Email Status
+                    </h3>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div
+                          className={`w-3 h-3 rounded-full ${
+                            candidate.email_sent
+                              ? "bg-green-500"
+                              : candidate.error_message
+                              ? "bg-red-500"
+                              : candidate.processed_at
+                              ? "bg-yellow-500"
+                              : "bg-gray-400"
+                          }`}
+                        ></div>
+                        <div>
+                          <p className="font-medium">
+                            {candidate.email_sent
+                              ? "Email Sent"
+                              : candidate.error_message
+                              ? "Email Failed"
+                              : candidate.processed_at
+                              ? "Email Pending"
+                              : "No Email Sent"}
+                          </p>
+                          {candidate.processed_at && (
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              {candidate.email_sent ? "Sent" : "Processed"} on{" "}
+                              {new Date(candidate.processed_at).toLocaleString()}
+                            </p>
+                          )}
+                          {!candidate.processed_at && !candidate.email_sent && (
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              Welcome email was never sent to this candidate
+                            </p>
+                          )}
+                          {candidate.error_message && (
+                            <p className="text-sm text-red-500 mt-1">
+                              Error: {candidate.error_message}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleResendEmail(candidate.id)}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
+                      >
+                        {candidate.email_sent ? "Resend Email" : "Send Email"}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Application Status Section */}
+                  <div
+                    className={`${
+                      mode === "dark" ? "bg-gray-800/60" : "bg-gray-50/60"
+                    } p-6 rounded-xl shadow-md backdrop-blur-sm`}
+                  >
+                    <h3 className="text-lg font-medium mb-4">
+                      Update application status
                     </h3>
                     <div className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

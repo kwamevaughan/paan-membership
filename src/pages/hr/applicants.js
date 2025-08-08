@@ -89,6 +89,18 @@ export default function HRApplicants({
     setIsModalOpen(true);
   };
 
+  const handleCandidateUpdate = (updatedCandidate) => {
+    // Update the candidate in the candidates list
+    const updatedCandidates = candidates.map(c => 
+      c.id === updatedCandidate.id ? updatedCandidate : c
+    );
+    setCandidates(updatedCandidates);
+    setFilteredCandidates(updatedCandidates);
+    
+    // Update the selected candidate in the modal
+    setSelectedCandidate(updatedCandidate);
+  };
+
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setSelectedCandidate(null);
@@ -507,6 +519,7 @@ export default function HRApplicants({
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onStatusChange={handleStatusChange}
+        onCandidateUpdate={handleCandidateUpdate}
         mode={mode}
       />
       <EmailModal

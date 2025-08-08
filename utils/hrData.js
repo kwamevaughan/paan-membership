@@ -281,6 +281,10 @@ export async function fetchHRData({
             submitted_at: response.submitted_at || null,
             questions: filteredQuestions,
             selected_tier: normalizeTier(candidate.selected_tier), // Normalize tier in candidate data
+            // Email status fields
+            email_sent: response.email_sent || false,
+            processed_at: response.processed_at || null,
+            error_message: response.error_message || null,
           };
         })
       : [];

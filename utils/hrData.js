@@ -213,12 +213,14 @@ export async function fetchHRData({
             });
           }
 
+          // Use the actual status from responses table, with fallback mapping for legacy data
           const statusMap = {
             completed: "Accepted",
-            Reviewed: "Reviewed",
             Hundreds: "Pending",
           };
-          const status = statusMap[response.status] || "Pending";
+          const status = response.status
+            ? statusMap[response.status] || response.status
+            : "Pending";
 
           const openingLower = candidate.opening?.toLowerCase() || "";
           const isAgency =
@@ -284,10 +286,14 @@ export async function fetchHRData({
       : [];
 
     const jobOpenings = fetchCandidates
-      ? [...new Set(combinedData.map((c) => {
-          const opening = c.opening || '';
-          return opening.replace(/\s+/g, ' ').trim();
-        }))]
+      ? [
+          ...new Set(
+            combinedData.map((c) => {
+              const opening = c.opening || "";
+              return opening.replace(/\s+/g, " ").trim();
+            })
+          ),
+        ]
           .filter(Boolean) // Remove null/undefined/empty strings
           .sort((a, b) => a.localeCompare(b)) // Sort alphabetically
       : [];

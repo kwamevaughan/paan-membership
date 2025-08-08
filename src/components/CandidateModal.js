@@ -688,11 +688,7 @@ export default function CandidateModal({
             >
               Close
             </button>
-            {activeTab === "status" && (
-              <button className="px-6 py-2 bg-blue-400 text-white rounded-lg hover:bg-sky-600 transition-all duration-200 font-medium shadow-md hover:shadow-lg backdrop-blur-sm">
-                Save Changes
-              </button>
-            )}
+
           </div>
 
           {/* Subtle Border Enhancement */}

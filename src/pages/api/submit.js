@@ -555,13 +555,23 @@ export default async function handler(req, res) {
 
     // Trigger email processing (non-blocking)
     const triggerUrl = `${baseUrl}/api/trigger-email-processing`;
+    console.log("Triggering immediate email processing for user:", userId);
+    
     fetch(triggerUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-    }).catch((error) => {
-      console.error("Failed to trigger email processing:", error.message);
-      // Don't throw - this is non-critical
-    });
+    })
+      .then((response) => {
+        console.log("Immediate email processing response status:", response.status);
+        return response.json();
+      })
+      .then((data) => {
+        console.log("Immediate email processing result:", data);
+      })
+      .catch((error) => {
+        console.error("Failed to trigger email processing:", error.message);
+        // Don't throw - this is non-critical
+      });
 
     return res.status(200).json({
       status: "success",

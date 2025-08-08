@@ -55,7 +55,11 @@ export default async function handler(req, res) {
         console.log(`[send-missing-welcome-emails] Processing candidate: ${candidate.primaryContactName}`);
 
         // If no email_data exists, we'll let the resend endpoint handle creating it
-        const resendResponse = await fetch(`${req.headers.origin}/api/resend-welcome-email`, {
+        const baseUrl = process.env.NODE_ENV === "development"
+          ? process.env.BASE_URL || "http://localhost:3000"
+          : process.env.PRODUCTION_URL || "https://membership.paan.africa";
+        
+        const resendResponse = await fetch(`${baseUrl}/api/resend-welcome-email`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ candidateId }),

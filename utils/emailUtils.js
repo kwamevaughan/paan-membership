@@ -97,6 +97,7 @@ export async function sendEmails({
   countryOfResidence,
   languagesSpoken,
 }) {
+  console.log(`[sendEmails] Starting email sending process for ${primaryContactName} (${primaryContactEmail}), job_type: ${job_type}`);
   // Validate environment variables
   if (!process.env.AGENCY_EMAIL) {
     throw new Error("AGENCY_EMAIL is not defined in environment variables");
@@ -104,6 +105,11 @@ export async function sendEmails({
   if (!process.env.FREELANCER_EMAIL) {
     throw new Error("FREELANCER_EMAIL is not defined in environment variables");
   }
+  if (!process.env.EMAIL_HOST || !process.env.EMAIL_PORT || !process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    throw new Error("Missing email configuration. Please check EMAIL_HOST, EMAIL_PORT, EMAIL_USER, and EMAIL_PASS environment variables.");
+  }
+  
+  console.log(`[sendEmails] Email config validated. Host: ${process.env.EMAIL_HOST}, Port: ${process.env.EMAIL_PORT}, User: ${process.env.EMAIL_USER}`);
 
   const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
@@ -291,14 +297,16 @@ export async function sendEmails({
   
 
   try {
-    await transporter.sendMail({
+    const candidateEmailResult = await transporter.sendMail({
       from: `"Pan-African Agency Network (PAAN)" <${process.env.EMAIL_USER}>`,
       to: primaryContactEmail,
       subject: processedCandidateSubject,
       html: candidateHtml,
     });
+    console.log(`[sendEmails] Candidate email sent successfully to ${primaryContactEmail}. Message ID: ${candidateEmailResult.messageId}`);
   } catch (err) {
     console.error("[sendEmails] Error sending candidate email:", err);
+    throw new Error(`Failed to send candidate email: ${err.message}`);
   }
 
   const processedAdminSubject = (
@@ -393,9 +401,11 @@ export async function sendEmails({
     job_type === "freelancer"
       ? process.env.FREELANCER_EMAIL
       : process.env.AGENCY_EMAIL;
+  
+  console.log(`[sendEmails] Admin email recipient for ${job_type}: ${adminEmailRecipient}`);
 
   try {
-    await transporter.sendMail({
+    const adminEmailResult = await transporter.sendMail({
       from: `"Pan-African Agency Network (PAAN)" <${process.env.EMAIL_USER}>`,
       to: adminEmailRecipient,
       subject: processedAdminSubject,
@@ -408,7 +418,9 @@ export async function sendEmails({
         },
       ],
     });
+    console.log(`[sendEmails] Admin email sent successfully to ${adminEmailRecipient}. Message ID: ${adminEmailResult.messageId}`);
   } catch (err) {
     console.error("[sendEmails] Error sending admin email:", err);
+    throw new Error(`Failed to send admin email: ${err.message}`);
   }
 }

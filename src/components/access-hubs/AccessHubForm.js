@@ -676,7 +676,7 @@ export default function AccessHubForm({
 
             {/* Available Checkbox */}
             <div className="md:col-span-2">
-              <label className="flex items-center text-sm font-medium">
+              <label className="flex items-center text-md cursor-pointer text-red-600 dark:text-red-400 mb-2 underline font-medium">
                 <input
                   type="checkbox"
                   name="is_available"

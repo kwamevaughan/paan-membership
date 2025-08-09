@@ -83,9 +83,7 @@ export default function HRApplicants({
 
     try {
       // Fetch full candidate data including answers and questions using existing fetchHRData
-      const response = await fetch(
-        `/api/candidate-details?id=${candidate.id}`
-      );
+      const response = await fetch(`/api/candidate-details?id=${candidate.id}`);
       if (!response.ok) {
         throw new Error("Failed to fetch candidate details");
       }

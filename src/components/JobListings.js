@@ -243,11 +243,7 @@ export default function JobListings({ mode, jobs, onJobDeleted }) {
                         mode === "dark" ? "text-gray-300" : "text-gray-600"
                       }`}
                     >
-                      {new Date(job.expires_on).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
+                      {job.expires_on_display}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end space-x-2">
@@ -328,7 +324,7 @@ export default function JobListings({ mode, jobs, onJobDeleted }) {
                       mode === "dark" ? "text-gray-400" : "text-gray-600"
                     }`}
                   >
-                    Expires {new Date(job.expires_on).toLocaleDateString()}
+                    Expires {job.expires_on_display}
                   </p>
                 </div>
               </div>

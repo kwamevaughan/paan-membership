@@ -19,15 +19,7 @@ import ConnectingDotsBackground from "@/components/ConnectingDotsBackground";
 import useAuthSession from "@/hooks/useAuthSession";
 import useLogout from "@/hooks/useLogout";
 import { Icon } from "@iconify/react";
-
-// Helper function to format ISO date as DD/MM/YYYY for display
-const formatDate = (isoDateString) => {
-  const date = new Date(isoDateString);
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-  return `${day}/${month}/${year}`;
-};
+import { formatDateDDMMYYYY } from "@/utils/dateUtils";
 
 const JobDescriptionModal = dynamic(
   () => import("@/components/JobDescriptionModal"),
@@ -56,8 +48,8 @@ export default function HRJobBoard({
     handleMouseEnter,
     handleMouseLeave,
     handleOutsideClick,
-  } = useSidebar();  
-  
+  } = useSidebar();
+
   const handleLogout = useLogout();
 
   const router = useRouter();
@@ -71,14 +63,12 @@ export default function HRJobBoard({
   const [lastJob, setLastJob] = useState(null);
 
   useEffect(() => {
-    console.log("Initial jobs on mount:", initialJobs);
     const handleOpenModal = (e) => {
       setSelectedOpening(e.detail);
       setIsViewModalOpen(true);
     };
 
     const handleEditModal = (e) => {
-      console.log("Opening EditJobModal with job:", e.detail);
       setEditJob(e.detail);
       setIsEditModalOpen(true);
     };
@@ -103,7 +93,7 @@ export default function HRJobBoard({
       const updatedJobs = data.map((job) => ({
         ...job,
         is_expired: new Date(job.expires_on) < new Date(),
-        expires_on_display: formatDate(job.expires_on), // For display only
+        expires_on_display: formatDateDDMMYYYY(job.expires_on), // For display only
       }));
       setJobs(updatedJobs);
       toast.success("Data loaded successfully!", { id: loadingToast });
@@ -139,7 +129,7 @@ export default function HRJobBoard({
           ? {
               ...j,
               ...updatedJob,
-              expires_on_display: formatDate(updatedJob.expires_on),
+              expires_on_display: formatDateDDMMYYYY(updatedJob.expires_on),
             }
           : j
       )
@@ -151,13 +141,13 @@ export default function HRJobBoard({
   const handleJobAdded = (newJob) => {
     console.log("New job added:", newJob);
     setJobs((prevJobs) => [
-      { ...newJob, expires_on_display: formatDate(newJob.expires_on) },
+      { ...newJob, expires_on_display: formatDateDDMMYYYY(newJob.expires_on) },
       ...prevJobs,
     ]);
     setLastJob({
       title: newJob.title,
       id: newJob.id,
-      expiresOn: formatDate(newJob.expires_on), // For NotifyEmailGroupModal
+      expiresOn: formatDateDDMMYYYY(newJob.expires_on), // For NotifyEmailGroupModal
       slug: newJob.slug,
     });
     setIsNotifyModalOpen(true);
@@ -186,9 +176,7 @@ export default function HRJobBoard({
       }`}
     >
       <Toaster />
-      
-      
-      
+
       <HRHeader
         toggleSidebar={toggleSidebar}
         isSidebarOpen={isSidebarOpen}
@@ -240,24 +228,28 @@ export default function HRJobBoard({
               </button>
             </div>
 
-            <h1 className={`text-2xl font-bold mb-6 ${
-              mode === "dark" ? "text-white" : "text-gray-900"
-            }`}>
+            <h1
+              className={`text-2xl font-bold mb-6 ${
+                mode === "dark" ? "text-white" : "text-gray-900"
+              }`}
+            >
               Job Openings
             </h1>
 
-            <JobFilters 
-              jobs={jobs} 
-              onFilter={setFilteredJobs} 
-              mode={mode} 
-            />
-            
+            <JobFilters jobs={jobs} onFilter={setFilteredJobs} mode={mode} />
+
             {filteredJobs.length ? (
-              <JobListings mode={mode} jobs={filteredJobs} onJobDeleted={fetchJobs} />
+              <JobListings
+                mode={mode}
+                jobs={filteredJobs}
+                onJobDeleted={fetchJobs}
+              />
             ) : (
-              <div className={`text-center py-8 ${
-                mode === "dark" ? "text-gray-400" : "text-gray-500"
-              }`}>
+              <div
+                className={`text-center py-8 ${
+                  mode === "dark" ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
                 {jobs.length ? "No jobs match your filters" : "Loading jobs..."}
               </div>
             )}
@@ -271,10 +263,13 @@ export default function HRJobBoard({
         title="Add New Job"
         mode={mode}
       >
-        <JobForm mode={mode} onJobAdded={(job) => {
-          handleJobAdded(job);
-          setIsAddJobModalOpen(false);
-        }} />
+        <JobForm
+          mode={mode}
+          onJobAdded={(job) => {
+            handleJobAdded(job);
+            setIsAddJobModalOpen(false);
+          }}
+        />
       </ItemActionModal>
 
       <JobDescriptionModal
@@ -317,11 +312,46 @@ export async function getServerSideProps(context) {
 
     if (error) throw error;
 
-    const initialJobs = data.map((job) => ({
-      ...job,
-      is_expired: new Date(job.expires_on) < new Date(),
-      expires_on_display: formatDate(job.expires_on), // For display only
-    }));
+    const initialJobs = data.map((job) => {
+      try {
+        // Check for any fields that might need JSON parsing
+        const processedJob = { ...job };
+
+        // If there are any JSON string fields, parse them safely
+        ["location", "requirements", "benefits", "skills"].forEach((field) => {
+          if (processedJob[field] && typeof processedJob[field] === "string") {
+            try {
+              // Only try to parse if it looks like JSON (starts with { or [)
+              if (
+                processedJob[field].trim().startsWith("{") ||
+                processedJob[field].trim().startsWith("[")
+              ) {
+                processedJob[field] = JSON.parse(processedJob[field]);
+              }
+            } catch (parseError) {
+              console.warn(
+                `Failed to parse ${field} for job ${job.id}:`,
+                parseError
+              );
+              // Keep the original string value if parsing fails
+            }
+          }
+        });
+
+        return {
+          ...processedJob,
+          is_expired: new Date(job.expires_on) < new Date(),
+          expires_on_display: formatDateDDMMYYYY(job.expires_on), // For display only
+        };
+      } catch (jobError) {
+        console.error("Error processing job:", job.id, jobError);
+        return {
+          ...job,
+          is_expired: false,
+          expires_on_display: "Invalid Date",
+        };
+      }
+    });
 
     return {
       props: {

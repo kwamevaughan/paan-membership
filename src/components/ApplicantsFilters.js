@@ -67,12 +67,7 @@ export default function ApplicantsFilters({
     openingOverride = filterOpening,
     tierOverride = filterTier
   ) => {
-    console.log("Applying filter:", {
-      searchQuery,
-      filterOpening: openingOverride,
-      filterStatus: statusOverride,
-      filterTier: tierOverride,
-    });
+    
     onFilterChange({
       searchQuery,
       filterOpening: openingOverride,

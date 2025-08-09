@@ -26,6 +26,7 @@ export default function HRApplicants({
   initialCandidates,
   initialQuestions,
   breadcrumbs,
+  pagination,
 }) {
   const [candidates, setCandidates] = useState(initialCandidates || []);
   const [filteredCandidates, setFilteredCandidates] = useState(
@@ -33,6 +34,8 @@ export default function HRApplicants({
   );
   const [sortField, setSortField] = useState("submitted_at");
   const [sortDirection, setSortDirection] = useState("desc");
+  const [currentPage, setCurrentPage] = useState(pagination?.currentPage || 1);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -45,6 +48,7 @@ export default function HRApplicants({
   const hasAppliedInitialSort = useRef(false);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
+  const [isLoadingCandidate, setIsLoadingCandidate] = useState(false);
 
   useAuthSession();
 
@@ -59,7 +63,7 @@ export default function HRApplicants({
     handleMouseLeave,
     handleOutsideClick,
   } = useSidebar();
-  
+
   const handleLogout = useLogout();
 
   const { handleStatusChange } = useStatusChange({
@@ -71,59 +75,61 @@ export default function HRApplicants({
     setIsEmailModalOpen,
   });
 
-  useEffect(() => {
-    if (hasAppliedInitialSort.current || candidates.length === 0) {
-      return;
-    }
-
-    const { opening } = router.query;
-    const savedOpening = localStorage.getItem("filterOpening") || "all";
-    const savedStatus = localStorage.getItem("filterStatus") || "all";
-    const savedSort = localStorage.getItem("sortBy") || "latest";
-
-    let initialFilter = [...candidates];
-    if (opening && initialFilter.some((c) => c.opening === opening)) {
-      initialFilter = initialFilter.filter((c) => c.opening === opening);
-    } else if (savedOpening !== "all") {
-      initialFilter = initialFilter.filter((c) => c.opening === savedOpening);
-    }
-    if (savedStatus !== "all") {
-      initialFilter = initialFilter.filter((c) => c.status === savedStatus);
-    }
-    
-    // Apply initial sorting to the filtered data
-    handleSortChange(savedSort, initialFilter);
-    hasAppliedInitialSort.current = true;
-  }, [router, candidates]);
-
-  const handleViewCandidate = (candidate) => {
+  const handleViewCandidate = async (candidate) => {
     // Close any open preview modal by resetting the candidate modal
     setIsModalOpen(false);
     setSelectedCandidate(null);
-    
-    // Small delay to ensure the previous modal is closed before opening the new one
-    setTimeout(() => {
-      setSelectedCandidate(candidate);
-      setIsModalOpen(true);
-    }, 100);
+    setIsLoadingCandidate(true);
+
+    try {
+      // Fetch full candidate data including answers and questions using existing fetchHRData
+      const response = await fetch(
+        `/api/get-candidate/candidate-details?id=${candidate.id}`
+      );
+      if (!response.ok) {
+        throw new Error("Failed to fetch candidate details");
+      }
+
+      const data = await response.json();
+
+      // Small delay to ensure the previous modal is closed before opening the new one
+      setTimeout(() => {
+        setSelectedCandidate(data.candidate);
+        setIsModalOpen(true);
+        setIsLoadingCandidate(false);
+      }, 100);
+    } catch (error) {
+      console.error("Error fetching candidate details:", error);
+      toast.error("Failed to load candidate details");
+
+      // Fallback: use the basic candidate data
+      setTimeout(() => {
+        setSelectedCandidate(candidate);
+        setIsModalOpen(true);
+        setIsLoadingCandidate(false);
+      }, 100);
+    }
   };
 
   const handleCandidateUpdate = (updatedCandidate) => {
     // Update the candidate in the candidates list
-    const updatedCandidates = candidates.map(c => 
+    const updatedCandidates = candidates.map((c) =>
       c.id === updatedCandidate.id ? updatedCandidate : c
     );
     setCandidates(updatedCandidates);
     setFilteredCandidates(updatedCandidates);
-    
+
     // Update the selected candidate in the modal
     setSelectedCandidate(updatedCandidate);
   };
 
   const handleCloseModal = () => {
-    console.log("Closing candidate modal, preview state:", { isPreviewModalOpen, previewUrl });
+    // Close modal first, then clear candidate data to prevent null processing
     setIsModalOpen(false);
-    setSelectedCandidate(null);
+    // Small delay to ensure modal is closed before clearing candidate
+    setTimeout(() => {
+      setSelectedCandidate(null);
+    }, 100);
   };
 
   const handleDocumentPreview = (url) => {
@@ -147,7 +153,10 @@ export default function HRApplicants({
   };
 
   const closePreviewModal = () => {
-    console.log("Closing preview modal, current state:", { isPreviewModalOpen, previewUrl });
+    console.log("Closing preview modal, current state:", {
+      isPreviewModalOpen,
+      previewUrl,
+    });
     setIsPreviewModalOpen(false);
     setPreviewUrl(null);
   };
@@ -159,13 +168,12 @@ export default function HRApplicants({
     setPreviewUrl(null);
   };
 
-  const handleFilterChange = ({ searchQuery, filterOpening, filterStatus, filterTier }) => {
-    console.log("handleFilterChange:", {
-      searchQuery,
-      filterOpening,
-      filterStatus,
-      filterTier,
-    });
+  const handleFilterChange = ({
+    searchQuery,
+    filterOpening,
+    filterStatus,
+    filterTier,
+  }) => {
     let result = [...candidates];
 
     if (searchQuery) {
@@ -205,26 +213,29 @@ export default function HRApplicants({
     const sortedResult = [...result].sort((a, b) => {
       let aValue = a[sortField] || "";
       let bValue = b[sortField] || "";
-      
+
       if (sortField === "selected_tier") {
-        aValue = a.selected_tier ? a.selected_tier.split(" - ")[0].trim().toLowerCase() : "";
-        bValue = b.selected_tier ? b.selected_tier.split(" - ")[0].trim().toLowerCase() : "";
+        aValue = a.selected_tier
+          ? a.selected_tier.split(" - ")[0].trim().toLowerCase()
+          : "";
+        bValue = b.selected_tier
+          ? b.selected_tier.split(" - ")[0].trim().toLowerCase()
+          : "";
       } else if (sortField === "submitted_at") {
         aValue = new Date(a.submitted_at || a.created_at || 0);
         bValue = new Date(b.submitted_at || b.created_at || 0);
       }
-      
+
       if (sortField === "submitted_at") {
         return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
       }
-      
+
       return sortDirection === "asc"
         ? aValue.toString().localeCompare(bValue.toString())
         : bValue.toString().localeCompare(aValue.toString());
     });
-    
+
     setFilteredCandidates(sortedResult);
-    console.log("Final filtered and sorted candidates:", sortedResult);
 
     const currentOpening = localStorage.getItem("filterOpening") || "all";
     const currentStatus = localStorage.getItem("filterStatus") || "all";
@@ -264,8 +275,12 @@ export default function HRApplicants({
       let aValue = a[field] || "";
       let bValue = b[field] || "";
       if (field === "tier") {
-        aValue = a.selected_tier ? a.selected_tier.split(" - ")[0].trim().toLowerCase() : "";
-        bValue = b.selected_tier ? b.selected_tier.split(" - ")[0].trim().toLowerCase() : "";
+        aValue = a.selected_tier
+          ? a.selected_tier.split(" - ")[0].trim().toLowerCase()
+          : "";
+        bValue = b.selected_tier
+          ? b.selected_tier.split(" - ")[0].trim().toLowerCase()
+          : "";
       }
       return newDirection === "asc"
         ? aValue.toString().localeCompare(bValue.toString())
@@ -274,9 +289,9 @@ export default function HRApplicants({
     setFilteredCandidates(sorted);
   };
 
-  const handleSortChange = (sortValue, dataToSort = null) => {
+  const handleSortChange = useCallback((sortValue, dataToSort = null) => {
     let field, direction;
-    
+
     switch (sortValue) {
       case "latest":
         field = "submitted_at";
@@ -318,26 +333,83 @@ export default function HRApplicants({
     const sorted = [...dataToSortArray].sort((a, b) => {
       let aValue = a[field] || "";
       let bValue = b[field] || "";
-      
+
       if (field === "selected_tier") {
-        aValue = a.selected_tier ? a.selected_tier.split(" - ")[0].trim().toLowerCase() : "";
-        bValue = b.selected_tier ? b.selected_tier.split(" - ")[0].trim().toLowerCase() : "";
+        aValue = a.selected_tier
+          ? a.selected_tier.split(" - ")[0].trim().toLowerCase()
+          : "";
+        bValue = b.selected_tier
+          ? b.selected_tier.split(" - ")[0].trim().toLowerCase()
+          : "";
       } else if (field === "submitted_at") {
         aValue = new Date(a.submitted_at || a.created_at || 0);
         bValue = new Date(b.submitted_at || b.created_at || 0);
       }
-      
+
       if (field === "submitted_at") {
         return direction === "asc" ? aValue - bValue : bValue - aValue;
       }
-      
+
       return direction === "asc"
         ? aValue.toString().localeCompare(bValue.toString())
         : bValue.toString().localeCompare(aValue.toString());
     });
-    
+
     setFilteredCandidates(sorted);
+  });
+
+  const handlePageChange = async (newPage) => {
+    if (newPage === currentPage || isLoading) return;
+
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `/api/applicants?page=${newPage}&limit=${pagination?.limit || 50}`
+      );
+      if (!response.ok) throw new Error("Failed to fetch data");
+
+      const data = await response.json();
+      setCandidates(data.candidates);
+      setFilteredCandidates(data.candidates);
+      setCurrentPage(newPage);
+
+      // Update URL without page reload
+      router.push(`/hr/applicants?page=${newPage}`, undefined, {
+        shallow: true,
+      });
+    } catch (error) {
+      console.error("Error fetching page data:", error);
+      toast.error("Failed to load page data");
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  // Apply initial sorting and filtering when component mounts
+  useEffect(() => {
+    if (hasAppliedInitialSort.current || candidates.length === 0) {
+      return;
+    }
+
+    const { opening } = router.query;
+    const savedOpening = localStorage.getItem("filterOpening") || "all";
+    const savedStatus = localStorage.getItem("filterStatus") || "all";
+    const savedSort = localStorage.getItem("sortBy") || "latest";
+
+    let initialFilter = [...candidates];
+    if (opening && initialFilter.some((c) => c.opening === opening)) {
+      initialFilter = initialFilter.filter((c) => c.opening === opening);
+    } else if (savedOpening !== "all") {
+      initialFilter = initialFilter.filter((c) => c.opening === savedOpening);
+    }
+    if (savedStatus !== "all") {
+      initialFilter = initialFilter.filter((c) => c.status === savedStatus);
+    }
+
+    // Apply initial sorting to the filtered data
+    handleSortChange(savedSort, initialFilter);
+    hasAppliedInitialSort.current = true;
+  }, [router, candidates, handleSortChange]);
 
   const handleSendEmail = async (emailDataWithToast) => {
     const { toastId, subject, body, ...restEmailData } = emailDataWithToast;
@@ -388,14 +460,15 @@ export default function HRApplicants({
       if (fetchError) throw fetchError;
 
       // Extract file IDs from the first response if it exists
-      const fileIds = responseData && responseData.length > 0
-        ? [
-            responseData[0]?.company_registration_file_id,
-            responseData[0]?.portfolio_work_file_id,
-            responseData[0]?.agency_profile_file_id,
-            responseData[0]?.tax_registration_file_id,
-          ].filter((id) => id) // Filter out null/undefined IDs
-        : [];
+      const fileIds =
+        responseData && responseData.length > 0
+          ? [
+              responseData[0]?.company_registration_file_id,
+              responseData[0]?.portfolio_work_file_id,
+              responseData[0]?.agency_profile_file_id,
+              responseData[0]?.tax_registration_file_id,
+            ].filter((id) => id) // Filter out null/undefined IDs
+          : [];
 
       // Delete submission errors first to avoid foreign key constraint violation
       const { error: submissionErrorsError } = await supabase
@@ -426,9 +499,11 @@ export default function HRApplicants({
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ fileIds }),
           });
-          
+
           if (!deleteResponse.ok) {
-            console.warn("Failed to delete files, but continuing with candidate deletion");
+            console.warn(
+              "Failed to delete files, but continuing with candidate deletion"
+            );
           }
         } catch (fileError) {
           console.warn("Error deleting files:", fileError);
@@ -437,7 +512,9 @@ export default function HRApplicants({
       }
 
       // Update state to remove deleted candidate
-      const updatedCandidates = candidates.filter((c) => c.id !== candidateToDelete);
+      const updatedCandidates = candidates.filter(
+        (c) => c.id !== candidateToDelete
+      );
       setCandidates(updatedCandidates);
       setFilteredCandidates(updatedCandidates);
       toast.success("Candidate deleted successfully!", {
@@ -597,7 +674,7 @@ export default function HRApplicants({
       }`}
     >
       <Toaster />
-      
+
       <HRHeader
         toggleSidebar={toggleSidebar}
         isSidebarOpen={isSidebarOpen}
@@ -655,6 +732,90 @@ export default function HRApplicants({
               handleBulkDelete={handleBulkDelete}
               setIsExportModalOpen={setIsExportModalOpen}
             />
+
+            {/* Pagination Controls */}
+            {pagination && pagination.totalPages > 1 && (
+              <div
+                className={`mt-6 flex items-center justify-between p-4 rounded-lg ${
+                  mode === "dark" ? "bg-gray-800" : "bg-white"
+                } shadow-sm`}
+              >
+                <div
+                  className={`text-sm ${
+                    mode === "dark" ? "text-gray-300" : "text-gray-600"
+                  }`}
+                >
+                  Showing {(currentPage - 1) * pagination.limit + 1} to{" "}
+                  {Math.min(
+                    currentPage * pagination.limit,
+                    pagination.totalCount
+                  )}{" "}
+                  of {pagination.totalCount} applicants
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage <= 1 || isLoading}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      currentPage <= 1 || isLoading
+                        ? "opacity-50 cursor-not-allowed"
+                        : mode === "dark"
+                        ? "bg-gray-700 text-white hover:bg-gray-600"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    <Icon icon="mdi:chevron-left" className="w-4 h-4" />
+                  </button>
+
+                  {/* Page numbers */}
+                  {Array.from(
+                    { length: Math.min(5, pagination.totalPages) },
+                    (_, i) => {
+                      const pageNum =
+                        Math.max(
+                          1,
+                          Math.min(pagination.totalPages - 4, currentPage - 2)
+                        ) + i;
+
+                      if (pageNum > pagination.totalPages) return null;
+
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => handlePageChange(pageNum)}
+                          disabled={isLoading}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            pageNum === currentPage
+                              ? "bg-paan-blue text-white"
+                              : mode === "dark"
+                              ? "bg-gray-700 text-white hover:bg-gray-600"
+                              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                          } ${
+                            isLoading ? "opacity-50 cursor-not-allowed" : ""
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    }
+                  )}
+
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage >= pagination.totalPages || isLoading}
+                    className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      currentPage >= pagination.totalPages || isLoading
+                        ? "opacity-50 cursor-not-allowed"
+                        : mode === "dark"
+                        ? "bg-gray-700 text-white hover:bg-gray-600"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    <Icon icon="mdi:chevron-right" className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -669,7 +830,8 @@ export default function HRApplicants({
         onDocumentPreview={handleDocumentPreview}
         onClosePreview={closePreviewModal}
         onCloseAll={handleCloseAllModals}
-      />      
+        isLoading={isLoadingCandidate}
+      />
       <EmailModal
         candidate={selectedCandidate}
         isOpen={isEmailModalOpen}
@@ -696,8 +858,12 @@ export default function HRApplicants({
       >
         <div className="space-y-4">
           <p className="text-lg">
-            Are you sure you want to delete {candidateToDelete ? candidates.find(c => c.id === candidateToDelete)?.primaryContactName : 'this candidate'}? This action cannot
-            be undone.
+            Are you sure you want to delete{" "}
+            {candidateToDelete
+              ? candidates.find((c) => c.id === candidateToDelete)
+                  ?.primaryContactName
+              : "this candidate"}
+            ? This action cannot be undone.
           </p>
           <div className="flex justify-end gap-4">
             <button

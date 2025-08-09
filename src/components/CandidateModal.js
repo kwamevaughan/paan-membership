@@ -18,7 +18,13 @@ export default function CandidateModal({
   const [activeTab, setActiveTab] = useState("profile");
 
   useEffect(() => {
-    if (candidate && candidate.questions && candidate.answers) {
+    // Only process if candidate exists and modal is open
+    if (!candidate || !isOpen) {
+      setQuestionAnswerPairs([]);
+      return;
+    }
+
+    if (candidate.questions && candidate.answers) {
       const pairs = candidate.questions.map((question, index) => ({
         questionId: question.id,
         questionText: question.text,
@@ -27,10 +33,13 @@ export default function CandidateModal({
 
       setQuestionAnswerPairs(pairs);
     } else {
-      console.warn(`Missing data for candidate:`, candidate);
+      // Only warn if we have a candidate but missing data (not when candidate is null during closing)
+      if (candidate.id) {
+        console.warn(`Missing questions or answers data for candidate:`, candidate.primaryContactName || candidate.id);
+      }
       setQuestionAnswerPairs([]);
     }
-  }, [candidate]);
+  }, [candidate, isOpen]);
 
   // Handle escape key press
   useEffect(() => {

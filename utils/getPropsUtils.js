@@ -135,29 +135,37 @@ export async function getHROverviewProps({ req, res }) {
 }
 
 export async function getAdminBusinessOpportunitiesProps({ req, res }) {
-  console.log("[getAdminBusinessOpportunitiesProps] Starting at", new Date().toISOString());
+  console.log(
+    "[getAdminBusinessOpportunitiesProps] Starting at",
+    new Date().toISOString()
+  );
 
   try {
     const authResult = await withAuth(req, res);
     if (authResult.redirect) return authResult;
 
     // Define the available tiers
-    const tiers = ["Gold Member", "Full Member", "Associate Member", "Free Member"];
+    const tiers = [
+      "Gold Member",
+      "Full Member",
+      "Associate Member",
+      "Free Member",
+    ];
 
-    return createProps(
-      { tiers },
-      [
-        { label: "Dashboard", href: "/admin" },
-        { label: "Business Opportunities" },
-      ]
-    );
+    return createProps({ tiers }, [
+      { label: "Dashboard", href: "/admin" },
+      { label: "Business Opportunities" },
+    ]);
   } catch (error) {
     return handleDBError(error, "getAdminBusinessOpportunitiesProps");
   }
 }
 
 export async function getAdminBusinessUpdatesProps({ req, res }) {
-  console.log("[getAdminBusinessUpdatesProps] Starting at", new Date().toISOString());
+  console.log(
+    "[getAdminBusinessUpdatesProps] Starting at",
+    new Date().toISOString()
+  );
 
   try {
     const authResult = await withAuth(req, res);
@@ -176,13 +184,10 @@ export async function getAdminBusinessUpdatesProps({ req, res }) {
       throw new Error(`Failed to fetch updates: ${updatesError.message}`);
     }
 
-    return createProps(
-      { initialUpdates: updatesData || [] },
-      [
-        { label: "Dashboard", href: "/admin" },
-        { label: "Updates" },
-      ]
-    );
+    return createProps({ initialUpdates: updatesData || [] }, [
+      { label: "Dashboard", href: "/admin" },
+      { label: "Updates" },
+    ]);
   } catch (error) {
     return handleDBError(error, "getAdminBusinessUpdatesProps");
   }
@@ -204,8 +209,8 @@ export async function getInterviewPageProps({ req, res, query }) {
 
   try {
     // Add timeout to prevent long-running queries
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Database query timeout')), 5000)
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Database query timeout")), 5000)
     );
 
     const queryPromise = supabaseServer
@@ -213,7 +218,10 @@ export async function getInterviewPageProps({ req, res, query }) {
       .select("*, max_answers")
       .order("id", { ascending: true });
 
-    const { data: questions, error } = await Promise.race([queryPromise, timeoutPromise]);
+    const { data: questions, error } = await Promise.race([
+      queryPromise,
+      timeoutPromise,
+    ]);
 
     if (error) throw error;
 
@@ -236,14 +244,17 @@ export async function getInterviewPageProps({ req, res, query }) {
 }
 
 export async function getAgenciesPageStaticProps() {
-  console.log("[getAgenciesPageStaticProps] Starting at", new Date().toISOString());
+  console.log(
+    "[getAgenciesPageStaticProps] Starting at",
+    new Date().toISOString()
+  );
 
   const supabaseServer = createSupabaseServerClient();
 
   try {
     // Add timeout to prevent long-running queries
-    const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Database query timeout')), 5000)
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Database query timeout")), 5000)
     );
 
     const queryPromise = supabaseServer
@@ -277,7 +288,10 @@ export async function getAgenciesPageStaticProps() {
 }
 
 export async function getFreelancersPageStaticProps() {
-  console.log("[getFreelancersPageStaticProps] Starting at", new Date().toISOString());
+  console.log(
+    "[getFreelancersPageStaticProps] Starting at",
+    new Date().toISOString()
+  );
 
   const supabaseServer = createSupabaseServerClient();
 
@@ -302,7 +316,10 @@ export async function getFreelancersPageStaticProps() {
 }
 
 export async function getInterviewQuestionsProps({ req, res }) {
-  console.log("[getInterviewQuestionsProps] Starting at", new Date().toISOString());
+  console.log(
+    "[getInterviewQuestionsProps] Starting at",
+    new Date().toISOString()
+  );
 
   try {
     const authResult = await withAuth(req, res);
@@ -331,17 +348,120 @@ export async function getInterviewQuestionsProps({ req, res }) {
         initialQuestions: questions || [],
         initialCategories: categories || [],
       },
-      [
-        { label: "Dashboard", href: "/admin" },
-        { label: "Interview Questions" },
-      ]
+      [{ label: "Dashboard", href: "/admin" }, { label: "Interview Questions" }]
     );
   } catch (error) {
     return handleDBError(error, "getInterviewQuestionsProps");
   }
 }
 
-export async function getApplicantsProps({ req, res }) {
+// Function to fetch single candidate with full data (answers, questions, etc.)
+async function fetchSingleCandidateData(supabaseServer, candidateId) {
+  try {
+    const data = await fetchHRData({
+      supabaseClient: supabaseServer,
+      fetchCandidates: true,
+      fetchQuestions: true,
+    });
+
+    // Find the specific candidate
+    const candidate = data.initialCandidates?.find(c => c.id === candidateId);
+    
+    if (!candidate) {
+      throw new Error('Candidate not found');
+    }
+
+    return candidate;
+  } catch (error) {
+    console.error('Error fetching single candidate:', error);
+    throw error;
+  }
+}
+
+// Lightweight fetch function specifically for applicants page
+async function fetchApplicantsData(supabaseServer, page = 1, limit = 50) {
+  const offset = (page - 1) * limit;
+
+  // Fetch candidates with responses data using proper join
+  const {
+    data: candidatesData,
+    error: candidatesError,
+    count,
+  } = await supabaseServer
+    .from("candidates")
+    .select(
+      `
+      id, 
+      primaryContactName, 
+      primaryContactEmail, 
+      primaryContactPhone,
+      primaryContactLinkedin,
+      opening,
+      opening_id,
+      reference_number,
+      agencyName,
+      headquartersLocation,
+      selected_tier,
+      job_type,
+      countryOfResidence,
+      created_at,
+      responses:responses!user_id(
+        id,
+        submitted_at,
+        status,
+        country,
+        device,
+        email_sent,
+        processed_at,
+        error_message
+      )
+    `,
+      { count: "exact" }
+    )
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (candidatesError) throw candidatesError;
+
+  // Transform the data to flatten the responses
+  const transformedCandidates =
+    candidatesData?.map((candidate) => {
+      // Get the first response (there should only be one per candidate)
+      const response = Array.isArray(candidate.responses)
+        ? candidate.responses[0]
+        : candidate.responses;
+
+      const { responses, ...candidateWithoutResponses } = candidate;
+
+      return {
+        ...candidateWithoutResponses,
+        // Flatten response data to candidate level for easier access
+        submitted_at: response?.submitted_at || candidate.created_at,
+        status: response?.status || "Pending",
+        country: response?.country || candidate.countryOfResidence,
+        device: response?.device || null,
+        email_sent: response?.email_sent || false,
+        processed_at: response?.processed_at || null,
+        error_message: response?.error_message || null,
+      };
+    }) || [];
+
+  // Fetch minimal questions data (only what's needed for display)
+  const { data: questionsData, error: questionsError } = await supabaseServer
+    .from("interview_questions")
+    .select("id, text, order, category, job_type")
+    .order("order", { ascending: true });
+
+  if (questionsError) throw questionsError;
+
+  return {
+    candidates: transformedCandidates,
+    questions: questionsData || [],
+    totalCount: count || 0,
+  };
+}
+
+export async function getApplicantsProps({ req, res, query }) {
   console.log("[getApplicantsProps] Starting at", new Date().toISOString());
 
   try {
@@ -350,23 +470,26 @@ export async function getApplicantsProps({ req, res }) {
 
     const { supabaseServer } = authResult;
 
-    console.time("fetchHRData");
-    const data = await fetchHRData({
-      supabaseClient: supabaseServer,
-      fetchCandidates: true,
-      fetchQuestions: true,
-    });
-    console.timeEnd("fetchHRData");
+    // Get pagination parameters
+    const page = parseInt(query?.page) || 1;
+    const limit = parseInt(query?.limit) || 50; // Reduced from loading all to 50 per page
+
+    console.time("fetchApplicantsData");
+    const data = await fetchApplicantsData(supabaseServer, page, limit);
+    console.timeEnd("fetchApplicantsData");
 
     return createProps(
       {
-        initialCandidates: data.initialCandidates || [],
-        initialQuestions: data.initialQuestions || [],
+        initialCandidates: data.candidates,
+        initialQuestions: data.questions,
+        pagination: {
+          currentPage: page,
+          totalCount: data.totalCount,
+          totalPages: Math.ceil(data.totalCount / limit),
+          limit,
+        },
       },
-      [
-        { label: "Dashboard", href: "/admin" },
-        { label: "Applicants" },
-      ]
+      [{ label: "Dashboard", href: "/admin" }, { label: "Applicants" }]
     );
   } catch (error) {
     return handleDBError(error, "getApplicantsProps");
@@ -374,7 +497,10 @@ export async function getApplicantsProps({ req, res }) {
 }
 
 export async function getAdminMarketIntelProps({ req, res }) {
-  console.log("[getAdminMarketIntelProps] Starting at", new Date().toISOString());
+  console.log(
+    "[getAdminMarketIntelProps] Starting at",
+    new Date().toISOString()
+  );
 
   try {
     const authResult = await withAuth(req, res);
@@ -383,13 +509,10 @@ export async function getAdminMarketIntelProps({ req, res }) {
     const { supabaseServer } = authResult;
     const candidatesMap = await fetchCandidatesMap(supabaseServer);
 
-    return createProps(
-      { initialCandidates: candidatesMap },
-      [
-        { label: "HR Dashboard", href: "/hr/dashboard" },
-        { label: "Market Intel" },
-      ]
-    );
+    return createProps({ initialCandidates: candidatesMap }, [
+      { label: "HR Dashboard", href: "/hr/dashboard" },
+      { label: "Market Intel" },
+    ]);
   } catch (error) {
     return handleDBError(error, "getAdminMarketIntelProps");
   }
@@ -406,14 +529,16 @@ export async function getAdminBlogProps({ req, res }) {
 
     const { data: blogs, error: blogsError } = await supabaseServer
       .from("blogs")
-      .select(`
+      .select(
+        `
         *,
         author_details:hr_users(name, username),
         category:blog_categories(name),
         tags:blog_post_tags(
           tag:blog_tags(name)
         )
-      `)
+      `
+      )
       .order("created_at", { ascending: false });
 
     if (blogsError) throw blogsError;
@@ -422,13 +547,17 @@ export async function getAdminBlogProps({ req, res }) {
       ...blog,
       article_category: blog.category?.name || null,
       article_tags: blog.tags?.map((t) => t.tag.name) || [],
-      author: blog.author_details?.name || blog.author_details?.username || "PAAN Admin"
+      author:
+        blog.author_details?.name ||
+        blog.author_details?.username ||
+        "PAAN Admin",
     }));
 
-    const { data: categoriesData, error: categoriesError } = await supabaseServer
-      .from("blog_categories")
-      .select("id, name, slug")
-      .order("name");
+    const { data: categoriesData, error: categoriesError } =
+      await supabaseServer
+        .from("blog_categories")
+        .select("id, name, slug")
+        .order("name");
 
     if (categoriesError) throw categoriesError;
 
@@ -446,10 +575,7 @@ export async function getAdminBlogProps({ req, res }) {
         tags: tagsData || [],
         hrUser,
       },
-      [
-        { label: "Dashboard", href: "/admin" },
-        { label: "Blog" },
-      ]
+      [{ label: "Dashboard", href: "/admin" }, { label: "Blog" }]
     );
   } catch (error) {
     return handleDBError(error, "getAdminBlogProps");
@@ -470,7 +596,10 @@ export async function getAdminEventsProps({ req, res }) {
 }
 
 export async function getAdminAccessHubsProps({ req, res }) {
-  console.log("[getAdminAccessHubsProps] Starting at", new Date().toISOString());
+  console.log(
+    "[getAdminAccessHubsProps] Starting at",
+    new Date().toISOString()
+  );
 
   try {
     const authResult = await withAuth(req, res, { redirectTo: "/hr/login" });
@@ -481,7 +610,6 @@ export async function getAdminAccessHubsProps({ req, res }) {
     return handleDBError(error, "getAdminAccessHubsProps");
   }
 }
-
 
 export async function getAdminResourcesProps({ req, res }) {
   console.log("[getAdminResourcesProps] Starting at", new Date().toISOString());
@@ -506,13 +634,10 @@ export async function getAdminOffersProps({ req, res }) {
     const { supabaseServer } = authResult;
     const candidatesMap = await fetchCandidatesMap(supabaseServer);
 
-    return createProps(
-      { initialCandidates: candidatesMap },
-      [
-        { label: "Dashboard", href: "/admin" },
-        { label: "Offers" },
-      ]
-    );
+    return createProps({ initialCandidates: candidatesMap }, [
+      { label: "Dashboard", href: "/admin" },
+      { label: "Offers" },
+    ]);
   } catch (error) {
     return handleDBError(error, "getAdminOffersProps");
   }

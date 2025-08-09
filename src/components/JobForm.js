@@ -126,6 +126,7 @@ export default function JobForm({ mode, onJobAdded }) {
 
     const isDefaultDescription =
       description === "" || description === "<p><br></p>";
+    const now = new Date().toISOString();
     const jobData = {
       title,
       description: isDefaultDescription ? null : description,
@@ -142,12 +143,14 @@ export default function JobForm({ mode, onJobAdded }) {
           locationCountry,
       },
       remote,
-        department: department || null,
+      department: department || null,
       job_type: jobType,
       slug: title
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)/g, ""),
+      created_at: now,
+      updated_at: now,
     };
 
     console.log("Job data to insert:", jobData);

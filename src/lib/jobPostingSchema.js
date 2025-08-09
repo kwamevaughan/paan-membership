@@ -37,9 +37,14 @@ export function generateJobPostingSchema(job, countries) {
     "@context": "https://schema.org",
     "@type": "JobPosting",
     title: job.title || "Job Opening",
-    description:
-      job.description ||
-      "Join our team at Pan-African Agency Network (PAAN). Apply now to be part of our growing network of creative professionals across Africa.",
+    description: job.description 
+      ? job.description.replace(/<[^>]+>/g, '').trim() || "Join our team at Pan-African Agency Network (PAAN). Apply now to be part of our growing network of creative professionals across Africa."
+      : "Join our team at Pan-African Agency Network (PAAN). Apply now to be part of our growing network of creative professionals across Africa.",
+    identifier: {
+      "@type": "PropertyValue",
+      name: "PAAN Job ID",
+      value: job.id || job.slug
+    },
     hiringOrganization: {
       "@type": "Organization",
       name: "Pan-African Agency Network (PAAN)",
@@ -74,30 +79,38 @@ export function generateJobPostingSchema(job, countries) {
     url: `https://membership.paan.africa/jobs/${job.slug}`,
   };
 
-  // Add optional fields if they exist
+  // Add datePosted (required by Google Jobs)
+  let datePosted = null;
   if (job.created_at) {
-    const datePosted = parseDate(job.created_at);
-    if (datePosted) schema.datePosted = datePosted;
+    datePosted = parseDate(job.created_at);
   }
+  // If no created_at or parsing failed, use current date as fallback
+  if (!datePosted) {
+    datePosted = new Date().toISOString().split("T")[0];
+  }
+  schema.datePosted = datePosted;
 
+  // Add validThrough (expiration date)
   if (job.expires_on) {
     const validThrough = parseDate(job.expires_on_display || job.expires_on);
-    if (validThrough) schema.validThrough = validThrough;
+    if (validThrough) {
+      schema.validThrough = validThrough;
+    }
   }
 
-  if (job.employment_type) {
-    // Map employment types to Google Jobs format
-    const employmentTypeMap = {
-      FULL_TIME: "FULL_TIME",
-      PART_TIME: "PART_TIME",
-      CONTRACT: "CONTRACTOR",
-      TEMPORARY: "TEMPORARY",
-      INTERN: "INTERN",
-      VOLUNTEER: "VOLUNTEER",
-    };
-    schema.employmentType =
-      employmentTypeMap[job.employment_type] || "FULL_TIME";
-  }
+  // Add employment type (with fallback)
+  const employmentTypeMap = {
+    FULL_TIME: "FULL_TIME",
+    PART_TIME: "PART_TIME",
+    CONTRACT: "CONTRACTOR",
+    CONTRACTOR: "CONTRACTOR",
+    TEMPORARY: "TEMPORARY",
+    INTERN: "INTERN",
+    VOLUNTEER: "VOLUNTEER",
+  };
+  schema.employmentType = job.employment_type 
+    ? (employmentTypeMap[job.employment_type] || "FULL_TIME")
+    : "FULL_TIME";
 
   if (job.remote) {
     schema.jobLocation = "TELECOMMUTE";

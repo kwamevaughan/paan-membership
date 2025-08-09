@@ -166,6 +166,7 @@ export default function EditJobModal({
       remote: editJob.remote || false,
       department: editJob.department || null,
       slug: editJob.slug, // Ensure slug is preserved
+      updated_at: new Date().toISOString(),
     };
     console.log("Updated job data:", updatedJobData);
 

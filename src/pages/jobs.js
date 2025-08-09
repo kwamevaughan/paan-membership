@@ -2,16 +2,17 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabase";
 import Head from "next/head";
 import Link from "next/link";
-import toast from "react-hot-toast";
+
 import JobsHeader from "@/layouts/JobsHeader";
 import Footer from "@/layouts/footer";
 import { Icon } from "@iconify/react";
 import { generateJobPostingSchema } from "@/lib/jobPostingSchema";
+import { formatDateDDMMYYYY } from "@/utils/dateUtils";
 import fs from "fs/promises"; // For filesystem access in Node.js
 import path from "path"; // For resolving file paths
 
 export default function PublicJobListings({ mode, toggleMode, initialJobs, countries }) {
-    const [jobs, setJobs] = useState(initialJobs);
+    const [jobs] = useState(initialJobs);
     const [searchQuery, setSearchQuery] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
     const [locationFilter, setLocationFilter] = useState("");
@@ -24,14 +25,6 @@ export default function PublicJobListings({ mode, toggleMode, initialJobs, count
             position: index + 1,
             item: generateJobPostingSchema(job, countries),
         })),
-    };
-
-    const formatDate = (isoDateString) => {
-        const date = new Date(isoDateString);
-        const day = String(date.getDate()).padStart(2, "0");
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const year = date.getFullYear();
-        return `${day}/${month}/${year}`;
     };
 
     const filteredJobs = jobs.filter((job) => {
@@ -100,9 +93,6 @@ export default function PublicJobListings({ mode, toggleMode, initialJobs, count
         />
 
         <main className="flex-1 py-12 px-4 sm:px-6 lg:px-8">
-          <div className="absolute inset-0 z-10 pointer-events-none">
-            
-          </div>
           <div className="max-w-7xl mx-auto">
             <h1
               className={`text-3xl md:text-4xl font-bold mb-8 text-center ${
@@ -344,14 +334,6 @@ export default function PublicJobListings({ mode, toggleMode, initialJobs, count
 }
 
 export async function getServerSideProps() {
-    const formatDate = (isoDateString) => {
-        const date = new Date(isoDateString);
-        const day = String(date.getDate()).padStart(2, "0");
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const year = date.getFullYear();
-        return `${day}/${month}/${year}`;
-    };
-
     try {
         // Fetch jobs from Supabase
         const { data: jobsData, error: jobsError } = await supabase
@@ -377,7 +359,7 @@ export async function getServerSideProps() {
 
             return {
                 ...job,
-                expires_on: formatDate(job.expires_on),
+                expires_on: formatDateDDMMYYYY(job.expires_on),
                 is_expired: new Date(job.expires_on) < new Date(),
                 location: parsedLocation,
             };
@@ -386,7 +368,6 @@ export async function getServerSideProps() {
         return { props: { initialJobs: jobs, countries } };
     } catch (error) {
         console.error("Error fetching data:", error);
-        toast.error("Failed to load job openings");
         return { props: { initialJobs: [], countries: [] } };
     }
 }

@@ -57,9 +57,11 @@ export default function InterviewPage({
 
   // Initialize formData with server-side props
   useEffect(() => {
-    const normalizedJobType = job_type?.toLowerCase() === "agencies" 
-      ? "agency" 
-      : job_type?.toLowerCase() === "freelancers" || job_type?.toLowerCase() === "freelancer"
+    const normalizedJobType =
+      job_type?.toLowerCase() === "agencies"
+        ? "agency"
+        : job_type?.toLowerCase() === "freelancers" ||
+          job_type?.toLowerCase() === "freelancer"
         ? "freelancer"
         : "freelancer"; // Default to freelancer
 
@@ -69,7 +71,7 @@ export default function InterviewPage({
       opening: prev.opening || opening || "",
       opening_id: prev.opening_id || opening_id || "",
     }));
-    
+
     // Set page loading to false after initialization
     setIsPageLoading(false);
   }, [job_type, opening, opening_id, setFormData]);
@@ -118,13 +120,16 @@ export default function InterviewPage({
   }, []);
 
   // Add a function to update form data with current indices
-  const updateFormDataWithIndices = useCallback((categoryIndex, questionIndex) => {
-    setFormData(prev => ({
-      ...prev,
-      currentCategoryIndex: categoryIndex,
-      currentQuestionIndex: questionIndex
-    }));
-  }, [setFormData]);
+  const updateFormDataWithIndices = useCallback(
+    (categoryIndex, questionIndex) => {
+      setFormData((prev) => ({
+        ...prev,
+        currentCategoryIndex: categoryIndex,
+        currentQuestionIndex: questionIndex,
+      }));
+    },
+    [setFormData]
+  );
 
   useEffect(() => {
     try {
@@ -395,8 +400,15 @@ export default function InterviewPage({
       setFormData(sanitizedFormData);
       setTimeout(() => {
         setStep(savedProgress.step);
-        if (savedProgress.step === 2 && savedProgress.currentCategoryIndex !== undefined && savedProgress.currentQuestionIndex !== undefined) {
-          updateFormDataWithIndices(savedProgress.currentCategoryIndex, savedProgress.currentQuestionIndex);
+        if (
+          savedProgress.step === 2 &&
+          savedProgress.currentCategoryIndex !== undefined &&
+          savedProgress.currentQuestionIndex !== undefined
+        ) {
+          updateFormDataWithIndices(
+            savedProgress.currentCategoryIndex,
+            savedProgress.currentQuestionIndex
+          );
         }
         toast.success(`Resuming from step ${savedProgress.step}`, {
           icon: "🔄",
@@ -434,9 +446,13 @@ export default function InterviewPage({
         <Head>
           <title>Loading... | PAAN Application</title>
         </Head>
-        <div className={`min-h-screen flex items-center justify-center ${
-          mode === "dark" ? "bg-[#0f172a] text-white" : "bg-gray-200 text-gray-900"
-        }`}>
+        <div
+          className={`min-h-screen flex items-center justify-center ${
+            mode === "dark"
+              ? "bg-[#0f172a] text-white"
+              : "bg-gray-200 text-gray-900"
+          }`}
+        >
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-paan-yellow mx-auto mb-4"></div>
             <p className="text-lg font-medium">Loading application...</p>
@@ -677,7 +693,7 @@ export default function InterviewPage({
                       <AgencyInstructions mode={mode} />
                     )}
                   </div>
-                  
+
                   {/* Form Content */}
                   <div className="lg:col-span-2">
                     {formData.job_type === "freelancer" ? (
@@ -709,7 +725,7 @@ export default function InterviewPage({
                       formData={formData}
                     />
                   </div>
-                  
+
                   {/* Questions Form */}
                   <div className="lg:col-span-2">
                     <Step2Questions

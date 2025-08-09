@@ -1,32 +1,39 @@
-"use client";
-
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 
 const Footer = () => {
-  const currentYear = new Date().getFullYear();
+  // Use static year to avoid hydration mismatch
+  const currentYear = 2025;
   const [isHeaderFixed, setIsHeaderFixed] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+    
     const handleScrollEvent = () => {
-      if (window.scrollY > 50) {
+      if (typeof window !== "undefined" && window.scrollY > 50) {
         setIsHeaderFixed(true);
       } else {
         setIsHeaderFixed(false);
       }
     };
 
-    window.addEventListener("scroll", handleScrollEvent);
-    return () => window.removeEventListener("scroll", handleScrollEvent);
+    if (typeof window !== "undefined") {
+      window.addEventListener("scroll", handleScrollEvent);
+      return () => window.removeEventListener("scroll", handleScrollEvent);
+    }
   }, []);
 
   const handleScroll = (e, href) => {
+    if (typeof window === "undefined" || typeof document === "undefined") return;
+    
     e.preventDefault();
     const targetId = href.replace("#", "");
     const element = document.getElementById(targetId);
     if (element) {
-      const headerHeight = document.querySelector("nav").offsetHeight;
+      const nav = document.querySelector("nav");
+      const headerHeight = nav ? nav.offsetHeight : 0;
       const elementPosition =
         element.getBoundingClientRect().top + window.scrollY;
       window.scrollTo({
@@ -59,68 +66,70 @@ const Footer = () => {
 
         <div className="flex flex-col gap-8 mt-14 mb-14">
           <div>
-            <ul className="flex gap-2">
-              <li className="group pb-4 hover:translate-y-[-4px] transition-transform duration-300">
-                <Link
-                  href="https://www.facebook.com/panafricanagencynetwork"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Facebook"
-                >
-                  <Icon
-                    icon="ic:baseline-facebook"
-                    width="32"
-                    height="32"
-                    className="text-gray-400 group-hover:text-[#1877F2]"
-                  />
-                </Link>
-              </li>
-              <li className="group pb-4 hover:translate-y-[-4px] transition-transform duration-300">
-                <Link
-                  href="https://www.linkedin.com/company/pan-african-agency-network"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="LinkedIn"
-                >
-                  <Icon
-                    icon="mdi:linkedin"
-                    width="32"
-                    height="32"
-                    className="text-gray-400 group-hover:text-[#0077B5]"
-                  />
-                </Link>
-              </li>
-              <li className="group pb-4 hover:translate-y-[-4px] transition-transform duration-300">
-                <Link
-                  href="https://instagram.com/pan_african_agency_network"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Instagram"
-                >
-                  <Icon
-                    icon="mingcute:instagram-fill"
-                    width="32"
-                    height="32"
-                    className="text-gray-400 group-hover:text-[#E4405F]"
-                  />
-                </Link>
-              </li>
-              <li className="group pb-4 hover:translate-y-[-4px] transition-transform duration-300">
-                <Link
-                  href="https://x.com/paan_network"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="X"
-                >
-                  <Icon
-                    icon="iconoir:x"
-                    width="32"
-                    height="32"
-                    className="text-gray-400 group-hover:text-black"
-                  />
-                </Link>
-              </li>
-            </ul>
+            {mounted && (
+              <ul className="flex gap-2">
+                <li className="group pb-4 hover:translate-y-[-4px] transition-transform duration-300">
+                  <Link
+                    href="https://www.facebook.com/panafricanagencynetwork"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Facebook"
+                  >
+                    <Icon
+                      icon="ic:baseline-facebook"
+                      width="32"
+                      height="32"
+                      className="text-gray-400 group-hover:text-[#1877F2]"
+                    />
+                  </Link>
+                </li>
+                <li className="group pb-4 hover:translate-y-[-4px] transition-transform duration-300">
+                  <Link
+                    href="https://www.linkedin.com/company/pan-african-agency-network"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="LinkedIn"
+                  >
+                    <Icon
+                      icon="mdi:linkedin"
+                      width="32"
+                      height="32"
+                      className="text-gray-400 group-hover:text-[#0077B5]"
+                    />
+                  </Link>
+                </li>
+                <li className="group pb-4 hover:translate-y-[-4px] transition-transform duration-300">
+                  <Link
+                    href="https://instagram.com/pan_african_agency_network"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Instagram"
+                  >
+                    <Icon
+                      icon="mingcute:instagram-fill"
+                      width="32"
+                      height="32"
+                      className="text-gray-400 group-hover:text-[#E4405F]"
+                    />
+                  </Link>
+                </li>
+                <li className="group pb-4 hover:translate-y-[-4px] transition-transform duration-300">
+                  <Link
+                    href="https://x.com/paan_network"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="X"
+                  >
+                    <Icon
+                      icon="iconoir:x"
+                      width="32"
+                      height="32"
+                      className="text-gray-400 group-hover:text-black"
+                    />
+                  </Link>
+                </li>
+              </ul>
+            )}
           </div>
         </div>
           </div>

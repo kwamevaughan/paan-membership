@@ -101,3 +101,36 @@ export const formatDateDDMMYYYY = (dateString) => {
   
   return `${day}/${month}/${year}`;
 };
+
+/**
+ * Format date with time (from utils/dateUtils.js)
+ * @param {string|Date} dateString - The date to format
+ * @returns {string} Date formatted with time
+ */
+export const formatDate = (dateString) => {
+  if (!dateString) return "N/A";
+  
+  const options = {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  };
+  return new Date(dateString).toLocaleString("en-US", options);
+};
+
+/**
+ * Get days remaining until a date
+ * @param {string|Date} date - The target date
+ * @returns {number} Number of days remaining
+ */
+export const getDaysRemaining = (date) => {
+  if (!date) return 0;
+  
+  const today = new Date();
+  const eventDate = new Date(date);
+  const diffTime = eventDate - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return diffDays;
+};

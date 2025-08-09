@@ -12,6 +12,7 @@ import ApplicantsFilters from "@/components/ApplicantsFilters";
 import CandidateModal from "@/components/CandidateModal";
 import EmailModal from "@/components/EmailModal";
 import ExportModal from "@/components/ExportModal";
+import PreviewModal from "@/components/PreviewModal";
 import useStatusChange from "@/hooks/useStatusChange";
 import { Icon } from "@iconify/react";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
@@ -42,6 +43,8 @@ export default function HRApplicants({
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [candidateToDelete, setCandidateToDelete] = useState(null);
   const hasAppliedInitialSort = useRef(false);
+  const [previewUrl, setPreviewUrl] = useState(null);
+  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
 
   useAuthSession();
 
@@ -94,8 +97,15 @@ export default function HRApplicants({
   }, [router, candidates]);
 
   const handleViewCandidate = (candidate) => {
-    setSelectedCandidate(candidate);
-    setIsModalOpen(true);
+    // Close any open preview modal by resetting the candidate modal
+    setIsModalOpen(false);
+    setSelectedCandidate(null);
+    
+    // Small delay to ensure the previous modal is closed before opening the new one
+    setTimeout(() => {
+      setSelectedCandidate(candidate);
+      setIsModalOpen(true);
+    }, 100);
   };
 
   const handleCandidateUpdate = (updatedCandidate) => {
@@ -111,8 +121,42 @@ export default function HRApplicants({
   };
 
   const handleCloseModal = () => {
+    console.log("Closing candidate modal, preview state:", { isPreviewModalOpen, previewUrl });
     setIsModalOpen(false);
     setSelectedCandidate(null);
+  };
+
+  const handleDocumentPreview = (url) => {
+    if (!url) {
+      console.warn("No document URL provided");
+      return;
+    }
+
+    try {
+      const fileId = url.split("id=")[1]?.split("&")[0];
+      if (!fileId) {
+        console.warn("Invalid Google Drive URL format");
+        return;
+      }
+      const previewUrl = `https://drive.google.com/file/d/${fileId}/preview`;
+      setPreviewUrl(previewUrl);
+      setIsPreviewModalOpen(true);
+    } catch (error) {
+      console.error("Error processing document URL:", error);
+    }
+  };
+
+  const closePreviewModal = () => {
+    console.log("Closing preview modal, current state:", { isPreviewModalOpen, previewUrl });
+    setIsPreviewModalOpen(false);
+    setPreviewUrl(null);
+  };
+
+  const handleCloseAllModals = () => {
+    setIsModalOpen(false);
+    setSelectedCandidate(null);
+    setIsPreviewModalOpen(false);
+    setPreviewUrl(null);
   };
 
   const handleFilterChange = ({ searchQuery, filterOpening, filterStatus, filterTier }) => {
@@ -553,6 +597,7 @@ export default function HRApplicants({
       }`}
     >
       <Toaster />
+      
       <HRHeader
         toggleSidebar={toggleSidebar}
         isSidebarOpen={isSidebarOpen}
@@ -621,7 +666,10 @@ export default function HRApplicants({
         onStatusChange={handleStatusChange}
         onCandidateUpdate={handleCandidateUpdate}
         mode={mode}
-      />
+        onDocumentPreview={handleDocumentPreview}
+        onClosePreview={closePreviewModal}
+        onCloseAll={handleCloseAllModals}
+      />      
       <EmailModal
         candidate={selectedCandidate}
         isOpen={isEmailModalOpen}

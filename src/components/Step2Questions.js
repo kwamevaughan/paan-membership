@@ -628,7 +628,7 @@ export default function Step2Questions({
             </div>
             <div>
               <span
-                className={`text-2xl font-medium  ${mode === "dark" ? "text-paan-deep-blue" : "text-paan-deep-blue"} `}
+                className={`text-2xl font-medium  ${mode === "dark" ? "text-gray-200" : "text-paan-deep-blue"} `}
               >
                 {currentCategory?.name || "Category"}
               </span>
@@ -670,7 +670,7 @@ export default function Step2Questions({
           </div>
         )}
 
-        <div className="relative bottom-0 bg-white/90 dark:bg-gray-800/90 backdrop-blur-md p-6 border-t border-gray-200 dark:border-gray-700 mt-8">
+        <div className="relative bottom-0  backdrop-blur-md p-6 border-t border-gray-200 dark:border-gray-700 mt-8">
           <div className="flex justify-between items-center gap-4">
             <button
               onClick={handleBack}

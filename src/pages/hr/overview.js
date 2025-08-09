@@ -180,6 +180,7 @@ export default function HROverview({
   const handleCloseCandidateModal = () => {
     setIsCandidateModalOpen(false);
     setSelectedCandidate(null);
+    // Don't close the filter modal when closing candidate modal
   };
 
   const handleCloseFilterModal = () => {
@@ -329,6 +330,7 @@ export default function HROverview({
           setSelectedCandidate={setSelectedCandidate}
           setIsCandidateModalOpen={setIsCandidateModalOpen}
           mode={mode}
+          isCandidateModalOpen={isCandidateModalOpen}
         />
       )}
 

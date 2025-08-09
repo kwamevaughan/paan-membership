@@ -9,9 +9,10 @@ export default function CandidateModal({
   onStatusChange,
   onCandidateUpdate,
   mode,
+  onDocumentPreview,
+  onClosePreview,
+  onCloseAll,
 }) {
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isAnswersModalOpen, setIsAnswersModalOpen] = useState(false);
   const [questionAnswerPairs, setQuestionAnswerPairs] = useState([]);
   const [activeTab, setActiveTab] = useState("profile");
@@ -31,31 +32,27 @@ export default function CandidateModal({
     }
   }, [candidate]);
 
+  // Handle escape key press
+  useEffect(() => {
+    const handleEscapeKey = (event) => {
+      if (event.key === "Escape" && isOpen) {
+        event.stopPropagation(); // Prevent event from bubbling up
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("keydown", handleEscapeKey);
+      return () => document.removeEventListener("keydown", handleEscapeKey);
+    }
+  }, [isOpen, onClose]);
+
   if (!isOpen || !candidate) return null;
 
   const handleDocumentPreview = (url) => {
-    if (!url) {
-      console.warn("No document URL provided");
-      return;
+    if (onDocumentPreview) {
+      onDocumentPreview(url);
     }
-
-    try {
-      const fileId = url.split("id=")[1]?.split("&")[0];
-      if (!fileId) {
-        console.warn("Invalid Google Drive URL format");
-        return;
-      }
-      const previewUrl = `https://drive.google.com/file/d/${fileId}/preview`;
-      setPreviewUrl(previewUrl);
-      setIsPreviewModalOpen(true);
-    } catch (error) {
-      console.error("Error processing document URL:", error);
-    }
-  };
-
-  const closePreviewModal = () => {
-    setIsPreviewModalOpen(false);
-    setPreviewUrl(null);
   };
 
   const openAnswersModal = () => setIsAnswersModalOpen(true);
@@ -268,10 +265,13 @@ export default function CandidateModal({
           },
         ]
       : []),
-  ].filter((doc) => doc.url);
+  ].filter(
+    (doc) =>
+      doc.url && doc.url !== "null" && doc.url !== null && doc.url.trim() !== ""
+  );
 
   return (
-    <div className="fixed inset-0 z-[50] overflow-y-auto">
+    <div className="fixed inset-0 overflow-y-auto" style={{ zIndex: 999999 }}>
       {/* Enhanced Glassmorphic Background */}
       <div
         className={`fixed inset-0 transition-all duration-500 backdrop-blur-sm
@@ -280,7 +280,12 @@ export default function CandidateModal({
               ? "bg-gradient-to-br from-slate-900/20 via-blue-900/10 to-blue-900/20"
               : "bg-gradient-to-br from-white/20 via-blue-50/30 to-blue-50/20"
           }`}
-        onClick={onClose}
+        onClick={(e) => {
+          // Only close if clicking directly on the background, not on child elements
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        }}
         style={{
           backgroundImage: `
             radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
@@ -460,7 +465,9 @@ export default function CandidateModal({
                         },
                         {
                           label: "Country",
-                          value: candidate.countryOfResidence,
+                          value: isAgencyCandidate
+                            ? candidate.headquartersLocation
+                            : candidate.countryOfResidence,
                           icon: "mdi:earth",
                         },
                         {
@@ -849,109 +856,6 @@ export default function CandidateModal({
           />
         </div>
       </div>
-
-      {/* Document Preview Modal */}
-      {isPreviewModalOpen && (
-        <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-70 backdrop-blur-sm">
-          <div
-            className={`rounded-xl shadow-2xl w-full max-w-5xl mx-4 flex flex-col max-h-[90vh] ${
-              mode === "dark"
-                ? "bg-gray-900/40 text-white border border-white/10"
-                : "bg-white/30 text-gray-900 border border-white/20"
-            } backdrop-blur-lg`}
-            style={{
-              backdropFilter: "blur(12px) saturate(180%)",
-              WebkitBackdropFilter: "blur(12px) saturate(180%)",
-              background:
-                mode === "dark"
-                  ? "linear-gradient(135deg, rgba(15, 23, 42, 0.4) 0%, rgba(30, 41, 59, 0.3) 100%)"
-                  : "linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 1) 100%)",
-            }}
-          >
-            <div
-              className="relative px-8 py-4 overflow-hidden"
-              style={{
-                backdropFilter: "blur(8px)",
-              }}
-            >
-              <div className="absolute inset-0 opacity-30">
-                <div className="absolute top-0 left-0 w-32 h-32 bg-white/10 rounded-full blur-xl transform -translate-x-16 -translate-y-16"></div>
-                <div className="absolute bottom-0 right-0 w-24 h-24 bg-white/10 rounded-full blur-lg transform translate-x-12 translate-y-12"></div>
-              </div>
-
-              <div className="relative flex items-center justify-between">
-                <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                  <Icon icon="mdi:file-document" className="w-6 h-6" />
-                  Document Preview
-                </h2>
-                <button
-                  onClick={closePreviewModal}
-                  className="group p-3 rounded-2xl transition-all duration-300 hover:bg-white/20 hover:scale-110 active:scale-95"
-                  style={{
-                    backdropFilter: "blur(4px)",
-                    background: "rgba(255, 255, 255, 0.1)",
-                  }}
-                >
-                  <Icon
-                    icon="heroicons:x-mark"
-                    className="h-6 w-6 text-white transition-transform duration-300 group-hover:rotate-90"
-                  />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex-1 p-0 overflow-hidden">
-              <iframe
-                src={previewUrl}
-                width="100%"
-                height="100%"
-                className="border-0 min-h-[70vh]"
-                title="Document Preview"
-                allow="autoplay"
-              />
-            </div>
-
-            <div
-              className={`p-4 border-t ${
-                mode === "dark" ? "border-gray-700/50" : "border-gray-200/50"
-              } ${
-                mode === "dark" ? "bg-gray-800/60" : "bg-gray-50/60"
-              } backdrop-blur-sm`}
-            >
-              <div className="flex justify-end">
-                <button
-                  onClick={closePreviewModal}
-                  className="px-6 py-2 bg-blue-400 text-white rounded-lg hover:bg-sky-600 transition-all duration-200 flex items-center gap-2 font-medium shadow-md hover:shadow-lg backdrop-blur-sm"
-                >
-                  <Icon icon="mdi:close" width={20} height={20} />
-                  Close Preview
-                </button>
-              </div>
-            </div>
-
-            {/* Subtle Border Enhancement */}
-            <div
-              className="absolute inset-0 rounded-xl pointer-events-none"
-              style={{
-                background: `
-                  linear-gradient(135deg, 
-                    rgba(255, 255, 255, 0.2) 0%, 
-                    transparent 20%, 
-                    transparent 80%, 
-                    rgba(255, 255, 255, 0.1) 100%
-                  )
-                `,
-                mask: "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-                WebkitMask:
-                  "linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)",
-                maskComposite: "xor",
-                WebkitMaskComposite: "xor",
-                padding: "1px",
-              }}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }

@@ -549,7 +549,7 @@ const handleColumnResize = (e, columnKey) => {
                   isDark
                     ? "bg-gray-800/80 text-white border-gray-600/60 backdrop-blur-md"
                     : "bg-white/80 text-gray-800 border-gray-300/60 backdrop-blur-md"
-                } focus:ring-2 focus:ring-[#f05d23]/50 transition-all duration-200 shadow-sm hover:shadow-md`}
+                } focus:ring-2 focus:ring-paan-blue/50 transition-all duration-200 shadow-sm hover:shadow-md`}
               >
                 {[5, 10, 25, 50].map((value) => (
                   <option key={value} value={value}>
@@ -622,7 +622,7 @@ const handleColumnResize = (e, columnKey) => {
                     isDark
                       ? "bg-gray-800/80 text-white border-gray-600/60 backdrop-blur-md"
                       : "bg-white/80 text-gray-800 border-gray-300/60 backdrop-blur-md"
-                  } focus:ring-2 focus:ring-[#f05d23]/50 transition-all duration-200 shadow-sm`}
+                  } focus:ring-2 focus:ring-paan-blue/50 transition-all duration-200 shadow-sm`}
                 />
                 <span className="text-sm font-medium">of {totalPages}</span>
               </div>

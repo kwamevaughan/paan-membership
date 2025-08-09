@@ -186,6 +186,9 @@ export default function HRJobBoard({
       }`}
     >
       <Toaster />
+      
+      
+      
       <HRHeader
         toggleSidebar={toggleSidebar}
         isSidebarOpen={isSidebarOpen}
@@ -287,12 +290,6 @@ export default function HRJobBoard({
         onSave={handleEditSave}
         mode={mode}
         onPreview={handlePreview}
-      />
-      <PreviewModal
-        isOpen={isPreviewModalOpen}
-        url={previewUrl}
-        onClose={handleClosePreviewModal}
-        mode={mode}
       />
       <NotifyEmailGroupModal
         isOpen={isNotifyModalOpen}

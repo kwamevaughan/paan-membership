@@ -59,7 +59,7 @@ export default function JobDescriptionModal({ isOpen, onClose, onProceed, select
         <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50">
             <div className="bg-white rounded-xl max-w-3xl w-full mx-4 shadow-2xl transform transition-all duration-300 animate-fade-in flex flex-col max-h-[90vh]">
                 {/* Header */}
-                <div className="bg-gradient-to-r from-[#f05d23] to-[#d94f1e] rounded-t-xl p-4 flex items-center">
+                <div className="bg-paan-blue rounded-t-xl p-4 flex items-center">
                     <Icon icon="mdi:briefcase" className="w-8 h-8 text-white mr-3" />
                     <h2 className="text-2xl font-bold text-white">{title}</h2>
                 </div>
@@ -145,7 +145,7 @@ export default function JobDescriptionModal({ isOpen, onClose, onProceed, select
                         </button>
                         <button
                             onClick={onProceed}
-                            className="px-6 py-2 bg-[#f05d23] text-white rounded-full hover:bg-[#d94f1e] transition duration-200 flex items-center gap-2 shadow-md"
+                            className="px-6 py-2 bg-paan-blue text-white rounded-full hover:bg-paan-blue-dark transition duration-200 flex items-center gap-2 shadow-md"
                         >
                             Proceed
                             <Icon icon="mdi:arrow-right" width={20} height={20} />

@@ -375,30 +375,60 @@ export default function QuestionCard({
   return (
     <div
       className={`rounded-xl py-4 transition-all duration-300 backdrop-blur-sm ${
-        mode === "dark" ? "bg-gradient-to-br from-gray-800/90 to-gray-900/90" : "bg-gradient-to-br from-white to-gray-50"
+        mode === "dark"
+          ? "bg-gradient-to-br from-gray-800/90 to-gray-900/90"
+          : "bg-gradient-to-br from-white to-gray-50"
       } ${!isComplete ? "border-red-500" : ""}`}
     >
       <div className="mb-6">
         <div className="flex items-start gap-4 mb-4">
-          <div className={`p-3 rounded-xl ${mode === "dark" ? "bg-paan-blue/10" : "bg-paan-blue/10"} backdrop-blur-sm`}>
+          <div
+            className={`p-3 rounded-xl ${
+              mode === "dark" ? "bg-paan-blue/10" : "bg-paan-blue/10"
+            } backdrop-blur-sm`}
+          >
             <Icon
               icon="mdi:question-mark-circle"
-              className={`w-7 h-7 ${mode === "dark" ? "text-paan-blue" : "text-paan-blue"}`}
+              className={`w-7 h-7 ${
+                mode === "dark" ? "text-paan-blue" : "text-paan-blue"
+              }`}
             />
           </div>
           <div className="flex-1">
-            <span
-              className={`text-xl font-normal leading-relaxed bg-gradient-to-r ${mode === "dark" ? "from-gray-100 to-gray-300" : "from-gray-900 to-gray-700"} bg-clip-text text-transparent`}
-              dangerouslySetInnerHTML={{ __html: q.text }}
-            />
-            {q.description && (
-              <div
-                className={`mt-2 text-base leading-relaxed ${
-                  mode === "dark" ? "text-gray-400" : "text-gray-600"
-                }`}
-                dangerouslySetInnerHTML={{ __html: q.description }}
-              />
-            )}
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <span
+                  className={`text-xl font-normal leading-relaxed bg-gradient-to-r ${
+                    mode === "dark"
+                      ? "from-gray-100 to-gray-300"
+                      : "from-gray-900 to-gray-700"
+                  } bg-clip-text text-transparent`}
+                  dangerouslySetInnerHTML={{ __html: q.text }}
+                />
+                {q.description && (
+                  <div
+                    className={`mt-2 text-base leading-relaxed ${
+                      mode === "dark" ? "text-gray-400" : "text-gray-600"
+                    }`}
+                    dangerouslySetInnerHTML={{ __html: q.description }}
+                  />
+                )}
+              </div>
+              {q.skippable && (
+                <button
+                  onClick={() => handleSkip(q.id)}
+                  className={`ml-4 px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2 ${
+                    mode === "dark"
+                      ? "bg-gray-700/50 text-gray-300 hover:bg-gray-600/60 hover:text-white border border-gray-600/50"
+                      : "bg-paan-blue/60 text-paan-dark-blue hover:bg-gray-200/90 hover:text-gray-800 border border-gray-200/60"
+                  } backdrop-blur-sm shadow-sm hover:shadow-md`}
+                  aria-label="Skip question"
+                >
+                  <Icon icon="mdi:skip-next" width={16} />
+                  Skip
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -434,8 +464,8 @@ export default function QuestionCard({
                 }),
                 menuList: (provided) => ({
                   ...provided,
-                  maxHeight: "400px"
-                })
+                  maxHeight: "400px",
+                }),
               }}
               classNamePrefix="react-select"
               aria-label="Select geographic markets served"
@@ -443,7 +473,11 @@ export default function QuestionCard({
           </div>
           {selectedCountries.length > 0 ? (
             <div
-              className={`text-sm mt-2 p-3 rounded-lg bg-gradient-to-r ${mode === "dark" ? "from-gray-700/50 to-gray-800/50" : "from-gray-50 to-gray-100"} backdrop-blur-sm`}
+              className={`text-sm mt-2 p-3 rounded-lg bg-gradient-to-r ${
+                mode === "dark"
+                  ? "from-gray-700/50 to-gray-800/50"
+                  : "from-gray-50 to-gray-100"
+              } backdrop-blur-sm`}
               aria-live="polite"
             >
               <span className="font-medium">Selected Countries: </span>
@@ -451,7 +485,11 @@ export default function QuestionCard({
             </div>
           ) : (
             <div
-              className={`text-sm mt-2 p-3 rounded-lg bg-gradient-to-r ${mode === "dark" ? "from-gray-700/50 to-gray-800/50" : "from-gray-50 to-gray-100"} backdrop-blur-sm`}
+              className={`text-sm mt-2 p-3 rounded-lg bg-gradient-to-r ${
+                mode === "dark"
+                  ? "from-gray-700/50 to-gray-800/50"
+                  : "from-gray-50 to-gray-100"
+              } backdrop-blur-sm`}
               aria-live="polite"
             >
               No countries selected.
@@ -463,7 +501,11 @@ export default function QuestionCard({
           <div className="space-y-6">
             <div className="flex flex-col gap-4 p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-gray-50/50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-900/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
               <div className="flex items-center justify-between">
-                <h4 className={`text-sm font-medium ${mode === "dark" ? "text-gray-300" : "text-[#231812]"}`}>
+                <h4
+                  className={`text-sm font-medium ${
+                    mode === "dark" ? "text-gray-300" : "text-[#231812]"
+                  }`}
+                >
                   Reference {1}
                 </h4>
                 {dynamicAnswers[q.id]?.length > 1 && (
@@ -488,7 +530,10 @@ export default function QuestionCard({
                   </label>
                   <input
                     type={field.type}
-                    value={dynamicAnswers[q.id]?.[0]?.[field.name.toLowerCase()] || ""}
+                    value={
+                      dynamicAnswers[q.id]?.[0]?.[field.name.toLowerCase()] ||
+                      ""
+                    }
                     onChange={(e) =>
                       handleStructuredInputChange(
                         q.id,
@@ -500,7 +545,9 @@ export default function QuestionCard({
                     className={`${inputStyles} focus:ring-2 focus:ring-paan-blue focus:border-transparent transition-all duration-300`}
                     placeholder={`Enter ${field.name}`}
                     id={`q-${q.id}-0-${field.name.toLowerCase()}`}
-                    aria-labelledby={`q-${q.id}-0-${field.name.toLowerCase()}-label`}
+                    aria-labelledby={`q-${
+                      q.id
+                    }-0-${field.name.toLowerCase()}-label`}
                   />
                 </div>
               ))}
@@ -511,9 +558,16 @@ export default function QuestionCard({
                 {(dynamicAnswers[q.id] || [{}])
                   .slice(1, q.max_answers || 1)
                   .map((ans, idx) => (
-                    <div key={idx + 1} className="flex flex-col gap-4 p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-gray-50/50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-900/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
+                    <div
+                      key={idx + 1}
+                      className="flex flex-col gap-4 p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-gray-50/50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-900/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300"
+                    >
                       <div className="flex items-center justify-between">
-                        <h4 className={`text-sm font-medium ${mode === "dark" ? "text-gray-300" : "text-[#231812]"}`}>
+                        <h4
+                          className={`text-sm font-medium ${
+                            mode === "dark" ? "text-gray-300" : "text-[#231812]"
+                          }`}
+                        >
                           Reference {idx + 2}
                         </h4>
                         <button
@@ -527,9 +581,13 @@ export default function QuestionCard({
                       {q.structured_answers.fields.map((field) => (
                         <div key={field.name} className="flex flex-col gap-2">
                           <label
-                            htmlFor={`q-${q.id}-${idx + 1}-${field.name.toLowerCase()}`}
+                            htmlFor={`q-${q.id}-${
+                              idx + 1
+                            }-${field.name.toLowerCase()}`}
                             className={`text-sm font-medium ${
-                              mode === "dark" ? "text-gray-300" : "text-[#231812]"
+                              mode === "dark"
+                                ? "text-gray-300"
+                                : "text-[#231812]"
                             }`}
                           >
                             {field.name}
@@ -547,8 +605,12 @@ export default function QuestionCard({
                             }
                             className={`${inputStyles} focus:ring-2 focus:ring-paan-blue focus:border-transparent transition-all duration-300`}
                             placeholder={`Enter ${field.name}`}
-                            id={`q-${q.id}-${idx + 1}-${field.name.toLowerCase()}`}
-                            aria-labelledby={`q-${q.id}-${idx + 1}-${field.name.toLowerCase()}-label`}
+                            id={`q-${q.id}-${
+                              idx + 1
+                            }-${field.name.toLowerCase()}`}
+                            aria-labelledby={`q-${q.id}-${
+                              idx + 1
+                            }-${field.name.toLowerCase()}-label`}
                           />
                         </div>
                       ))}
@@ -607,7 +669,10 @@ export default function QuestionCard({
           <div className="space-y-6">
             {(dynamicAnswers[q.id] || [{ text: "", link: "" }]).map(
               (ans, idx) => (
-                <div key={idx} className="flex flex-col gap-4 p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-gray-50/50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-900/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
+                <div
+                  key={idx}
+                  className="flex flex-col gap-4 p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-gray-50/50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-900/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300"
+                >
                   <label
                     id={`q-${q.id}-label-${idx}`}
                     className={`text-sm font-medium ${
@@ -755,7 +820,10 @@ export default function QuestionCard({
           {selectedTextInputOption && (
             <div className="mt-6 space-y-4">
               {(dynamicAnswers[q.id] || [{ text: "" }]).map((ans, idx) => (
-                <div key={idx} className="flex flex-col gap-3 p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-gray-50/50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-900/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300">
+                <div
+                  key={idx}
+                  className="flex flex-col gap-3 p-6 rounded-xl border border-gray-200 dark:border-gray-700 bg-gradient-to-br from-gray-50/50 to-gray-100/50 dark:from-gray-800/50 dark:to-gray-900/50 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300"
+                >
                   <label
                     id={`q-${q.id}-text-input-${idx}`}
                     className={`text-sm font-medium ${
@@ -808,17 +876,6 @@ export default function QuestionCard({
             </div>
           )}
         </>
-      )}
-
-      {q.skippable && (
-        <button
-          onClick={() => handleSkip(q.id)}
-          className="mt-6 text-paan-blue hover:text-paan-blue font-semibold flex items-center gap-2 transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98]"
-          aria-label="Skip question"
-        >
-          <Icon icon="mdi:skip-next" width={20} />
-          Skip
-        </button>
       )}
     </div>
   );

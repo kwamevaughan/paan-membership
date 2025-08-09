@@ -9,6 +9,7 @@ export default function ChartFilterModal({
   setSelectedCandidate,
   setIsCandidateModalOpen,
   mode = "light",
+  isCandidateModalOpen = false,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredCandidates, setFilteredCandidates] = useState(candidates);
@@ -18,6 +19,11 @@ export default function ChartFilterModal({
 
   // Track if a candidate modal is open to prevent closing this modal
   const [isViewingCandidate, setIsViewingCandidate] = useState(false);
+
+  // Update local state when prop changes
+  useEffect(() => {
+    setIsViewingCandidate(isCandidateModalOpen);
+  }, [isCandidateModalOpen]);
 
   // Filter candidates based on search term
   useEffect(() => {
@@ -57,6 +63,12 @@ export default function ChartFilterModal({
         return;
       }
 
+      // Check if click is on a candidate modal (higher z-index)
+      if (event.target.closest('[style*="z-index: 999999"]') || 
+          event.target.closest('[style*="zIndex: 999999"]')) {
+        return;
+      }
+
       // Delay closing to avoid immediate closure on mount
       if (isInitialMount.current) {
         isInitialMount.current = false;
@@ -80,6 +92,7 @@ export default function ChartFilterModal({
   useEffect(() => {
     const handleEscapeKey = (event) => {
       if (event.key === "Escape" && !isViewingCandidate) {
+        event.stopPropagation(); // Prevent event from bubbling up
         onClose();
       }
     };
@@ -94,9 +107,10 @@ export default function ChartFilterModal({
     const observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         if (mutation.type === "childList") {
-          // Check if a candidate modal with z-[60] exists in the DOM
-          const candidateModalExists =
-            document.querySelector(".z-\\[60\\]") !== null;
+          // Check if a candidate modal with high z-index exists in the DOM
+          const candidateModalExists = 
+            document.querySelector('[style*="z-index: 999999"]') !== null ||
+            document.querySelector('[style*="zIndex: 999999"]') !== null;
           setIsViewingCandidate(candidateModalExists);
         }
       }
@@ -139,6 +153,12 @@ export default function ChartFilterModal({
       aria-modal="true"
       role="dialog"
       aria-labelledby="modal-title"
+      onClick={(e) => {
+        // Only close if clicking directly on the background and not viewing a candidate
+        if (e.target === e.currentTarget && !isViewingCandidate) {
+          onClose();
+        }
+      }}
     >
       <div
         ref={modalRef}
@@ -146,7 +166,7 @@ export default function ChartFilterModal({
           isDark ? "bg-gray-800 text-white" : "bg-white text-gray-800"
         }`}
       >
-        <div className="bg-gradient-to-r from-[#f05d23] to-[#d94f1e] rounded-t-xl p-5 flex items-center justify-between">
+        <div className="bg-paan-blue rounded-t-xl p-5 flex items-center justify-between">
           <h2
             id="modal-title"
             className="text-2xl font-bold text-white flex items-center"
@@ -194,7 +214,7 @@ export default function ChartFilterModal({
                 isDark
                   ? "bg-gray-700 text-white placeholder-gray-400 border-gray-600"
                   : "bg-gray-100 text-gray-800 placeholder-gray-500 border-gray-300"
-              } border focus:outline-none focus:ring-2 focus:ring-[#f05d23]`}
+              } border focus:outline-none focus:ring-2 focus:ring-paan-blue`}
               aria-label="Search candidates"
             />
             {searchTerm && (
@@ -247,7 +267,7 @@ export default function ChartFilterModal({
                   </div>
                   <button
                     onClick={() => handleViewClick(candidate)}
-                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#f05d23] text-white hover:bg-[#d94f1e] transition duration-200 shadow-md"
+                    className="flex items-center gap-2 px-4 py-2 rounded-full bg-paan-blue text-white hover:bg-paan-blue-dark transition duration-200 shadow-md"
                     aria-label={`View details for ${
                       candidate.primaryContactName || "candidate"
                     }`}

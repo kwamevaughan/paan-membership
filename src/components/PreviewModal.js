@@ -26,7 +26,7 @@ export default function PreviewModal({ isOpen, url, onClose, mode }) {
     }
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-[100]">
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center" style={{ zIndex: 99999 }}>
             <div className="absolute inset-0" onClick={handleClose} />
             <div
                 className={`relative rounded-xl shadow-2xl w-full max-w-4xl mx-4 flex flex-col max-h-[90vh] ${
@@ -34,7 +34,7 @@ export default function PreviewModal({ isOpen, url, onClose, mode }) {
                 }`}
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="bg-gradient-to-r from-[#f05d23] to-[#d94f1e] rounded-t-xl p-4 flex items-center justify-between">
+                <div className="bg-paan-blue rounded-t-xl p-4 flex items-center justify-between">
                     <h2 className="text-2xl font-bold text-white">File Preview</h2>
                     <button
                         onClick={handleClose}

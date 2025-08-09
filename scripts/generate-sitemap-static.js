@@ -5,7 +5,7 @@ const path = require("path");
 const staticUrls = [
   { loc: "https://membership.paan.africa/", priority: "1.0" },
   { loc: "https://membership.paan.africa/interview", priority: "0.7" },
-  { loc: "https://membership.paan.africa/job-board", priority: "0.7" },
+  { loc: "https://membership.paan.africa/jobs", priority: "0.7" },
 ];
 
 const lastmod = new Date().toISOString();

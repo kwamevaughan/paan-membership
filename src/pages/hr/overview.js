@@ -177,10 +177,33 @@ export default function HROverview({
     }
   };
 
+  const handleViewCandidate = async (candidate) => {
+    try {
+      // Fetch full candidate data including answers and questions using existing fetchHRData
+      const response = await fetch(`/api/candidate-details?id=${candidate.id}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch candidate details');
+      }
+      
+      const data = await response.json();
+      setSelectedCandidate(data.candidate);
+      setIsCandidateModalOpen(true);
+    } catch (error) {
+      console.error('Error fetching candidate details:', error);
+      toast.error('Failed to load candidate details');
+      
+      // Fallback: use the basic candidate data
+      setSelectedCandidate(candidate);
+      setIsCandidateModalOpen(true);
+    }
+  };
+
   const handleCloseCandidateModal = () => {
     setIsCandidateModalOpen(false);
-    setSelectedCandidate(null);
-    // Don't close the filter modal when closing candidate modal
+    // Small delay to ensure modal is closed before clearing candidate
+    setTimeout(() => {
+      setSelectedCandidate(null);
+    }, 100);
   };
 
   const handleCloseFilterModal = () => {
@@ -266,7 +289,7 @@ export default function HROverview({
               <div className="md:col-span-1">
                 <CandidateList
                   candidates={candidates}
-                  setSelectedCandidate={setSelectedCandidate}
+                  setSelectedCandidate={handleViewCandidate}
                   setIsModalOpen={setIsCandidateModalOpen}
                   mode={mode}
                 />
@@ -294,7 +317,7 @@ export default function HROverview({
               <div className="md:col-span-2">
                 <RecentActivities
                   candidates={candidates}
-                  setSelectedCandidate={setSelectedCandidate}
+                  setSelectedCandidate={handleViewCandidate}
                   setIsModalOpen={setIsCandidateModalOpen}
                   mode={mode}
                 />
@@ -327,7 +350,7 @@ export default function HROverview({
           type={filterType}
           value={filterValue}
           onClose={handleCloseFilterModal}
-          setSelectedCandidate={setSelectedCandidate}
+          setSelectedCandidate={handleViewCandidate}
           setIsCandidateModalOpen={setIsCandidateModalOpen}
           mode={mode}
           isCandidateModalOpen={isCandidateModalOpen}

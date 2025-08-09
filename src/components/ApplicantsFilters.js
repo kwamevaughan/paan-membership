@@ -27,7 +27,7 @@ export default function ApplicantsFilters({
     "Shortlisted",
     "Rejected",
   ];
-  
+
   // Sorting options
   const sortOptions = [
     { value: "latest", label: "Latest Applications" },
@@ -62,19 +62,21 @@ export default function ApplicantsFilters({
       typeof c.primaryContactEmail === "string"
   );
 
-  const handleFilter = useCallback((
-    statusOverride = filterStatus,
-    openingOverride = filterOpening,
-    tierOverride = filterTier
-  ) => {
-    
-    onFilterChange({
-      searchQuery,
-      filterOpening: openingOverride,
-      filterStatus: statusOverride,
-      filterTier: tierOverride,
-    });
-  }, [searchQuery, filterStatus, filterOpening, filterTier, onFilterChange]);
+  const handleFilter = useCallback(
+    (
+      statusOverride = filterStatus,
+      openingOverride = filterOpening,
+      tierOverride = filterTier
+    ) => {
+      onFilterChange({
+        searchQuery,
+        filterOpening: openingOverride,
+        filterStatus: statusOverride,
+        filterTier: tierOverride,
+      });
+    },
+    [searchQuery, filterStatus, filterOpening, filterTier, onFilterChange]
+  );
 
   // Apply initial filter when component loads
   useEffect(() => {
@@ -95,7 +97,7 @@ export default function ApplicantsFilters({
       setFilterStatus(savedStatus);
       setFilterTier(savedTier);
       setSortBy(savedSort);
-      
+
       // Don't call onSortChange during initial load - let parent handle initial sort
       // if (onSortChange) {
       //   onSortChange(savedSort);
@@ -128,7 +130,14 @@ export default function ApplicantsFilters({
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [searchQuery, filterOpening, filterStatus, filterTier, areCandidatesValid, candidates]);
+  }, [
+    searchQuery,
+    filterOpening,
+    filterStatus,
+    filterTier,
+    areCandidatesValid,
+    candidates,
+  ]);
 
   const handleStatusChange = (e) => {
     const newStatus = e.target.value;

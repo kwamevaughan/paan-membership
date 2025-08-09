@@ -106,6 +106,68 @@ export async function withAuth(req, res, options = {}) {
   }
 }
 
+// Lightweight fetch function for overview page (no heavy answers/questions data)
+async function fetchOverviewData(supabaseServer) {
+  // Fetch candidates with responses data using proper join (minimal fields only)
+  const { data: candidatesData, error: candidatesError } = await supabaseServer
+    .from("candidates")
+    .select(`
+      id, 
+      primaryContactName, 
+      primaryContactEmail,
+      opening,
+      opening_id,
+      agencyName,
+      selected_tier,
+      job_type,
+      countryOfResidence,
+      created_at,
+      responses:responses!user_id(
+        submitted_at,
+        status,
+        country,
+        device
+      )
+    `)
+    .order("created_at", { ascending: false });
+
+  if (candidatesError) throw candidatesError;
+
+  // Transform the data to flatten the responses
+  const transformedCandidates = candidatesData?.map(candidate => {
+    // Get the first response (there should only be one per candidate)
+    const response = Array.isArray(candidate.responses) ? candidate.responses[0] : candidate.responses;
+    
+    const { responses, ...candidateWithoutResponses } = candidate;
+    
+    return {
+      ...candidateWithoutResponses,
+      // Flatten response data to candidate level for easier access
+      submitted_at: response?.submitted_at || candidate.created_at,
+      status: response?.status || "Pending",
+      country: response?.country || candidate.countryOfResidence,
+      device: response?.device || null,
+    };
+  }) || [];
+
+  // Extract unique job openings from candidates (same as original fetchHRData)
+  const jobOpenings = [
+    ...new Set(
+      transformedCandidates.map((c) => {
+        const opening = c.opening || "";
+        return opening.replace(/\s+/g, " ").trim();
+      })
+    ),
+  ]
+    .filter(Boolean) // Remove null/undefined/empty strings
+    .sort((a, b) => a.localeCompare(b)); // Sort alphabetically
+
+  return {
+    candidates: transformedCandidates,
+    jobOpenings: jobOpenings,
+  };
+}
+
 export async function getHROverviewProps({ req, res }) {
   console.log("[getHROverviewProps] Starting at", new Date().toISOString());
 
@@ -115,18 +177,14 @@ export async function getHROverviewProps({ req, res }) {
 
     const { supabaseServer, hrUser } = authResult;
 
-    console.time("fetchHRData");
-    const data = await fetchHRData({
-      supabaseClient: supabaseServer,
-      fetchCandidates: true,
-      fetchQuestions: true,
-    });
-    console.timeEnd("fetchHRData");
+    console.time("fetchOverviewData");
+    const data = await fetchOverviewData(supabaseServer);
+    console.timeEnd("fetchOverviewData");
 
     return createProps({
-      initialCandidates: data.initialCandidates || [],
-      initialJobOpenings: data.initialJobOpenings || [],
-      initialQuestions: data.initialQuestions || [],
+      initialCandidates: data.candidates,
+      initialJobOpenings: data.jobOpenings,
+      initialQuestions: [], // Overview doesn't need questions data
       userName: hrUser.name,
     });
   } catch (error) {

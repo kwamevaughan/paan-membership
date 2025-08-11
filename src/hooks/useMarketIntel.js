@@ -11,21 +11,15 @@ export function useMarketIntel(candidatesMap = {}) {
     title: "",
     description: "",
     tier_restriction: "Associate Member",
-    url: "",
-    icon_url: "",
-    region: "Global",
     type: "Report",
-    downloadable: false,
-    chart_data: "",
+    file: null,
     file_path: "",
   });
   const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState("newest");
   const [filters, setFilters] = useState({
     tier: "All",
-    region: "All",
     type: "All",
-    downloadable: "All",
     search: "",
   });
 
@@ -133,17 +127,14 @@ export function useMarketIntel(candidatesMap = {}) {
 
     const filtered = marketIntel.filter(intel => {
       const matchesTier = filters.tier === "All" || intel.tier_restriction === filters.tier;
-      const matchesRegion = filters.region === "All" || intel.region === filters.region;
       const matchesType = filters.type === "All" || intel.type === filters.type;
-      const matchesDownloadable = filters.downloadable === "All" || 
-        (filters.downloadable === "Yes" ? intel.downloadable : !intel.downloadable);
       
       const searchTerm = filters.search.toLowerCase();
       const matchesSearch = !searchTerm || 
         intel.title.toLowerCase().includes(searchTerm) ||
         intel.description.toLowerCase().includes(searchTerm);
 
-      return matchesTier && matchesRegion && matchesType && matchesDownloadable && matchesSearch;
+      return matchesTier && matchesType && matchesSearch;
     });
 
     console.log('[useMarketIntel] Filtered data:', {
@@ -170,6 +161,18 @@ export function useMarketIntel(candidatesMap = {}) {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const resetForm = () => {
+    setFormData({
+      id: null,
+      title: "",
+      description: "",
+      tier_restriction: "Associate Member",
+      type: "Report",
+      file: null,
+      file_path: "",
+    });
   };
 
   const handleEdit = async (intel) => {
@@ -203,9 +206,38 @@ export function useMarketIntel(candidatesMap = {}) {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e && e.preventDefault) {
+      e.preventDefault();
+    }
     try {
-      const { id, ...data } = formData;
+      console.log("Form submission started with data:", formData);
+      const { id, file, ...data } = formData;
+      
+      // Handle file upload to ImageKit if there's a new file
+      if (file) {
+        console.log("Uploading file to ImageKit:", file.name);
+        const uploadFormData = new FormData();
+        uploadFormData.append('file', file);
+        uploadFormData.append('fileName', `${Date.now()}_${file.name}`);
+        uploadFormData.append('folder', '/Reports');
+        
+        const uploadResponse = await fetch('/api/imagekit/upload-file', {
+          method: 'POST',
+          body: uploadFormData,
+        });
+        
+        if (!uploadResponse.ok) {
+          const errorText = await uploadResponse.text();
+          console.error("Upload failed:", errorText);
+          throw new Error(`Failed to upload file: ${uploadResponse.status} ${errorText}`);
+        }
+        
+        const uploadResult = await uploadResponse.json();
+        console.log("Upload successful:", uploadResult);
+        data.file_path = uploadResult.url;
+      }
+      
+      console.log("Final data to be saved:", data);
       
       if (id) {
         // Update existing market intel
@@ -227,6 +259,7 @@ export function useMarketIntel(candidatesMap = {}) {
       }
       
       fetchMarketIntel();
+      resetForm();
       return true;
     } catch (error) {
       console.error("Error submitting market intel:", error);
@@ -261,6 +294,8 @@ export function useMarketIntel(candidatesMap = {}) {
     handleEdit,
     handleDelete,
     handleSubmit,
+    fetchMarketIntel,
+    resetForm,
     getPDFUrl,
   };
 }

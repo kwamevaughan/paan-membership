@@ -1,387 +1,184 @@
-// src/components/MarketIntelForm.js
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
-import dynamic from "next/dynamic";
-import { IKContext, IKUpload } from "imagekitio-react";
-import { Line, Bar, Pie } from "react-chartjs-2";
+import { motion } from "framer-motion";
 import toast from "react-hot-toast";
-import ItemActionModal from "./ItemActionModal";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
-
-// Register ChartJS components
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  BarElement,
-  ArcElement,
-  Title,
-  Tooltip,
-  Legend
-);
-
-// Dynamically import EditorComponent for client-side only
-const EditorComponent = dynamic(() => import("./EditorComponent"), {
-  ssr: false,
-  loading: () => <p>Loading editor...</p>,
-});
-
-const defaultChartData = {
-  labels: ["January", "February", "March", "April", "May", "June"],
-  datasets: [
-    {
-      label: "Sample Data",
-      data: [12, 19, 3, 5, 2, 3],
-      backgroundColor: "rgba(75, 192, 192, 0.2)",
-      borderColor: "rgba(75, 192, 192, 1)",
-      borderWidth: 1,
-    },
-  ],
-};
 
 export default function MarketIntelForm({
-  showForm,
   mode,
   formData,
   handleInputChange,
-  handleSubmit,
-  handleCancel,
-  loading,
+  submitForm,
+  cancelForm,
   isEditing,
-  categories,
-  memberCount,
-  getPDFUrl,
 }) {
-  const [uploading, setUploading] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [previewUrl, setPreviewUrl] = useState(formData.file_path || null);
-  const [chartType, setChartType] = useState("line");
-  const [chartData, setChartData] = useState(defaultChartData);
-  const [showPdfModal, setShowPdfModal] = useState(false);
-  const [pdfUrl, setPdfUrl] = useState("");
-  const [isLoadingPdf, setIsLoadingPdf] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const types = [
     "Report",
-    "Analysis",
+    "Analysis", 
     "Regional Insight",
     "Data Visualization",
   ];
 
-  const regions = [
-    "Global",
-    "North America",
-    "South America",
-    "Europe",
-    "Asia Pacific",
-    "Middle East",
-    "Africa",
-  ];
-
-  const tiers = [
+  const validTiers = [
     "Associate Member",
-    "Full Member",
+    "Full Member", 
     "Gold Member",
     "Free Member",
   ];
 
-  const chartTypes = [
-    { value: "line", label: "Line Chart" },
-    { value: "bar", label: "Bar Chart" },
-    { value: "pie", label: "Pie Chart" },
-  ];
-
-  // Authenticator function
-  const authenticator = async () => {
-    try {
-      const endpoint =
-        process.env.NODE_ENV === "production"
-          ? "https://membership.paan.africa/api/imagekit/auth"
-          : "http://localhost:3000/api/imagekit/auth";
-      const response = await fetch(endpoint, {
-        method: "GET",
-        credentials: "include", // Include cookies for Supabase session
-      });
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Failed to fetch auth parameters: ${response.status} ${errorText}`
-        );
-      }
-      const data = await response.json();
-      if (!data.signature || !data.token || !data.expire) {
-        throw new Error("Invalid auth parameters received");
-      }
-      console.log("Authenticator success:", data);
-      return {
-        signature: data.signature,
-        token: data.token,
-        expire: data.expire,
-      };
-    } catch (error) {
-      console.error("Authenticator error:", error);
-      toast.error(`Authentication failed: ${error.message}`);
-      throw error;
-    }
-  };
-
-  // Parse chart data when form data changes
+  // Ensure tier_restriction is valid on mount
   useEffect(() => {
-    if (formData.type === "Data Visualization") {
-      try {
-        if (formData.chart_data) {
-          const parsedData = typeof formData.chart_data === 'string' 
-            ? JSON.parse(formData.chart_data)
-            : formData.chart_data;
-          
-          // Ensure the parsed data has the required structure
-          if (!parsedData.labels || !parsedData.datasets) {
-            setChartData(defaultChartData);
-            return;
-          }
-          
-          // Ensure datasets is an array and has at least one item
-          if (!Array.isArray(parsedData.datasets) || parsedData.datasets.length === 0) {
-            setChartData(defaultChartData);
-            return;
-          }
-          
-          setChartData(parsedData);
-        } else {
-          setChartData(defaultChartData);
-        }
-      } catch (error) {
-        console.error("Error parsing chart data:", error);
-        setChartData(defaultChartData);
-      }
-    } else {
-      setChartData(null);
-    }
-  }, [formData.type, formData.chart_data]);
-
-  useEffect(() => {
-    if (formData.file_path) {
-      setPreviewUrl(formData.file_path);
-    }
-  }, [formData.file_path]);
-
-  const onUploadStart = () => {
-    setUploading(true);
-    setUploadProgress(0);
-  };
-
-  const onUploadSuccess = (res) => {
-    try {
-      const fileUrl = `${process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}${res.filePath}`;
+    if (!validTiers.includes(formData.tier_restriction)) {
       handleInputChange({
-        target: {
-          name: "file_path",
-          value: fileUrl,
-        },
+        target: { name: "tier_restriction", value: validTiers[0] }
       });
-      setPreviewUrl(fileUrl);
-      toast.success("File uploaded successfully");
-    } catch (error) {
-      console.error("Upload success handling error:", error);
-      toast.error("Failed to process uploaded file");
-    } finally {
-      setUploading(false);
     }
-  };
+  }, [formData.tier_restriction, handleInputChange, validTiers]);
 
-  const onUploadError = (error) => {
-    console.error("Upload error:", error);
-    toast.error(`Failed to upload file: ${error.message || "Unknown error"}`);
-    setUploading(false);
-  };
+  const validateForm = async (e) => {
+    e.preventDefault();
+    const newErrors = {};
+    
+    if (!formData.title) newErrors.title = "Title is required";
+    if (!types.includes(formData.type)) newErrors.type = "Please select a valid type";
+    if (!validTiers.includes(formData.tier_restriction)) newErrors.tier_restriction = "Please select a valid tier restriction";
+    if (!formData.file && !formData.file_path) newErrors.file = "Please upload a PDF file";
 
-  const onUploadProgress = (progressEvent) => {
-    const progress = Math.round(
-      (progressEvent.loaded / progressEvent.total) * 100
-    );
-    setUploadProgress(progress);
-  };
-
-  const handleChartTypeChange = (e) => {
-    setChartType(e.target.value);
-  };
-
-  const handleChartDataChange = (e) => {
-    try {
-      const parsedData = JSON.parse(e.target.value);
-      
-      // Validate the parsed data structure
-      if (!parsedData.labels || !Array.isArray(parsedData.datasets) || parsedData.datasets.length === 0) {
-        throw new Error("Invalid chart data structure");
-      }
-      
-      setChartData(parsedData);
-      handleInputChange({
-        target: {
-          name: "chart_data",
-          value: JSON.stringify(parsedData),
-        },
-      });
-    } catch (error) {
-      console.error("Invalid JSON or chart data structure:", error);
-      // Keep the existing chart data if the new data is invalid
-    }
-  };
-
-  const handleViewPdf = async () => {
-    if (!formData.file_path) {
-      toast.error("No file available to view");
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
       return;
     }
-
+    setErrors({});
+    
     try {
-      setIsLoadingPdf(true);
-      // Use the file_path directly since it's already a complete URL
-      setPdfUrl(formData.file_path);
-      setShowPdfModal(true);
+      setIsSubmitting(true);
+      const loadingToast = toast.loading(
+        isEditing ? "Updating market intel..." : "Creating market intel..."
+      );
+      
+      await submitForm(e);
+      
+      toast.success(
+        isEditing ? "Market intel updated successfully!" : "Market intel created successfully!",
+        { id: loadingToast }
+      );
+      
+      // Close the modal after successful submission
+      cancelForm();
     } catch (error) {
-      console.error("Error getting PDF URL:", error);
-      toast.error("Failed to load PDF. The file may have been deleted or is not accessible.");
+      toast.error(
+        isEditing ? "Failed to update market intel" : "Failed to create market intel"
+      );
+      console.error("Form submission error:", error);
     } finally {
-      setIsLoadingPdf(false);
-    }
-  };
-
-  if (!showForm) {
-    return null;
-  }
-
-  const renderChart = () => {
-    if (!chartData || !chartData.datasets || !Array.isArray(chartData.datasets)) {
-      return null;
-    }
-
-    const options = {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: "top",
-        },
-        title: {
-          display: true,
-          text: formData.title || "Chart Title",
-        },
-      },
-    };
-
-    switch (chartType) {
-      case "line":
-        return <Line data={chartData} options={options} />;
-      case "bar":
-        return <Bar data={chartData} options={options} />;
-      case "pie":
-        return <Pie data={chartData} options={options} />;
-      default:
-        return null;
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <>
-      <ItemActionModal
-        isOpen={showForm}
-        onClose={handleCancel}
-        title={isEditing ? "Edit Market Intel" : "Create Market Intel"}
-        mode={mode}
-      >
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Title */}
-            <div className="md:col-span-2">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className={`rounded-2xl ${
+        mode === "dark" 
+          ? "bg-gray-800/90 backdrop-blur-sm" 
+          : ""
+      }`}
+    >
+      <div className="mb-8">
+        <p className={`mt-2 text-sm ${
+          mode === "dark" ? "text-gray-400" : "text-gray-500"
+        }`}>
+          Fill in the details below to {isEditing ? "update" : "create"} your market intel report.
+        </p>
+      </div>
+
+      <form onSubmit={validateForm} className="space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-6">
+            <div>
               <label
                 htmlFor="title"
-                className={`block text-sm font-medium mb-2 ${
-                  mode === "dark" ? "text-gray-300" : "text-gray-700"
+                className={`block text-sm font-medium ${
+                  mode === "dark" ? "text-gray-200" : "text-gray-700"
                 }`}
               >
                 Title
               </label>
-              <input
-                type="text"
-                id="title"
-                name="title"
-                value={formData.title || ""}
-                onChange={handleInputChange}
-                required
-                className={`w-full rounded-lg border ${
-                  mode === "dark"
-                    ? "bg-gray-700 border-gray-600 text-gray-200"
-                    : "bg-white border-gray-300 text-gray-700"
-                } px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                placeholder="Enter report title"
-              />
+              <div className="mt-1 relative">
+                <input
+                  type="text"
+                  name="title"
+                  id="title"
+                  value={formData.title || ""}
+                  onChange={handleInputChange}
+                  className={`block w-full rounded-xl border text-sm px-4 py-3 transition-all duration-200 ${
+                    mode === "dark"
+                      ? "bg-gray-700/50 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500"
+                      : "bg-white border-gray-200 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                  } ${errors.title ? "border-red-500" : ""}`}
+                  placeholder="Enter market intel title"
+                />
+                {errors.title && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="absolute -bottom-6 left-0 text-red-500 text-xs"
+                  >
+                    {errors.title}
+                  </motion.p>
+                )}
+              </div>
             </div>
 
-            {/* Category */}
             <div>
               <label
-                htmlFor="category"
-                className={`block text-sm font-medium mb-2 ${
-                  mode === "dark" ? "text-gray-300" : "text-gray-700"
+                htmlFor="description"
+                className={`block text-sm font-medium ${
+                  mode === "dark" ? "text-gray-200" : "text-gray-700"
                 }`}
               >
-                Category
+                Description
               </label>
-              <select
-                id="category"
-                name="category"
-                value={formData.category || ""}
+              <textarea
+                name="description"
+                id="description"
+                value={formData.description || ""}
                 onChange={handleInputChange}
-                required
-                className={`w-full rounded-lg border ${
+                rows={4}
+                className={`mt-1 block w-full rounded-xl border text-sm px-4 py-3 transition-all duration-200 ${
                   mode === "dark"
-                    ? "bg-gray-700 border-gray-600 text-gray-200"
-                    : "bg-white border-gray-300 text-gray-700"
-                } px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-              >
-                <option value="">Select category</option>
-                {categories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
+                    ? "bg-gray-700/50 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500"
+                    : "bg-white border-gray-200 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                }`}
+                placeholder="Enter market intel description"
+              />
             </div>
+          </div>
 
-            {/* Type */}
+          <div className="space-y-6">
             <div>
               <label
                 htmlFor="type"
-                className={`block text-sm font-medium mb-2 ${
-                  mode === "dark" ? "text-gray-300" : "text-gray-700"
+                className={`block text-sm font-medium ${
+                  mode === "dark" ? "text-gray-200" : "text-gray-700"
                 }`}
               >
                 Type
               </label>
               <select
-                id="type"
                 name="type"
+                id="type"
                 value={formData.type || ""}
                 onChange={handleInputChange}
-                required
-                className={`w-full rounded-lg border ${
+                className={`mt-1 block w-full rounded-xl border text-sm px-4 py-3 transition-all duration-200 ${
                   mode === "dark"
-                    ? "bg-gray-700 border-gray-600 text-gray-200"
-                    : "bg-white border-gray-300 text-gray-700"
-                } px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                    ? "bg-gray-700/50 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500"
+                    : "bg-white border-gray-200 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                } ${errors.type ? "border-red-500" : ""}`}
               >
                 <option value="">Select type</option>
                 {types.map((type) => (
@@ -390,319 +187,138 @@ export default function MarketIntelForm({
                   </option>
                 ))}
               </select>
+              {errors.type && (
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-1 text-red-500 text-xs"
+                >
+                  {errors.type}
+                </motion.p>
+              )}
             </div>
 
-            {/* Region */}
-            <div>
-              <label
-                htmlFor="region"
-                className={`block text-sm font-medium mb-2 ${
-                  mode === "dark" ? "text-gray-300" : "text-gray-700"
-                }`}
-              >
-                Region
-              </label>
-              <select
-                id="region"
-                name="region"
-                value={formData.region || ""}
-                onChange={handleInputChange}
-                required
-                className={`w-full rounded-lg border ${
-                  mode === "dark"
-                    ? "bg-gray-700 border-gray-600 text-gray-200"
-                    : "bg-white border-gray-300 text-gray-700"
-                } px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-              >
-                <option value="">Select region</option>
-                {regions.map((region) => (
-                  <option key={region} value={region}>
-                    {region}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Tier Restriction */}
             <div>
               <label
                 htmlFor="tier_restriction"
-                className={`block text-sm font-medium mb-2 ${
-                  mode === "dark" ? "text-gray-300" : "text-gray-700"
+                className={`block text-sm font-medium ${
+                  mode === "dark" ? "text-gray-200" : "text-gray-700"
                 }`}
               >
                 Tier Restriction
               </label>
               <select
-                id="tier_restriction"
                 name="tier_restriction"
+                id="tier_restriction"
                 value={formData.tier_restriction || ""}
                 onChange={handleInputChange}
-                required
-                className={`w-full rounded-lg border ${
+                className={`mt-1 block w-full rounded-xl border text-sm px-4 py-3 transition-all duration-200 ${
                   mode === "dark"
-                    ? "bg-gray-700 border-gray-600 text-gray-200"
-                    : "bg-white border-gray-300 text-gray-700"
-                } px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+                    ? "bg-gray-700/50 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500"
+                    : "bg-white border-gray-200 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                } ${errors.tier_restriction ? "border-red-500" : ""}`}
               >
                 <option value="">Select tier</option>
-                {tiers.map((tier) => (
+                {validTiers.map((tier) => (
                   <option key={tier} value={tier}>
-                    {tier}
+                    {tier === "Free Member" ? "Free Member" : tier}
                   </option>
                 ))}
               </select>
-            </div>
-
-            {/* File Upload */}
-            <div className="md:col-span-2">
-              <label
-                className={`block text-sm font-medium mb-2 ${
-                  mode === "dark" ? "text-gray-300" : "text-gray-700"
-                }`}
-              >
-                Upload Report (PDF)
-              </label>
-              <IKContext
-                publicKey={process.env.NEXT_PUBLIC_IMAGEKIT_PUBLIC_KEY}
-                urlEndpoint={process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT}
-                authenticationEndpoint={
-                  process.env.NODE_ENV === "production"
-                    ? "https://membership.paan.africa/api/imagekit/auth"
-                    : "http://localhost:3000/api/imagekit/auth"
-                }
-                authenticator={authenticator}
-                onError={(err) => {
-                  console.error("ImageKit context error:", err);
-                  toast.error(
-                    `Failed to initialize file upload: ${
-                      err.message || "Unknown error"
-                    }`
-                  );
-                }}
-              >
-                <div className="space-y-4">
-                  <IKUpload
-                    fileName="report.pdf"
-                    useUniqueFileName={true}
-                    folder="/Reports"
-                    onUploadStart={onUploadStart}
-                    onUploadProgress={onUploadProgress}
-                    onSuccess={onUploadSuccess}
-                    onError={onUploadError}
-                    accept="application/pdf"
-                    className={`w-full rounded-lg border ${
-                      mode === "dark"
-                        ? "bg-gray-700 border-gray-600 text-gray-200"
-                        : "bg-white border-gray-300 text-gray-700"
-                    } px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                  />
-                  {uploading && (
-                    <div className="w-full bg-gray-200 rounded-full h-2.5">
-                      <div
-                        className="bg-blue-600 h-2.5 rounded-full"
-                        style={{ width: `${uploadProgress}%` }}
-                      ></div>
-                    </div>
-                  )}
-                  {previewUrl && /\.pdf$/i.test(formData.file_path) && (
-                    <div className="mt-2">
-                      <button
-                        type="button"
-                        onClick={handleViewPdf}
-                        disabled={isLoadingPdf}
-                        className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-lg ${
-                          mode === "dark"
-                            ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
-                            : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-                        } transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed`}
-                      >
-                        {isLoadingPdf ? (
-                          <>
-                            <Icon icon="heroicons:arrow-path" className="w-4 h-4 mr-2 animate-spin" />
-                            Loading...
-                          </>
-                        ) : (
-                          <>
-                            <Icon icon="heroicons:document-text" className="w-4 h-4 mr-2" />
-                            View uploaded file
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </IKContext>
-            </div>
-
-            {/* Chart Type (only for Data Visualization) */}
-            {formData.type === "Data Visualization" && (
-              <div className="md:col-span-2">
-                <label
-                  htmlFor="chartType"
-                  className={`block text-sm font-medium mb-2 ${
-                    mode === "dark" ? "text-gray-300" : "text-gray-700"
-                  }`}
+              {errors.tier_restriction && (
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-1 text-red-500 text-xs"
                 >
-                  Chart Type
-                </label>
-                <select
-                  id="chartType"
-                  value={chartType}
-                  onChange={handleChartTypeChange}
-                  className={`w-full rounded-lg border ${
-                    mode === "dark"
-                      ? "bg-gray-700 border-gray-600 text-gray-200"
-                      : "bg-white border-gray-300 text-gray-700"
-                  } px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                >
-                  {chartTypes.map((type) => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Chart Data (only for Data Visualization) */}
-            {formData.type === "Data Visualization" && (
-              <div className="md:col-span-2">
-                <label
-                  htmlFor="chartData"
-                  className={`block text-sm font-medium mb-2 ${
-                    mode === "dark" ? "text-gray-300" : "text-gray-700"
-                  }`}
-                >
-                  Chart Data (JSON)
-                </label>
-                <textarea
-                  id="chartData"
-                  name="chart_data"
-                  value={JSON.stringify(chartData, null, 2)}
-                  onChange={handleChartDataChange}
-                  rows={10}
-                  className={`w-full rounded-lg border ${
-                    mode === "dark"
-                      ? "bg-gray-700 border-gray-600 text-gray-200"
-                      : "bg-white border-gray-300 text-gray-700"
-                  } px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                  placeholder="Enter chart data in JSON format"
-                />
-                {chartData && (
-                  <div className="mt-4 p-4 bg-white rounded-lg shadow">
-                    {renderChart()}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Description */}
-            <div className="md:col-span-2">
-              <label
-                htmlFor="description"
-                className={`block text-sm font-medium mb-2 ${
-                  mode === "dark" ? "text-gray-300" : "text-gray-700"
-                }`}
-              >
-                Description
-              </label>
-              <div
-                className={`border-2 rounded-xl overflow-hidden transition-all duration-200 ${
-                  mode === "dark" ? "border-gray-600" : "border-gray-200"
-                }`}
-              >
-                <EditorComponent
-                  initialValue={formData.description || ""}
-                  onBlur={(newContent) =>
-                    handleInputChange({
-                      target: { name: "description", value: newContent },
-                    })
-                  }
-                  mode={mode}
-                  holderId="jodit-editor-market-intel-form"
-                  className="w-full"
-                  height="300"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Form Actions */}
-          <div className="flex justify-end space-x-4 pt-6">
-            <button
-              type="submit"
-              disabled={loading || uploading}
-              className={`px-6 py-3 text-sm font-medium rounded-xl text-white bg-blue-600 hover:bg-blue-700 transition-all duration-200 flex items-center shadow-sm ${
-                mode === "dark" ? "shadow-white/10" : "shadow-gray-200"
-              } ${loading || uploading ? "opacity-50 cursor-not-allowed" : ""}`}
-            >
-              {loading || uploading ? (
-                <>
-                  <Icon
-                    icon="heroicons:arrow-path"
-                    className="h-4 w-4 mr-2 animate-spin"
-                  />
-                  {isEditing ? "Updating..." : "Creating..."}
-                </>
-              ) : (
-                <>
-                  <Icon
-                    icon={isEditing ? "heroicons:check" : "heroicons:plus"}
-                    className="h-4 w-4 mr-2"
-                  />
-                  {isEditing ? "Update Report" : "Create Report"}
-                </>
+                  {errors.tier_restriction}
+                </motion.p>
               )}
-            </button>
-          </div>
-        </form>
-      </ItemActionModal>
-
-      {/* PDF Viewer Modal */}
-      <ItemActionModal
-        isOpen={showPdfModal}
-        onClose={() => {
-          setShowPdfModal(false);
-          setPdfUrl("");
-        }}
-        title="Document Preview"
-        mode={mode}
-        size="xl"
-      >
-        <div className="space-y-4">
-          {pdfUrl ? (
-            <div className="relative w-full" style={{ height: "80vh" }}>
-              <iframe
-                src={pdfUrl}
-                className="absolute inset-0 w-full h-full border-0"
-                title="PDF Preview"
-              />
             </div>
-          ) : (
-            <div className="flex items-center justify-center h-80">
-              <p className={`text-sm ${mode === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                Failed to load PDF preview
-              </p>
-            </div>
-          )}
-          <div className="flex justify-end">
-            <button
-              onClick={() => {
-                setShowPdfModal(false);
-                setPdfUrl("");
-              }}
-              className={`px-4 py-2 text-sm font-medium rounded-lg ${
-                mode === "dark"
-                  ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
-                  : "bg-gray-100 hover:bg-gray-200 text-gray-700"
-              } transition-colors duration-200`}
-            >
-              Close
-            </button>
           </div>
         </div>
-      </ItemActionModal>
-    </>
+
+        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-6 space-y-6">
+          <label className={`block text-sm font-medium ${
+            mode === "dark" ? "text-gray-200" : "text-gray-700"
+          }`}>
+            Upload PDF
+          </label>
+          <div className="mt-1">
+            <div className={`flex items-center justify-center w-full px-4 py-6 border-2 border-dashed rounded-xl transition-all duration-200 ${
+              mode === "dark"
+                ? "border-gray-600 hover:border-gray-500 bg-gray-700/50"
+                : "border-gray-300 hover:border-gray-400 bg-white"
+            }`}>
+              <input
+                type="file"
+                name="file"
+                id="file"
+                accept="application/pdf"
+                onChange={(e) =>
+                  handleInputChange({
+                    target: { name: "file", value: e.target.files[0] },
+                  })
+                }
+                className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              />
+            </div>
+            {formData.file_path && (
+              <p className={`mt-2 text-sm ${
+                mode === "dark" ? "text-gray-400" : "text-gray-500"
+              }`}>
+                Current file: {formData.file_path.split("/").pop()}
+              </p>
+            )}
+            {errors.file && (
+              <motion.p
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-2 text-red-500 text-xs"
+              >
+                {errors.file}
+              </motion.p>
+            )}
+          </div>
+        </div>
+
+        <div className="flex justify-end space-x-4 pt-4">
+          <button
+            type="button"
+            onClick={cancelForm}
+            disabled={isSubmitting}
+            className={`px-6 py-3 rounded-xl text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+              mode === "dark"
+                ? "bg-gray-700 text-gray-200 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            }`}
+          >
+            <Icon icon="heroicons:x-mark" className="w-5 h-5" />
+            <span>Cancel</span>
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className={`px-6 py-3 rounded-xl text-sm font-medium text-white transition-all duration-200 flex items-center space-x-2 ${
+              isSubmitting
+                ? "bg-blue-400 cursor-not-allowed"
+                : "bg-blue-600 hover:bg-blue-700"
+            }`}
+          >
+            {isSubmitting ? (
+              <>
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <span>Processing...</span>
+              </>
+            ) : (
+              <>
+                <Icon icon="heroicons:check" className="w-5 h-5" />
+                <span>{isEditing ? "Update Market Intel" : "Create Market Intel"}</span>
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+    </motion.div>
   );
 }

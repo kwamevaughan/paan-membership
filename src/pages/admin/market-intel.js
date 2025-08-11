@@ -35,10 +35,8 @@ export default function AdminMarketIntel({
   const [filterTerm, setFilterTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("newest");
   const [showFilters, setShowFilters] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedTier, setSelectedTier] = useState("");
   const [selectedType, setSelectedType] = useState("");
-  const [selectedRegion, setSelectedRegion] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(6);
@@ -75,18 +73,10 @@ export default function AdminMarketIntel({
     handleSubmit,
     handleDelete,
     formData,
+    setFormData,
+    resetForm,
   } = useMarketIntel();
 
-  useEffect(() => {
-    console.log('AdminMarketIntel - marketIntel data:', {
-      count: marketIntel?.length,
-      items: marketIntel?.map(item => ({
-        title: item.title,
-        category: item.category,
-        tier: item.tier_restriction
-      }))
-    });
-  }, [marketIntel]);
 
   const handleLogout = useLogout();
   useAuthSession();
@@ -94,24 +84,34 @@ export default function AdminMarketIntel({
   const handleResetFilters = () => {
     setSelectedType("All");
     setSelectedTier("All");
-    setSelectedRegion("All");
     setFilterTerm("");
     setSortOrder("newest");
   };
 
   const handleCreateMarketIntel = () => {
     setCurrentMarketIntel(null);
+    resetForm();
     setShowForm(true);
   };
 
   const handleEditClick = async (marketIntel) => {
     setCurrentMarketIntel(marketIntel);
+    // Set the form data for editing
+    setFormData({
+      id: marketIntel.id,
+      title: marketIntel.title || "",
+      description: marketIntel.description || "",
+      tier_restriction: marketIntel.tier_restriction || "Associate Member",
+      type: marketIntel.type || "Report",
+      file: null,
+      file_path: marketIntel.file_path || "",
+    });
     setShowForm(true);
   };
 
-  const handleFormSubmit = async (formData) => {
+  const handleFormSubmit = async (e) => {
     try {
-      const success = await handleSubmit(formData);
+      const success = await handleSubmit(e);
       if (success) {
         setShowForm(false);
         setCurrentMarketIntel(null);
@@ -152,12 +152,7 @@ export default function AdminMarketIntel({
       
       const matchesSearch = !searchQuery || 
         (item.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-         item.body?.toLowerCase().includes(searchQuery.toLowerCase()));
-      
-      const matchesCategory = !selectedCategory || 
-        selectedCategory === "All" || 
-        selectedCategory === "all" || 
-        item.category?.toLowerCase() === selectedCategory.toLowerCase();
+         item.description?.toLowerCase().includes(searchQuery.toLowerCase()));
       
       const matchesTier = !selectedTier || 
         selectedTier === "All" || 
@@ -169,14 +164,9 @@ export default function AdminMarketIntel({
         selectedType === "all" || 
         item.type?.toLowerCase() === selectedType.toLowerCase();
       
-      const matchesRegion = !selectedRegion || 
-        selectedRegion === "All" || 
-        selectedRegion === "all" || 
-        item.region?.toLowerCase() === selectedRegion.toLowerCase();
-      
-      return matchesSearch && matchesCategory && matchesTier && matchesType && matchesRegion;
+      return matchesSearch && matchesTier && matchesType;
     });
-  }, [marketIntel, searchQuery, selectedCategory, selectedTier, selectedType, selectedRegion]);
+  }, [marketIntel, searchQuery, selectedTier, selectedType]);
 
   const sortedMarketIntel = useMemo(() => {
     return [...filteredMarketIntel].sort((a, b) => {
@@ -189,22 +179,13 @@ export default function AdminMarketIntel({
   const hasMore = sortedMarketIntel.length > currentPage * itemsPerPage;
   const remainingCount = sortedMarketIntel.length - (currentPage * itemsPerPage);
 
-  console.log('Admin Market Intel - Pagination Debug:', {
-    totalItems: sortedMarketIntel.length,
-    currentPage,
-    itemsPerPage,
-    displayedItems: Math.min(currentPage * itemsPerPage, sortedMarketIntel.length),
-    remainingCount,
-    hasMore,
-    filteredCount: filteredMarketIntel.length
-  });
+  
 
   const handleLoadMore = () => {
     setCurrentPage(prev => prev + 1);
   };
 
   const handleCountChange = useCallback(({ displayedCount, totalCount }) => {
-    console.log('AdminMarketIntel - Count change:', { displayedCount, totalCount });
     setDisplayedCount(displayedCount);
     setTotalCount(totalCount);
   }, []);
@@ -339,18 +320,12 @@ export default function AdminMarketIntel({
                       totalCount={totalCount}
                     >
                       <MarketIntelFilters
-                        selectedCategory={selectedCategory}
-                        onCategoryChange={setSelectedCategory}
                         selectedTier={selectedTier}
                         onTierChange={setSelectedTier}
                         selectedType={selectedType}
                         onTypeChange={setSelectedType}
-                        selectedRegion={selectedRegion}
-                        onRegionChange={setSelectedRegion}
-                        categories={[...new Set(marketIntel.map(item => item.category))].filter(Boolean)}
                         tiers={[...new Set(marketIntel.map(item => item.tier_restriction))].filter(Boolean)}
                         types={[...new Set(marketIntel.map(item => item.type))].filter(Boolean)}
-                        regions={[...new Set(marketIntel.map(item => item.region))].filter(Boolean)}
                         mode={mode}
                         loading={marketIntelLoading}
                       />
@@ -369,7 +344,6 @@ export default function AdminMarketIntel({
                         viewMode={viewMode}
                         setViewMode={setViewMode}
                         filterTerm={searchQuery}
-                        selectedCategory={selectedCategory}
                         selectedTier={selectedTier}
                         isSelectable={true}
                         hasMore={hasMore}
@@ -414,12 +388,13 @@ export default function AdminMarketIntel({
         style={{ isolation: "isolate" }}
       >
         <MarketIntelForm
-          formData={currentMarketIntel || formData}
+          formData={formData}
           handleInputChange={handleInputChange}
           submitForm={handleFormSubmit}
           cancelForm={() => {
             setShowForm(false);
             setCurrentMarketIntel(null);
+            resetForm();
           }}
           isEditing={!!currentMarketIntel}
           tiers={tiers}

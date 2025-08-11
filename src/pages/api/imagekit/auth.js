@@ -33,8 +33,6 @@ export default async function handler(req, res) {
     const now = Date.now();
     const expire = Math.floor(now / 1000) + 600; // 10 minutes
 
-    
-
     const signature = createHmac("sha1", privateKey)
       .update(token + expire)
       .digest("hex");

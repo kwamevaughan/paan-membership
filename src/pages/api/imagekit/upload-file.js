@@ -106,12 +106,16 @@ export default async function handler(req, res) {
     const fileContent = await fs.readFile(tempFilePath);
     console.log("File content read successfully, size:", fileContent.length);
 
+    // Get folder from form fields, default to "/Blog"
+    const folder = fields.folder?.[0] || "/Blog";
+    console.log("Upload folder:", folder);
+
     console.log("Uploading to ImageKit...");
     // Upload to ImageKit
     const uploadResponse = await imagekit.upload({
       file: fileContent,
       fileName,
-      folder: "/Blog",
+      folder: folder,
       useUniqueFileName: true,
       isPrivateFile: false,
     });

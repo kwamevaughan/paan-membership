@@ -1,15 +1,9 @@
+import React, { useState, useEffect, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { Icon } from "@iconify/react";
-import dynamic from "next/dynamic";
-import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import toast from "react-hot-toast";
-import MarketIntelChart from "./MarketIntelChart";
-
-// Dynamically import EditorComponent for client-side only
-const EditorComponent = dynamic(() => import("../EditorComponent"), {
-  ssr: false,
-  loading: () => <p>Loading editor...</p>,
-});
+import ItemActionModal from "@/components/ItemActionModal";
 
 export default function MarketIntelForm({
   mode,
@@ -19,698 +13,416 @@ export default function MarketIntelForm({
   cancelForm,
   isEditing,
 }) {
-  const formRef = useRef(null);
-  const fileInputRef = useRef(null);
-  const [chartDataError, setChartDataError] = useState(null);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [uploading, setUploading] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
 
-  // Validate ApexCharts JSON
-  const validateChartData = (value) => {
-    if (!value) {
-      setChartDataError(null);
-      return true;
-    }
-    try {
-      const parsed = JSON.parse(value);
-      if (
-        !parsed.type ||
-        !parsed.series ||
-        !Array.isArray(parsed.series) ||
-        !parsed.options
-      ) {
-        throw new Error(
-          "Invalid ApexCharts configuration: missing type, series, or options"
-        );
-      }
-      setChartDataError(null);
-      return parsed;
-    } catch (error) {
-      setChartDataError(error.message);
-      return false;
-    }
-  };
+  const types = [
+    "Report",
+    "Analysis",
+    "Regional Insight",
+    "Data Visualization",
+  ];
 
-  // Handle file selection
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.type !== "application/pdf") {
-        toast.error("Please select a PDF file");
-        return;
-      }
-      if (file.size > 10 * 1024 * 1024) {
-        toast.error("File size must be less than 10MB");
-        return;
-      }
-      setSelectedFile(file);
-      toast.success(`Selected: ${file.name}`);
-    }
-  };
+  const validTiers = useMemo(
+    () => ["Associate Member", "Full Member", "Gold Member", "Free Member"],
+    []
+  );
 
-  // Handle input changes with JSON validation for chart_data
-  const onInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    if (name === "chart_data") {
-      validateChartData(value);
+  // Ensure tier_restriction is valid on mount
+  useEffect(() => {
+    if (!validTiers.includes(formData.tier_restriction)) {
       handleInputChange({
-        target: {
-          name,
-          value,
-        },
-      });
-    } else {
-      handleInputChange({
-        target: {
-          name,
-          value: type === "checkbox" ? checked : value,
-        },
+        target: { name: "tier_restriction", value: validTiers[0] },
       });
     }
-  };
+  }, [formData.tier_restriction, handleInputChange, validTiers]);
 
-  // Handle form submission with validation
-  const onSubmit = (e) => {
+  const validateForm = async (e) => {
     e.preventDefault();
-    setUploading(true);
-    if (formData.type === "Data Visualization" && formData.chart_data) {
-      const isValid = validateChartData(formData.chart_data);
-      if (!isValid) {
-        toast.error("Invalid chart data JSON. Please fix the errors.");
-        setUploading(false);
-        return;
-      }
+    const newErrors = {};
+
+    if (!formData.title) newErrors.title = "Title is required";
+    if (!types.includes(formData.type))
+      newErrors.type = "Please select a valid type";
+    if (!validTiers.includes(formData.tier_restriction))
+      newErrors.tier_restriction = "Please select a valid tier restriction";
+    if (!formData.file && !formData.file_path)
+      newErrors.file = "Please upload a PDF file";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
     }
-    submitForm(formData, selectedFile);
-    setUploading(false);
-  };
+    setErrors({});
 
-  // Generate sample chart JSON for ApexCharts
-  const generateSampleChartData = (chartType) => {
-    const colors = ["#4f46e5", "#7c3aed", "#ec4899", "#f59e0b", "#10b981"];
-    const samples = {
-      bar: {
-        type: "bar",
-        series: [
-          {
-            name: "Sales ($000)",
-            data: [12, 19, 3, 5, 2],
-          },
-          {
-            name: "Profit ($000)",
-            data: [8, 11, 1, 3, 1],
-          },
-        ],
-        options: {
-          chart: {
-            type: "bar",
-            height: 350,
-            toolbar: { show: false },
-          },
-          colors: [colors[0], colors[1]],
-          plotOptions: {
-            bar: {
-              horizontal: false,
-              columnWidth: "55%",
-            },
-          },
-          dataLabels: { enabled: false },
-          xaxis: {
-            categories: ["January", "February", "March", "April", "May"],
-            labels: {
-              style: { colors: mode === "dark" ? "#ffffff" : "#000000" },
-            },
-          },
-          yaxis: {
-            title: { text: "Amount ($000)" },
-            labels: {
-              style: { colors: mode === "dark" ? "#ffffff" : "#000000" },
-            },
-          },
-          title: {
-            text: "Monthly Sales & Profit",
-            align: "center",
-            style: { color: mode === "dark" ? "#ffffff" : "#000000" },
-          },
-          legend: { position: "top" },
-        },
-      },
-      line: {
-        type: "line",
-        series: [
-          {
-            name: "Growth (%)",
-            data: [65, 59, 80, 81, 56, 55],
-          },
-          {
-            name: "Target (%)",
-            data: [60, 65, 70, 75, 60, 65],
-          },
-        ],
-        options: {
-          chart: {
-            type: "line",
-            height: 350,
-            toolbar: { show: false },
-          },
-          colors: [colors[0], colors[1]],
-          dataLabels: { enabled: false },
-          stroke: { curve: "smooth", width: 2 },
-          xaxis: {
-            categories: ["Jan", "Feb", "Mar", "Apr", "May", "Jun"],
-            labels: {
-              style: { colors: mode === "dark" ? "#ffffff" : "#000000" },
-            },
-          },
-          yaxis: {
-            title: { text: "Percentage (%)" },
-            labels: {
-              style: { colors: mode === "dark" ? "#ffffff" : "#000000" },
-            },
-          },
-          title: {
-            text: "Growth vs Target",
-            align: "center",
-            style: { color: mode === "dark" ? "#ffffff" : "#000000" },
-          },
-          legend: { position: "top" },
-        },
-      },
-      pie: {
-        type: "pie",
-        series: [300, 250, 400, 120, 80],
-        options: {
-          chart: {
-            type: "pie",
-            height: 350,
-            toolbar: { show: false },
-          },
-          colors,
-          labels: [
-            "North America",
-            "Europe",
-            "Asia",
-            "Africa",
-            "South America",
-          ],
-          dataLabels: { enabled: true },
-          title: {
-            text: "Revenue by Region",
-            align: "center",
-            style: { color: mode === "dark" ? "#ffffff" : "#000000" },
-          },
-          legend: {
-            position: "top",
-            labels: { colors: mode === "dark" ? "#ffffff" : "#000000" },
-          },
-        },
-      },
-      doughnut: {
-        type: "donut",
-        series: [55, 35, 8, 2],
-        options: {
-          chart: {
-            type: "donut",
-            height: 350,
-            toolbar: { show: false },
-          },
-          colors: [colors[0], colors[1], colors[2], colors[3]],
-          labels: ["Desktop", "Mobile", "Tablet", "Other"],
-          dataLabels: { enabled: true },
-          title: {
-            text: "Device Usage Distribution",
-            align: "center",
-            style: { color: mode === "dark" ? "#ffffff" : "#000000" },
-          },
-          legend: {
-            position: "top",
-            labels: { colors: mode === "dark" ? "#ffffff" : "#000000" },
-          },
-        },
-      },
-      area: {
-        type: "area",
-        series: [
-          {
-            name: "Revenue",
-            data: [40, 55, 70, 85],
-          },
-          {
-            name: "Expenses",
-            data: [25, 35, 45, 50],
-          },
-        ],
-        options: {
-          chart: {
-            type: "area",
-            height: 350,
-            toolbar: { show: false },
-          },
-          colors: [colors[0], colors[1]],
-          dataLabels: { enabled: false },
-          stroke: { curve: "smooth", width: 2 },
-          fill: {
-            type: "gradient",
-            gradient: { opacityFrom: 0.6, opacityTo: 0.8 },
-          },
-          xaxis: {
-            categories: ["Q1", "Q2", "Q3", "Q4"],
-            labels: {
-              style: { colors: mode === "dark" ? "#ffffff" : "#000000" },
-            },
-          },
-          yaxis: {
-            title: { text: "Amount ($000)" },
-            labels: {
-              style: { colors: mode === "dark" ? "#ffffff" : "#000000" },
-            },
-          },
-          title: {
-            text: "Quarterly Performance",
-            align: "center",
-            style: { color: mode === "dark" ? "#ffffff" : "#000000" },
-          },
-          legend: { position: "top" },
-        },
-      },
-    };
-    return JSON.stringify(samples[chartType] || samples.bar, null, 2);
-  };
+    try {
+      setIsSubmitting(true);
+      const loadingToast = toast.loading(
+        isEditing ? "Updating market intel..." : "Creating market intel..."
+      );
 
-  const insertSampleData = (chartType) => {
-    const sampleData = generateSampleChartData(chartType);
-    handleInputChange({
-      target: {
-        name: "chart_data",
-        value: sampleData,
-      },
-    });
-    validateChartData(sampleData);
-  };
+      await submitForm(e);
 
-  // Parse chart_data for preview
-  const parsedChartData =
-    formData.type === "Data Visualization" &&
-    formData.chart_data &&
-    !chartDataError
-      ? JSON.parse(formData.chart_data)
-      : null;
+      toast.success(
+        isEditing
+          ? "Market intel updated successfully!"
+          : "Market intel created successfully!",
+        { id: loadingToast }
+      );
+
+      // Close the modal after successful submission
+      cancelForm();
+    } catch (error) {
+      toast.error(
+        isEditing
+          ? "Failed to update market intel"
+          : "Failed to create market intel"
+      );
+      console.error("Form submission error:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
-      <div>
-        <label
-          className={`block text-sm font-medium ${
-            mode === "dark" ? "text-gray-300" : "text-gray-700"
-          } mb-2`}
-        >
-          Title *
-        </label>
-        <input
-          type="text"
-          name="title"
-          value={formData?.title || ""}
-          onChange={onInputChange}
-          required
-          className={`w-full px-4 py-3 rounded-xl ${
-            mode === "dark"
-              ? "bg-gray-800 text-white border-gray-700"
-              : "bg-white text-gray-900 border-gray-200"
-          } focus:ring-2 focus:ring-blue-500 backdrop-blur-sm`}
-          placeholder="Enter report title"
-        />
-      </div>
-      <div>
-        <label
-          className={`block text-sm font-medium ${
-            mode === "dark" ? "text-gray-300" : "text-gray-700"
-          } mb-2`}
-        >
-          Description
-        </label>
-        <textarea
-          name="description"
-          value={formData?.description || ""}
-          onChange={onInputChange}
-          rows={4}
-          className={`w-full px-4 py-3 rounded-xl ${
-            mode === "dark"
-              ? "bg-gray-800 text-white border-gray-700"
-              : "bg-white text-gray-900 border-gray-200"
-          } focus:ring-2 focus:ring-blue-500 backdrop-blur-sm`}
-          placeholder="Enter description"
-        />
-      </div>
-      <div>
-        <label
-          className={`block text-sm font-medium ${
-            mode === "dark" ? "text-gray-300" : "text-gray-700"
-          } mb-2`}
-        >
-          Tier Restriction *
-        </label>
-        <select
-          name="tier_restriction"
-          value={formData?.tier_restriction || ""}
-          onChange={onInputChange}
-          required
-          className={`w-full px-4 py-3 rounded-xl ${
-            mode === "dark"
-              ? "bg-gray-800 text-white border-gray-700"
-              : "bg-white text-gray-900 border-gray-200"
-          } focus:ring-2 focus:ring-blue-500 backdrop-blur-sm`}
-        >
-          <option value="Associate Member">Associate Member</option>
-          <option value="Full Member">Full Member</option>
-          <option value="Gold Member">Gold Member</option>
-          <option value="Free Member">Free Member</option>
-        </select>
-      </div>
-      <div>
-        <label
-          className={`block text-sm font-medium ${
-            mode === "dark" ? "text-gray-300" : "text-gray-700"
-          } mb-2`}
-        >
-          Region *
-        </label>
-        <select
-          name="region"
-          value={formData?.region || ""}
-          onChange={onInputChange}
-          required
-          className={`w-full px-4 py-3 rounded-xl ${
-            mode === "dark"
-              ? "bg-gray-800 text-white border-gray-700"
-              : "bg-white text-gray-900 border-gray-200"
-          } focus:ring-2 focus:ring-blue-500 backdrop-blur-sm`}
-        >
-          <option value="Global">Global</option>
-          <option value="East Africa">East Africa</option>
-          <option value="West Africa">West Africa</option>
-          <option value="Southern Africa">Southern Africa</option>
-          <option value="North Africa">North Africa</option>
-          <option value="Central Africa">Central Africa</option>
-        </select>
-      </div>
-      <div>
-        <label
-          className={`block text-sm font-medium ${
-            mode === "dark" ? "text-gray-300" : "text-gray-700"
-          } mb-2`}
-        >
-          Type *
-        </label>
-        <select
-          name="type"
-          value={formData?.type || ""}
-          onChange={onInputChange}
-          required
-          className={`w-full px-4 py-3 rounded-xl ${
-            mode === "dark"
-              ? "bg-gray-800 text-white border-gray-700"
-              : "bg-white text-gray-900 border-gray-200"
-          } focus:ring-2 focus:ring-blue-500 backdrop-blur-sm`}
-        >
-          <option value="Report">Report</option>
-          <option value="Regional Insight">Regional Insight</option>
-          <option value="Data Visualization">Data Visualization</option>
-          <option value="Downloadable Resource">Downloadable Resource</option>
-        </select>
-      </div>
-      <div>
-        <label
-          className={`block text-sm font-medium ${
-            mode === "dark" ? "text-gray-300" : "text-gray-700"
-          } mb-2`}
-        >
-          Upload PDF Document
-        </label>
-        <div className="space-y-3">
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept=".pdf"
-            className="hidden"
-          />
-          <motion.button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className={`w-full px-4 py-3 rounded-xl border-2 border-dashed ${
-              mode === "dark"
-                ? "border-gray-600 bg-gray-800 text-gray-300 hover:border-gray-500"
-                : "border-gray-300 bg-gray-50 text-gray-600 hover:border-gray-400"
-            } flex items-center justify-center gap-2 transition-colors`}
-          >
-            <Icon icon="heroicons:document-arrow-up" className="w-5 h-5" />
-            {selectedFile ? selectedFile.name : "Choose PDF file"}
-          </motion.button>
-          {selectedFile && (
-            <div
-              className={`flex items-center gap-2 p-2 rounded-lg ${
-                mode === "dark" ? "bg-gray-800" : "bg-gray-100"
-              }`}
-            >
-              <Icon
-                icon="heroicons:document-text"
-                className="w-4 h-4 text-red-500"
-              />
-              <span className="text-sm flex-1">{selectedFile.name}</span>
-              <button
-                type="button"
-                onClick={() => setSelectedFile(null)}
-                className="text-red-500 hover:text-red-700"
-              >
-                <Icon icon="heroicons:x-mark" className="w-4 h-4" />
-              </button>
-            </div>
-          )}
-          {formData?.file_path && !selectedFile && (
-            <div
-              className={`flex items-center gap-2 p-2 rounded-lg ${
-                mode === "dark" ? "bg-gray-800" : "bg-gray-100"
-              }`}
-            >
-              <Icon
-                icon="heroicons:document-text"
-                className="w-4 h-4 text-green-500"
-              />
-              <span className="text-sm flex-1">Existing file uploaded</span>
-            </div>
-          )}
-        </div>
-      </div>
-      {formData?.type === "Data Visualization" && (
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label
-              className={`block text-sm font-medium ${
-                mode === "dark" ? "text-gray-300" : "text-gray-700"
-              }`}
-            >
-              Chart Data (JSON) - Optional
-            </label>
-            <div className="flex gap-1">
-              {["bar", "line", "pie", "donut", "area"].map((type) => (
-                <motion.button
-                  key={type}
-                  type="button"
-                  onClick={() => insertSampleData(type)}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`px-2 py-1 text-xs rounded ${
-                    mode === "dark"
-                      ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                  title={`Insert ${type} chart sample`}
-                >
-                  {type}
-                </motion.button>
-              ))}
-            </div>
-          </div>
-          <textarea
-            name="chart_data"
-            value={formData?.chart_data || ""}
-            onChange={onInputChange}
-            rows={6}
-            className={`w-full px-4 py-3 rounded-xl ${
-              mode === "dark"
-                ? "bg-gray-800 text-white border-gray-700"
-                : "bg-white text-gray-900 border-gray-200"
-            } focus:ring-2 focus:ring-blue-500 backdrop-blur-sm ${
-              chartDataError ? "border-red-500" : ""
-            }`}
-            placeholder='{
-  "type": "bar",
-  "series": [
-    {
-      "name": "Sales",
-      "data": [12, 19, 3, 5, 2]
-    }
-  ],
-  "options": {
-    "chart": {
-      "type": "bar",
-      "height": 350
-    },
-    "xaxis": {
-      "categories": ["Jan", "Feb", "Mar", "Apr", "May"]
-    },
-    "title": {
-      "text": "Sample Chart"
-    }
-  }
-}'
-          />
-          {chartDataError && (
-            <p className="mt-2 text-sm text-red-500">{chartDataError}</p>
-          )}
+    <>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className={`rounded-2xl ${
+          mode === "dark" ? "bg-gray-800/90 backdrop-blur-sm" : ""
+        }`}
+      >
+        <div className="mb-8">
           <p
-            className={`mt-2 text-xs ${
+            className={`mt-2 text-sm ${
               mode === "dark" ? "text-gray-400" : "text-gray-500"
             }`}
           >
-            Click the buttons above to insert sample chart data, or paste
-            ApexCharts JSON. Leave empty for regular content.
+            Fill in the details below to {isEditing ? "update" : "create"} your
+            market intel report.
           </p>
-          {parsedChartData && (
-            <div className="mt-4">
-              <label
-                className={`block text-sm font-medium ${
-                  mode === "dark" ? "text-gray-300" : "text-gray-700"
-                } mb-2`}
-              >
-                Chart Preview
-              </label>
-              <div
-                className={`p-4 rounded-xl border ${
-                  mode === "dark"
-                    ? "bg-gray-800 border-gray-700"
-                    : "bg-white border-gray-200"
-                }`}
-                style={{ height: "440px" }}
-              >
-                <MarketIntelChart mode={mode} chartData={parsedChartData} />
+        </div>
+
+        <form onSubmit={validateForm} className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              <div>
+                <label
+                  htmlFor="title"
+                  className={`block text-sm font-medium ${
+                    mode === "dark" ? "text-gray-200" : "text-gray-700"
+                  }`}
+                >
+                  Title
+                </label>
+                <div className="mt-1 relative">
+                  <input
+                    type="text"
+                    name="title"
+                    id="title"
+                    value={formData.title || ""}
+                    onChange={handleInputChange}
+                    className={`block w-full rounded-xl border text-sm px-4 py-3 transition-all duration-200 ${
+                      mode === "dark"
+                        ? "bg-gray-700/50 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500"
+                        : "bg-white border-gray-200 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                    } ${errors.title ? "border-red-500" : ""}`}
+                    placeholder="Enter market intel title"
+                  />
+                  {errors.title && (
+                    <motion.p
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="absolute -bottom-6 left-0 text-red-500 text-xs"
+                    >
+                      {errors.title}
+                    </motion.p>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="description"
+                  className={`block text-sm font-medium ${
+                    mode === "dark" ? "text-gray-200" : "text-gray-700"
+                  }`}
+                >
+                  Description
+                </label>
+                <textarea
+                  name="description"
+                  id="description"
+                  value={formData.description || ""}
+                  onChange={handleInputChange}
+                  rows={4}
+                  className={`mt-1 block w-full rounded-xl border text-sm px-4 py-3 transition-all duration-200 ${
+                    mode === "dark"
+                      ? "bg-gray-700/50 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500"
+                      : "bg-white border-gray-200 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                  }`}
+                  placeholder="Enter market intel description"
+                />
               </div>
             </div>
-          )}
-        </div>
-      )}
-      <div>
-        <label
-          className={`block text-sm font-medium ${
-            mode === "dark" ? "text-gray-300" : "text-gray-700"
-          } mb-2`}
-        >
-          URL
-        </label>
-        <input
-          type="url"
-          name="url"
-          value={formData?.url || ""}
-          onChange={onInputChange}
-          className={`w-full px-4 py-3 rounded-xl ${
-            mode === "dark"
-              ? "bg-gray-800 text-white border-gray-700"
-              : "bg-white text-gray-900 border-gray-200"
-          } focus:ring-2 focus:ring-blue-500 backdrop-blur-sm`}
-          placeholder="Enter resource URL"
-        />
-      </div>
-      <div>
-        <label
-          className={`block text-sm font-medium ${
-            mode === "dark" ? "text-gray-300" : "text-gray-700"
-          } mb-2`}
-        >
-          Icon URL
-        </label>
-        <input
-          type="url"
-          name="icon_url"
-          value={formData?.icon_url || ""}
-          onChange={onInputChange}
-          className={`w-full px-4 py-3 rounded-xl ${
-            mode === "dark"
-              ? "bg-gray-800 text-white border-gray-700"
-              : "bg-white text-gray-900 border-gray-200"
-          } focus:ring-2 focus:ring-blue-500 backdrop-blur-sm`}
-          placeholder="Enter icon URL"
-        />
-        {formData?.icon_url && (
-          <img
-            src={formData.icon_url}
-            alt="Icon Preview"
-            className={`mt-4 w-16 h-16 rounded-lg object-cover border ${
-              mode === "dark" ? "border-gray-700" : "border-gray-200"
-            } shadow-sm`}
-            onError={() => toast.error("Invalid icon URL")}
-          />
+
+            <div className="space-y-6">
+              <div>
+                <label
+                  htmlFor="type"
+                  className={`block text-sm font-medium ${
+                    mode === "dark" ? "text-gray-200" : "text-gray-700"
+                  }`}
+                >
+                  Type
+                </label>
+                <select
+                  name="type"
+                  id="type"
+                  value={formData.type || ""}
+                  onChange={handleInputChange}
+                  className={`mt-1 block w-full rounded-xl border text-sm px-4 py-3 transition-all duration-200 ${
+                    mode === "dark"
+                      ? "bg-gray-700/50 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500"
+                      : "bg-white border-gray-200 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                  } ${errors.type ? "border-red-500" : ""}`}
+                >
+                  <option value="">Select type</option>
+                  {types.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+                {errors.type && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-1 text-red-500 text-xs"
+                  >
+                    {errors.type}
+                  </motion.p>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="tier_restriction"
+                  className={`block text-sm font-medium ${
+                    mode === "dark" ? "text-gray-200" : "text-gray-700"
+                  }`}
+                >
+                  Tier Restriction
+                </label>
+                <select
+                  name="tier_restriction"
+                  id="tier_restriction"
+                  value={formData.tier_restriction || ""}
+                  onChange={handleInputChange}
+                  className={`mt-1 block w-full rounded-xl border text-sm px-4 py-3 transition-all duration-200 ${
+                    mode === "dark"
+                      ? "bg-gray-700/50 border-gray-600 text-white focus:border-blue-500 focus:ring-blue-500"
+                      : "bg-white border-gray-200 text-gray-900 focus:border-blue-500 focus:ring-blue-500"
+                  } ${errors.tier_restriction ? "border-red-500" : ""}`}
+                >
+                  <option value="">Select tier</option>
+                  {validTiers.map((tier) => (
+                    <option key={tier} value={tier}>
+                      {tier === "Free Member" ? "Free Member" : tier}
+                    </option>
+                  ))}
+                </select>
+                {errors.tier_restriction && (
+                  <motion.p
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-1 text-red-500 text-xs"
+                  >
+                    {errors.tier_restriction}
+                  </motion.p>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gray-50 dark:bg-gray-800/50 rounded-xl p-6 space-y-6">
+            <label
+              className={`block text-sm font-medium ${
+                mode === "dark" ? "text-gray-200" : "text-gray-700"
+              }`}
+            >
+              Upload PDF
+            </label>
+            <div className="mt-1">
+              <div
+                className={`flex items-center justify-center w-full px-4 py-6 border-2 border-dashed rounded-xl transition-all duration-200 ${
+                  mode === "dark"
+                    ? "border-gray-600 hover:border-gray-500 bg-gray-700/50"
+                    : "border-gray-300 hover:border-gray-400 bg-white"
+                }`}
+              >
+                <input
+                  type="file"
+                  name="file"
+                  id="file"
+                  accept="application/pdf"
+                  onChange={(e) =>
+                    handleInputChange({
+                      target: { name: "file", value: e.target.files[0] },
+                    })
+                  }
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+              </div>
+              {formData.file_path && (
+                <div
+                  className={`mt-2 flex items-center justify-between p-3 rounded-lg ${
+                    mode === "dark" ? "bg-gray-700/50" : "bg-gray-100"
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <Icon
+                      icon="heroicons:document-text"
+                      className="w-4 h-4 text-green-500"
+                    />
+                    <span
+                      className={`text-sm ${
+                        mode === "dark" ? "text-gray-300" : "text-gray-600"
+                      }`}
+                    >
+                      Current file: {formData.file_path.split("/").pop()}
+                    </span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      type="button"
+                      onClick={() => setShowPreviewModal(true)}
+                      className={`flex items-center space-x-1 px-2 py-1 text-xs rounded transition-colors ${
+                        mode === "dark"
+                          ? "text-blue-400 hover:bg-blue-900/20 hover:text-blue-300"
+                          : "text-blue-600 hover:bg-blue-50 hover:text-blue-700"
+                      }`}
+                      title="Preview PDF"
+                    >
+                      <Icon icon="heroicons:eye" className="w-3 h-3" />
+                      <span>Preview</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        handleInputChange({
+                          target: { name: "file_path", value: "" },
+                        })
+                      }
+                      className={`flex items-center space-x-1 px-2 py-1 text-xs rounded transition-colors ${
+                        mode === "dark"
+                          ? "text-red-400 hover:bg-red-900/20 hover:text-red-300"
+                          : "text-red-600 hover:bg-red-50 hover:text-red-700"
+                      }`}
+                      title="Remove current file"
+                    >
+                      <Icon icon="heroicons:trash" className="w-3 h-3" />
+                      <span>Remove</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+              {errors.file && (
+                <motion.p
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-2 text-red-500 text-xs"
+                >
+                  {errors.file}
+                </motion.p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-4 pt-4">
+            <button
+              type="button"
+              onClick={cancelForm}
+              disabled={isSubmitting}
+              className={`px-6 py-3 rounded-xl text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
+                mode === "dark"
+                  ? "bg-gray-700 text-gray-200 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              }`}
+            >
+              <Icon icon="heroicons:x-mark" className="w-5 h-5" />
+              <span>Cancel</span>
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`px-6 py-3 rounded-xl text-sm font-medium text-white transition-all duration-200 flex items-center space-x-2 ${
+                isSubmitting
+                  ? "bg-blue-400 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700"
+              }`}
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  <span>Processing...</span>
+                </>
+              ) : (
+                <>
+                  <Icon icon="heroicons:check" className="w-5 h-5" />
+                  <span>
+                    {isEditing ? "Update Market Intel" : "Create Market Intel"}
+                  </span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </motion.div>
+
+      {/* PDF Preview Modal using ItemActionModal with React Portal */}
+      {showPreviewModal &&
+        createPortal(
+          <ItemActionModal
+            isOpen={showPreviewModal}
+            onClose={() => setShowPreviewModal(false)}
+            title="PDF Preview"
+            mode={mode}
+            width="max-w-6xl"
+          >
+            <div className="h-[80vh]">
+              {formData.file_path ? (
+                <iframe
+                  src={formData.file_path}
+                  className="w-full h-full border-0 rounded-lg"
+                  title="PDF Preview"
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <Icon
+                      icon="heroicons:document-text"
+                      className={`mx-auto h-16 w-16 mb-4 ${
+                        mode === "dark" ? "text-gray-400" : "text-gray-300"
+                      }`}
+                    />
+                    <p
+                      className={`text-sm ${
+                        mode === "dark" ? "text-gray-400" : "text-gray-600"
+                      }`}
+                    >
+                      No PDF file available to preview
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </ItemActionModal>,
+          document.body
         )}
-      </div>
-      <div>
-        <label
-          className={`block text-sm font-medium ${
-            mode === "dark" ? "text-gray-300" : "text-gray-700"
-          } mb-2`}
-        >
-          Downloadable
-        </label>
-        <input
-          type="checkbox"
-          name="downloadable"
-          checked={formData?.downloadable || false}
-          onChange={onInputChange}
-          className="h-5 w-5 text-blue-600 focus:ring-blue-500 rounded"
-        />
-      </div>
-      <div className="flex gap-4">
-        <motion.button
-          type="button"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          onClick={cancelForm}
-          className={`flex-1 px-6 py-3 rounded-xl ${
-            mode === "dark"
-              ? "bg-gray-800 text-white"
-              : "bg-gray-200 text-gray-900"
-          } flex items-center justify-center shadow-lg hover:shadow-xl`}
-        >
-          <Icon icon="heroicons:x-mark" className="w-5 h-5 mr-2" />
-          Cancel
-        </motion.button>
-        <motion.button
-          type="submit"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          disabled={uploading}
-          className={`flex-1 px-6 py-3 rounded-xl ${
-            mode === "dark"
-              ? "bg-gradient-to-r from-blue-400 to-blue-600 text-white"
-              : "bg-gradient-to-r from-blue-400 to-blue-600 text-white"
-          } disabled:opacity-50 flex items-center justify-center shadow-lg hover:shadow-xl`}
-        >
-          {uploading ? (
-            <>
-              <Icon
-                icon="heroicons:arrow-path"
-                className="w-5 h-5 mr-2 animate-spin"
-              />
-              Uploading...
-            </>
-          ) : (
-            <>
-              <Icon icon="heroicons:check" className="w-5 h-5 mr-2" />
-              {isEditing ? "Update" : "Create"}
-            </>
-          )}
-        </motion.button>
-      </div>
-    </form>
+    </>
   );
 }

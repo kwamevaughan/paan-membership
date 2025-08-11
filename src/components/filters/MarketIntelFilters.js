@@ -1,28 +1,15 @@
 import SelectFilter from "./common/SelectFilter";
 
 export default function MarketIntelFilters({
-  selectedCategory,
-  onCategoryChange,
   selectedTier,
   onTierChange,
   selectedType,
   onTypeChange,
-  selectedRegion,
-  onRegionChange,
-  categories = [],
   tiers = [],
   types = [],
-  regions = [],
   mode = "light",
   loading = false,
 }) {
-  const defaultCategories = [
-    "Report",
-    "Regional Insight",
-    "Data Visualization",
-    "Downloadable Resource"
-  ];
-
   const defaultTiers = [
     "Associate Member",
     "Full Member",
@@ -32,42 +19,13 @@ export default function MarketIntelFilters({
 
   const defaultTypes = [
     "Report",
+    "Analysis",
     "Regional Insight",
-    "Data Visualization",
-    "Downloadable Resource"
-  ];
-
-  const defaultRegions = [
-    "Global",
-    "East Africa",
-    "West Africa",
-    "Southern Africa",
-    "North Africa",
-    "Central Africa"
+    "Data Visualization"
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <SelectFilter
-        label="Category"
-        value={selectedCategory}
-        onChange={onCategoryChange}
-        options={categories.length > 0 ? categories : defaultCategories}
-        disabled={loading}
-        mode={mode}
-        id="market-intel-category"
-      />
-
-      <SelectFilter
-        label="Tier"
-        value={selectedTier}
-        onChange={onTierChange}
-        options={tiers.length > 0 ? tiers : defaultTiers}
-        disabled={loading}
-        mode={mode}
-        id="market-intel-tier"
-      />
-
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <SelectFilter
         label="Type"
         value={selectedType}
@@ -79,13 +37,13 @@ export default function MarketIntelFilters({
       />
 
       <SelectFilter
-        label="Region"
-        value={selectedRegion}
-        onChange={onRegionChange}
-        options={regions.length > 0 ? regions : defaultRegions}
+        label="Tier"
+        value={selectedTier}
+        onChange={onTierChange}
+        options={tiers.length > 0 ? tiers : defaultTiers}
         disabled={loading}
         mode={mode}
-        id="market-intel-region"
+        id="market-intel-tier"
       />
     </div>
   );

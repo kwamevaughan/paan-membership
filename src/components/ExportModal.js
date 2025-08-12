@@ -57,6 +57,7 @@ export default function ExportModal({ isOpen, onClose, candidates, mode, type = 
         opening: true,
         selected_tier: true,
         job_type: true,
+        country: true,
         status: true,
         phone: false,
         linkedin: false,
@@ -84,6 +85,7 @@ export default function ExportModal({ isOpen, onClose, candidates, mode, type = 
         { label: "Opening", key: "opening", icon: "mdi:briefcase" },
         { label: "Selected Tier", key: "selected_tier", icon: "mdi:star" },
         { label: "Job Type", key: "job_type", icon: "mdi:briefcase" },
+        { label: "Country", key: "country", icon: "mdi:map-marker" },
         { label: "Status", key: "status", icon: "mdi:tag" },
         { label: "Phone", key: "phone", icon: "mdi:phone" },
         { label: "LinkedIn", key: "linkedin", icon: "mdi:linkedin" },
@@ -103,6 +105,11 @@ export default function ExportModal({ isOpen, onClose, candidates, mode, type = 
 
     // Format the created_at field in filteredCandidates
     const formattedCandidates = filteredCandidates.map(candidate => {
+      // Determine country based on job type
+      const country = candidate.job_type === "agency" 
+        ? candidate.headquartersLocation 
+        : candidate.countryOfResidence;
+      
       return {
         ...candidate,
         created_at: formatDate(candidate.created_at),
@@ -114,6 +121,7 @@ export default function ExportModal({ isOpen, onClose, candidates, mode, type = 
         primaryContactEmail: candidate.primaryContactEmail || "-",
         agencyName: candidate.agencyName || "-",
         headquartersLocation: candidate.headquartersLocation || "-",
+        country: country || "-",
         status: candidate.status || "-",
         registered_at: candidate.registered_at ? formatDate(candidate.registered_at) : "-"
       };

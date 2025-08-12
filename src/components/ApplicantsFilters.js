@@ -12,6 +12,7 @@ export default function ApplicantsFilters({
   const [filterOpening, setFilterOpening] = useState(initialOpening || "all");
   const [filterStatus, setFilterStatus] = useState("all");
   const [filterTier, setFilterTier] = useState("all");
+  const [filterCountry, setFilterCountry] = useState("all");
   const [sortBy, setSortBy] = useState("latest");
   const [isExpanded, setIsExpanded] = useState(true);
   const hasAppliedInitialFilter = useRef(false);
@@ -54,6 +55,26 @@ export default function ApplicantsFilters({
     ),
   ];
 
+  // Extract unique countries from both countryOfResidence and headquartersLocation
+  const uniqueCountries = [
+    "all",
+    ...Array.from(
+      new Set(
+        candidates
+          .map((c) => {
+            // For agencies, use headquartersLocation; for freelancers, use countryOfResidence
+            if (c.job_type === "agency") {
+              return c.headquartersLocation;
+            } else if (c.job_type === "freelancer") {
+              return c.countryOfResidence;
+            }
+            return null;
+          })
+          .filter(Boolean)
+      )
+    ).sort(),
+  ];
+
   // Validate candidates
   const areCandidatesValid = candidates.every(
     (c) =>
@@ -66,16 +87,18 @@ export default function ApplicantsFilters({
     (
       statusOverride = filterStatus,
       openingOverride = filterOpening,
-      tierOverride = filterTier
+      tierOverride = filterTier,
+      countryOverride = filterCountry
     ) => {
       onFilterChange({
         searchQuery,
         filterOpening: openingOverride,
         filterStatus: statusOverride,
         filterTier: tierOverride,
+        filterCountry: countryOverride,
       });
     },
-    [searchQuery, filterStatus, filterOpening, filterTier, onFilterChange]
+    [searchQuery, filterStatus, filterOpening, filterTier, filterCountry, onFilterChange]
   );
 
   // Apply initial filter when component loads
@@ -91,18 +114,20 @@ export default function ApplicantsFilters({
           : localStorage.getItem("filterOpening") || "all";
       const savedStatus = localStorage.getItem("filterStatus") || "all";
       const savedTier = localStorage.getItem("filterTier") || "all";
+      const savedCountry = localStorage.getItem("filterCountry") || "all";
       const savedSort = localStorage.getItem("sortBy") || "latest";
 
       setFilterOpening(savedOpening);
       setFilterStatus(savedStatus);
       setFilterTier(savedTier);
+      setFilterCountry(savedCountry);
       setSortBy(savedSort);
 
       // Don't call onSortChange during initial load - let parent handle initial sort
       // if (onSortChange) {
       //   onSortChange(savedSort);
       // }
-      handleFilter(savedStatus, savedOpening, savedTier);
+      handleFilter(savedStatus, savedOpening, savedTier, savedCountry);
       hasAppliedInitialFilter.current = true;
     } else if (!areCandidatesValid) {
       console.warn("Invalid candidates detected:", candidates);
@@ -135,6 +160,7 @@ export default function ApplicantsFilters({
     filterOpening,
     filterStatus,
     filterTier,
+    filterCountry,
     areCandidatesValid,
     candidates,
   ]);
@@ -157,6 +183,12 @@ export default function ApplicantsFilters({
     localStorage.setItem("filterTier", newTier);
   };
 
+  const handleCountryChange = (e) => {
+    const newCountry = e.target.value;
+    setFilterCountry(newCountry);
+    localStorage.setItem("filterCountry", newCountry);
+  };
+
   const handleSortChange = (e) => {
     const newSort = e.target.value;
     setSortBy(newSort);
@@ -171,10 +203,12 @@ export default function ApplicantsFilters({
     setFilterOpening("all");
     setFilterStatus("all");
     setFilterTier("all");
+    setFilterCountry("all");
     setSortBy("latest");
     localStorage.removeItem("filterOpening");
     localStorage.removeItem("filterStatus");
     localStorage.removeItem("filterTier");
+    localStorage.removeItem("filterCountry");
     localStorage.removeItem("sortBy");
     if (onSortChange) {
       onSortChange("latest");
@@ -188,6 +222,7 @@ export default function ApplicantsFilters({
     if (filterOpening !== "all") count++;
     if (filterStatus !== "all") count++;
     if (filterTier !== "all") count++;
+    if (filterCountry !== "all") count++;
     if (sortBy !== "latest") count++; // Count non-default sorting as active filter
     return count;
   };
@@ -254,7 +289,7 @@ export default function ApplicantsFilters({
       {/* Filter Content */}
       {isExpanded && (
         <div className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
             {/* Search Field */}
             <div>
               <label
@@ -358,6 +393,34 @@ export default function ApplicantsFilters({
                   {uniqueTiers.map((tier) => (
                     <option key={tier} value={tier}>
                       {tier === "all" ? "All Tiers" : tier}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                  <Icon
+                    icon="heroicons:chevron-down"
+                    className={`w-4 h-4 ${mutedTextColor}`}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Country Filter */}
+            <div>
+              <label
+                className={`block text-sm font-medium mb-1.5 ${mutedTextColor}`}
+              >
+                Country
+              </label>
+              <div className="relative">
+                <select
+                  value={filterCountry}
+                  onChange={handleCountryChange}
+                  className={`block w-full rounded-md shadow-sm pl-3 pr-8 py-2 text-sm focus:ring-2 focus:ring-[#f05d23] focus:border-transparent ${inputBg} ${inputBorder} ${textColor} border appearance-none`}
+                >
+                  {uniqueCountries.map((country) => (
+                    <option key={country} value={country}>
+                      {country === "all" ? "All Countries" : country}
                     </option>
                   ))}
                 </select>

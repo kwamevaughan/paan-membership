@@ -24,6 +24,7 @@ export default function ApplicantsTable({
     primaryContactPhone: false,
     primaryContactLinkedin: false,
     tier: true,
+    country: false,
     reference_number: false,
   });
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,6 +37,7 @@ export default function ApplicantsTable({
     primaryContactPhone: 150,
     primaryContactLinkedin: 150,
     tier: 120,
+    country: 120,
     reference_number: 150,
   });
 
@@ -47,6 +49,7 @@ export default function ApplicantsTable({
     { key: "primaryContactPhone", label: "Phone" },
     { key: "primaryContactLinkedin", label: "LinkedIn" },
     { key: "tier", label: "Tier" },
+    { key: "country", label: "Country" },
     { key: "reference_number", label: "Reference Number" },
   ];
 
@@ -456,6 +459,18 @@ const handleColumnResize = (e, columnKey) => {
                       : "—"}
                   </td>
                 )}
+                {visibleColumns.country && (
+                  <td
+                    className={`p-4 ${
+                      isDark ? "text-gray-300" : "text-gray-600"
+                    } text-sm`}
+                    style={{ width: columnWidths.country }}
+                  >
+                    {candidate.job_type === "agency" 
+                      ? candidate.headquartersLocation || "—"
+                      : candidate.countryOfResidence || "—"}
+                  </td>
+                )}
                 {visibleColumns.reference_number && (
                   <td
                     className={`p-4 ${
@@ -468,7 +483,13 @@ const handleColumnResize = (e, columnKey) => {
                 )}
                 <td className="flex p-4 space-x-3">
                   <button
-                    onClick={() => onViewCandidate(candidate)}
+                    onClick={() => {
+                      toast.loading("Loading candidate details...", { 
+                        id: `loading-${candidate.id}`,
+                        duration: 3000 
+                      });
+                      onViewCandidate(candidate);
+                    }}
                     className={`px-4 py-2 rounded-lg inline-flex items-center gap-1.5 text-xs font-medium transition-all duration-200 transform hover:scale-105
                       ${
                         isDark

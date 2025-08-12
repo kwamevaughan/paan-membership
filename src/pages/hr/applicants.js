@@ -90,6 +90,9 @@ export default function HRApplicants({
 
       const data = await response.json();
 
+      // Dismiss the loading toast
+      toast.dismiss(`loading-${candidate.id}`);
+
       // Small delay to ensure the previous modal is closed before opening the new one
       setTimeout(() => {
         setSelectedCandidate(data.candidate);
@@ -98,6 +101,9 @@ export default function HRApplicants({
       }, 100);
     } catch (error) {
       console.error("Error fetching candidate details:", error);
+      
+      // Dismiss the loading toast and show error
+      toast.dismiss(`loading-${candidate.id}`);
       toast.error("Failed to load candidate details");
 
       // Fallback: use the basic candidate data
@@ -171,6 +177,7 @@ export default function HRApplicants({
     filterOpening,
     filterStatus,
     filterTier,
+    filterCountry,
   }) => {
     let result = [...candidates];
 
@@ -206,6 +213,16 @@ export default function HRApplicants({
       });
       console.log("After tier filter:", result);
     }
+    if (filterCountry !== "all") {
+      result = result.filter((c) => {
+        // For agencies, check headquartersLocation; for freelancers, check countryOfResidence
+        const countryValue = c.job_type === "agency" 
+          ? c.headquartersLocation 
+          : c.countryOfResidence;
+        return countryValue === filterCountry;
+      });
+      console.log("After country filter:", result);
+    }
 
     // Apply current sort to the filtered data
     const sortedResult = [...result].sort((a, b) => {
@@ -238,16 +255,19 @@ export default function HRApplicants({
     const currentOpening = localStorage.getItem("filterOpening") || "all";
     const currentStatus = localStorage.getItem("filterStatus") || "all";
     const currentTier = localStorage.getItem("filterTier") || "all";
+    const currentCountry = localStorage.getItem("filterCountry") || "all";
     const currentQueryOpening = router.query.opening || "all";
 
     if (
       filterOpening !== currentOpening ||
       filterStatus !== currentStatus ||
-      filterTier !== currentTier
+      filterTier !== currentTier ||
+      filterCountry !== currentCountry
     ) {
       localStorage.setItem("filterOpening", filterOpening);
       localStorage.setItem("filterStatus", filterStatus);
       localStorage.setItem("filterTier", filterTier);
+      localStorage.setItem("filterCountry", filterCountry);
 
       if (filterOpening !== currentQueryOpening) {
         if (filterOpening !== "all") {

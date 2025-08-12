@@ -178,6 +178,13 @@ export default function HROverview({
   };
 
   const handleViewCandidate = async (candidate) => {
+    // Show loading toast
+    const loadingToastId = `loading-${candidate.id}`;
+    toast.loading("Loading candidate details...", { 
+      id: loadingToastId,
+      duration: 3000 
+    });
+
     try {
       // Fetch full candidate data including answers and questions using existing fetchHRData
       const response = await fetch(`/api/candidate-details?id=${candidate.id}`);
@@ -186,10 +193,17 @@ export default function HROverview({
       }
       
       const data = await response.json();
+      
+      // Dismiss loading toast
+      toast.dismiss(loadingToastId);
+      
       setSelectedCandidate(data.candidate);
       setIsCandidateModalOpen(true);
     } catch (error) {
       console.error('Error fetching candidate details:', error);
+      
+      // Dismiss loading toast and show error
+      toast.dismiss(loadingToastId);
       toast.error('Failed to load candidate details');
       
       // Fallback: use the basic candidate data

@@ -40,7 +40,7 @@ export default function AccessHubsCard({
   const formatPrice = (price) => {
     const numericPrice = parseFloat(price) || 0;
     if (numericPrice === 0) return "Free";
-    return `$${numericPrice.toFixed(2)}/day`;
+    return `$${numericPrice.toFixed(2)}`;
   };
 
   const accessHubStatus = getAccessHubStatus(accessHub.is_available);
@@ -130,14 +130,41 @@ export default function AccessHubsCard({
         </div>
 
         {/* Capacity and Pricing */}
-        <div className="flex flex-wrap items-center align-middle gap-4 mb-4 text-sm text-gray-600 dark:text-gray-300">
-          <div className="flex items-center gap-1">
-            <Icon icon="heroicons:users" className="w-4 h-4" />
+        <div className="mb-4">
+          <div className="flex items-center gap-1 mb-2 text-sm text-gray-600 dark:text-gray-300">
+            <Icon icon="heroicons:users" className="w-4 h-4 flex-shrink-0" />
             <span>Capacity: {accessHub.capacity}</span>
           </div>
-          <div className="flex items-center gap-1">
-            <Icon icon="heroicons:currency-dollar" className="w-4 h-4" />
-            <span>{formatPrice(accessHub.pricing_per_day)}</span>
+          
+          {/* Pricing Grid */}
+          <div className="grid grid-cols-2 gap-2 text-sm">
+            {/* Boardroom */}
+            <div className="flex items-center gap-1">
+              <Icon icon="heroicons:building-office" className="w-4 h-4 text-blue-500 flex-shrink-0" />
+              <span className="font-medium">${accessHub.pricing_boardroom || 15}</span>
+              <span className="text-xs text-gray-500">/hr</span>
+            </div>
+            
+            {/* Co-working */}
+            <div className="flex items-center gap-1">
+              <Icon icon="heroicons:briefcase" className="w-4 h-4 text-green-500 flex-shrink-0" />
+              <span className="font-medium">${accessHub.pricing_coworking || 20}</span>
+              <span className="text-xs text-gray-500">/day</span>
+            </div>
+            
+            {/* Meeting Room */}
+            <div className="flex items-center gap-1">
+              <Icon icon="heroicons:rectangle-group" className="w-4 h-4 text-purple-500 flex-shrink-0" />
+              <span className="font-medium">${accessHub.pricing_meeting || 10}</span>
+              <span className="text-xs text-gray-500">/hr</span>
+            </div>
+            
+            {/* Virtual Address */}
+            <div className="flex items-center gap-1">
+              <Icon icon="heroicons:globe-alt" className="w-4 h-4 text-amber-500 flex-shrink-0" />
+              <span className="font-medium">${accessHub.pricing_virtual || 200}</span>
+              <span className="text-xs text-gray-500">/year</span>
+            </div>
           </div>
         </div>
       </div>

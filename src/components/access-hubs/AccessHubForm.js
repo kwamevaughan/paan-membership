@@ -35,6 +35,11 @@ export default function AccessHubForm({
     country: "",
     is_available: true,
     pricing_per_day: 0,
+    pricing_boardroom: 15,
+    pricing_coworking: 20,
+    pricing_meeting: 10,
+    pricing_virtual: 200,
+    pricing_unit: "USD",
     amenities: [],
     images: [],
     capacity: 0,
@@ -43,6 +48,26 @@ export default function AccessHubForm({
   const [imageSource, setImageSource] = useState("upload");
   const [uploadedImage, setUploadedImage] = useState(null);
   const fileInputRef = useRef(null);
+
+  // Sync formData with localFormData when formData prop changes
+  useEffect(() => {
+    if (formData) {
+      setLocalFormData(prev => ({
+        ...prev,
+        ...formData,
+        // Ensure arrays are properly initialized
+        amenities: formData.amenities || [],
+        images: formData.images || [],
+        // Set default values if not present
+        pricing_boardroom: formData.pricing_boardroom !== undefined ? formData.pricing_boardroom : '',
+        pricing_coworking: formData.pricing_coworking !== undefined ? formData.pricing_coworking : '',
+        pricing_meeting: formData.pricing_meeting !== undefined ? formData.pricing_meeting : '',
+        pricing_virtual: formData.pricing_virtual !== undefined ? formData.pricing_virtual : '',
+        pricing_unit: formData.pricing_unit || 'USD',
+        capacity: formData.capacity || 0
+      }));
+    }
+  }, [formData]);
   const [isDragging, setIsDragging] = useState(false);
 
   const resetLocalForm = () => {
@@ -54,6 +79,11 @@ export default function AccessHubForm({
       country: "",
       is_available: true,
       pricing_per_day: 0,
+      pricing_boardroom: 15,
+      pricing_coworking: 20,
+      pricing_meeting: 10,
+      pricing_virtual: 200,
+      pricing_unit: "USD",
       amenities: [],
       images: [],
       capacity: 0,
@@ -84,6 +114,11 @@ export default function AccessHubForm({
         country: "",
         is_available: true,
         pricing_per_day: 0,
+        pricing_boardroom: 15,
+        pricing_coworking: 20,
+        pricing_meeting: 10,
+        pricing_virtual: 200,
+        pricing_unit: "USD",
         amenities: [],
         images: [],
         capacity: 0,
@@ -583,7 +618,7 @@ export default function AccessHubForm({
                 id="capacity"
                 name="capacity"
                 min="1"
-                value={localFormData.capacity || 0}
+                value={localFormData.capacity || 1}
                 onChange={handleLocalInputChange}
                 className={`w-full px-4 py-3 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
                   mode === "dark"
@@ -601,42 +636,108 @@ export default function AccessHubForm({
               )}
             </div>
 
-            {/* Pricing Per Day */}
-            <div>
-              <label
-                htmlFor="pricing_per_day"
-                className="block text-sm font-medium mb-2"
-              >
-                Pricing Per Day
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  id="pricing_per_day"
-                  name="pricing_per_day"
-                  min="0"
-                  step="0.01"
-                  value={localFormData.pricing_per_day || 0}
-                  onChange={handleLocalInputChange}
-                  className={`w-full pl-8 pr-4 py-3 rounded-lg border transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:outline-none ${
-                    mode === "dark"
-                      ? "bg-gray-700 border-gray-600 text-gray-200 placeholder-gray-400"
-                      : "bg-white border-gray-300 text-gray-900 placeholder-gray-500"
-                  } ${errors.pricing_per_day ? "border-red-500" : ""}`}
-                  placeholder="0.00"
-                  aria-invalid={errors.pricing_per_day ? "true" : "false"}
-                  aria-describedby={errors.pricing_per_day ? "pricing-error" : undefined}
-                />
-                <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
-                  $
-                </span>
+            {/* Pricing Section */}
+            <div className="col-span-2">
+              <h3 className="text-lg font-medium mb-3">Pricing</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Boardroom Pricing */}
+                <div>
+                  <label
+                    htmlFor="pricing_boardroom"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Boardroom (per hour)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                    <input
+                      type="number"
+                      id="pricing_boardroom"
+                      name="pricing_boardroom"
+                      min="0"
+                      step="0.01"
+                      value={localFormData.pricing_boardroom || ''}
+                      onChange={handleLocalInputChange}
+                      className="w-full pl-8 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      placeholder="15.00"
+                    />
+                  </div>
+                </div>
+
+                {/* Co-working Space Pricing */}
+                <div>
+                  <label
+                    htmlFor="pricing_coworking"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Co-working Space (day pass)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                    <input
+                      type="number"
+                      id="pricing_coworking"
+                      name="pricing_coworking"
+                      min="0"
+                      step="0.01"
+                      value={localFormData.pricing_coworking || ''}
+                      onChange={handleLocalInputChange}
+                      className="w-full pl-8 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      placeholder="20.00"
+                    />
+                  </div>
+                </div>
+
+                {/* Meeting Room Pricing */}
+                <div>
+                  <label
+                    htmlFor="pricing_meeting"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Meeting Room (per hour)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                    <input
+                      type="number"
+                      id="pricing_meeting"
+                      name="pricing_meeting"
+                      min="0"
+                      step="0.01"
+                      value={localFormData.pricing_meeting || ''}
+                      onChange={handleLocalInputChange}
+                      className="w-full pl-8 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      placeholder="10.00"
+                    />
+                  </div>
+                </div>
+
+                {/* Virtual Address Pricing */}
+                <div>
+                  <label
+                    htmlFor="pricing_virtual"
+                    className="block text-sm font-medium mb-1"
+                  >
+                    Virtual Address (per year)
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">$</span>
+                    <input
+                      type="number"
+                      id="pricing_virtual"
+                      name="pricing_virtual"
+                      min="0"
+                      step="0.01"
+                      value={localFormData.pricing_virtual || ''}
+                      onChange={handleLocalInputChange}
+                      className="w-full pl-8 pr-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                      placeholder="200.00"
+                    />
+                  </div>
+                </div>
               </div>
-              {errors.pricing_per_day && (
-                <p id="pricing-error" className="text-red-500 text-xs mt-1">
-                  {errors.pricing_per_day}
-                </p>
-              )}
             </div>
+
 
             {/* Amenities */}
             <div className="md:col-span-2">

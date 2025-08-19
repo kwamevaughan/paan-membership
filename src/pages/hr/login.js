@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/router";
 import { Icon } from "@iconify/react";
 import Image from "next/image";
@@ -16,6 +16,9 @@ export default function HRLogin() {
   const [captchaVerified, setCaptchaVerified] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [mode] = useState("light");
+  const [isLoading, setIsLoading] = useState(false);
+  const loginAttempts = useRef(0);
+  const lastAttemptTime = useRef(0);
   const router = useRouter();
 
   useEffect(() => {
@@ -36,15 +39,45 @@ export default function HRLogin() {
     return cookies;
   };
 
-  const handleLogin = async (e) => {
+  const handleLogin = useCallback(async (e) => {
     e.preventDefault();
     console.log("[HRLogin] Form submitted, handleLogin called");
+
+    if (isLoading) return;
+
+    // Rate limiting check - Supabase allows 30 requests per 5 minutes per IP
+    const now = Date.now();
+    const timeSinceLastAttempt = now - lastAttemptTime.current;
+    const FIVE_MINUTES = 5 * 60 * 1000;
+    
+    // Reset attempt counter if more than 5 minutes have passed
+    if (timeSinceLastAttempt > FIVE_MINUTES) {
+      loginAttempts.current = 0;
+    }
+    
+    // If too many attempts (25 to stay safe under the 30 limit), show error and return
+    if (loginAttempts.current >= 25) {
+      const timeToWait = Math.ceil((FIVE_MINUTES - timeSinceLastAttempt) / (60 * 1000));
+      if (timeSinceLastAttempt < FIVE_MINUTES) {
+        toast.error(`Too many login attempts. Please wait ${timeToWait} minutes before trying again.`, {
+          duration: 5000,
+          icon: '⏳'
+        });
+        return;
+      } else {
+        loginAttempts.current = 0; // Reset counter if wait time has passed
+      }
+    }
 
     if (!captchaVerified) {
       console.log("[HRLogin] CAPTCHA not verified");
       toast.error("Please verify the CAPTCHA.", { icon: "⚠️" });
       return;
     }
+
+    setIsLoading(true);
+    loginAttempts.current += 1;
+    lastAttemptTime.current = now;
 
     try {
       console.log("[HRLogin] Attempting login with email:", email);
@@ -66,9 +99,31 @@ export default function HRLogin() {
 
       if (authError) {
         console.error("[HRLogin] Supabase auth error:", authError);
-        toast.error(authError.message || "Invalid email or password.", {
-          icon: "❌",
-        });
+        
+        // Handle rate limiting specifically
+        if (authError.status === 429) {
+          const retryAfter = authError.response?.headers?.get('Retry-After') || 60;
+          toast.error(`Too many requests. Please try again in ${retryAfter} seconds.`, {
+            duration: 5000,
+            icon: '⏱️'
+          });
+        } else {
+          toast.error(authError.message || "Invalid email or password.", {
+            icon: "❌",
+            duration: 5000
+          });
+        }
+        
+        // If too many failed attempts, show cooldown message
+        if (loginAttempts.current >= 20) {
+          const timeToWait = Math.ceil((FIVE_MINUTES - (now - lastAttemptTime.current)) / (60 * 1000));
+          toast.error(`Too many attempts. Please wait ${timeToWait} minutes before trying again.`, {
+            duration: 5000,
+            icon: '⏱️'
+          });
+        }
+        
+        setIsLoading(false);
         return;
       }
 
@@ -96,9 +151,17 @@ export default function HRLogin() {
 
       if (sessionError || !currentSession) {
         console.error("[HRLogin] Session verification failed:", sessionError);
-        toast.error("Failed to verify session.", { icon: "❌" });
+        toast.error("Failed to verify session. Please try again.", { 
+          icon: "❌",
+          duration: 5000
+        });
+        setIsLoading(false);
         return;
       }
+      
+      // Reset attempt counter on successful login
+      loginAttempts.current = 0;
+      setIsLoading(false);
 
       console.log("[HRLogin] Checking hr_users for user ID:", user.id);
       const { data: hrUser, error: hrError } = await supabase
@@ -145,8 +208,10 @@ export default function HRLogin() {
     } catch (error) {
       console.error("[HRLogin] Unexpected error:", error);
       toast.error("An unexpected error occurred.", { icon: "❌" });
+    } finally {
+      setIsLoading(false);
     }
-  };
+  }, [email, password, captchaVerified, router, isLoading]);
 
   const handleMagicLink = async (e) => {
     e.preventDefault();

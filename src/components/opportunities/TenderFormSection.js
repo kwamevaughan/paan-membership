@@ -48,6 +48,10 @@ export default function TenderFormSection({
     "Videography",
     "Review and Development",
     "Technical Assistance",
+    "Social Media",
+    "E-learning Course Development",
+    "Digital Marketing",
+    "Media Monitoring Services",
     "Other",
   ];
 

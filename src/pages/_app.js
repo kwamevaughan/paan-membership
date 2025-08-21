@@ -127,7 +127,29 @@ function MyApp({ Component, pageProps }) {
 
   return (
     <div className={`${mode === "dark" ? "dark" : ""} ${poppins.variable} font-sans`}>
-      <Toaster position="top-center" reverseOrder={false} />
+      <div id="toast-container" style={{ 
+        position: 'fixed', 
+        top: '1rem', 
+        left: '50%', 
+        transform: 'translateX(-50%)', 
+        zIndex: 10000000, // Higher than the modal's z-index
+        pointerEvents: 'none', // Allow clicks to pass through to elements behind
+        maxWidth: '400px',
+        width: '100%',
+      }}>
+        <Toaster 
+          position="top-center"
+          reverseOrder={false}
+          toastOptions={{
+            style: {
+              zIndex: 10000000,
+              position: 'relative',
+              margin: '0.5rem',
+              pointerEvents: 'auto', // Make the toast itself clickable
+            },
+          }}
+        />
+      </div>
       <Component
         {...pageProps}
         mode={mode}

@@ -181,13 +181,12 @@ const useStatusChange = ({
       }
 
       toast.dismiss(statusToastId);
-      toast.success(`Status updated to ${newStatus}!`, { duration: 2000 });
 
       if (
         ["Accepted", "Reviewed", "Shortlisted", "Rejected"].includes(
           newStatus
         ) &&
-        candidate.email
+        candidate.primaryContactEmail
       ) {
         const { data: templateData, error: templateError } = await supabase
           .from("email_templates")
@@ -237,8 +236,10 @@ const useStatusChange = ({
 
         toast.custom(
           (t) => (
-            <div className="max-w-md w-full bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5">
-              <div className="flex-1 w-0 p-4">
+            <div 
+              className="flex-col bg-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-black ring-opacity-5"
+            >
+              <div className="flex-1 p-4">
                 <div className="flex items-start">
                   <div className="ml-3 flex-1">
                     <p className="text-sm font-medium text-gray-900">
@@ -259,7 +260,7 @@ const useStatusChange = ({
                   </div>
                 </div>
               </div>
-              <div className="flex border-l border-gray-200">
+              <div className="flex  border-l border-gray-200 min-w-[120px]">
                 <button
                   onClick={() => {
                     toast.dismiss(t.id);
@@ -282,11 +283,11 @@ const useStatusChange = ({
           ),
           { duration: Infinity }
         );
-      } else if (
+} else if (
         ["Accepted", "Reviewed", "Shortlisted", "Rejected"].includes(
           newStatus
         ) &&
-        !candidate.email
+        !candidate.primaryContactEmail
       ) {
         console.warn(`No email found for candidate ${candidateId}`);
         toast.error("Cannot send email: Candidate email is missing", {

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/router";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import HRSidebar from "@/layouts/hrSidebar";
 import HRHeader from "@/layouts/hrHeader";
 import useSidebar from "@/hooks/useSidebar";
@@ -691,7 +691,7 @@ export default function HRApplicants({
         mode === "dark" ? "bg-gray-900" : "bg-gray-50"
       }`}
     >
-      <Toaster />
+      {/* Toaster is rendered globally in `src/pages/_app.js` to avoid duplicates */}
 
       <HRHeader
         toggleSidebar={toggleSidebar}

@@ -52,6 +52,10 @@ export default function TenderFormSection({
     "E-learning Course Development",
     "Digital Marketing",
     "Media Monitoring Services",
+    "Copywriting and Editing",
+    "Consultancy Engagement",
+    "Media content production ",
+
     "Other",
   ];
 

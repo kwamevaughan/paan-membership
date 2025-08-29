@@ -50,6 +50,13 @@ export default function HRApplicants({
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isLoadingCandidate, setIsLoadingCandidate] = useState(false);
 
+  // Close candidate modal if email modal opens to avoid stacking/overlay issues
+  useEffect(() => {
+    if (isEmailModalOpen) {
+      setIsModalOpen(false);
+    }
+  }, [isEmailModalOpen]);
+
   useAuthSession();
 
   const {

@@ -56,8 +56,18 @@ export default async function handler(req, res) {
       }
 
       if (user) {
+        // If user already exists, update their password to the provided one
+        const { error: updateExistingError } = await supabase.auth.admin.updateUserById(
+          user.id,
+          { password }
+        );
+        if (updateExistingError) {
+          console.error('Update existing user password error:', updateExistingError);
+          throw new Error(`Failed to update existing user password: ${updateExistingError.message}`);
+        }
+
         return res.status(200).json({
-          message: `User ${email} already exists`,
+          message: `User ${email} already exists. Password updated.`,
           auth_user_id: user.id,
           existed: true,
         });

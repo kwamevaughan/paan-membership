@@ -27,6 +27,10 @@ export const useFormValidation = () => {
     primaryContactEmail: "Email Address",
     primaryContactPhone: "Phone Number",
     primaryContactLinkedin: "LinkedIn URL",
+    secondaryContactName: "Secondary Contact Name",
+    secondaryContactRole: "Secondary Contact Role", 
+    secondaryContactEmail: "Secondary Contact Email",
+    secondaryContactPhone: "Secondary Contact Phone",
     phoneNumber: "Phone Number",
     countryOfResidence: "Country of Residence",
     languagesSpoken: "Languages Spoken",
@@ -71,7 +75,15 @@ export const useFormValidation = () => {
         }
         break;
       case "websiteUrl":
-      case "primaryContactLinkedin":
+      case "primaryContactLinkedin",
+          "secondaryContactName",
+          "secondaryContactRole",
+          "secondaryContactEmail",
+          "secondaryContactPhone",
+          "secondaryContactName",
+          "secondaryContactRole", 
+          "secondaryContactEmail",
+          "secondaryContactPhone":
         if (value && !urlRegex.test(value)) {
           error = `Please enter a valid ${
             name === "websiteUrl" ? "website URL" : "LinkedIn URL"
@@ -95,6 +107,32 @@ export const useFormValidation = () => {
           error = "Email address is required";
         } else if (!emailRegex.test(value)) {
           error = "Please enter a valid email address";
+        }
+        break;
+      case "secondaryContactName":
+        if (!value) {
+          error = "Secondary contact name is required";
+        } else if (!nameRegex.test(value)) {
+          error = "Please enter a valid secondary contact name";
+        }
+        break;
+      case "secondaryContactRole":
+        if (!value) {
+          error = "Secondary contact role is required";
+        }
+        break;
+      case "secondaryContactEmail":
+        if (!value) {
+          error = "Secondary contact email address is required";
+        } else if (!emailRegex.test(value)) {
+          error = "Please enter a valid secondary contact email address";
+        }
+        break;
+      case "secondaryContactPhone":
+        if (!value) {
+          error = "Secondary contact phone number is required";
+        } else if (!phoneRegex.test(value)) {
+          error = "Please enter a valid secondary contact phone number with country code (e.g., +254 701 850 850)";
         }
         break;
       case "primaryContactPhone":
@@ -145,7 +183,11 @@ export const useFormValidation = () => {
           "primaryContactRole",
           "primaryContactEmail",
           "primaryContactPhone",
-          "primaryContactLinkedin"
+          "primaryContactLinkedin",
+          "secondaryContactName",
+          "secondaryContactRole",
+          "secondaryContactEmail",
+          "secondaryContactPhone"
         );
       } else if (formData.job_type === "freelancer") {
         fieldsToValidate.push(

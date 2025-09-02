@@ -10,6 +10,10 @@ export async function upsertCandidate({
   primaryContactRole,
   primaryContactEmail,
   primaryContactPhone,
+  secondaryContactName,
+  secondaryContactRole,
+  secondaryContactEmail,
+  secondaryContactPhone,
   primaryContactLinkedin,
   opening,
   job_type,
@@ -102,6 +106,10 @@ export async function upsertCandidate({
         websiteUrl,
         primaryContactRole,
         primaryContactPhone,
+        secondaryContactName,
+        secondaryContactRole,
+        secondaryContactEmail,
+        secondaryContactPhone,
         selected_tier: normalizedTier,
       });
     }

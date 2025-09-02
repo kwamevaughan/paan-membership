@@ -23,9 +23,20 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
         },
       });
     }
+    // Set default phone number country code for secondary contact if phone is empty
+    if (!formData.secondaryContactPhone && formData.headquartersLocation) {
+      const defaultCode = getDialCode(formData.headquartersLocation) || "+254";
+      handleChange({
+        target: {
+          name: "secondaryContactPhone",
+          value: defaultCode,
+        },
+      });
+    }
   }, [
     formData.headquartersLocation,
     formData.primaryContactPhone,
+    formData.secondaryContactPhone,
     getDialCode,
     handleChange,
   ]);
@@ -141,7 +152,7 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
           value: cleanedValue ? `https://${cleanedValue}` : "",
         },
       });
-    } else if (name === "primaryContactPhone") {
+    } else if (name === "primaryContactPhone" || name === "secondaryContactPhone") {
       // Allow only digits and a leading '+' for the country code
       const cleanedValue = value
         .replace(/[^0-9+]/g, "")
@@ -174,6 +185,20 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
       handleChange({
         target: {
           name: "primaryContactPhone",
+          value: phoneWithoutCode
+            ? `${countryCode} ${phoneWithoutCode}`
+            : countryCode,
+        },
+      });
+    }
+
+    // Update secondary phone number only if it's empty or starts with the previous country code
+    const currentSecondaryPhone = formData.secondaryContactPhone || "";
+    if (!currentSecondaryPhone || currentSecondaryPhone.startsWith(prevCountryCode)) {
+      const phoneWithoutCode = currentSecondaryPhone.replace(/^\+\d+\s*/, "").trim();
+      handleChange({
+        target: {
+          name: "secondaryContactPhone",
           value: phoneWithoutCode
             ? `${countryCode} ${phoneWithoutCode}`
             : countryCode,
@@ -717,6 +742,193 @@ export default function Step1AgenciesForm({ formData, handleChange, mode }) {
                 {errors.primaryContactLinkedin}
               </span>
             )}
+          </div>
+
+          <h3 className="text-lg font-semibold mt-8">Secondary Contact Person</h3>
+
+          {/* Secondary Contact Name and Role/Title (On Same Row) */}
+          <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
+            {/* Secondary Contact Name */}
+            <div className="relative flex-1">
+              <label
+                htmlFor="secondaryContactName"
+                className="block text-sm font-medium mb-1"
+              >
+                Name <span className="text-red-500">*</span>
+              </label>
+              <div className="flex items-center">
+                <Icon
+                  icon="mdi:user"
+                  className="absolute left-3 text-paan-blue w-5 h-5"
+                />
+                <input
+                  type="text"
+                  name="secondaryContactName"
+                  id="secondaryContactName"
+                  value={formData.secondaryContactName}
+                  onChange={handleInputChange}
+                  placeholder="e.g., Jane Smith"
+                  required
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
+                    mode === "dark"
+                      ? `bg-gray-700 text-white border-gray-600 ${
+                          errors.secondaryContactName
+                            ? "border-red-500"
+                            : "focus:border-paan-blue"
+                        }`
+                      : `bg-gray-50 text-[#231812] border-blue-300 ${
+                          errors.secondaryContactName
+                            ? "border-red-500"
+                            : "focus:border-paan-blue"
+                        }`
+                  }`}
+                />
+              </div>
+              {errors.secondaryContactName && (
+                <span className="mt-1 text-xs text-red-500 flex items-center">
+                  <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />{" "}
+                  {errors.secondaryContactName}
+                </span>
+              )}
+            </div>
+
+            {/* Secondary Contact Role/Title */}
+            <div className="relative flex-1">
+              <label
+                htmlFor="secondaryContactRole"
+                className="block text-sm font-medium mb-1"
+              >
+                Role/Title <span className="text-red-500">*</span>
+              </label>
+              <div className="flex items-center">
+                <Icon
+                  icon="mdi:briefcase"
+                  className="absolute left-3 text-paan-blue w-5 h-5"
+                />
+                <input
+                  type="text"
+                  name="secondaryContactRole"
+                  id="secondaryContactRole"
+                  value={formData.secondaryContactRole}
+                  onChange={handleInputChange}
+                  placeholder="e.g., COO"
+                  required
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
+                    mode === "dark"
+                      ? `bg-gray-700 text-white border-gray-600 ${
+                          errors.secondaryContactRole
+                            ? "border-red-500"
+                            : "focus:border-paan-blue"
+                        }`
+                      : `bg-gray-50 text-[#231812] border-blue-300 ${
+                          errors.secondaryContactRole
+                            ? "border-red-500"
+                            : "focus:border-paan-blue"
+                        }`
+                  }`}
+                />
+              </div>
+              {errors.secondaryContactRole && (
+                <span className="mt-1 text-xs text-red-500 flex items-center">
+                  <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />{" "}
+                  {errors.secondaryContactRole}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Secondary Contact Email and Phone Number (On Same Row) */}
+          <div className="flex flex-col sm:flex-row sm:space-x-4 space-y-6 sm:space-y-0">
+            {/* Secondary Contact Email */}
+            <div className="relative flex-1">
+              <label
+                htmlFor="secondaryContactEmail"
+                className="block text-sm font-medium mb-1"
+              >
+                Email <span className="text-red-500">*</span>
+              </label>
+              <div className="flex items-center">
+                <Icon
+                  icon="mdi:email"
+                  className="absolute left-3 text-paan-blue w-5 h-5"
+                />
+                <input
+                  type="email"
+                  name="secondaryContactEmail"
+                  id="secondaryContactEmail"
+                  value={formData.secondaryContactEmail}
+                  onChange={handleInputChange}
+                  placeholder="e.g., jane.smith@example.com"
+                  required
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
+                    mode === "dark"
+                      ? `bg-gray-700 text-white border-gray-600 ${
+                          errors.secondaryContactEmail
+                            ? "border-red-500"
+                            : "focus:border-paan-blue"
+                        }`
+                      : `bg-gray-50 text-[#231812] border-blue-300 ${
+                          errors.secondaryContactEmail
+                            ? "border-red-500"
+                            : "focus:border-paan-blue"
+                        }`
+                  }`}
+                />
+              </div>
+              {errors.secondaryContactEmail && (
+                <span className="mt-1 text-xs text-red-500 flex items-center">
+                  <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />{" "}
+                  {errors.secondaryContactEmail}
+                </span>
+              )}
+            </div>
+
+            {/* Secondary Contact Phone Number */}
+            <div className="relative flex-1">
+              <label
+                htmlFor="secondaryContactPhone"
+                className="block text-sm font-medium mb-1"
+              >
+                Phone Number <span className="text-red-500">*</span>
+              </label>
+              <div className="flex items-center">
+                <Icon
+                  icon="mdi:phone"
+                  className="absolute left-3 text-paan-blue w-5 h-5"
+                />
+                <input
+                  type="tel"
+                  name="secondaryContactPhone"
+                  id="secondaryContactPhone"
+                  value={formData.secondaryContactPhone}
+                  onChange={handleInputChange}
+                  placeholder={`e.g., ${
+                    getDialCode(formData.headquartersLocation) || "+254"
+                  } 701 850 851`}
+                  required
+                  pattern="[0-9+]*"
+                  className={`w-full pl-10 pr-4 py-3 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200 ${
+                    mode === "dark"
+                      ? `bg-gray-700 text-white border-gray-600 ${
+                          errors.secondaryContactPhone
+                            ? "border-red-500"
+                            : "focus:border-paan-blue"
+                        }`
+                      : `bg-gray-50 text-[#231812] border-blue-300 ${
+                          errors.secondaryContactPhone
+                            ? "border-red-500"
+                            : "focus:border-paan-blue"
+                        }`
+                  }`}
+                />
+              </div>
+              {errors.secondaryContactPhone && (
+                <span className="mt-1 text-xs text-red-500 flex items-center">
+                  <Icon icon="mdi:alert-circle" className="w-4 h-4 mr-1" />{" "}
+                  {errors.secondaryContactPhone}
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Applying For (Separate Row) */}

@@ -75,15 +75,7 @@ export const useFormValidation = () => {
         }
         break;
       case "websiteUrl":
-      case "primaryContactLinkedin",
-          "secondaryContactName",
-          "secondaryContactRole",
-          "secondaryContactEmail",
-          "secondaryContactPhone",
-          "secondaryContactName",
-          "secondaryContactRole", 
-          "secondaryContactEmail",
-          "secondaryContactPhone":
+      case "primaryContactLinkedin":
         if (value && !urlRegex.test(value)) {
           error = `Please enter a valid ${
             name === "websiteUrl" ? "website URL" : "LinkedIn URL"

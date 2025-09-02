@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import Header from "@/layouts/header";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { useFormData } from "@/hooks/useFormData";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import { useFormValidation } from "@/hooks/useFormValidation";
@@ -21,6 +21,7 @@ import ItemActionModal from "@/components/ItemActionModal";
 import QuestionsProgress from "@/components/QuestionsProgress";
 import FreelancerInstructions from "@/components/FreelancerInstructions";
 import AgencyInstructions from "@/components/AgencyInstructions";
+import Link from "next/link";
 
 export default function InterviewPage({
   mode,
@@ -464,7 +465,6 @@ export default function InterviewPage({
 
   return (
     <>
-      <Toaster />
       <Head>
         <title>
           Join PAAN | Expression of Interest - Pan-African Agency Network
@@ -804,6 +804,15 @@ export default function InterviewPage({
                   </button>
                 </div>
               )}
+              <p className="mt-4 text-center text-sm text-gray-500">
+                Having any challenges? Email us for quick help at{" "}
+                <Link
+                  href="mailto:support@paan.africa"
+                  className="text-paan-blue hover:underline"
+                >
+                  support@paan.africa
+                </Link>
+              </p>
             </div>
           </MovingDotBorder>
         </div>

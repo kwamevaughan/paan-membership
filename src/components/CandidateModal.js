@@ -519,24 +519,123 @@ export default function CandidateModal({
                 mode === "dark" ? "text-gray-100" : "text-gray-800"
               }`}
             >
-              {activeTab === "profile" && (
+                            {activeTab === "profile" && (
                 <div className="space-y-6 animate-fade-in">
+                  {/* Agency Information */}
+                  {isAgencyCandidate && (
+                    <div
+                      className={`${
+                        mode === "dark" ? "bg-gray-800/60" : "bg-gray-50/60"
+                      } p-6 rounded-xl shadow-md backdrop-blur-sm`}
+                    >
+                      <div className="flex items-center gap-3 mb-6">
+                        <div
+                          className={`p-2 rounded-lg ${
+                            mode === "dark" ? "bg-gray-700/80" : "bg-white/80"
+                          } shadow-sm backdrop-blur-sm`}
+                        >
+                          <Icon
+                            icon="hugeicons:office"
+                            className="w-6 h-6 text-paan-blue"
+                          />
+                        </div>
+                        <h3 className="text-lg font-medium">Agency Information</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {[
+                          {
+                            label: "Agency Name",
+                            value: candidate.agencyName,
+                            icon: "hugeicons:office",
+                          },
+                          {
+                            label: "Year Established",
+                            value: candidate.yearEstablished,
+                            icon: "mdi:calendar",
+                          },
+                          {
+                            label: "Headquarters",
+                            value: candidate.headquartersLocation,
+                            icon: "mdi:earth",
+                          },
+                          {
+                            label: "Website",
+                            value: candidate.websiteUrl,
+                            icon: "mdi:web",
+                            isLink: true,
+                          },
+                        ].map((item, idx) => (
+                          <div key={idx} className="flex items-start gap-3">
+                            <div
+                              className={`p-2 rounded-lg ${
+                                mode === "dark" ? "bg-gray-700/80" : "bg-white/80"
+                              } shadow-sm backdrop-blur-sm`}
+                            >
+                              <Icon
+                                icon={item.icon}
+                                className="w-6 h-6 text-paan-blue"
+                              />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                                {item.label}
+                              </p>
+                              {item.isLink &&
+                              item.value &&
+                              item.value !== "N/A" ? (
+                                <a
+                                  href={item.value}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-paan-blue hover:text-paan-dark-blue text-base font-normal break-all transition-colors duration-200"
+                                >
+                                  {item.value}
+                                </a>
+                              ) : (
+                                <p className="text-base font-normal break-all">
+                                  {item.value}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Primary Contact Information */}
                   <div
                     className={`${
                       mode === "dark" ? "bg-gray-800/60" : "bg-gray-50/60"
                     } p-6 rounded-xl shadow-md backdrop-blur-sm`}
                   >
+                    <div className="flex items-center gap-3 mb-6">
+                      <div
+                        className={`p-2 rounded-lg ${
+                          mode === "dark" ? "bg-gray-700/80" : "bg-white/80"
+                        } shadow-sm backdrop-blur-sm`}
+                      >
+                        <Icon
+                          icon="mdi:account-star"
+                          className="w-6 h-6 text-paan-blue"
+                        />
+                      </div>
+                      <h3 className="text-lg font-medium">
+                        {isAgencyCandidate ? "Primary Contact" : "Contact Information"}
+                      </h3>
+                    </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {[
                         {
-                          label: isAgencyCandidate ? "Agency" : "Name",
-                          value: isAgencyCandidate
-                            ? candidate.agencyName
-                            : candidate.primaryContactName,
-                          icon: isAgencyCandidate
-                            ? "hugeicons:office"
-                            : "mdi:account",
+                          label: isAgencyCandidate ? "Name" : "Full Name",
+                          value: candidate.primaryContactName,
+                          icon: "mdi:account",
                         },
+                        ...(isAgencyCandidate ? [{
+                          label: "Role/Title",
+                          value: candidate.primaryContactRole,
+                          icon: "mdi:briefcase",
+                        }] : []),
                         {
                           label: "Email",
                           value: candidate.primaryContactEmail,
@@ -547,19 +646,17 @@ export default function CandidateModal({
                           value: candidate.primaryContactPhone || "N/A",
                           icon: "mdi:phone",
                         },
-                        {
-                          label: "Country",
-                          value: isAgencyCandidate
-                            ? candidate.headquartersLocation
-                            : candidate.countryOfResidence,
-                          icon: "mdi:earth",
-                        },
-                        {
+                        ...(isAgencyCandidate ? [{
                           label: "LinkedIn",
                           value: candidate.primaryContactLinkedin,
                           icon: "mdi:linkedin",
                           isLink: true,
-                        },
+                        }] : []),
+                        ...(isFreelancerCandidate ? [{
+                          label: "Country",
+                          value: candidate.countryOfResidence,
+                          icon: "mdi:earth",
+                        }] : []),
                       ].map((item, idx) => (
                         <div key={idx} className="flex items-start gap-3">
                           <div
@@ -597,9 +694,76 @@ export default function CandidateModal({
                       ))}
                     </div>
                   </div>
+
+                  {/* Secondary Contact Information (Agency only) */}
+                  {isAgencyCandidate && candidate.secondaryContactName && (
+                    <div
+                      className={`${
+                        mode === "dark" ? "bg-gray-800/60" : "bg-gray-50/60"
+                      } p-6 rounded-xl shadow-md backdrop-blur-sm`}
+                    >
+                      <div className="flex items-center gap-3 mb-6">
+                        <div
+                          className={`p-2 rounded-lg ${
+                            mode === "dark" ? "bg-gray-700/80" : "bg-white/80"
+                          } shadow-sm backdrop-blur-sm`}
+                        >
+                          <Icon
+                            icon="mdi:account-multiple"
+                            className="w-6 h-6 text-paan-blue"
+                          />
+                        </div>
+                        <h3 className="text-lg font-medium">Secondary Contact</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {[
+                          {
+                            label: "Name",
+                            value: candidate.secondaryContactName,
+                            icon: "mdi:account",
+                          },
+                          {
+                            label: "Role/Title",
+                            value: candidate.secondaryContactRole,
+                            icon: "mdi:briefcase",
+                          },
+                          {
+                            label: "Email",
+                            value: candidate.secondaryContactEmail,
+                            icon: "mdi:email",
+                          },
+                          {
+                            label: "Phone",
+                            value: candidate.secondaryContactPhone || "N/A",
+                            icon: "mdi:phone",
+                          },
+                        ].map((item, idx) => (
+                          <div key={idx} className="flex items-start gap-3">
+                            <div
+                              className={`p-2 rounded-lg ${
+                                mode === "dark" ? "bg-gray-700/80" : "bg-white/80"
+                              } shadow-sm backdrop-blur-sm`}
+                            >
+                              <Icon
+                                icon={item.icon}
+                                className="w-6 h-6 text-paan-blue"
+                              />
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                                {item.label}
+                              </p>
+                              <p className="text-base font-normal break-all">
+                                {item.value}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-
               {activeTab === "documents" && (
                 <div className="space-y-6 animate-fade-in">
                   {documentList.length > 0 ? (

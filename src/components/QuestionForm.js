@@ -41,8 +41,16 @@ export default function QuestionForm({
   const [skippable, setSkippable] = useState(false);
   const [answerStructure, setAnswerStructure] = useState("");
   const [jobType, setJobType] = useState(
-    selectedJobType === "all" ? "agencies" : selectedJobType
+    selectedJobType === "all" ? "agency" : selectedJobType
   );
+
+  const normalizeJobType = (jt) => {
+    if (!jt) return "agency";
+    if (jt === "agencies") return "agency";
+    if (jt === "freelancers") return "freelancer";
+    if (jt === "all") return "agency"; // default when adding under "all"
+    return jt;
+  };
 
   const { countryOptions } = useCountry();
 
@@ -60,6 +68,12 @@ export default function QuestionForm({
 
   useEffect(() => {
     if (isOpen) {
+      console.log("[QuestionForm] opening with question:", {
+        id: question?.id,
+        updated_at: question?.updated_at,
+        options_first: Array.isArray(question?.options) ? question.options[0] : null,
+        options_last: Array.isArray(question?.options) ? question.options[question.options.length - 1] : null,
+      });
       if (question) {
         setText(question.text || "");
         setDescription(question.description || "");
@@ -70,9 +84,9 @@ export default function QuestionForm({
             ? question.category
             : "";
         setCategory(categoryId);
-        setOptions(
-          question.options?.filter((opt) => opt !== "Other").join("\n") || ""
-        );
+        const lines = question.options?.filter((opt) => opt !== "Other").join("\n") || "";
+        console.log("[QuestionForm] setting options textarea to:", lines);
+        setOptions(lines);
         setIsMultiSelect(question.is_multi_select || false);
         setIsOtherEnabled(question.options?.includes("Other") || false);
         setOtherOptionText(question.other_option_text || "");
@@ -113,7 +127,7 @@ export default function QuestionForm({
         );
         setJobType(
           question.job_type ||
-            (selectedJobType === "all" ? "agencies" : selectedJobType)
+            (selectedJobType === "all" ? "agency" : selectedJobType)
         );
       } else {
         setText("");
@@ -135,7 +149,7 @@ export default function QuestionForm({
         setMaxWords("");
         setSkippable(false);
         setAnswerStructure("");
-        setJobType(selectedJobType === "all" ? "agencies" : selectedJobType);
+        setJobType(selectedJobType === "all" ? "agency" : selectedJobType);
       }
     }
   }, [isOpen, question, selectedJobType]);
@@ -336,7 +350,7 @@ export default function QuestionForm({
             : null
           : null,
       answerStructure: isOpenEnded && answerStructure ? answerStructure : null,
-      job_type: jobType,
+      job_type: normalizeJobType(jobType),
       regionalOptions: isCountrySelect ? [
         "All of Africa",
         "All of Europe",
@@ -467,7 +481,7 @@ export default function QuestionForm({
             </label>
             <select
               value={jobType}
-              onChange={(e) => setJobType(e.target.value)}
+              onChange={(e) => setJobType(normalizeJobType(e.target.value))}
               className={`w-full p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-900 transition-all duration-200 backdrop-blur-sm ${
                 mode === "dark"
                   ? "bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-white/10 text-gray-100"
@@ -476,8 +490,8 @@ export default function QuestionForm({
               required
               id="job-type-select"
             >
-              <option value="agencies">Agencies</option>
-              <option value="freelancers">Freelancers</option>
+              <option value="agency">Agency</option>
+              <option value="freelancer">Freelancer</option>
             </select>
           </div>
 

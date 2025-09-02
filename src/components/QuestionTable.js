@@ -53,6 +53,11 @@ export default function QuestionTable({
     return `${options.slice(0, 3).join(", ")}, ...`;
   };
 
+  const fullOptions = (options) => {
+    if (!Array.isArray(options) || options.length === 0) return "—";
+    return options.join(", ");
+  };
+
   const handleDelete = (question) => {
     setQuestionToDelete(question);
     setIsDeleteModalOpen(true);
@@ -231,8 +236,8 @@ export default function QuestionTable({
                     : "bg-gradient-to-br from-white/60 to-gray-50/60 border-white/20"
                 } ${
                   !isQuestionComplete(question)
-                    ? "border-red-400/30 ring-2 ring-red-400/20"
-                    : ""
+                  ? "border-red-400/30 ring-2 ring-red-400/20"
+                  : ""
                 }`}
               >
                 {/* Status Indicator */}
@@ -340,6 +345,7 @@ export default function QuestionTable({
                           Options
                         </h4>
                         <p
+                          title={fullOptions(question.options)}
                           className={`text-sm rounded-lg p-3 ${
                             mode === "dark"
                               ? "bg-blue-500/20 border border-blue-400/30 text-blue-300"
@@ -511,7 +517,7 @@ export default function QuestionTable({
                       mode === "dark" ? "text-gray-300" : "text-gray-700"
                     }`}
                   >
-                    "{stripHtmlTags(questionToDelete.text)}"
+                    &quot;{stripHtmlTags(questionToDelete.text)}&quot;
                   </p>
                 </div>
               )}

@@ -17,6 +17,7 @@ import toast, { Toaster } from "react-hot-toast";
 import useAuthSession from "@/hooks/useAuthSession";
 import useLogout from "@/hooks/useLogout";
 import { getInterviewQuestionsProps } from "utils/getPropsUtils";
+import { supabase } from "@/lib/supabase";
 
 export default function HRInterviewQuestions({
   mode = "light",
@@ -77,26 +78,65 @@ export default function HRInterviewQuestions({
     }
   };
 
-  const startEditing = (question) => {
+  const startEditing = async (question) => {
     if (!question.id) {
       toast.error("Cannot edit question: Missing question ID.");
       return;
     }
-    const normalizedQuestion = {
-      ...question,
-      category:
-        typeof question.category === "object" && question.category?.id
-          ? question.category.id
-          : typeof question.category === "object" && question.category?.name
-          ? categories.find((cat) => cat.name === question.category.name)?.id ||
-            ""
-          : typeof question.category === "string"
-          ? question.category
-          : "",
-      job_type: question.job_type || selectedJobType,
-    };
-    setEditingQuestion(normalizedQuestion);
-    setIsQuestionModalOpen(true);
+    console.log("[HRInterviewQuestions] startEditing id", question.id);
+    try {
+      const { data: fresh, error } = await supabase
+        .from("interview_questions")
+        .select("*")
+        .eq("id", question.id)
+        .single();
+      console.log("[HRInterviewQuestions] fetched fresh row:", {
+        id: fresh?.id,
+        updated_at: fresh?.updated_at,
+        options_last: Array.isArray(fresh?.options) ? fresh.options[fresh.options.length - 1] : null,
+        error,
+      });
+      if (error || !fresh) {
+        console.warn("[HRInterviewQuestions] Failed to fetch fresh question, using cached:", error);
+      }
+      const base = fresh || question;
+      const normalizedQuestion = {
+        ...base,
+        category:
+          typeof base.category === "object" && base.category?.id
+            ? base.category.id
+            : typeof base.category === "object" && base.category?.name
+            ? categories.find((cat) => cat.name === base.category.name)?.id || ""
+            : typeof base.category === "string"
+            ? base.category
+            : "",
+        job_type: base.job_type || selectedJobType,
+      };
+      console.log("[HRInterviewQuestions] opening form with:", {
+        id: normalizedQuestion.id,
+        options_first: Array.isArray(normalizedQuestion.options) ? normalizedQuestion.options[0] : null,
+        options_last: Array.isArray(normalizedQuestion.options) ? normalizedQuestion.options[normalizedQuestion.options.length - 1] : null,
+      });
+      setEditingQuestion(normalizedQuestion);
+      setIsQuestionModalOpen(true);
+    } catch (e) {
+      console.error("[HRInterviewQuestions] Error opening question for edit:", e);
+      toast.error("Failed to load latest question.");
+      const normalizedQuestion = {
+        ...question,
+        category:
+          typeof question.category === "object" && question.category?.id
+            ? question.category.id
+            : typeof question.category === "object" && question.category?.name
+            ? categories.find((cat) => cat.name === question.category.name)?.id || ""
+            : typeof question.category === "string"
+            ? question.category
+            : "",
+        job_type: question.job_type || selectedJobType,
+      };
+      setEditingQuestion(normalizedQuestion);
+      setIsQuestionModalOpen(true);
+    }
   };
 
   const handleAddQuestion = () => {

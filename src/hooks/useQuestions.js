@@ -2,12 +2,20 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "react-hot-toast";
 
-export const useQuestions = (jobType = "agencies") => {
+export const useQuestions = (jobType = "agency") => {
   const [questions, setQuestions] = useState([]);
   const [categories, setCategories] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortField, setSortField] = useState("order");
   const [sortDirection, setSortDirection] = useState("asc");
+
+  const normalizeJobType = (jt) => {
+    if (!jt) return "agency";
+    if (jt === "agencies") return "agency";
+    if (jt === "freelancers") return "freelancer";
+    if (jt === "all") return "all";
+    return jt;
+  };
 
   useEffect(() => {
     fetchQuestions();
@@ -15,14 +23,17 @@ export const useQuestions = (jobType = "agencies") => {
   }, [sortField, sortDirection, jobType]);
 
   const fetchQuestions = async () => {
+    const normalized = normalizeJobType(jobType);
+    console.log("[useQuestions] fetchQuestions start", { normalized, sortField, sortDirection });
+
     let query = supabase
       .from("interview_questions")
       .select(
-        "id, text, description, options, is_multi_select, other_option_text, is_open_ended, is_country_select, order, category, max_answers, depends_on_question_id, depends_on_answer, max_words, skippable, text_input_option, text_input_max_answers, structured_answers, has_links, job_type, category:question_categories(name)"
+        "id, text, description, options, is_multi_select, other_option_text, is_open_ended, is_country_select, order, category, max_answers, depends_on_question_id, depends_on_answer, max_words, skippable, text_input_option, text_input_max_answers, structured_answers, has_links, job_type, updated_at, category:question_categories(name)"
       );
 
-    if (jobType !== "all") {
-      query = query.eq("job_type", jobType);
+    if (normalized !== "all") {
+      query = query.eq("job_type", normalized);
     }
 
     query = query.order(sortField, { ascending: sortDirection === "asc" });
@@ -30,27 +41,22 @@ export const useQuestions = (jobType = "agencies") => {
     const { data, error } = await query;
 
     if (error) {
-      console.error("Error fetching questions:", error);
+      console.error("[useQuestions] Error fetching questions:", error);
       toast.error("Failed to load questions: " + error.message);
     } else {
       const validQuestions = data.filter(
         (q) => q.id && q.job_type && Number.isInteger(q.order)
       );
-      console.log(
-        "Fetched questions:",
+      console.log("[useQuestions] fetched count:", data.length, "valid:", validQuestions.length);
+      console.table(
         validQuestions.map((q) => ({
           id: q.id,
-          text: q.text,
           job_type: q.job_type,
           order: q.order,
+          updated_at: q.updated_at,
+          options_last: Array.isArray(q.options) ? q.options[q.options.length - 1] : null,
         }))
       );
-      if (data.length !== validQuestions.length) {
-        console.warn(
-          "Filtered out invalid questions:",
-          data.filter((q) => !q.id || !q.job_type || !Number.isInteger(q.order))
-        );
-      }
       setQuestions(validQuestions);
     }
   };
@@ -62,19 +68,15 @@ export const useQuestions = (jobType = "agencies") => {
       .order("name", { ascending: true });
 
     if (error) {
-      console.error("Error fetching categories:", error);
+      console.error("[useQuestions] Error fetching categories:", error);
       toast.error("Failed to load categories: " + error.message);
     } else {
-      console.log(
-        "Fetched categories:",
-        data.map((c) => ({ id: c.id, name: c.name, job_type: c.job_type }))
-      );
       setCategories(data || []);
     }
   };
 
   const addQuestion = async (questionData) => {
-    console.log("addQuestion called with:", questionData);
+    console.log("[useQuestions] addQuestion", questionData);
     if (!questionData || typeof questionData !== "object") {
       console.error("Invalid questionData:", questionData);
       toast.error("Cannot add question: Invalid question data.");
@@ -132,13 +134,13 @@ export const useQuestions = (jobType = "agencies") => {
           max_words: maxWords || null,
           skippable: skippable || false,
           structured_answers: structuredAnswers || null,
-          job_type: job_type || (jobType === "all" ? "agencies" : jobType),
+          job_type: normalizeJobType(job_type) || normalizeJobType(jobType),
         },
       ])
       .select();
 
     if (error) {
-      console.error("Error adding question:", error);
+      console.error("[useQuestions] Error adding question:", error);
       toast.error("Failed to add question: " + error.message);
       return false;
     } else {
@@ -151,7 +153,7 @@ export const useQuestions = (jobType = "agencies") => {
   };
 
   const editQuestion = async (id, questionData) => {
-    console.log("editQuestion called with ID:", id, "data:", questionData);
+    console.log("[useQuestions] editQuestion", { id, questionData });
     if (!id || isNaN(parseInt(id))) {
       console.error("Invalid question ID:", id);
       toast.error("Cannot edit question: Invalid question ID.");
@@ -187,43 +189,63 @@ export const useQuestions = (jobType = "agencies") => {
       return false;
     }
 
-    const { data, error } = await supabase
+    const updatePayload = {
+      text,
+      description,
+      options,
+      is_multi_select: isMultiSelect || false,
+      other_option_text: otherOptionText || "",
+      is_open_ended: isOpenEnded || false,
+      is_country_select: isCountrySelect || false,
+      updated_at: new Date().toISOString(),
+      category: categoryId,
+      max_answers: maxAnswers || null,
+      depends_on_question_id: dependsOnQuestionId || null,
+      depends_on_answer: dependsOnAnswer || null,
+      has_links: hasLinks || false,
+      text_input_option: textInputOption || null,
+      text_input_max_answers: textInputMaxAnswers || null,
+      max_words: maxWords || null,
+      skippable: skippable || false,
+      structured_answers: structuredAnswers || null,
+      job_type: normalizeJobType(job_type) || normalizeJobType(jobType),
+    };
+
+    console.log("[useQuestions] Submitting update payload:", updatePayload);
+
+    const { data, error, status } = await supabase
       .from("interview_questions")
-      .update({
-        text,
-        description,
-        options,
-        is_multi_select: isMultiSelect || false,
-        other_option_text: otherOptionText || "",
-        is_open_ended: isOpenEnded || false,
-        is_country_select: isCountrySelect || false,
-        updated_at: new Date().toISOString(),
-        category: categoryId,
-        max_answers: maxAnswers || null,
-        depends_on_question_id: dependsOnQuestionId || null,
-        depends_on_answer: dependsOnAnswer || null,
-        has_links: hasLinks || false,
-        text_input_option: textInputOption || null,
-        text_input_max_answers: textInputMaxAnswers || null,
-        max_words: maxWords || null,
-        skippable: skippable || false,
-        structured_answers: structuredAnswers || null,
-        job_type: job_type || (jobType === "all" ? "agencies" : jobType),
-      })
+      .update(updatePayload)
       .eq("id", parseInt(id))
       .select();
 
+    console.log("[useQuestions] Update response:", { status, error, data });
+
     if (error) {
-      console.error("Error editing question:", error);
+      console.error("[useQuestions] Error editing question:", error);
       toast.error("Failed to update question: " + error.message);
       return false;
-    } else {
-      toast.success(`Question "${data[0].text}" updated successfully!`, {
-        icon: "✅",
-      });
-      fetchQuestions();
-      return true;
     }
+
+    if (!data || data.length === 0) {
+      console.error("[useQuestions] No rows were updated for question ID:", id);
+      toast.error("Failed to update question: No rows were affected.");
+      return false;
+    }
+
+    setQuestions((prev) => {
+      const next = prev.map((q) => (q.id === parseInt(id) ? { ...q, ...data[0] } : q));
+      console.log("[useQuestions] Optimistic state updated for id", id, {
+        new_last_option: Array.isArray(data[0]?.options) ? data[0].options[data[0].options.length - 1] : null,
+      });
+      return next;
+    });
+
+    toast.success(`Question "${data[0].text}" updated successfully!`, {
+      icon: "✅",
+    });
+    fetchQuestions();
+    return true;
   };
 
   const deleteQuestion = async (id, text) => {
@@ -232,7 +254,7 @@ export const useQuestions = (jobType = "agencies") => {
       .delete()
       .eq("id", id);
     if (error) {
-      console.error("Error deleting question:", error);
+      console.error("[useQuestions] Error deleting question:", error);
       toast.error("Failed to delete question: " + error.message);
       return false;
     } else {
@@ -243,15 +265,7 @@ export const useQuestions = (jobType = "agencies") => {
   };
 
   const moveQuestion = async (fromIndex, toIndex) => {
-    console.log("moveQuestion called:", {
-      fromIndex,
-      toIndex,
-      questions: questions.map((q) => ({
-        id: q.id,
-        order: q.order,
-        job_type: q.job_type,
-      })),
-    });
+    console.log("[useQuestions] moveQuestion", { fromIndex, toIndex });
     const updatedQuestions = [...questions];
     const [movedQuestion] = updatedQuestions.splice(fromIndex, 1);
     updatedQuestions.splice(toIndex, 0, movedQuestion);
@@ -261,13 +275,9 @@ export const useQuestions = (jobType = "agencies") => {
       order: idx,
     }));
 
-    // Validate job_type
     const invalidQuestions = reorderedQuestions.filter((q) => !q.job_type);
     if (invalidQuestions.length > 0) {
-      console.error(
-        "Questions with missing job_type:",
-        invalidQuestions.map((q) => ({ id: q.id, text: q.text }))
-      );
+      console.error("[useQuestions] Missing job_type in", invalidQuestions);
       toast.error("Cannot reorder: Some questions have missing job_type.");
       return false;
     }
@@ -277,10 +287,8 @@ export const useQuestions = (jobType = "agencies") => {
     const updates = reorderedQuestions.map((q) => ({
       id: q.id,
       order: q.order,
-      job_type: q.job_type, // Explicitly include job_type
+      job_type: normalizeJobType(q.job_type),
     }));
-
-    console.log("Updating question order:", updates);
 
     const { error } = await supabase
       .from("interview_questions")
@@ -289,16 +297,12 @@ export const useQuestions = (jobType = "agencies") => {
       });
 
     if (error) {
-      console.error("Error reordering questions:", error);
+      console.error("[useQuestions] Error reordering questions:", error);
       toast.error("Failed to reorder questions: " + error.message);
       fetchQuestions();
       return false;
     }
 
-    console.log(
-      "Questions reordered successfully, new order:",
-      reorderedQuestions.map((q) => ({ id: q.id, order: q.order }))
-    );
     return true;
   };
 
@@ -314,6 +318,13 @@ export const useQuestions = (jobType = "agencies") => {
   const filteredQuestions = questions.filter((q) =>
     q.text.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  useEffect(() => {
+    console.log("[useQuestions] filteredQuestions updated", {
+      count: filteredQuestions.length,
+      ids: filteredQuestions.map((q) => q.id),
+    });
+  }, [filteredQuestions]);
 
   return {
     questions: filteredQuestions,

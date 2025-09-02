@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import toast from "react-hot-toast";
+import { supabase } from "@/lib/supabase";
 
 export default function CandidateModal({
   candidate,
@@ -16,6 +17,41 @@ export default function CandidateModal({
   const [isAnswersModalOpen, setIsAnswersModalOpen] = useState(false);
   const [questionAnswerPairs, setQuestionAnswerPairs] = useState([]);
   const [activeTab, setActiveTab] = useState("profile");
+  const [tierValue, setTierValue] = useState("");
+  const tierOptions = [
+    "Free Member (Tier 1)",
+    "Associate Member (Tier 2)",
+    "Full Member (Tier 3)",
+    "Gold Member (Tier 4)",
+  ];
+
+  const normalizeTierLabel = (label) => {
+    if (!label || typeof label !== "string") return "Free Member (Tier 1)";
+    // If already has parentheses Tier N, keep name and normalize spacing/case
+    const parenMatch = label.match(/\(\s*Tier\s*(\d+)\s*\)/i);
+    if (parenMatch) {
+      const tierNum = parenMatch[1];
+      const base = label.replace(/\(\s*Tier\s*\d+\s*\)/i, "").trim();
+      return `${base} (Tier ${tierNum})`;
+    }
+    // If hyphen format like "Name - Tier N"
+    const hyphenMatch = label.match(/^(.*?)\s*-\s*Tier\s*(\d+)/i);
+    if (hyphenMatch) {
+      const base = hyphenMatch[1].trim();
+      const tierNum = hyphenMatch[2];
+      return `${base} (Tier ${tierNum})`;
+    }
+    // Map plain names to default tier numbers (as used in this app)
+    const base = label.trim();
+    const map = {
+      "Free Member": 1,
+      "Associate Member": 2,
+      "Full Member": 3,
+      "Gold Member": 4,
+    };
+    const num = map[base] || 1;
+    return `${base} (Tier ${num})`;
+  };
 
   useEffect(() => {
     // Only process if candidate exists and modal is open
@@ -41,6 +77,12 @@ export default function CandidateModal({
     }
   }, [candidate, isOpen]);
 
+  useEffect(() => {
+    if (candidate) {
+      setTierValue(normalizeTierLabel(candidate.selected_tier || "Free Member (Tier 1)"));
+    }
+  }, [candidate]);
+
   // Handle escape key press
   useEffect(() => {
     const handleEscapeKey = (event) => {
@@ -61,6 +103,33 @@ export default function CandidateModal({
   const handleDocumentPreview = (url) => {
     if (onDocumentPreview) {
       onDocumentPreview(url);
+    }
+  };
+
+  const handleSaveTier = async () => {
+    const normalized = normalizeTierLabel(tierValue);
+    if (!normalized || normalized === normalizeTierLabel(candidate.selected_tier)) {
+      toast.success("No changes to save");
+      return;
+    }
+
+    const savingToast = toast.loading("Updating membership tier...");
+    try {
+      const { error } = await supabase
+        .from("candidates")
+        .update({ selected_tier: normalized })
+        .eq("id", candidate.id);
+
+      if (error) throw error;
+
+      if (onCandidateUpdate) {
+        onCandidateUpdate({ ...candidate, selected_tier: normalized });
+      }
+
+      toast.success("Tier updated", { id: savingToast });
+    } catch (err) {
+      console.error("Failed to update tier", err);
+      toast.error("Failed to update tier", { id: savingToast });
     }
   };
 
@@ -377,11 +446,12 @@ export default function CandidateModal({
             } backdrop-blur-sm`}
           >
             <div className="flex space-x-1">
-              {["profile", "documents", "answers", "status"].map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 rounded-t-lg font-medium transition-all duration-200 text-sm
+              {["profile", "documents", "answers", "membership", "status"].map(
+                (tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`px-4 py-2 rounded-t-lg font-medium transition-all duration-200 text-sm
                     ${
                       activeTab === tab
                         ? `${
@@ -395,36 +465,41 @@ export default function CandidateModal({
                               : "hover:bg-gray-100/80"
                           }`
                     }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <Icon
-                      icon={
-                        tab === "profile"
-                          ? "mdi:account-details"
-                          : tab === "documents"
-                          ? "mdi:file-document-multiple"
-                          : tab === "answers"
-                          ? "mdi:chat-question"
-                          : "mdi:tag"
-                      }
-                      className="w-5 h-5"
-                    />
-                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                    {(tab === "documents" && documentList.length > 0) ||
-                    (tab === "answers" && questionAnswerPairs.length > 0) ? (
-                      <span
-                        className={`text-xs px-2 py-0.5 rounded-full ${
-                          mode === "dark" ? "bg-gray-700/80" : "bg-gray-200/80"
-                        } backdrop-blur-sm`}
-                      >
-                        {tab === "documents"
-                          ? documentList.length
-                          : questionAnswerPairs.length}
-                      </span>
-                    ) : null}
-                  </div>
-                </button>
-              ))}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon
+                        icon={
+                          tab === "profile"
+                            ? "mdi:account-details"
+                            : tab === "documents"
+                            ? "mdi:file-document-multiple"
+                            : tab === "answers"
+                            ? "mdi:chat-question"
+                            : tab === "membership"
+                            ? "mdi:crown"
+                            : "mdi:tag"
+                        }
+                        className="w-5 h-5"
+                      />
+                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      {(tab === "documents" && documentList.length > 0) ||
+                      (tab === "answers" && questionAnswerPairs.length > 0) ? (
+                        <span
+                          className={`text-xs px-2 py-0.5 rounded-full ${
+                            mode === "dark"
+                              ? "bg-gray-700/80"
+                              : "bg-gray-200/80"
+                          } backdrop-blur-sm`}
+                        >
+                          {tab === "documents"
+                            ? documentList.length
+                            : questionAnswerPairs.length}
+                        </span>
+                      ) : null}
+                    </div>
+                  </button>
+                )
+              )}
             </div>
           </div>
 
@@ -657,6 +732,192 @@ export default function CandidateModal({
                       </p>
                     </div>
                   )}
+                </div>
+              )}
+
+              {activeTab === "membership" && (
+                <div className="space-y-8 animate-fade-in">
+                  <div
+                    className={`${
+                      mode === "dark"
+                        ? "bg-gradient-to-br from-gray-800/80 via-gray-800/60 to-gray-900/80 border-gray-700/50"
+                        : "bg-gradient-to-br from-white/80 via-gray-50/60 to-white/80 border-gray-200/50"
+                    } p-8 rounded-2xl shadow-xl backdrop-blur-lg border transition-all duration-300 hover:shadow-2xl`}
+                  >
+                    {/* Header Section */}
+                    <div className="flex items-center gap-3 mb-8">
+                      <div className="p-3 rounded-xl bg-gradient-to-r from-paan-blue to-paan-dark-blue shadow-lg">
+                        <Icon icon="mdi:crown" className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-medium  ">
+                          Membership Management
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 ">
+                          Manage membership tier and privileges
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Current Status Card */}
+                    <div
+                      className={`${
+                        mode === "dark"
+                          ? "bg-gradient-to-r from-gray-700/60 to-gray-800/60 border-gray-600/30"
+                          : "bg-gradient-to-r from-blue-50/80 to-indigo-50/80 border-blue-200/30"
+                      } p-6 rounded-xl border mb-8 relative overflow-hidden`}
+                    >
+                      <div className="absolute top-0 right-0 w-32 h-32 opacity-10">
+                        <Icon
+                          icon="mdi:crown"
+                          className="w-full h-full text-paan-blue"
+                        />
+                      </div>
+                      <div className="relative z-10">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="flex items-center gap-2 mb-2">
+                              <Icon
+                                icon="mdi:shield-check"
+                                className="w-5 h-5 text-green-500"
+                              />
+                              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                                Current Membership Tier
+                              </span>
+                            </div>
+                            <h4 className="text-lg font-semibold text-gray-800 dark:text-white">
+                              {candidate.selected_tier ||
+                                "Free Member - Tier 1"}
+                            </h4>
+                          </div>
+                          <div className="text-right">
+                            <div className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-xs font-medium">
+                              <Icon icon="mdi:circle" className="w-2 h-2" />
+                              Active
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Tier Selection Section */}
+                    <div className="space-y-6">
+                      <div>
+                        <label className="flex items-center gap-2 text-lg font-semibold mb-4 text-gray-800 dark:text-white">
+                          <Icon
+                            icon="mdi:tune"
+                            className="w-5 h-5 text-paan-blue"
+                          />
+                          Select New Membership Tier
+                        </label>
+
+                        <div className="relative group">
+                          <select
+                            value={tierValue}
+                            onChange={(e) => setTierValue(e.target.value)}
+                            className={`block w-full rounded-xl shadow-lg pl-4 pr-12 py-4 text-base font-medium transition-all duration-200 focus:ring-4 focus:ring-paan-blue/20 focus:border-paan-blue focus:scale-[1.02] ${
+                              mode === "dark"
+                                ? "bg-gray-700/80 border-gray-600/50 text-white hover:bg-gray-700 hover:border-gray-500"
+                                : "bg-white border-gray-300/60 text-gray-800 hover:bg-gray-50 hover:border-gray-400"
+                            } border-2 appearance-none cursor-pointer`}
+                          >
+                            {tierOptions.map((opt) => (
+                              <option key={opt} value={opt} className="py-2">
+                                {opt}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">
+                            <Icon
+                              icon="heroicons:chevron-down"
+                              className="w-5 h-5 text-gray-500 group-hover:text-paan-blue transition-colors"
+                            />
+                          </div>
+
+                          {/* Selection indicator */}
+                          {tierValue !==
+                            (candidate.selected_tier ||
+                              "Free Member - Tier 1") && (
+                            <div className="absolute -top-2 -right-2 w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
+                              <Icon
+                                icon="mdi:pencil"
+                                className="w-2.5 h-2.5 text-white"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Change Indicator */}
+                      {tierValue !==
+                        (candidate.selected_tier || "Free Member - Tier 1") && (
+                        <div
+                          className={`${
+                            mode === "dark"
+                              ? "bg-orange-900/20 border-orange-700/30 text-orange-300"
+                              : "bg-orange-50 border-orange-200 text-orange-700"
+                          } p-4 rounded-lg border flex items-center gap-3 animate-pulse`}
+                        >
+                          <Icon
+                            icon="mdi:information"
+                            className="w-5 h-5 flex-shrink-0"
+                          />
+                          <div className="text-sm">
+                            <span className="font-medium">
+                              Tier change detected:
+                            </span>{" "}
+                            {candidate.selected_tier || "Free Member - Tier 1"}{" "}
+                            → {tierValue}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-gray-200/50 dark:border-gray-700/50">
+                      <button
+                        onClick={() =>
+                          setTierValue(
+                            candidate.selected_tier || "Free Member - Tier 1"
+                          )
+                        }
+                        disabled={
+                          tierValue ===
+                          (candidate.selected_tier || "Free Member - Tier 1")
+                        }
+                        className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 ${
+                          tierValue ===
+                          (candidate.selected_tier || "Free Member - Tier 1")
+                            ? "opacity-50 cursor-not-allowed"
+                            : "hover:scale-105 active:scale-95"
+                        } ${
+                          mode === "dark"
+                            ? "bg-gray-700/80 text-white hover:bg-gray-600 border border-gray-600/50"
+                            : "bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-300/50"
+                        }`}
+                      >
+                        <Icon icon="mdi:restore" className="w-4 h-4" />
+                        Reset
+                      </button>
+
+                      <button
+                        onClick={handleSaveTier}
+                        disabled={
+                          tierValue ===
+                          (candidate.selected_tier || "Free Member - Tier 1")
+                        }
+                        className={`px-8 py-3 rounded-xl text-sm font-semibold transition-all duration-200 flex items-center gap-2 shadow-lg ${
+                          tierValue ===
+                          (candidate.selected_tier || "Free Member - Tier 1")
+                            ? "opacity-50 cursor-not-allowed"
+                            : "hover:scale-105 active:scale-95 hover:shadow-xl"
+                        } bg-gradient-to-r from-paan-blue to-paan-dark-blue text-white`}
+                      >
+                        <Icon icon="mdi:content-save" className="w-4 h-4" />
+                        Save Changes
+                      </button>
+                    </div>
+                  </div>
                 </div>
               )}
 

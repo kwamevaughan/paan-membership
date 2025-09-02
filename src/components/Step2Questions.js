@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { Icon } from "@iconify/react";
 import QuestionCard from "./QuestionCard";
-import { toast } from "react-hot-toast";
+import toast from "react-hot-toast";
 
 export default function Step2Questions({
   formData,

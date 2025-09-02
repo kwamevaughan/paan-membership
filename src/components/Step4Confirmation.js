@@ -4,7 +4,7 @@ import Link from "next/link";
 import confetti from "canvas-confetti";
 import { Icon } from "@iconify/react";
 import ItemActionModal from "./ItemActionModal";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import ConfirmationProgress from "./ConfirmationProgress";
 
 export default function Step4Confirmation({
@@ -201,17 +201,7 @@ export default function Step4Confirmation({
 
   return (
     <>
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: isDark ? "#1f2937" : "#fff",
-            color: isDark ? "#fff" : "#1f2937",
-            border: `1px solid ${isDark ? "#374151" : "#e5e7eb"}`,
-          },
-        }}
-      />
+      
       <div className="animate-fade-in max-w-7xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Progress Sidebar */}

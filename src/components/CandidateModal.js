@@ -746,7 +746,7 @@ export default function CandidateModal({
                   >
                     {/* Header Section */}
                     <div className="flex items-center gap-3 mb-8">
-                      <div className="p-3 rounded-xl bg-gradient-to-r from-paan-blue to-paan-dark-blue shadow-lg">
+                      <div className="p-3 rounded-xl bg-paan-blue shadow-lg">
                         <Icon icon="mdi:crown" className="w-6 h-6 text-white" />
                       </div>
                       <div>
@@ -785,7 +785,7 @@ export default function CandidateModal({
                                 Current Membership Tier
                               </span>
                             </div>
-                            <h4 className="text-lg font-semibold text-gray-800 dark:text-white">
+                            <h4 className="text-lg font-normal text-gray-800 dark:text-white">
                               {candidate.selected_tier ||
                                 "Free Member - Tier 1"}
                             </h4>
@@ -803,7 +803,7 @@ export default function CandidateModal({
                     {/* Tier Selection Section */}
                     <div className="space-y-6">
                       <div>
-                        <label className="flex items-center gap-2 text-lg font-semibold mb-4 text-gray-800 dark:text-white">
+                        <label className="flex items-center gap-2 text-lg font-medium mb-4 text-gray-800 dark:text-white">
                           <Icon
                             icon="mdi:tune"
                             className="w-5 h-5 text-paan-blue"
@@ -815,7 +815,7 @@ export default function CandidateModal({
                           <select
                             value={tierValue}
                             onChange={(e) => setTierValue(e.target.value)}
-                            className={`block w-full rounded-xl shadow-lg pl-4 pr-12 py-4 text-base font-medium transition-all duration-200 focus:ring-4 focus:ring-paan-blue/20 focus:border-paan-blue focus:scale-[1.02] ${
+                            className={`block w-full rounded-xl shadow-lg pl-4 pr-12 py-4 text-sm font-normal transition-all duration-200 focus:ring-4 focus:ring-paan-blue/20 focus:border-paan-blue focus:scale-[1.02] ${
                               mode === "dark"
                                 ? "bg-gray-700/80 border-gray-600/50 text-white hover:bg-gray-700 hover:border-gray-500"
                                 : "bg-white border-gray-300/60 text-gray-800 hover:bg-gray-50 hover:border-gray-400"
@@ -911,7 +911,7 @@ export default function CandidateModal({
                           (candidate.selected_tier || "Free Member - Tier 1")
                             ? "opacity-50 cursor-not-allowed"
                             : "hover:scale-105 active:scale-95 hover:shadow-xl"
-                        } bg-gradient-to-r from-paan-blue to-paan-dark-blue text-white`}
+                        } bg-paan-blue text-white`}
                       >
                         <Icon icon="mdi:content-save" className="w-4 h-4" />
                         Save Changes

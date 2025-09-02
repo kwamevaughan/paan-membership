@@ -698,7 +698,6 @@ export default function HRApplicants({
         mode === "dark" ? "bg-gray-900" : "bg-gray-50"
       }`}
     >
-      {/* Toaster is rendered globally in `src/pages/_app.js` to avoid duplicates */}
 
       <HRHeader
         toggleSidebar={toggleSidebar}

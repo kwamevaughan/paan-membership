@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { Icon } from "@iconify/react";
 import HRSidebar from "@/layouts/hrSidebar";
 import HRHeader from "@/layouts/hrHeader";

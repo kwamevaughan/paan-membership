@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/router";
 import { Icon } from "@iconify/react";
 import Image from "next/image";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import ReCAPTCHA from "react-google-recaptcha";
 import { supabase } from "@/lib/supabase";
 import Footer from "@/layouts/footer";
@@ -531,7 +531,6 @@ export default function HRLogin() {
         </div>
       </div>
 
-      <Toaster />
     </div>
   );
 }

@@ -13,7 +13,7 @@ import SimpleFooter from "@/layouts/simpleFooter";
 import CategoryTable from "@/components/CategoryTable";
 import CategoryForm from "@/components/CategoryForm";
 import ItemActionModal from "@/components/ItemActionModal";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import useAuthSession from "@/hooks/useAuthSession";
 import useLogout from "@/hooks/useLogout";
 import { getInterviewQuestionsProps } from "utils/getPropsUtils";
@@ -197,7 +197,6 @@ export default function HRInterviewQuestions({
           mode === "dark" ? "bg-gray-900" : "bg-gray-50"
         }`}
       >
-        <Toaster />
         <HRHeader
           toggleSidebar={toggleSidebar}
           isSidebarOpen={isSidebarOpen}

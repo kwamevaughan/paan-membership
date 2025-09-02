@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "@/lib/supabase";
 import { motion } from "framer-motion";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { Icon } from "@iconify/react";
 import HRSidebar from "@/layouts/hrSidebar";
 import HRHeader from "@/layouts/hrHeader";
@@ -155,7 +155,6 @@ export default function Recruiters({ mode = "light", toggleMode, initialEmailGro
                         : "bg-gradient-to-b from-gray-50 to-gray-100"
                 }`}
             >
-                <Toaster />
                 <HRHeader
                     toggleSidebar={toggleSidebar}
                     isSidebarOpen={isSidebarOpen}
@@ -202,7 +201,6 @@ export default function Recruiters({ mode = "light", toggleMode, initialEmailGro
                     : "bg-gradient-to-b from-gray-50 to-gray-100"
             }`}
         >
-            <Toaster />
             <HRHeader
                 toggleSidebar={toggleSidebar}
                 isSidebarOpen={isSidebarOpen}

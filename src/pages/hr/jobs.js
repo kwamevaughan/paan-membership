@@ -1,7 +1,7 @@
 // TODO: Extract modal logic to useJobModals hook for better maintainability
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/router";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import HRSidebar from "@/layouts/hrSidebar";
 import HRHeader from "@/layouts/hrHeader";
 import useSidebar from "@/hooks/useSidebar";
@@ -175,7 +175,6 @@ export default function HRJobBoard({
         mode === "dark" ? "bg-gradient-to-b from-gray-900 to-gray-800" : ""
       }`}
     >
-      <Toaster />
 
       <HRHeader
         toggleSidebar={toggleSidebar}

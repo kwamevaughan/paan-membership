@@ -204,10 +204,10 @@ export async function getAdminBusinessOpportunitiesProps({ req, res }) {
 
     // Define the available tiers
     const tiers = [
-      "Gold Member",
-      "Full Member",
-      "Associate Member",
       "Free Member",
+      "Associate Member",
+      "Full Member",
+      "Gold Member",
     ];
 
     return createProps({ tiers }, [

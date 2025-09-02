@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Toaster, toast } from "react-hot-toast";
+import toast from "react-hot-toast";
 import HRSidebar from "@/layouts/hrSidebar";
 import HRHeader from "@/layouts/hrHeader";
 import useSidebar from "@/hooks/useSidebar";
@@ -205,7 +205,6 @@ export default function EmailTemplates({
           : "bg-gradient-to-br from-blue-50 via-sky-50 to-sky-50"
       }`}
     >
-      <Toaster />
       <HRHeader
         toggleSidebar={toggleSidebar}
         isSidebarOpen={isSidebarOpen}

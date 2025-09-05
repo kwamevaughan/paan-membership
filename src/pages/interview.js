@@ -676,7 +676,7 @@ export default function InterviewPage({
           />
         </div>
 
-        <div className="max-w-7xl w-full mx-auto p-6 py-10 relative z-20">
+        <div className="max-w-7xl w-full mx-auto p-6 py-10 relative z-10">
           <MovingDotBorder mode={mode}>
             <div
               className={`rounded-[calc(1rem-4px)] p-6 ${

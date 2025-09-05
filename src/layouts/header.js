@@ -2,6 +2,7 @@ import Image from "next/image";
 import { Icon } from "@iconify/react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import LanguageSwitch from "@/components/LanguageSwitch";
 
 const Header = ({
   mode,
@@ -244,8 +245,9 @@ const Header = ({
             </div>
           )}
 
-          {/* Dark Mode Toggle */}
+          {/* Dark Mode Toggle & Language Switch */}
           <div className="flex items-center space-x-4">
+            <LanguageSwitch mode={mode} />
             <button
               onClick={() => toggleMode()}
               className={`relative p-3 rounded-full focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400

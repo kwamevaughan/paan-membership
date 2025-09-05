@@ -4,8 +4,9 @@ import Image from "next/image";
 import { Icon } from "@iconify/react";
 import { useState, useEffect } from "react";
 import SEO from "@/components/SEO";
+import LanguageSwitch from "@/components/LanguageSwitch";
 
-export default function Freelancers({ initialOpenings }) {
+export default function Freelancers({ initialOpenings, mode }) {
   const router = useRouter();
   const [selectedOpening, setSelectedOpening] = useState("");
   const [openings] = useState(initialOpenings);
@@ -105,7 +106,9 @@ export default function Freelancers({ initialOpenings }) {
       </div>
 
       {/* Floating Navigation Elements */}
-      <div className="absolute top-6 right-6 z-20">
+      <div className="absolute top-6 right-6 z-20 flex items-center gap-4">
+        <LanguageSwitch mode={mode} />
+
         <Link href="/">
           <div className="group flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white hover:bg-white/20 transition-all duration-300 hover:scale-105">
             <span className="text-sm font-medium">For Agencies</span>

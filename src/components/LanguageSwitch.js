@@ -220,6 +220,9 @@ const LanguageSwitch = ({ mode }) => {
       .goog-te-menu-frame {
         box-shadow: none !important;
       }
+      body {
+        top: 0 !important;
+      }
     `;
     document.head.appendChild(style);
     return () => {

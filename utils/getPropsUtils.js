@@ -530,7 +530,7 @@ export async function getApplicantsProps({ req, res, query }) {
 
     // Get pagination parameters
     const page = parseInt(query?.page) || 1;
-    const limit = parseInt(query?.limit) || 100; // Reduced from loading all to 50 per page
+    const limit = parseInt(query?.limit) || 1000; // Reduced from loading all to 50 per page
 
     console.time("fetchApplicantsData");
     const data = await fetchApplicantsData(supabaseServer, page, limit);

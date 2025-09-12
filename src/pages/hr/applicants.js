@@ -220,6 +220,13 @@ export default function HRApplicants({
       });
       console.log("After tier filter:", result);
     }
+
+    // Always filter out Admin tier candidates from the table
+    result = result.filter((c) => {
+      if (!c.selected_tier) return true;
+      const tierValue = c.selected_tier.split(" - ")[0].trim();
+      return tierValue !== "Admin";
+    });
     if (filterCountry !== "all") {
       result = result.filter((c) => {
         // For agencies, check headquartersLocation; for freelancers, check countryOfResidence

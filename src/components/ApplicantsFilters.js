@@ -39,7 +39,7 @@ export default function ApplicantsFilters({
     { value: "tier", label: "Tier" },
     { value: "reference", label: "Reference Number" },
   ];
-  // Extract unique tiers and add 'all' option
+  // Extract unique tiers and add 'all' option, excluding Admin tier
   const uniqueTiers = [
     "all",
     ...Array.from(
@@ -51,6 +51,7 @@ export default function ApplicantsFilters({
               : null
           )
           .filter(Boolean)
+          .filter((tier) => tier !== "Admin") // Hide Admin tier
       )
     ),
   ];
@@ -155,15 +156,7 @@ export default function ApplicantsFilters({
         clearTimeout(searchTimeoutRef.current);
       }
     };
-  }, [
-    searchQuery,
-    filterOpening,
-    filterStatus,
-    filterTier,
-    filterCountry,
-    areCandidatesValid,
-    candidates,
-  ]);
+  }, [searchQuery, filterOpening, filterStatus, filterTier, filterCountry, areCandidatesValid, candidates, handleFilter]);
 
   const handleStatusChange = (e) => {
     const newStatus = e.target.value;

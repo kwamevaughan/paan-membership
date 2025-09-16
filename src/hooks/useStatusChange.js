@@ -65,7 +65,8 @@ const useStatusChange = ({
         throw new Error("Candidate not found");
       }
 
-      const answers = candidate.answers?.length > 0 ? candidate.answers : [];
+      // Only include answers when they exist to avoid overwriting with []
+      const hasAnswers = Array.isArray(candidate.answers) && candidate.answers.length > 0;
 
       let plainPassword = null;
       let authUserId = candidate.auth_user_id;
@@ -128,24 +129,25 @@ const useStatusChange = ({
         }
       }
 
-      // Update responses table
+      // Update responses table (do not overwrite answers if not provided)
+      const upsertPayload = {
+        user_id: candidateId,
+        status: newStatus,
+        company_registration_url: candidate.companyRegistrationUrl,
+        portfolio_work_url: candidate.portfolioWorkUrl,
+        agency_profile_url: candidate.agencyProfileUrl,
+        tax_registration_url: candidate.taxRegistrationUrl,
+        country: candidate.country,
+        device: candidate.device,
+        submitted_at: candidate.submitted_at,
+      };
+      if (hasAnswers) {
+        upsertPayload.answers = candidate.answers;
+      }
+
       const { error } = await supabase
         .from("responses")
-        .upsert(
-          {
-            user_id: candidateId,
-            answers: answers,
-            status: newStatus,
-            company_registration_url: candidate.companyRegistrationUrl,
-            portfolio_work_url: candidate.portfolioWorkUrl,
-            agency_profile_url: candidate.agencyProfileUrl,
-            tax_registration_url: candidate.taxRegistrationUrl,
-            country: candidate.country,
-            device: candidate.device,
-            submitted_at: candidate.submitted_at,
-          },
-          { onConflict: ["user_id"] }
-        )
+        .upsert(upsertPayload, { onConflict: ["user_id"] })
         .eq("user_id", candidateId);
       if (error) throw error;
 
@@ -283,7 +285,7 @@ const useStatusChange = ({
           ),
           { duration: Infinity }
         );
-} else if (
+      } else if (
         ["Accepted", "Reviewed", "Shortlisted", "Rejected"].includes(
           newStatus
         ) &&

@@ -30,7 +30,7 @@ export const useCountry = () => {
         }
         setCountries(data);
         const options = data.map((country) => ({
-          label: country.name,
+          label: `${country.flag || country.emoji || ''} ${country.name}`.trim(),
           value: country.name,
         }));
         const sortedOptions = [
@@ -51,7 +51,7 @@ export const useCountry = () => {
         // Include regional options even in fallback case
         setCountryOptions([
           ...regionalOptions,
-          ...fallback.map((c) => ({ label: c.name, value: c.name }))
+          ...fallback.map((c) => ({ label: `${c.flag || ''} ${c.name}`.trim(), value: c.name }))
         ]);
       })
       .finally(() => {

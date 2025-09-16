@@ -2,6 +2,8 @@ import { Icon } from "@iconify/react";
 import { useState, useCallback } from "react";
 import FileUpload from "@/components/common/FileUpload";
 import * as XLSX from 'xlsx';
+import Select from "react-select";
+import countriesGeoJson from "@/data/countries";
 
 export default function TenderFormSection({
   formData,
@@ -58,6 +60,50 @@ export default function TenderFormSection({
 
     "Other",
   ];
+
+  const countryOptions = (countriesGeoJson?.features || [])
+    .map((f) => f?.properties?.name)
+    .filter(Boolean)
+    .map((name) => ({ label: name, value: name }));
+
+  const selectStyles = {
+    control: (provided) => ({
+      ...provided,
+      backgroundColor: mode === "dark" ? "#1f2937" : "#ffffff",
+      borderColor: mode === "dark" ? "#374151" : "#e5e7eb",
+      color: mode === "dark" ? "#f3f4f6" : "#111827",
+      paddingLeft: "2.5rem",
+      borderRadius: "0.75rem",
+      minHeight: "3rem",
+      boxShadow: "none",
+    }),
+    menu: (provided) => ({
+      ...provided,
+      backgroundColor: mode === "dark" ? "#1f2937" : "#ffffff",
+      color: mode === "dark" ? "#f3f4f6" : "#111827",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isFocused
+        ? mode === "dark" ? "#374151" : "#f3f4f6"
+        : state.isSelected
+        ? "#3b82f6"
+        : mode === "dark" ? "#1f2937" : "#ffffff",
+      color: state.isSelected ? "#ffffff" : mode === "dark" ? "#f3f4f6" : "#111827",
+    }),
+    singleValue: (provided) => ({
+      ...provided,
+      color: mode === "dark" ? "#f3f4f6" : "#111827",
+    }),
+    input: (provided) => ({
+      ...provided,
+      color: mode === "dark" ? "#f3f4f6" : "#111827",
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: mode === "dark" ? "#9ca3af" : "#6b7280",
+    }),
+  };
 
   // Parse CSV/Excel file
   const parseBulkFile = useCallback(async (file) => {
@@ -302,6 +348,31 @@ export default function TenderFormSection({
               className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 ${mode === "dark" ? "border-gray-700 bg-gray-800 text-white" : "border-gray-200 bg-white text-gray-900"}`}
               placeholder="Enter organization name"
             />
+          </div>
+          
+          {/* Location (Country) */}
+          <div className="col-span-1">
+            <label className={`block text-sm font-medium ${mode === "dark" ? "text-gray-300" : "text-gray-700"} mb-1.5`}>
+              Location <span className="text-xs text-gray-400">(country)</span>
+            </label>
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <Icon icon="heroicons:map-pin" className={`h-5 w-5 ${mode === "dark" ? "text-gray-300" : "text-gray-400"}`} />
+              </div>
+              <Select
+                inputId="tender_location"
+                value={formData.location ? { label: formData.location, value: formData.location } : null}
+                onChange={(opt) =>
+                  handleInputChange({ target: { name: "location", value: opt ? opt.value : "" } })
+                }
+                options={countryOptions}
+                isClearable
+                isSearchable
+                placeholder="Select country"
+                styles={selectStyles}
+                classNamePrefix="react-select"
+              />
+            </div>
           </div>
           
           <div className="col-span-1">

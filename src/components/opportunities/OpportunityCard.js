@@ -13,21 +13,25 @@ export default function OpportunityCard({
   const isTender = opportunity.is_tender;
 
   const getFileIcon = (fileType) => {
-    if (fileType?.includes('pdf')) return 'heroicons:document-text';
-    if (fileType?.includes('word') || fileType?.includes('document')) return 'heroicons:document';
-    if (fileType?.includes('excel') || fileType?.includes('spreadsheet')) return 'heroicons:table-cells';
-    if (fileType?.includes('powerpoint') || fileType?.includes('presentation')) return 'heroicons:presentation-chart-line';
-    if (fileType?.includes('zip') || fileType?.includes('compressed')) return 'heroicons:archive-box';
-    if (fileType?.includes('text')) return 'heroicons:document-text';
-    return 'heroicons:document';
+    if (fileType?.includes("pdf")) return "heroicons:document-text";
+    if (fileType?.includes("word") || fileType?.includes("document"))
+      return "heroicons:document";
+    if (fileType?.includes("excel") || fileType?.includes("spreadsheet"))
+      return "heroicons:table-cells";
+    if (fileType?.includes("powerpoint") || fileType?.includes("presentation"))
+      return "heroicons:presentation-chart-line";
+    if (fileType?.includes("zip") || fileType?.includes("compressed"))
+      return "heroicons:archive-box";
+    if (fileType?.includes("text")) return "heroicons:document-text";
+    return "heroicons:document";
   };
 
   const formatFileSize = (bytes) => {
-    if (!bytes || bytes === 0) return '0 Bytes';
+    if (!bytes || bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   return (
@@ -46,13 +50,12 @@ export default function OpportunityCard({
           <div className="flex-1">
             <h3 className="text-lg font-semibold mb-2 line-clamp-2">
               {isTender
-                ? (opportunity.tender_title || opportunity.organization_name)
-                : (opportunity.job_type === "Freelancer"
-                    ? opportunity.gig_title
-                    : opportunity.organization_name)
-              }
+                ? opportunity.tender_title || opportunity.organization_name
+                : opportunity.job_type === "Freelancer"
+                ? opportunity.gig_title
+                : opportunity.organization_name}
             </h3>
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
               <span
                 className={`px-2 py-1 text-xs font-medium rounded-full ${
                   isTender
@@ -70,6 +73,17 @@ export default function OpportunityCard({
               >
                 {isTender ? "Tender" : opportunity.job_type}
               </span>
+              {opportunity.location && (
+                <span
+                  className={`px-2 py-1 text-xs font-medium rounded-full ${
+                    mode === "dark"
+                      ? "bg-green-900/30 text-green-300"
+                      : "bg-green-100 text-green-600"
+                  }`}
+                >
+                  {opportunity.location}
+                </span>
+              )}
               {!isTender && opportunity.service_type && (
                 <span
                   className={`px-2 py-1 text-xs font-medium rounded-full ${
@@ -261,13 +275,13 @@ export default function OpportunityCard({
               )}
 
               {!isAgency && opportunity.skills_required?.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    <Icon
-                      icon="heroicons:tag"
-                      className={`w-4 h-4 ${
-                        mode === "dark" ? "text-gray-400" : "text-gray-500"
-                      }`}
-                    />
+                <div className="flex flex-wrap gap-2">
+                  <Icon
+                    icon="heroicons:tag"
+                    className={`w-4 h-4 ${
+                      mode === "dark" ? "text-gray-400" : "text-gray-500"
+                    }`}
+                  />
                   <span className="text-sm">Skills:</span>
                   {opportunity.skills_required.map((skill) => (
                     <span

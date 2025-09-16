@@ -11,7 +11,11 @@ import useSidebar from "@/hooks/useSidebar";
 import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useOpportunities } from "@/hooks/useOpportunities";
-import { useOpportunityInterests, useTotalOpportunityInterests, useAllOpportunityInterests } from "@/hooks/useOpportunityInterests";
+import {
+  useOpportunityInterests,
+  useTotalOpportunityInterests,
+  useAllOpportunityInterests,
+} from "@/hooks/useOpportunityInterests";
 import { Icon } from "@iconify/react";
 import PageHeader from "@/components/common/PageHeader";
 import OpportunityFilters from "@/components/filters/OpportunityFilters";
@@ -84,13 +88,16 @@ export default function AdminBusinessOpportunities({
     setViewMode(newViewMode);
   }, []);
 
-  const handleSelectAll = useCallback((selected) => {
-    if (selected) {
-      setSelectedIds(opportunities.map((opportunity) => opportunity.id));
-    } else {
-      setSelectedIds([]);
-    }
-  }, [opportunities]);
+  const handleSelectAll = useCallback(
+    (selected) => {
+      if (selected) {
+        setSelectedIds(opportunities.map((opportunity) => opportunity.id));
+      } else {
+        setSelectedIds([]);
+      }
+    },
+    [opportunities]
+  );
 
   const handleSelect = useCallback((id) => {
     setSelectedIds((prev) =>
@@ -124,43 +131,74 @@ export default function AdminBusinessOpportunities({
       selectedTier !== "All" ||
       selectedTenderType !== "All"
     );
-  }, [filterTerm, sortOrder, selectedLocation, selectedServiceType, selectedIndustry, selectedJobType, selectedTier, selectedTenderType]);
+  }, [
+    filterTerm,
+    sortOrder,
+    selectedLocation,
+    selectedServiceType,
+    selectedIndustry,
+    selectedJobType,
+    selectedTier,
+    selectedTenderType,
+  ]);
 
   // Create filtered opportunities for BaseFilters
   const filteredOpportunities = useMemo(() => {
     if (!opportunities) return [];
-    
+
     return opportunities.filter((opportunity) => {
       if (!opportunity) return false;
-      
+
       const matchesSearch =
         !filterTerm ||
-        (opportunity.title && opportunity.title.toLowerCase().includes(filterTerm.toLowerCase())) ||
-        (opportunity.description && opportunity.description.toLowerCase().includes(filterTerm.toLowerCase()));
-      
+        (opportunity.title &&
+          opportunity.title.toLowerCase().includes(filterTerm.toLowerCase())) ||
+        (opportunity.description &&
+          opportunity.description
+            .toLowerCase()
+            .includes(filterTerm.toLowerCase()));
+
       const matchesLocation =
         selectedLocation === "All" || opportunity.location === selectedLocation;
-      
+
       const matchesServiceType =
-        selectedServiceType === "All" || opportunity.service_type === selectedServiceType;
-      
+        selectedServiceType === "All" ||
+        opportunity.service_type === selectedServiceType;
+
       const matchesIndustry =
         selectedIndustry === "All" || opportunity.industry === selectedIndustry;
-      
+
       const matchesJobType =
         selectedJobType === "All" || opportunity.job_type === selectedJobType;
-      
+
       const matchesTier =
         selectedTier === "All" || opportunity.tier_restriction === selectedTier;
-      
+
       const matchesTenderType =
-        selectedTenderType === "All" || 
+        selectedTenderType === "All" ||
         (selectedTenderType === "Tender" && opportunity.is_tender) ||
         (selectedTenderType === "Regular" && !opportunity.is_tender);
-      
-      return matchesSearch && matchesLocation && matchesServiceType && matchesIndustry && matchesJobType && matchesTier && matchesTenderType;
+
+      return (
+        matchesSearch &&
+        matchesLocation &&
+        matchesServiceType &&
+        matchesIndustry &&
+        matchesJobType &&
+        matchesTier &&
+        matchesTenderType
+      );
     });
-  }, [opportunities, filterTerm, selectedLocation, selectedServiceType, selectedIndustry, selectedJobType, selectedTier, selectedTenderType]);
+  }, [
+    opportunities,
+    filterTerm,
+    selectedLocation,
+    selectedServiceType,
+    selectedIndustry,
+    selectedJobType,
+    selectedTier,
+    selectedTenderType,
+  ]);
 
   // Function to open delete confirmation modal
   const openDeleteModal = (id) => {
@@ -178,7 +216,7 @@ export default function AdminBusinessOpportunities({
   // Function to confirm deletion
   const confirmDelete = () => {
     if (opportunityToDelete) {
-      const loadingToastId = toast.loading('Please wait...');
+      const loadingToastId = toast.loading("Please wait...");
       Promise.resolve(handleDelete(opportunityToDelete)).finally(() => {
         toast.dismiss(loadingToastId);
         closeDeleteModal();
@@ -222,7 +260,7 @@ export default function AdminBusinessOpportunities({
     submitForm: (e, id) => {
       handleSubmit(e, id);
       modalActions.closeModal();
-    }
+    },
   };
 
   const {
@@ -245,11 +283,21 @@ export default function AdminBusinessOpportunities({
 
   // Extract unique values for filters
   const filterOptions = useMemo(() => {
-    const locations = [...new Set(opportunities.map(opp => opp.location))].filter(Boolean);
-    const serviceTypes = [...new Set(opportunities.map(opp => opp.service_type))].filter(Boolean);
-    const industries = [...new Set(opportunities.map(opp => opp.industry))].filter(Boolean);
-    const jobTypes = [...new Set(opportunities.map(opp => opp.job_type))].filter(Boolean);
-    const tiers = [...new Set(opportunities.map(opp => opp.tier_restriction))].filter(Boolean);
+    const locations = [
+      ...new Set(opportunities.map((opp) => opp.location)),
+    ].filter(Boolean);
+    const serviceTypes = [
+      ...new Set(opportunities.map((opp) => opp.service_type)),
+    ].filter(Boolean);
+    const industries = [
+      ...new Set(opportunities.map((opp) => opp.industry)),
+    ].filter(Boolean);
+    const jobTypes = [
+      ...new Set(opportunities.map((opp) => opp.job_type)),
+    ].filter(Boolean);
+    const tiers = [
+      ...new Set(opportunities.map((opp) => opp.tier_restriction)),
+    ].filter(Boolean);
     const tenderTypes = ["Regular", "Tender"]; // Static options for tender type
 
     return {
@@ -258,7 +306,7 @@ export default function AdminBusinessOpportunities({
       industries,
       jobTypes,
       tiers,
-      tenderTypes
+      tenderTypes,
     };
   }, [opportunities]);
 
@@ -283,8 +331,10 @@ export default function AdminBusinessOpportunities({
   };
 
   // In the render, set modal title and button text based on isEditing
-  const modalTitle = isEditing ? 'Edit Opportunity' : 'Add Opportunity';
-  const modalButtonText = isEditing ? 'Update Opportunity' : 'Create Opportunity';
+  const modalTitle = isEditing ? "Edit Opportunity" : "Add Opportunity";
+  const modalButtonText = isEditing
+    ? "Update Opportunity"
+    : "Create Opportunity";
 
   return (
     <div
@@ -294,7 +344,6 @@ export default function AdminBusinessOpportunities({
           : "bg-gray-100 text-gray-900"
       } transition-colors duration-300`}
     >
-      
       <HRHeader
         toggleSidebar={toggleSidebar}
         isSidebarOpen={isSidebarOpen}
@@ -702,7 +751,7 @@ export default function AdminBusinessOpportunities({
                 handleInputChange={handleInputChange}
                 submitForm={async (e) => {
                   e.preventDefault();
-                  let loadingToastId = toast.loading('Please wait...');
+                  let loadingToastId = toast.loading("Please wait...");
                   await handleSubmit(e, editingId);
                   if (loadingToastId) {
                     toast.dismiss(loadingToastId);
@@ -735,14 +784,18 @@ export default function AdminBusinessOpportunities({
                   {opportunities.find((opp) => opp.id === opportunityToDelete)
                     ?.job_type === "Freelancer"
                     ? "gig"
-                    : "opportunity"} {" "}
+                    : "opportunity"}{" "}
                   <strong>
                     &ldquo;
                     {(() => {
-                      const opp = opportunities.find((opp) => opp.id === opportunityToDelete);
+                      const opp = opportunities.find(
+                        (opp) => opp.id === opportunityToDelete
+                      );
                       if (!opp) return "";
-                      if (opp.job_type === "Freelancer") return opp.gig_title || "";
-                      if (opp.is_tender) return opp.tender_title || opp.organization_name || "";
+                      if (opp.job_type === "Freelancer")
+                        return opp.gig_title || "";
+                      if (opp.is_tender)
+                        return opp.tender_title || opp.organization_name || "";
                       return opp.organization_name || "";
                     })()}
                     &rdquo;

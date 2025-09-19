@@ -161,7 +161,8 @@ export async function fetchHRData({
               parsedAnswers = response.answers;
             }
 
-            parsedAnswers = parsedAnswers.map((answer, index) => {
+            // Format each answer but keep the array length intact to preserve indexing
+            parsedAnswers = parsedAnswers.map((answer) => {
               if (!answer || answer === null || answer === "") {
                 return null;
               }
@@ -230,36 +231,20 @@ export async function fetchHRData({
             openingLower.includes("freelancer") ||
             openingLower.includes("freelancers");
 
-          let filteredQuestions = questionsData;
-          let filteredAnswers = parsedAnswers;
+          // Build job-specific questions and align answers by question.id - 1
+          const jobQuestions = isAgency
+            ? questionsData.filter((q) => q.job_type === "agency")
+            : isFreelancer
+            ? questionsData.filter((q) => q.job_type === "freelancer")
+            : questionsData;
 
-          if (isAgency) {
-            const allAgencyQuestions = questionsData.filter(
-              (q) => q.job_type === "agency"
-            );
-            filteredAnswers = parsedAnswers.filter(
-              (answer) => answer !== null && answer !== ""
-            );
-            filteredQuestions = allAgencyQuestions.slice(
-              0,
-              filteredAnswers.length
-            );
-          } else if (isFreelancer) {
-            filteredQuestions = questionsData.filter(
-              (q) => q.job_type === "freelancer"
-            );
-            filteredAnswers = parsedAnswers.filter(
-              (answer) => answer !== null && answer !== ""
-            );
-            filteredQuestions = filteredQuestions.slice(
-              0,
-              filteredAnswers.length
-            );
-          }
+          const alignedAnswers = jobQuestions.map(
+            (q) => parsedAnswers[q.id - 1] ?? null
+          );
 
-          if (filteredAnswers.length !== filteredQuestions.length) {
+          if (alignedAnswers.length !== jobQuestions.length) {
             console.warn(
-              `[fetchHRData] Answer count mismatch for ${candidate.primaryContactName}. Expected ${filteredQuestions.length}, got ${filteredAnswers.length}`
+              `[fetchHRData] Answer count mismatch for ${candidate.primaryContactName}. Expected ${jobQuestions.length}, got ${alignedAnswers.length}`
             );
           }
 
@@ -268,7 +253,7 @@ export async function fetchHRData({
             email: candidate.primaryContactEmail || "",
             primaryContactName: candidate.primaryContactName || "Unknown",
             opening: candidate.opening || "Unknown Position",
-            answers: filteredAnswers,
+            answers: alignedAnswers,
             companyRegistrationUrl: response.company_registration_url || null,
             portfolioWorkUrl: response.portfolio_work_url || null,
             agencyProfileUrl: response.agency_profile_url || null,
@@ -279,7 +264,7 @@ export async function fetchHRData({
               : "Unknown",
             device: response.device || "Unknown",
             submitted_at: response.submitted_at || null,
-            questions: filteredQuestions,
+            questions: jobQuestions,
             selected_tier: normalizeTier(candidate.selected_tier), // Normalize tier in candidate data
             // Email status fields
             email_sent: response.email_sent || false,

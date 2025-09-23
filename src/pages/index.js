@@ -324,9 +324,9 @@ export default function Agencies({ initialOpenings, mode }) {
   );
 }
 
-export async function getStaticProps() {
-  const { getAgenciesPageStaticProps } = await import(
+export async function getServerSideProps(context) {
+  const { getAgenciesPageServerProps } = await import(
     "@/../utils/getPropsUtils"
   );
-  return await getAgenciesPageStaticProps();
+  return await getAgenciesPageServerProps(context);
 }

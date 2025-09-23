@@ -129,7 +129,8 @@ async function fetchOverviewData(supabaseServer) {
         device
       )
     `)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+        .limit(50); // Limit for better performance
 
   if (candidatesError) throw candidatesError;
 
@@ -236,7 +237,8 @@ export async function getAdminBusinessUpdatesProps({ req, res }) {
       .select(
         "id, title, description, category, cta_text, cta_url, tier_restriction, tags, created_at, updated_at"
       )
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+        .limit(50); // Limit for better performance
 
     if (updatesError) {
       throw new Error(`Failed to fetch updates: ${updatesError.message}`);
@@ -273,7 +275,7 @@ export async function getInterviewPageProps({ req, res, query }) {
 
     const queryPromise = supabaseServer
       .from("interview_questions")
-      .select("*, max_answers")
+      .select("id, article_name, slug, is_published, created_at, updated_at, author, category_id, max_answers")
       .order("id", { ascending: true });
 
     const { data: questions, error } = await Promise.race([
@@ -345,6 +347,39 @@ export async function getAgenciesPageStaticProps() {
   }
 }
 
+
+export async function getAgenciesPageServerProps({ req, res }) {
+  console.log(
+    "[getAgenciesPageServerProps] Starting at",
+    new Date().toISOString()
+  );
+
+  const supabaseServer = createSupabaseServerClient(req, res);
+
+  try {
+    const { data, error } = await supabaseServer
+      .from("job_openings")
+      .select("id, title, job_type")
+      .eq("job_type", "agencies")
+      .gt("expires_on", new Date().toISOString())
+      .limit(50);
+
+    if (error) throw error;
+
+    return {
+      props: {
+        initialOpenings: data || [],
+      },
+    };
+  } catch (error) {
+    console.error("[getAgenciesPageServerProps] Error:", error);
+    return {
+      props: {
+        initialOpenings: [],
+      },
+    };
+  }
+}
 export async function getFreelancersPageStaticProps() {
   console.log(
     "[getFreelancersPageStaticProps] Starting at",
@@ -397,7 +432,8 @@ export async function getInterviewQuestionsProps({ req, res }) {
     const { data: categories, error: catError } = await supabaseServer
       .from("question_categories")
       .select("id, name, job_type, is_mandatory")
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+        .limit(50); // Limit for better performance
 
     if (catError) throw catError;
 
@@ -577,7 +613,8 @@ export async function getAdminMarketIntelProps({ req, res }) {
 }
 
 export async function getAdminBlogProps({ req, res }) {
-  console.log("[getAdminBlogProps] Starting at", new Date().toISOString());
+  // console.log("[getAdminBlogProps] Starting at", new Date().toISOString());
+  const startTime = Date.now();
 
   try {
     const authResult = await withAuth(req, res);
@@ -589,22 +626,22 @@ export async function getAdminBlogProps({ req, res }) {
       .from("blogs")
       .select(
         `
-        *,
+        id, article_name, slug, is_published, created_at, updated_at, author, category_id,
         author_details:hr_users(name, username),
-        category:blog_categories(name),
-        tags:blog_post_tags(
-          tag:blog_tags(name)
-        )
+        category:blog_categories(name)
+        
       `
       )
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+        .limit(50); // Limit for better performance
 
     if (blogsError) throw blogsError;
+  // console.log(`[getAdminBlogProps] Blogs query completed - ${blogs?.length || 0} blogs fetched`);
 
     const transformedBlogs = blogs.map((blog) => ({
       ...blog,
       article_category: blog.category?.name || null,
-      article_tags: blog.tags?.map((t) => t.tag.name) || [],
+      article_tags: [], // Tags removed for performance
       author:
         blog.author_details?.name ||
         blog.author_details?.username ||
@@ -626,7 +663,12 @@ export async function getAdminBlogProps({ req, res }) {
 
     if (tagsError) throw tagsError;
 
-    return createProps(
+    const endTime = Date.now();
+  const totalTime = endTime - startTime;
+  // console.log(`[getAdminBlogProps] Total execution time: ${totalTime}ms`);
+  // console.log(`[getAdminBlogProps] Data size: ${JSON.stringify(transformedBlogs).length} bytes`);
+  
+  return createProps(
       {
         initialBlogs: transformedBlogs || [],
         categories: categoriesData || [],

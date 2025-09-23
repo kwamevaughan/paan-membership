@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import toast, { Toaster } from "react-hot-toast";
 import "leaflet/dist/leaflet.css";
 import "../styles/globals.css";
+import "../styles/dark-mode-date-range.css";
 import { Poppins } from "next/font/google";
 import { sidebarNav } from "@/data/nav";
 import '@/styles/editor.css';

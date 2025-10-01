@@ -341,7 +341,6 @@ export async function getServerSideProps({ req, res }) {
         "[EmailTemplates] HR User Error:",
         hrUserError?.message || "User not in hr_users"
       );
-      await supabaseServer.auth.signOut();
       return {
         redirect: {
           destination: "/hr/login",

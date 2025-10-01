@@ -111,7 +111,8 @@ async function fetchOverviewData(supabaseServer) {
   // Fetch candidates with responses data using proper join (minimal fields only)
   const { data: candidatesData, error: candidatesError } = await supabaseServer
     .from("candidates")
-    .select(`
+    .select(
+      `
       id, 
       primaryContactName, 
       primaryContactEmail,
@@ -128,28 +129,32 @@ async function fetchOverviewData(supabaseServer) {
         country,
         device
       )
-    `)
+    `
+    )
     .order("created_at", { ascending: false })
-        .limit(50); // Limit for better performance
+    .limit(50); // Limit for better performance
 
   if (candidatesError) throw candidatesError;
 
   // Transform the data to flatten the responses
-  const transformedCandidates = candidatesData?.map(candidate => {
-    // Get the first response (there should only be one per candidate)
-    const response = Array.isArray(candidate.responses) ? candidate.responses[0] : candidate.responses;
-    
-    const { responses, ...candidateWithoutResponses } = candidate;
-    
-    return {
-      ...candidateWithoutResponses,
-      // Flatten response data to candidate level for easier access
-      submitted_at: response?.submitted_at || candidate.created_at,
-      status: response?.status || "Pending",
-      country: response?.country || candidate.countryOfResidence,
-      device: response?.device || null,
-    };
-  }) || [];
+  const transformedCandidates =
+    candidatesData?.map((candidate) => {
+      // Get the first response (there should only be one per candidate)
+      const response = Array.isArray(candidate.responses)
+        ? candidate.responses[0]
+        : candidate.responses;
+
+      const { responses, ...candidateWithoutResponses } = candidate;
+
+      return {
+        ...candidateWithoutResponses,
+        // Flatten response data to candidate level for easier access
+        submitted_at: response?.submitted_at || candidate.created_at,
+        status: response?.status || "Pending",
+        country: response?.country || candidate.countryOfResidence,
+        device: response?.device || null,
+      };
+    }) || [];
 
   // Extract unique job openings from candidates (same as original fetchHRData)
   const jobOpenings = [
@@ -238,7 +243,7 @@ export async function getAdminBusinessUpdatesProps({ req, res }) {
         "id, title, description, category, cta_text, cta_url, tier_restriction, tags, created_at, updated_at"
       )
       .order("created_at", { ascending: false })
-        .limit(50); // Limit for better performance
+      .limit(50); // Limit for better performance
 
     if (updatesError) {
       throw new Error(`Failed to fetch updates: ${updatesError.message}`);
@@ -275,8 +280,10 @@ export async function getInterviewPageProps({ req, res, query }) {
 
     const queryPromise = supabaseServer
       .from("interview_questions")
-      .select("id, article_name, slug, is_published, created_at, updated_at, author, category_id, max_answers")
-      .order("id", { ascending: true });
+      .select(
+        "id, text, description, options, is_multi_select, other_option_text, is_open_ended, is_country_select, order, category, max_answers, depends_on_question_id, depends_on_answer, max_words, skippable, text_input_option, text_input_max_answers, structured_answers, has_links, job_type, created_at, updated_at"
+      )
+      .order("order", { ascending: true });
 
     const { data: questions, error } = await Promise.race([
       queryPromise,
@@ -346,7 +353,6 @@ export async function getAgenciesPageStaticProps() {
     };
   }
 }
-
 
 export async function getAgenciesPageServerProps({ req, res }) {
   console.log(
@@ -433,7 +439,7 @@ export async function getInterviewQuestionsProps({ req, res }) {
       .from("question_categories")
       .select("id, name, job_type, is_mandatory")
       .order("created_at", { ascending: false })
-        .limit(50); // Limit for better performance
+      .limit(50); // Limit for better performance
 
     if (catError) throw catError;
 
@@ -459,15 +465,15 @@ async function fetchSingleCandidateData(supabaseServer, candidateId) {
     });
 
     // Find the specific candidate
-    const candidate = data.initialCandidates?.find(c => c.id === candidateId);
-    
+    const candidate = data.initialCandidates?.find((c) => c.id === candidateId);
+
     if (!candidate) {
-      throw new Error('Candidate not found');
+      throw new Error("Candidate not found");
     }
 
     return candidate;
   } catch (error) {
-    console.error('Error fetching single candidate:', error);
+    console.error("Error fetching single candidate:", error);
     throw error;
   }
 }
@@ -633,10 +639,10 @@ export async function getAdminBlogProps({ req, res }) {
       `
       )
       .order("created_at", { ascending: false })
-        .limit(50); // Limit for better performance
+      .limit(50); // Limit for better performance
 
     if (blogsError) throw blogsError;
-  // console.log(`[getAdminBlogProps] Blogs query completed - ${blogs?.length || 0} blogs fetched`);
+    // console.log(`[getAdminBlogProps] Blogs query completed - ${blogs?.length || 0} blogs fetched`);
 
     const transformedBlogs = blogs.map((blog) => ({
       ...blog,
@@ -664,11 +670,11 @@ export async function getAdminBlogProps({ req, res }) {
     if (tagsError) throw tagsError;
 
     const endTime = Date.now();
-  const totalTime = endTime - startTime;
-  // console.log(`[getAdminBlogProps] Total execution time: ${totalTime}ms`);
-  // console.log(`[getAdminBlogProps] Data size: ${JSON.stringify(transformedBlogs).length} bytes`);
-  
-  return createProps(
+    const totalTime = endTime - startTime;
+    // console.log(`[getAdminBlogProps] Total execution time: ${totalTime}ms`);
+    // console.log(`[getAdminBlogProps] Data size: ${JSON.stringify(transformedBlogs).length} bytes`);
+
+    return createProps(
       {
         initialBlogs: transformedBlogs || [],
         categories: categoriesData || [],

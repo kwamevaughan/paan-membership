@@ -1,15 +1,45 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Poppins", system-ui, sans-serif;
+  
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-paan-yellow: #F2B706;
+  --color-paan-blue: #84C1D9;
+  --color-paan-dark-blue: #172840;
+  --color-paan-red: #F25849;
+  
+  --animation-circular-gradient: circularGradient 6s linear infinite;
+  --animation-swing: swing 1s ease-in-out;
+  --animation-swing-infinite: swing 2s ease-in-out infinite;
+}
+
+@keyframes circularGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes swing {
+  0% { transform: rotate(0deg); }
+  10% { transform: rotate(15deg); }
+  20% { transform: rotate(-10deg); }
+  30% { transform: rotate(7deg); }
+  40% { transform: rotate(-5deg); }
+  50% { transform: rotate(3deg); }
+  60% { transform: rotate(-2deg); }
+  100% { transform: rotate(0deg); }
+}
 
 :root {
-    --font-poppins: "Poppins", sans-serif;
+  --font-poppins: "Poppins", sans-serif;
 }
 
 @layer base {
-    html {
-        font-family: var(--font-poppins), system-ui, sans-serif;
-    }
+  html {
+    font-family: var(--font-poppins), system-ui, sans-serif;
+  }
 }
 
 body {

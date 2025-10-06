@@ -3,7 +3,7 @@ import { useState, useCallback } from "react";
 import FileUpload from "@/components/common/FileUpload";
 import * as XLSX from 'xlsx';
 import Select from "react-select";
-import countriesGeoJson from "@/data/countries";
+import { useCountry } from "@/hooks/useCountry";
 
 export default function TenderFormSection({
   formData,
@@ -61,10 +61,8 @@ export default function TenderFormSection({
     "Other",
   ];
 
-  const countryOptions = (countriesGeoJson?.features || [])
-    .map((f) => f?.properties?.name)
-    .filter(Boolean)
-    .map((name) => ({ label: name, value: name }));
+  // Use the useCountry hook for consistent country selection
+  const { countryOptions, loading: countriesLoading } = useCountry();
 
   const selectStyles = {
     control: (provided) => ({
@@ -361,10 +359,14 @@ export default function TenderFormSection({
               </div>
               <Select
                 inputId="tender_location"
-                value={formData.locations ? formData.locations.map(loc => ({
-                  label: loc,
-                  value: loc
-                })) : []}
+                value={formData.locations ? formData.locations.map(loc => {
+                  // Find the matching option to maintain the full country object with flag
+                  const option = countryOptions.find(opt => opt.value === loc);
+                  return {
+                    label: option ? option.label : loc,
+                    value: loc
+                  };
+                }) : []}
                 onChange={(selectedOptions) => {
                   handleInputChange({
                     target: {
@@ -377,6 +379,7 @@ export default function TenderFormSection({
                 isMulti
                 isClearable
                 isSearchable
+                isLoading={countriesLoading}
                 placeholder="Select countries..."
                 styles={{
                   ...selectStyles,

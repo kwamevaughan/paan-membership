@@ -17,7 +17,13 @@ const poppins = Poppins({
 
 function MyApp({ Component, pageProps }) {
   const [mode, setMode] = useState("light");
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+
+  // Set mounted state when component mounts on client side
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Toggle dark mode and persist in localStorage
   const toggleMode = () => {
@@ -126,15 +132,25 @@ function MyApp({ Component, pageProps }) {
     return crumbs;
   })();
 
+  // Don't render until we're on the client side to prevent hydration mismatch
+  if (!mounted) {
+    return (
+      <div className={`${poppins.variable} font-sans min-h-screen`}>
+        {/* You can add a loading spinner here if needed */}
+      </div>
+    );
+  }
+
   return (
-    <div className={`${mode === "dark" ? "dark" : ""} ${poppins.variable} font-sans`}>
+    <div className={`${mode === "dark" ? "dark" : ""} ${poppins.variable} font-sans min-h-screen`}>
+      <Component {...pageProps} mode={mode} toggleMode={toggleMode} />
       <div id="toast-container" style={{ 
         position: 'fixed', 
         top: '1rem', 
         left: '50%', 
         transform: 'translateX(-50%)', 
-        zIndex: 10000000, // Higher than the modal's z-index
-        pointerEvents: 'none', // Allow clicks to pass through to elements behind
+        zIndex: 10000000,
+        pointerEvents: 'none',
         maxWidth: '400px',
         width: '100%',
       }}>
@@ -143,20 +159,13 @@ function MyApp({ Component, pageProps }) {
           reverseOrder={false}
           toastOptions={{
             style: {
-              zIndex: 10000000,
               position: 'relative',
               margin: '0.5rem',
-              pointerEvents: 'auto', // Make the toast itself clickable
+              pointerEvents: 'auto',
             },
           }}
         />
       </div>
-      <Component
-        {...pageProps}
-        mode={mode}
-        toggleMode={toggleMode}
-        breadcrumbs={breadcrumbs}
-      />
     </div>
   );
 }

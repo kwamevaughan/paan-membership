@@ -21,22 +21,18 @@ const HRSidebar = ({
   const router = useRouter();
   const sidebarRef = useRef(null);
   const [showLogout, setShowLogout] = useState(false);
-  const [expandedCategories, setExpandedCategories] = useState({});
-
-  // Initialize with all categories expanded
-  useEffect(() => {
-    if (
-      sidebarNav &&
-      sidebarNav.length > 0 &&
-      Object.keys(expandedCategories).length === 0
-    ) {
-      const allExpanded = {};
+  // Initialize expanded categories state with a function to ensure consistency between server and client
+  const [expandedCategories, setExpandedCategories] = useState(() => {
+    const initialExpanded = {};
+    if (typeof window !== 'undefined' && sidebarNav && sidebarNav.length > 0) {
       sidebarNav.forEach(({ category }) => {
-        allExpanded[category] = true;
+        initialExpanded[category] = true;
       });
-      setExpandedCategories(allExpanded);
     }
-  }, []);
+    return initialExpanded;
+  });
+
+  // Remove the useEffect that was initializing expandedCategories
 
   // Toggle category expansion
   const toggleCategory = (category) => {
@@ -86,7 +82,7 @@ const HRSidebar = ({
         ref={sidebarRef}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        className={`fixed left-0 top-0 z-50 rounded-xl m-0 md:m-3 transition-all duration-300
+        className={`fixed left-0 top-0 z-50 rounded-xl m-0 md:m-3 transition-all duration-300 overflow-hidden
           ${isMobile ? (isSidebarOpen ? "block" : "hidden") : "block"}
           ${mode === "dark" ? "bg-[#05050a]" : "bg-[#101720]"}
           ${
@@ -96,7 +92,7 @@ const HRSidebar = ({
           }
           group shadow-lg shadow-black/20 custom-scrollbar`}
         style={{
-          width: sidebarWidth,
+          width: typeof window !== 'undefined' ? sidebarWidth : '80px',
           height: isMobile ? "100vh" : "calc(100vh - 24px)",
           backgroundColor:
             isHovering && !isSidebarOpen && !isMobile

@@ -77,6 +77,11 @@ export const sidebarNav = [
         label: "Events",
       },
       {
+        href: "/admin/masterclasses",
+        icon: "mdi:school-outline",
+        label: "Masterclasses",
+      },
+      {
         href: "/admin/resources",
         icon: "mdi:book-open-page-variant",
         label: "Resources",

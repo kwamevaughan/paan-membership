@@ -364,7 +364,7 @@ export default function ImageLibrary({
     >
       <div className="min-h-screen px-4 text-center">
         <div
-          className="fixed inset-0 bg-black bg-opacity-50"
+          className="fixed inset-0 bg-black/50 bg-opacity-50"
           style={{ zIndex: 9999 }}
           onClick={(e) => {
             e.preventDefault();
@@ -527,7 +527,7 @@ export default function ImageLibrary({
                         />
                       </div>
                       <div
-                        className={`absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-opacity flex items-center justify-center ${
+                        className={`absolute inset-0 bg-opacity-0 group-hover:bg-opacity-40 transition-opacity flex items-center justify-center ${
                           mode === "dark" ? "text-white" : "text-white"
                         }`}
                       >

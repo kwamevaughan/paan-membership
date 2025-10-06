@@ -24,7 +24,7 @@ const HRSidebar = ({
   // Initialize expanded categories state with a function to ensure consistency between server and client
   const [expandedCategories, setExpandedCategories] = useState(() => {
     const initialExpanded = {};
-    if (typeof window !== 'undefined' && sidebarNav && sidebarNav.length > 0) {
+    if (typeof window !== "undefined" && sidebarNav && sidebarNav.length > 0) {
       sidebarNav.forEach(({ category }) => {
         initialExpanded[category] = true;
       });
@@ -41,7 +41,6 @@ const HRSidebar = ({
       [category]: !prev[category],
     }));
   };
-  
 
   // Handle outside clicks for mobile
   useEffect(() => {
@@ -92,7 +91,7 @@ const HRSidebar = ({
           }
           group shadow-lg shadow-black/20 custom-scrollbar`}
         style={{
-          width: typeof window !== 'undefined' ? sidebarWidth : '80px',
+          width: typeof window !== "undefined" ? sidebarWidth : "80px",
           height: isMobile ? "100vh" : "calc(100vh - 24px)",
           backgroundColor:
             isHovering && !isSidebarOpen && !isMobile
@@ -198,7 +197,7 @@ const HRSidebar = ({
                 <div
                   className={`overflow-hidden transition-all duration-300 ${
                     !shouldAppearExpanded || expandedCategories[category]
-                      ? "max-h-96 opacity-100"
+                      ? "max-h-none opacity-100"
                       : "max-h-0 opacity-0"
                   }`}
                 >

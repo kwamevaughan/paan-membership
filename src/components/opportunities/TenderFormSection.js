@@ -350,10 +350,10 @@ export default function TenderFormSection({
             />
           </div>
           
-          {/* Location (Country) */}
+          {/* Location (Countries) */}
           <div className="col-span-1">
             <label className={`block text-sm font-medium ${mode === "dark" ? "text-gray-300" : "text-gray-700"} mb-1.5`}>
-              Location <span className="text-xs text-gray-400">(country)</span>
+              Locations <span className="text-xs text-gray-400">(select one or more countries)</span>
             </label>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -361,73 +361,149 @@ export default function TenderFormSection({
               </div>
               <Select
                 inputId="tender_location"
-                value={formData.location ? { label: formData.location, value: formData.location } : null}
-                onChange={(opt) =>
-                  handleInputChange({ target: { name: "location", value: opt ? opt.value : "" } })
-                }
+                value={formData.locations ? formData.locations.map(loc => ({
+                  label: loc,
+                  value: loc
+                })) : []}
+                onChange={(selectedOptions) => {
+                  handleInputChange({
+                    target: {
+                      name: "locations",
+                      value: selectedOptions ? selectedOptions.map(option => option.value) : []
+                    }
+                  });
+                }}
                 options={countryOptions}
+                isMulti
                 isClearable
                 isSearchable
-                placeholder="Select country"
-                styles={selectStyles}
+                placeholder="Select countries..."
+                styles={{
+                  ...selectStyles,
+                  multiValue: (provided) => ({
+                    ...provided,
+                    backgroundColor: mode === 'dark' ? '#374151' : '#e5e7eb',
+                  }),
+                  multiValueLabel: (provided) => ({
+                    ...provided,
+                    color: mode === 'dark' ? '#f3f4f6' : '#111827',
+                  }),
+                  multiValueRemove: (provided) => ({
+                    ...provided,
+                    color: mode === 'dark' ? '#9ca3af' : '#6b7280',
+                    ':hover': {
+                      backgroundColor: mode === 'dark' ? '#ef4444' : '#f87171',
+                      color: 'white',
+                    },
+                  }),
+                }}
+                className="react-select-container"
                 classNamePrefix="react-select"
+                components={{
+                  DropdownIndicator: () => null,
+                  IndicatorSeparator: () => null,
+                }}
               />
-            </div>
-          </div>
-          
-          <div className="col-span-1">
-            <label className={`block text-sm font-medium ${mode === "dark" ? "text-gray-300" : "text-gray-700"} mb-1.5`}>
-              Category <span className="text-rose-500">*</span>
-            </label>
-            <div className="relative group">
-              <select
-                name="tender_category"
-                value={formData.tender_category || ""}
-                onChange={handleInputChange}
-                required={true}
-                className={`appearance-none w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 ${
-                  mode === "dark" ? "border-gray-700 bg-gray-800 text-white" : "border-gray-200 bg-white text-gray-900"
-                }`}
-              >
-                <option value="">Select Category</option>
-                {tenderCategories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <Icon icon="heroicons:chevron-down" className={`h-5 w-5 ${mode === "dark" ? "text-gray-300" : "text-gray-400"}`} />
-              </div>
               <div className="absolute inset-0 rounded-xl border border-indigo-500 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
             </div>
           </div>
           
+          {/* Category with Search */}
           <div className="col-span-1">
-            <label className={`block text-sm font-medium ${mode === "dark" ? "text-gray-300" : "text-gray-700"} mb-1.5`}>
+            <label htmlFor="tender_category" className={`block text-sm font-medium ${mode === "dark" ? "text-gray-300" : "text-gray-700"} mb-1.5`}>
+              Category <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative group">
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <Icon icon="heroicons:tag" className={`h-5 w-5 ${mode === "dark" ? "text-gray-300" : "text-gray-400"}`} />
+              </div>
+              <Select
+                inputId="tender_category"
+                name="tender_category"
+                value={formData.tender_category ? { 
+                  label: formData.tender_category, 
+                  value: formData.tender_category 
+                } : null}
+                onChange={(selectedOption) => {
+                  handleInputChange({ 
+                    target: { 
+                      name: "tender_category", 
+                      value: selectedOption ? selectedOption.value : "" 
+                    } 
+                  });
+                }}
+                options={tenderCategories.map(category => ({
+                  label: category,
+                  value: category
+                }))}
+                isClearable
+                isSearchable
+                placeholder="Search or select category..."
+                required={true}
+                styles={{
+                  ...selectStyles,
+                  control: (provided) => ({
+                    ...selectStyles.control(provided),
+                    paddingLeft: '2.5rem',
+                  }),
+                }}
+                className="react-select-container"
+                classNamePrefix="react-select"
+                components={{
+                  DropdownIndicator: () => null,
+                  IndicatorSeparator: () => null,
+                }}
+              />
+              <div className="absolute inset-0 rounded-xl border border-indigo-500 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
+            </div>
+          </div>
+          
+          {/* Membership Tier with Search */}
+          <div className="col-span-1">
+            <label htmlFor="tier_restriction" className={`block text-sm font-medium ${mode === "dark" ? "text-gray-300" : "text-gray-700"} mb-1.5`}>
               Membership Tier <span className="text-rose-500">*</span>
             </label>
             <div className="relative group">
-              <select
-                name="tier_restriction"
-                value={formData.tier_restriction || ""}
-                onChange={handleInputChange}
-                required={true}
-                className={`appearance-none w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200 ${
-                  mode === "dark" ? "border-gray-700 bg-gray-800 text-white" : "border-gray-200 bg-white text-gray-900"
-                }`}
-              >
-                <option value="">Select Tier</option>
-                {tiers && tiers.length > 0 &&
-                  tiers.map((tier) => (
-                    <option key={tier} value={tier}>
-                      {tier}
-                    </option>
-                  ))}
-              </select>
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <Icon icon="heroicons:chevron-down" className={`h-5 w-5 ${mode === "dark" ? "text-gray-300" : "text-gray-400"}`} />
+              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                <Icon icon="heroicons:shield-check" className={`h-5 w-5 ${mode === "dark" ? "text-gray-300" : "text-gray-400"}`} />
               </div>
+              <Select
+                inputId="tier_restriction"
+                name="tier_restriction"
+                value={formData.tier_restriction ? { 
+                  label: formData.tier_restriction, 
+                  value: formData.tier_restriction 
+                } : null}
+                onChange={(selectedOption) => {
+                  handleInputChange({ 
+                    target: { 
+                      name: "tier_restriction", 
+                      value: selectedOption ? selectedOption.value : "" 
+                    } 
+                  });
+                }}
+                options={tiers && tiers.length > 0 ? tiers.map(tier => ({
+                  label: tier,
+                  value: tier
+                })) : []}
+                isClearable
+                isSearchable
+                placeholder="Search or select tier..."
+                required={true}
+                styles={{
+                  ...selectStyles,
+                  control: (provided) => ({
+                    ...selectStyles.control(provided),
+                    paddingLeft: '2.5rem',
+                  }),
+                }}
+                className="react-select-container"
+                classNamePrefix="react-select"
+                components={{
+                  DropdownIndicator: () => null,
+                  IndicatorSeparator: () => null,
+                }}
+              />
               <div className="absolute inset-0 rounded-xl border border-indigo-500 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
             </div>
           </div>

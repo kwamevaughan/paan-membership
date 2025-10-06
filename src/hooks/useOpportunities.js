@@ -9,28 +9,9 @@ export const useOpportunities = () => {
     gig_title: "",
     tender_title: "",
     description: "",
-    location: "",
+    locations: [], // Using only locations array
     deadline: "",
-    tier_restriction: "",
-    service_type: "",
-    industry: "",
-    project_type: "",
-    application_link: "",
-    job_type: "Agency",
-    skills_required: [],
-    estimated_duration: "",
-    budget_range: "",
-    remote_work: false,
-    attachment_url: "",
-    attachment_name: "",
-    attachment_type: "",
-    attachment_size: null,
-    is_tender: false,
-    tender_organization: "",
-    tender_category: "",
-    tender_issued: "",
-    tender_closing: "",
-    tender_access_link: "",
+    tier_restriction: ""
   });
   const [loading, setLoading] = useState(false);
 
@@ -58,7 +39,7 @@ export const useOpportunities = () => {
         await supabase
           .from("business_opportunities")
           .select(
-            "id, organization_name, gig_title, tender_title, description, location, deadline, tier_restriction, service_type, industry, project_type, application_link, job_type, skills_required, estimated_duration, budget_range, remote_work, attachment_url, attachment_name, attachment_type, attachment_size, is_tender, tender_organization, tender_category, tender_issued, tender_closing, tender_access_link, created_at, updated_at"
+            "id, organization_name, gig_title, tender_title, description, locations, deadline, tier_restriction, service_type, industry, project_type, application_link, job_type, skills_required, estimated_duration, budget_range, remote_work, attachment_url, attachment_name, attachment_type, attachment_size, is_tender, tender_organization, tender_category, tender_issued, tender_closing, tender_access_link, created_at, updated_at"
           )
           .order("created_at", { ascending: false });
 
@@ -165,7 +146,7 @@ export const useOpportunities = () => {
         gig_title: formData.job_type === "Freelancer" ? formData.gig_title : null,
         tender_title: formData.is_tender ? formData.tender_title : null,
         description: typeof formData.description === "string" ? formData.description : "",
-        location: formData.location || null,
+        locations: Array.isArray(formData.locations) ? formData.locations : [],
         deadline:
           formData.is_tender
             ? (formData.tender_closing && formData.tender_closing !== '' ? formData.tender_closing : null)
@@ -337,7 +318,7 @@ export const useOpportunities = () => {
       gig_title: opp.gig_title || "",
       tender_title: opp.tender_title || "",
       description: opp.description || "",
-      location: opp.location || "",
+      locations: Array.isArray(opp.locations) ? opp.locations : [],
       deadline: opp.deadline
         ? new Date(opp.deadline).toISOString().split("T")[0]
         : "",
@@ -405,7 +386,7 @@ export const useOpportunities = () => {
       gig_title: "",
       tender_title: "",
       description: "",
-      location: "",
+      locations: [],
       deadline: "",
       tier_restriction: "",
       service_type: "",

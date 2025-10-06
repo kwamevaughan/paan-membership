@@ -141,10 +141,10 @@ export default function RegularFormSection({
         </div>
       </div>
 
-      {/* Location (Country) */}
+      {/* Location (Countries) */}
       <div className="col-span-1">
         <label htmlFor="location" className={`block text-sm font-medium ${mode === "dark" ? "text-gray-300" : "text-gray-700"} mb-1.5`}>
-          Location <span className="text-xs text-gray-400">(country)</span>
+          Locations <span className="text-xs text-gray-400">(select one or more countries)</span>
         </label>
         <div className="relative group">
           <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
@@ -152,17 +152,49 @@ export default function RegularFormSection({
           </div>
           <Select
             inputId="location"
-            value={formData.location ? { label: formData.location, value: formData.location } : null}
-            onChange={(opt) =>
-              handleInputChange({ target: { name: "location", value: opt ? opt.value : "" } })
-            }
+            value={formData.locations ? formData.locations.map(loc => ({
+              label: loc,
+              value: loc
+            })) : []}
+            onChange={(selectedOptions) => {
+              handleInputChange({
+                target: {
+                  name: "locations",
+                  value: selectedOptions ? selectedOptions.map(option => option.value) : []
+                }
+              });
+            }}
             options={countryOptions}
+            isMulti
             isClearable
             isSearchable
             isLoading={countriesLoading}
-            placeholder="Select country"
-            styles={selectStyles}
+            placeholder="Select countries..."
+            styles={{
+              ...selectStyles,
+              multiValue: (provided) => ({
+                ...provided,
+                backgroundColor: mode === 'dark' ? '#374151' : '#e5e7eb',
+              }),
+              multiValueLabel: (provided) => ({
+                ...provided,
+                color: mode === 'dark' ? '#f3f4f6' : '#111827',
+              }),
+              multiValueRemove: (provided) => ({
+                ...provided,
+                color: mode === 'dark' ? '#9ca3af' : '#6b7280',
+                ':hover': {
+                  backgroundColor: mode === 'dark' ? '#ef4444' : '#f87171',
+                  color: 'white',
+                },
+              }),
+            }}
+            className="react-select-container"
             classNamePrefix="react-select"
+            components={{
+              DropdownIndicator: () => null,
+              IndicatorSeparator: () => null,
+            }}
           />
           <div className="absolute inset-0 rounded-xl border border-indigo-500 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
         </div>

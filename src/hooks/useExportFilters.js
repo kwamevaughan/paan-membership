@@ -22,10 +22,8 @@ export default function useExportFilters(candidates) {
         })
         .filter((candidate) => {
 
-            // If no date range selected, show all candidates
-            if (!dateRange[0].startDate || !dateRange[0].endDate) {
-                // console.log('No date range selected - returning true');
-                // console.log('--- Date Filter End ---');
+            // If no date range selected (All Time) or dates are null, show all candidates
+            if (!dateRange || !dateRange[0] || dateRange[0].startDate === null || dateRange[0].endDate === null) {
                 return true;
             }
 

@@ -61,9 +61,11 @@ export default function FilterSection({
                     }`}
                 >
                     <span>
-                        {dateRange[0].startDate && dateRange[0].endDate
-                            ? `${dateRange[0].startDate.toLocaleDateString()} - ${dateRange[0].endDate.toLocaleDateString()}`
-                            : "Select Date Range"}
+                        {!dateRange[0]?.startDate && !dateRange[0]?.endDate 
+                            ? "All Time" 
+                            : dateRange[0].startDate && dateRange[0].endDate
+                                ? `${dateRange[0].startDate.toLocaleDateString()} - ${dateRange[0].endDate.toLocaleDateString()}`
+                                : "Select Date Range"}
                     </span>
                     <Icon
                         icon={showDatePicker ? "mdi:chevron-up" : "mdi:chevron-down"}

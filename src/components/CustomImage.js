@@ -1,7 +1,8 @@
-import Image from "@tiptap/extension-image";
+import TiptapImage from "@tiptap/extension-image";
 import { NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
 import { Icon } from "@iconify/react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
+import Image from "next/image";
 
 function ImageNode({ node, updateAttributes, selected, deleteNode }) {
   const { src, alt, width, height, align, href } = node.attrs;
@@ -32,23 +33,23 @@ function ImageNode({ node, updateAttributes, selected, deleteNode }) {
     }
   };
 
-  const handleAltTextChange = () => {
+  const handleAltTextChange = useCallback(() => {
     updateAttributes({ alt: altText });
     setIsEditing(false);
-  };
+  }, [altText, updateAttributes]);
 
-  const handleResizeStart = (e, direction) => {
+  const handleResizeStart = useCallback((e, direction) => {
     e.preventDefault();
     e.stopPropagation();
     setIsResizing(true);
     setResizeStart({ x: e.clientX, y: e.clientY });
     setOriginalSize({
-      width: imageRef.current.offsetWidth,
-      height: imageRef.current.offsetHeight
+      width: imageRef.current?.offsetWidth || 0,
+      height: imageRef.current?.offsetHeight || 0
     });
-  };
+  }, []);
 
-  const handleResizeMove = (e) => {
+  const handleResizeMove = useCallback((e) => {
     if (!isResizing) return;
 
     const deltaX = e.clientX - resizeStart.x;
@@ -71,9 +72,9 @@ function ImageNode({ node, updateAttributes, selected, deleteNode }) {
       imageRef.current.style.width = `${newWidth}px`;
       imageRef.current.style.height = `${newHeight}px`;
     }
-  };
+  }, [isResizing, resizeStart.x, resizeStart.y, originalSize.width, originalSize.height]);
 
-  const handleResizeEnd = () => {
+  const handleResizeEnd = useCallback(() => {
     if (!isResizing) return;
     
     if (imageRef.current) {
@@ -84,23 +85,28 @@ function ImageNode({ node, updateAttributes, selected, deleteNode }) {
     }
     
     setIsResizing(false);
-  };
+  }, [isResizing, updateAttributes]);
 
-  const handleLinkSubmit = () => {
+  const handleLinkSubmit = useCallback(() => {
     updateAttributes({ href: linkUrl });
     setShowLinkInput(false);
-  };
+  }, [linkUrl, updateAttributes]);
+
+  // Memoize the event handlers to prevent unnecessary re-renders
+  const memoizedHandleResizeMove = useCallback(handleResizeMove, [handleResizeMove]);
+  const memoizedHandleResizeEnd = useCallback(handleResizeEnd, [handleResizeEnd]);
 
   useEffect(() => {
     if (isResizing) {
-      window.addEventListener('mousemove', handleResizeMove);
-      window.addEventListener('mouseup', handleResizeEnd);
+      window.addEventListener('mousemove', memoizedHandleResizeMove);
+      window.addEventListener('mouseup', memoizedHandleResizeEnd);
     }
+    
     return () => {
-      window.removeEventListener('mousemove', handleResizeMove);
-      window.removeEventListener('mouseup', handleResizeEnd);
+      window.removeEventListener('mousemove', memoizedHandleResizeMove);
+      window.removeEventListener('mouseup', memoizedHandleResizeEnd);
     };
-  }, [isResizing]);
+  }, [isResizing, memoizedHandleResizeMove, memoizedHandleResizeEnd]);
 
   return (
     <NodeViewWrapper className={`${className} ${getAlignmentClass()}`} data-drag-handle>
@@ -118,32 +124,34 @@ function ImageNode({ node, updateAttributes, selected, deleteNode }) {
             }}
             className="cursor-pointer"
           >
-            <img 
-              ref={imageRef}
-              src={src} 
-              alt={alt} 
-              className="h-auto"
-              style={{
-                width: width || 'auto',
-                height: height || 'auto',
-                display: 'inline-block',
-                maxWidth: '100%'
-              }}
-            />
+            <div ref={imageRef} style={{ position: 'relative', width: width || '100%', height: height || 'auto' }}>
+              <Image
+                src={src}
+                alt={alt || 'Image'}
+                fill
+                style={{
+                  objectFit: 'contain',
+                  maxWidth: '100%',
+                  height: 'auto'
+                }}
+                unoptimized={src.startsWith('http')}
+              />
+            </div>
           </a>
         ) : (
-          <img 
-            ref={imageRef}
-            src={src} 
-            alt={alt} 
-            className="h-auto"
-            style={{
-              width: width || 'auto',
-              height: height || 'auto',
-              display: 'inline-block',
-              maxWidth: '100%'
-            }}
-          />
+          <div ref={imageRef} style={{ position: 'relative', width: width || '100%', height: height || 'auto' }}>
+            <Image
+              src={src}
+              alt={alt || 'Image'}
+              fill
+              style={{
+                objectFit: 'contain',
+                maxWidth: '100%',
+                height: 'auto'
+              }}
+              unoptimized={src.startsWith('http')}
+            />
+          </div>
         )}
         {selected && (
           <div className="absolute inset-0 pointer-events-none">
@@ -321,7 +329,7 @@ function ImageNode({ node, updateAttributes, selected, deleteNode }) {
   );
 }
 
-export default Image.extend({
+export default TiptapImage.extend({
   addAttributes() {
     return {
       ...this.parent?.(),

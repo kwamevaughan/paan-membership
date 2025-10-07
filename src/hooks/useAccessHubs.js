@@ -461,7 +461,7 @@ export function useAccessHubs() {
       supabase.removeChannel(accessHubsSubscription);
       supabase.removeChannel(registrationsSubscription);
     };
-  }, [fetchRegistrations]);
+  }, [fetchRegistrations, fetchAccessHubs]);
 
   return {
     accessHubs,

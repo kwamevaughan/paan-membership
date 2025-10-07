@@ -154,7 +154,7 @@ export default function EmailTemplates({
     };
 
     input.click();
-  };
+  }, [isGalleryOpen]); // Added isGalleryOpen to dependencies
 
   const handlePreviewTemplate = () => {
     if (!body) {

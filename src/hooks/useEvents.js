@@ -79,7 +79,7 @@ export function useEvents() {
     }
   }, []);
 
-  const fetchRegistrations = async () => {
+  const fetchRegistrations = useCallback(async () => {
     setIsLoadingRegistrations(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -149,7 +149,7 @@ export function useEvents() {
     } finally {
       setIsLoadingRegistrations(false);
     }
-  };
+  }, []);
 
   const handleRegistrationAction = async (registrationId, action) => {
     try {
@@ -371,7 +371,7 @@ export function useEvents() {
     }
   };
 
-  const fetchFilterOptions = async () => {
+  const fetchFilterOptions = useCallback(async () => {
     try {
       const { data: events, error } = await supabase
         .from("events")
@@ -393,7 +393,7 @@ export function useEvents() {
       console.error("Error fetching filter options:", error);
       toast.error("Failed to load filter options");
     }
-  };
+  }, []);
 
   const filteredEvents = events?.filter((event) => {
     
@@ -440,7 +440,7 @@ export function useEvents() {
       supabase.removeChannel(eventsSubscription);
       supabase.removeChannel(registrationsSubscription);
     };
-  }, []);
+  }, [fetchEvents, fetchRegistrations, fetchFilterOptions]);
 
   return {
     events,

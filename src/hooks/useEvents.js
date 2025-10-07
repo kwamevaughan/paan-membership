@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import { supabase } from "@/lib/supabase";
 
@@ -40,7 +40,7 @@ export function useEvents() {
   const [itemsPerPage] = useState(12);
   const [selectedIds, setSelectedIds] = useState([]);
 
-  const fetchEvents = async () => {
+  const fetchEvents = useCallback(async () => {
     setLoading(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -77,7 +77,7 @@ export function useEvents() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   const fetchRegistrations = async () => {
     setIsLoadingRegistrations(true);

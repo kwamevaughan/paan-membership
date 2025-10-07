@@ -68,7 +68,7 @@ export default function EmailTemplates({
         setCurrentEditor
       )
     );
-  }, [mode]);
+  }, [mode, handleImageUpload]);
 
   const fetchGalleryImages = async () => {
     setIsLoadingImages(true);
@@ -107,7 +107,7 @@ export default function EmailTemplates({
     }
   };
 
-  const handleImageUpload = async (editor) => {
+  const handleImageUpload = useCallback(async (editor) => {
     const input = document.createElement("input");
     input.type = "file";
     input.accept = "image/*";

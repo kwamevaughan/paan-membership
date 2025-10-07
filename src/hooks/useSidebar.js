@@ -42,9 +42,9 @@ const useSidebar = () => {
   }, [isSidebarOpen]);
 
   // Toggle sidebar
-  const toggleSidebar = (open) => {
-    setSidebarOpen(open !== undefined ? open : !isSidebarOpen);
-  };
+  const toggleSidebar = useCallback((open) => {
+    setSidebarOpen(prev => open !== undefined ? open : !prev);
+  }, []);
 
   // Sidebar visibility change
   const handleSidebarChange = useCallback((e) => {

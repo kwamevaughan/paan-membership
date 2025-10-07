@@ -103,7 +103,7 @@ export default function AdminEvents({
 
   useEffect(() => {
     fetchEvents();
-  }, []);
+  }, [fetchEvents]);
 
   const handleResetFilters = () => {
     setSelectedType("All");

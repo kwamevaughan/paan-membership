@@ -43,7 +43,7 @@ export function useAccessHubs() {
   const [itemsPerPage] = useState(12);
   const [selectedIds, setSelectedIds] = useState([]);
 
-  const fetchAccessHubs = async () => {
+  const fetchAccessHubs = useCallback(async () => {
     setLoading(true);
     try {
       const {
@@ -90,9 +90,9 @@ export function useAccessHubs() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const fetchRegistrations = async () => {
+  const fetchRegistrations = useCallback(async () => {
     setIsLoadingRegistrations(true);
     try {
       const {
@@ -173,7 +173,7 @@ export function useAccessHubs() {
     } finally {
       setIsLoadingRegistrations(false);
     }
-  };
+  }, []);
 
   const handleRegistrationAction = async (registrationId, action) => {
     try {
@@ -461,7 +461,7 @@ export function useAccessHubs() {
       supabase.removeChannel(accessHubsSubscription);
       supabase.removeChannel(registrationsSubscription);
     };
-  }, []);
+  }, [fetchRegistrations]);
 
   return {
     accessHubs,

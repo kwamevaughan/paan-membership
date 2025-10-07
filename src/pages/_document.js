@@ -1,5 +1,6 @@
 import Document, { Html, Head, Main, NextScript } from "next/document";
 import Script from "next/script";
+import Image from "next/image";
 
 class MyDocument extends Document {
   render() {
@@ -54,12 +55,15 @@ class MyDocument extends Document {
             }}
           />
           <noscript>
-            <img 
-              height="1" 
-              width="1" 
-              src="https://www.facebook.com/tr?id=706159915533812&ev=PageView&noscript=1"
-              alt=""
-            />
+            <div style={{ position: 'absolute' }}>
+              <Image 
+                height="1" 
+                width="1" 
+                src="https://www.facebook.com/tr?id=706159915533812&ev=PageView&noscript=1"
+                alt=""
+                unoptimized
+              />
+            </div>
           </noscript>
 
           {/* Favicon Links */}

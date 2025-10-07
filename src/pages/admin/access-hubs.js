@@ -95,7 +95,7 @@ export default function AdminAccessHubs({
 
   useEffect(() => {
     fetchAccessHubs();
-  }, []);
+  }, [fetchAccessHubs]);
 
   const handleResetFilters = () => {
     setSelectedSpaceType("All");

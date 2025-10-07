@@ -1,15 +1,13 @@
 // Member portal page for viewing enrolled masterclasses
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/router';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { Icon } from '@iconify/react';
 import Header from '@/layouts/hrHeader';
 import Sidebar from '@/layouts/hrSidebar';
-import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function MemberMasterclasses() {
-  const router = useRouter();
   const { user } = useAuth();
   const [enrolledMasterclasses, setEnrolledMasterclasses] = useState([]);
   const [availableMasterclasses, setAvailableMasterclasses] = useState([]);
@@ -22,15 +20,7 @@ export default function MemberMasterclasses() {
   });
   const [categories, setCategories] = useState([]);
 
-  useEffect(() => {
-    if (user) {
-      fetchEnrolledMasterclasses();
-      fetchAvailableMasterclasses();
-      fetchCategories();
-    }
-  }, [user, filters]);
-
-  const fetchEnrolledMasterclasses = async () => {
+  const fetchEnrolledMasterclasses = useCallback(async () => {
     if (!user) return;
 
     try {
@@ -50,9 +40,9 @@ export default function MemberMasterclasses() {
     } catch (error) {
       console.error('Error fetching enrolled masterclasses:', error);
     }
-  };
+  }, [user, filters.status]);
 
-  const fetchAvailableMasterclasses = async () => {
+  const fetchAvailableMasterclasses = useCallback(async () => {
     try {
       const params = new URLSearchParams({
         status: 'published',
@@ -74,7 +64,7 @@ export default function MemberMasterclasses() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters.category, filters.search]);
 
   const fetchCategories = async () => {
     try {
@@ -87,6 +77,14 @@ export default function MemberMasterclasses() {
       console.error('Error fetching categories:', error);
     }
   };
+
+  useEffect(() => {
+    if (user) {
+      fetchEnrolledMasterclasses();
+      fetchAvailableMasterclasses();
+      fetchCategories();
+    }
+  }, [user, fetchEnrolledMasterclasses, fetchAvailableMasterclasses]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -132,10 +130,6 @@ export default function MemberMasterclasses() {
 
   const isUpcoming = (dateString) => {
     return new Date(dateString) > new Date();
-  };
-
-  const isPast = (dateString) => {
-    return new Date(dateString) < new Date();
   };
 
   return (
@@ -231,7 +225,7 @@ export default function MemberMasterclasses() {
                 ) : enrolledMasterclasses.length === 0 ? (
                   <div className="bg-white p-8 rounded-lg shadow-sm text-center">
                     <Icon icon="heroicons:academic-cap" className="w-12 h-12 mx-auto text-gray-400" />
-                    <p className="mt-2 text-gray-500">You haven't enrolled in any masterclasses yet</p>
+                    <p className="mt-2 text-gray-500">You haven&apos;t enrolled in any masterclasses yet</p>
                     <button
                       onClick={() => setActiveTab('available')}
                       className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -248,10 +242,12 @@ export default function MemberMasterclasses() {
                             <div className="flex-1">
                               <div className="flex items-center space-x-4">
                                 {registration.masterclass?.image_url && (
-                                  <img
+                                  <Image
                                     className="h-16 w-16 rounded-lg object-cover"
                                     src={registration.masterclass.image_url}
                                     alt={registration.masterclass.title}
+                                    width={64}
+                                    height={64}
                                   />
                                 )}
                                 <div>
@@ -330,10 +326,12 @@ export default function MemberMasterclasses() {
                     {availableMasterclasses.map((masterclass) => (
                       <div key={masterclass.id} className="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow">
                         {masterclass.image_url && (
-                          <img
+                          <Image
                             className="h-48 w-full object-cover"
                             src={masterclass.image_url}
                             alt={masterclass.title}
+                            width={400}
+                            height={192}
                           />
                         )}
                         <div className="p-6">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "react-hot-toast";
 
@@ -20,9 +20,9 @@ export const useQuestions = (jobType = "agency") => {
   useEffect(() => {
     fetchQuestions();
     fetchCategories();
-  }, [sortField, sortDirection, jobType]);
+  }, [sortField, sortDirection, jobType, fetchQuestions]);
 
-  const fetchQuestions = async () => {
+  const fetchQuestions = useCallback(async () => {
     const normalized = normalizeJobType(jobType);
     console.log("[useQuestions] fetchQuestions start", { normalized, sortField, sortDirection });
 
@@ -59,7 +59,7 @@ export const useQuestions = (jobType = "agency") => {
       );
       setQuestions(validQuestions);
     }
-  };
+  }, [jobType, sortField, sortDirection]);
 
   const fetchCategories = async () => {
     const { data, error } = await supabase

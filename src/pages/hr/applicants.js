@@ -388,7 +388,7 @@ export default function HRApplicants({
     });
 
     setFilteredCandidates(sorted);
-  });
+  }, [filteredCandidates]);
 
   const handlePageChange = async (newPage) => {
     if (newPage === currentPage || isLoading) return;

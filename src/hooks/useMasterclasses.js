@@ -32,7 +32,7 @@ export const useMasterclasses = (filters = {}) => {
 
       if (response.ok) {
         setMasterclasses(result.data || []);
-        setPagination(result.pagination || pagination);
+        setPagination(prev => result.pagination || prev);
       } else {
         setError(result.error || 'Failed to fetch masterclasses');
       }
@@ -194,7 +194,7 @@ export const useMasterclassRegistrations = (filters = {}) => {
 
       if (response.ok) {
         setRegistrations(result.data || []);
-        setPagination(result.pagination || pagination);
+        setPagination(prev => result.pagination || prev);
       } else {
         setError(result.error || 'Failed to fetch registrations');
       }

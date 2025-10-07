@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import { supabase } from "@/lib/supabase";
 
@@ -19,7 +19,7 @@ export function useOffers(candidatesMap = {}) {
   const [sortOrder, setSortOrder] = useState("created_at");
   const [sortDirection, setSortDirection] = useState("desc");
 
-  const fetchOffers = async () => {
+  const fetchOffers = useCallback(async () => {
     try {
       setLoading(true);
       const {
@@ -98,7 +98,7 @@ export function useOffers(candidatesMap = {}) {
     } finally {
       setLoading(false);
     }
-  };
+  }, [candidatesMap, filterTerm, filterType, sortOrder, sortDirection]);
 
   useEffect(() => {
     fetchOffers();
@@ -126,7 +126,7 @@ export function useOffers(candidatesMap = {}) {
       supabase.removeChannel(offersSubscription);
       supabase.removeChannel(feedbackSubscription);
     };
-  }, [filterTerm, filterType, sortOrder, sortDirection]);
+  }, [filterTerm, filterType, sortOrder, sortDirection, fetchOffers]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

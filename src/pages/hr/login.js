@@ -211,7 +211,7 @@ export default function HRLogin() {
     } finally {
       setIsLoading(false);
     }
-  }, [email, password, captchaVerified, router, isLoading]);
+  }, [email, password, captchaVerified, rememberMe, router, isLoading]);
 
   const handleMagicLink = async (e) => {
     e.preventDefault();

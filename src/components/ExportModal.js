@@ -233,7 +233,7 @@ export default function ExportModal({ isOpen, onClose, candidates, mode, type = 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-[9999]">
+        <div className="fixed inset-0 bg-black/40 bg-opacity-60 flex justify-center items-center z-[9999]">
             <div
                 className={`rounded-xl max-w-2xl w-full mx-0 shadow-2xl transform transition-all duration-300 animate-fade-in flex flex-col max-h-[80vh] ${
                     mode === "dark" ? "bg-gray-800 text-white" : "bg-white text-[#231812]"

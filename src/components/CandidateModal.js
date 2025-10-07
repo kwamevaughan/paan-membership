@@ -1020,7 +1020,7 @@ export default function CandidateModal({
                             mode === "dark"
                               ? "bg-orange-900/20 border-orange-700/30 text-orange-300"
                               : "bg-orange-50 border-orange-200 text-orange-700"
-                          } p-4 rounded-lg border flex items-center gap-3 animate-pulse`}
+                          } p-4 rounded-lg border flex items-center gap-3`}
                         >
                           <Icon
                             icon="mdi:information"

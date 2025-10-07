@@ -283,10 +283,12 @@ export default function EventsGrid({
                 </div>
               </div>
               {/* Fallback image */}
-              <img
+              <Image
                 src={event.banner_image}
                 alt={event.title}
                 className="hidden"
+                width={400}
+                height={200}
                 onError={(e) => {
                   console.error('[EventsGrid] Fallback image failed:', {
                     url: event.banner_image,

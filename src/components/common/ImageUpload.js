@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Image from "next/image";
 import { Icon } from "@iconify/react";
 import toast from "react-hot-toast";
 import ImageLibrary from "@/components/common/ImageLibrary";
@@ -232,10 +233,12 @@ export default function ImageUpload({
 
       {(formData.article_image || uploadedImage) && (
         <div className="mt-4">
-          <img
+          <Image
             src={uploadedImage?.url || formData.article_image}
             alt="Preview"
             className="w-full h-48 object-cover rounded-xl"
+            width={400}
+            height={192}
           />
         </div>
       )}

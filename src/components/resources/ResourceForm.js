@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
@@ -12,12 +12,12 @@ const ResourceForm = ({
   mode,
 }) => {
   const resourceTypes = ["PDF", "Video", "Workshop", "Audio", "Other"];
-  const validTiers = [
+  const validTiers = useMemo(() => [
     "Associate Member",
     "Full Member",
     "Gold Member",
     "Free Member",
-  ];
+  ], []);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [resourceSource, setResourceSource] = useState(
@@ -31,7 +31,7 @@ const ResourceForm = ({
         target: { name: "tier_restriction", value: validTiers[0] }
       });
     }
-  }, []);
+  }, [formData.tier_restriction, handleInputChange, validTiers]);
 
   const validateForm = async (e) => {
     e.preventDefault();

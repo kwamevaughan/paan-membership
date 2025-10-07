@@ -69,14 +69,14 @@ export default function OpportunityForm({
         fileSize: formData.attachment_size || 0,
       });
     }
-  }, [isEditing, formData.attachment_url]);
+  }, [isEditing, formData.attachment_url, formData.attachment_name, formData.attachment_size, formData.attachment_type]);
 
   // Add tender fields to form state if not present
   useEffect(() => {
     if (formData.is_tender === undefined) {
       handleInputChange({ target: { name: "is_tender", value: false } });
     }
-  }, []);
+  }, [formData.is_tender, handleInputChange]);
 
   // Sync isTender state with formData.is_tender
   useEffect(() => {

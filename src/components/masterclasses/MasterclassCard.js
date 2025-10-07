@@ -1,5 +1,6 @@
 // Reusable masterclass card component
 import Link from 'next/link';
+import Image from 'next/image';
 import { Icon } from '@iconify/react';
 
 export default function MasterclassCard({ masterclass, showActions = false, onEdit, onDelete }) {
@@ -42,10 +43,12 @@ export default function MasterclassCard({ masterclass, showActions = false, onEd
       {/* Image */}
       {masterclass.image_url && (
         <div className="relative">
-          <img
+          <Image
             className="h-48 w-full object-cover"
             src={masterclass.image_url}
             alt={masterclass.title}
+            width={400}
+            height={192}
           />
           {masterclass.is_featured && (
             <div className="absolute top-2 right-2">

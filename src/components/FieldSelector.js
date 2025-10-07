@@ -43,13 +43,13 @@ export default function FieldSelector({
                                 >
                                     <Icon
                                         icon="mdi:drag"
-                                        className="w-4 h-4 text-[#f05d23]"
+                                        className="w-4 h-4 text-paan-dark-blue"
                                     />
                                     <input
                                         type="checkbox"
                                         checked={selectedFields[field.key]}
                                         onChange={() => handleFieldToggle(field.key)}
-                                        className={`h-4 w-4 text-[#f05d23] border rounded focus:ring-[#f05d23] ${
+                                        className={`h-4 w-4 text-paan-dark-blue border rounded focus:ring-[#f05d23] ${
                                             mode === "dark"
                                                 ? "border-gray-600 bg-gray-800"
                                                 : "border-gray-300 bg-white"
@@ -57,7 +57,7 @@ export default function FieldSelector({
                                     />
                                     <Icon
                                         icon={field.icon}
-                                        className="w-4 h-4 text-[#f05d23]"
+                                        className="w-4 h-4 text-paan-blue"
                                     />
                                     <span
                                         className={`text-sm ${

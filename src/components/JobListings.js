@@ -36,7 +36,7 @@ export default function JobListings({ mode, jobs, onJobDeleted }) {
                   Delete Job Opening?
                 </p>
                 <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">
-                  Are you sure you want to delete "{title}"? This action cannot
+                  Are you sure you want to delete &quot;{title}&quot;? This action cannot
                   be undone.
                 </p>
               </div>

@@ -202,10 +202,12 @@ export default function AccessHubsGrid({
                 </div>
               </div>
               {/* Fallback image */}
-              <img
+              <Image
                 src={accessHub.images[0]}
                 alt={accessHub.title}
                 className="hidden"
+                width={400}
+                height={200}
                 onError={(e) => {
                   console.error('[AccessHubsGrid] Fallback image failed:', {
                     url: accessHub.images[0],

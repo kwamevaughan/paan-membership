@@ -167,6 +167,7 @@ export default function BlogForm({
     formData.article_name,
     formData.id,
     currentBlogId,
+    setFormData,
   ]);
 
   // Reset form when showForm changes

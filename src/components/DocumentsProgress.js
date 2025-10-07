@@ -39,7 +39,7 @@ export default function DocumentsProgress({
       progressPercentage,
       remainingItems: totalItems - completedItems,
     };
-  }, [formData, fileTypes, declarationChecks]);
+  }, [declarationChecks]);
 
   return (
     <div

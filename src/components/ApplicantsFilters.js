@@ -133,7 +133,7 @@ export default function ApplicantsFilters({
     } else if (!areCandidatesValid) {
       console.warn("Invalid candidates detected:", candidates);
     }
-  }, [candidates, initialOpening, areCandidatesValid]);
+  }, [candidates, initialOpening, areCandidatesValid, handleFilter]);
 
   // Debounced filter application
   useEffect(() => {

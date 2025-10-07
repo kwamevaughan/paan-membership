@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Icon } from "@iconify/react";
 import toast from "react-hot-toast";
 import TooltipIconButton from "@/components/TooltipIconButton";
@@ -9,25 +9,25 @@ const LanguageSwitch = ({ mode }) => {
   const initialLoadRef = useRef(true);
   const googleTranslateElRef = useRef(null);
 
-  const languages = [
+  const languages = useMemo(() => [
     { name: "English", flag: "flag:us-1x1", code: "en" },
     { name: "French", flag: "flag:fr-1x1", code: "fr" },
     { name: "Swahili", flag: "flag:ke-1x1", code: "sw" },
     { name: "Arabic", flag: "flag:sa-1x1", code: "ar" },
     { name: "Hausa", flag: "flag:ng-1x1", code: "ha" },
     { name: "Akan", flag: "flag:gh-1x1", code: "ak" },
-  ];
+  ], []);
 
-  const toastMessages = {
+  const toastMessages = useMemo(() => ({
     en: "Translated to English",
     fr: "Traduit en Français",
     sw: "Umetafsiriwa kwa Kiswahili",
     ar: "تمت الترجمة إلى العربية",
     ha: "An fassara zuwa Hausa",
     ak: "Wɔakyerɛ aseɛ kɔ Akan",
-  };
+  }), []);
 
-  const detectInitialLanguage = () => {
+  const detectInitialLanguage = useCallback(() => {
     // Safe check for browser environment
     if (typeof window === "undefined") return "English";
 
@@ -41,7 +41,7 @@ const LanguageSwitch = ({ mode }) => {
 
     window.localStorage.setItem("selectedLanguage", defaultLang);
     return defaultLang;
-  };
+  }, [languages]);
 
   // Initialize state with a function to prevent execution during SSR
   const [selectedLanguage, setSelectedLanguage] = useState("English");
@@ -53,7 +53,7 @@ const LanguageSwitch = ({ mode }) => {
   // Set the initial language after component mounts (client-side only)
   useEffect(() => {
     setSelectedLanguage(detectInitialLanguage());
-  }, []);
+  }, [detectInitialLanguage]);
 
   // Load Google Translate script safely
   useEffect(() => {
@@ -184,7 +184,7 @@ const LanguageSwitch = ({ mode }) => {
         console.error("Error applying language:", error);
       }
     }
-  }, [selectRef.current, selectedLanguage]);
+  }, [selectedLanguage, languages, toastMessages]);
 
   // Close dropdown when clicked outside
   useEffect(() => {

@@ -107,7 +107,7 @@ const EmailTemplateEditor = ({
     if (selectedTemplate) {
       setEditorKey((prev) => prev + 1);
     }
-  }, [selectedTemplate?.id]);
+  }, [selectedTemplate]);
 
   // Close tag menu when clicking outside
   useEffect(() => {

@@ -17,7 +17,7 @@ const DraggableQuestion = ({
     if (!node) return;
     drop(node);
     drag(node);
-  }, []);
+  }, [drag, drop]);
 
   const [{ isDragging }, drag] = useDrag({
     type: "QUESTION",

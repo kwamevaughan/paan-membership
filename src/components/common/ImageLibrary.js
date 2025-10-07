@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Icon } from "@iconify/react";
 import Image from "next/image";
 import toast from "react-hot-toast";
@@ -140,7 +140,7 @@ export default function ImageLibrary({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [imageToDelete, setImageToDelete] = useState(null);
 
-  const fetchFiles = async () => {
+  const fetchFiles = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/imagekit/list-files?path=${folder}`);
@@ -157,13 +157,13 @@ export default function ImageLibrary({
     } finally {
       setLoading(false);
     }
-  };
+  }, [folder]);
 
   useEffect(() => {
     if (isOpen) {
       fetchFiles();
     }
-  }, [isOpen]);
+  }, [isOpen, fetchFiles]);
 
   const handleFileUpload = async (file) => {
     if (!file || !onUpload) {

@@ -65,7 +65,7 @@ export default function StatusChart({
     [candidates, selectedTab, selectedYear]
   );
 
-  const months = [
+  const months = useMemo(() => [
     "Jan",
     "Feb",
     "Mar",
@@ -78,7 +78,7 @@ export default function StatusChart({
     "Oct",
     "Nov",
     "Dec",
-  ];
+  ], []);
 
   const statusCountsByMonth = useMemo(
     () =>
@@ -93,7 +93,7 @@ export default function StatusChart({
           return acc;
         }, {})
       ),
-    [filteredCandidates]
+    [filteredCandidates, months]
   );
 
   const totalsByMonth = useMemo(
@@ -154,7 +154,7 @@ export default function StatusChart({
     [statusCountsByMonth, totalsByMonth]
   );
 
-  const chartColors = ["#4361ee", "#80d8a8", "#e2a03f", "#f35321", "#ffc107"];
+  const chartColors = useMemo(() => ["#4361ee", "#80d8a8", "#e2a03f", "#f35321", "#ffc107"], []);
 
   const options = useMemo(
     () => ({

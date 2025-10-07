@@ -139,7 +139,7 @@ export default function Step3Documents({
         setIsAnimating(false);
       }, 500);
     }
-  }, [memoizedCompletedFiles, memoizedActiveFileIndex, fileTypes.length, isAnimating]);
+  }, [memoizedCompletedFiles, memoizedActiveFileIndex, fileTypes, isAnimating]);
 
   const handleFileUpload = (type, file) => {
     if (file && file.size > MAX_FILE_SIZE) {

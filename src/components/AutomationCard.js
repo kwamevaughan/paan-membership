@@ -103,7 +103,7 @@ export default function AutomationCard({ automation, mode, onToggle, onDelete, o
                     {operatorIcons[automation.condition_operator]}{' '}
                     {automation.condition_value},{' '}
                     <span className="font-semibold">then</span> {automation.action_type}{' '}
-                    <span className="text-[#f05d23] font-medium">"{getActionValueDisplay()}"</span>
+                    <span className="text-[#f05d23] font-medium">&quot;{getActionValueDisplay()}&quot;</span>
                 </p>
                 <p className="text-xs mt-1 flex items-center gap-1">
                     <Icon icon={automation.active ? "mdi:play" : "mdi:pause"} width={14} />

@@ -264,7 +264,7 @@ const EmailTemplateList = ({
             </span>
             {searchTerm && (
               <span className="text-blue-500 font-medium">
-                Filtered by "{searchTerm}"
+                Filtered by &quot;{searchTerm}&quot;
               </span>
             )}
           </div>

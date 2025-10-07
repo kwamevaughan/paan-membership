@@ -86,7 +86,7 @@ export default function QuestionsProgress({
       totalEstimatedMinutes: Math.ceil(totalEstimatedMinutes),
       remainingQuestions: totalQuestions - answeredQuestions,
     };
-  }, [questions, formData, currentCategoryIndex, currentQuestionIndex, categories]);
+  }, [questions, formData, categories]);
 
   // Get current category and next categories
   const categoryProgress = useMemo(() => {

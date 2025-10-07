@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
 import toast from "react-hot-toast";
@@ -21,12 +21,12 @@ export default function MarketIntelForm({
     "Data Visualization",
   ];
 
-  const validTiers = [
+  const validTiers = useMemo(() => [
     "Associate Member",
     "Full Member", 
     "Gold Member",
     "Free Member",
-  ];
+  ], []);
 
   // Ensure tier_restriction is valid on mount
   useEffect(() => {

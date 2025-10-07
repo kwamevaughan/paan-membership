@@ -180,7 +180,7 @@ const NotifyEmailGroupModal = ({
             mode === "dark" ? "text-gray-300" : "text-gray-600"
           }`}
         >
-          Job "{jobTitle}" ({jobType}) has been posted. Select groups to notify:
+          Job &quot;{jobTitle}&quot; ({jobType}) has been posted. Select groups to notify:
         </p>
         <div className="mb-4">
           <div className="flex gap-2 mb-2">

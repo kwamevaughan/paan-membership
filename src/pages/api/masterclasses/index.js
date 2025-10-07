@@ -44,7 +44,7 @@ async function getMasterclasses(req, res) {
       *,
       category:masterclass_categories(id, name, slug),
       instructor:masterclass_instructors(id, name, title, profile_image_url),
-      registrations_count:masterclass_registrations(count)
+      registrations:masterclass_registrations(seats_booked)
     `);
 
   // Apply filters
@@ -86,8 +86,17 @@ async function getMasterclasses(req, res) {
     return res.status(400).json({ error: error.message });
   }
 
+  // Add enrollment stats to each masterclass
+  const dataWithStats = data?.map(masterclass => ({
+    ...masterclass,
+    enrollment_stats: {
+      total_registrations: masterclass.registrations?.length || 0,
+      total_seats_booked: masterclass.registrations?.reduce((sum, reg) => sum + (reg.seats_booked || 0), 0) || 0
+    }
+  })) || [];
+
   return res.status(200).json({
-    data,
+    data: dataWithStats,
     pagination: {
       page: parseInt(page),
       limit: parseInt(limit),

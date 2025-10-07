@@ -109,7 +109,7 @@ export default function MasterclassCard({ masterclass, showActions = false, onEd
           <div className="flex items-center text-sm text-gray-500">
             <Icon icon="heroicons:users" className="w-4 h-4 mr-2" />
             <span>
-              {masterclass.max_seats - masterclass.available_seats} / {masterclass.max_seats} enrolled
+              {masterclass.enrollment_stats?.total_seats_booked || 0} / {masterclass.max_seats} enrolled
             </span>
           </div>
           {masterclass.level && (
@@ -179,7 +179,7 @@ export default function MasterclassCard({ masterclass, showActions = false, onEd
           <div className="mt-4 pt-4 border-t border-gray-200">
             <div className="flex items-center justify-between text-xs text-gray-500">
               <span>Created: {new Date(masterclass.created_at).toLocaleDateString()}</span>
-              <span>Available: {masterclass.available_seats} seats</span>
+              <span>Available: {masterclass.max_seats - (masterclass.enrollment_stats?.total_seats_booked || 0)} seats</span>
             </div>
           </div>
         )}

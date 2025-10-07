@@ -44,6 +44,32 @@ export const sidebarNav = [
   },
 
   {
+    category: "Masterclass Management",
+    items: [
+      {
+        href: "/admin/masterclasses",
+        icon: "mdi:school-outline",
+        label: "Masterclasses",
+      },
+      {
+        href: "/admin/masterclasses/purchases",
+        icon: "mdi:credit-card-outline",
+        label: "Purchase Management",
+      },
+      {
+        href: "/admin/masterclasses/tickets",
+        icon: "mdi:ticket-outline",
+        label: "Ticket Management",
+      },
+      {
+        href: "/admin/masterclasses/analytics",
+        icon: "mdi:chart-line",
+        label: "Analytics & Reports",
+      },
+    ],
+  },
+
+  {
     category: "Content Management",
     items: [
       {
@@ -75,11 +101,6 @@ export const sidebarNav = [
         href: "/admin/events",
         icon: "mdi:calendar",
         label: "Events",
-      },
-      {
-        href: "/admin/masterclasses",
-        icon: "mdi:school-outline",
-        label: "Masterclasses",
       },
       {
         href: "/admin/resources",

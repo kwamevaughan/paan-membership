@@ -1,35 +1,36 @@
 // Admin page for masterclasses management
-import { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { Icon } from '@iconify/react';
-import toast from 'react-hot-toast';
-import HRHeader from '@/layouts/hrHeader';
-import HRSidebar from '@/layouts/hrSidebar';
-import SimpleFooter from '@/layouts/simpleFooter';
-import PageHeader from '@/components/common/PageHeader';
-import ItemActionModal from '@/components/ItemActionModal';
-import ImageLibrary from '@/components/common/ImageLibrary';
-import MasterclassForm from '@/components/masterclasses/MasterclassForm';
-import useSidebar from '@/hooks/useSidebar';
-import useLogout from '@/hooks/useLogout';
-import useAuthSession from '@/hooks/useAuthSession';
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { Icon } from "@iconify/react";
+import toast from "react-hot-toast";
+import HRHeader from "@/layouts/hrHeader";
+import HRSidebar from "@/layouts/hrSidebar";
+import SimpleFooter from "@/layouts/simpleFooter";
+import PageHeader from "@/components/common/PageHeader";
+import ItemActionModal from "@/components/ItemActionModal";
+import ImageLibrary from "@/components/common/ImageLibrary";
+import MasterclassForm from "@/components/masterclasses/MasterclassForm";
+import MasterclassTable from "@/components/masterclasses/MasterclassTable";
+import useSidebar from "@/hooks/useSidebar";
+import useLogout from "@/hooks/useLogout";
+import useAuthSession from "@/hooks/useAuthSession";
 
 export default function MasterclassesAdmin({ mode = "light", toggleMode }) {
   useAuthSession();
   const [masterclasses, setMasterclasses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    status: '',
-    category: '',
-    search: ''
+    status: "",
+    category: "",
+    search: "",
   });
   const [categories, setCategories] = useState([]);
   const [stats, setStats] = useState({
     total: 0,
     published: 0,
     draft: 0,
-    upcoming: 0
+    upcoming: 0,
   });
 
   // Modal states
@@ -38,6 +39,11 @@ export default function MasterclassesAdmin({ mode = "light", toggleMode }) {
   const [editingId, setEditingId] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [masterclassToDelete, setMasterclassToDelete] = useState(null);
+  
+  // Table selection states
+  const [selectedItems, setSelectedItems] = useState([]);
+  
+  // Image library states
   const [formData, setFormData] = useState({});
   const [showImageLibrary, setShowImageLibrary] = useState(false);
   const [imageLibraryCallback, setImageLibraryCallback] = useState(null);
@@ -53,27 +59,27 @@ export default function MasterclassesAdmin({ mode = "light", toggleMode }) {
     handleMouseLeave,
     handleOutsideClick,
   } = useSidebar();
-  
+
   const handleLogout = useLogout();
 
   const fetchMasterclasses = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (filters.status) params.append('status', filters.status);
-      if (filters.category) params.append('category', filters.category);
-      if (filters.search) params.append('search', filters.search);
+      if (filters.status) params.append("status", filters.status);
+      if (filters.category) params.append("category", filters.category);
+      if (filters.search) params.append("search", filters.search);
 
       const response = await fetch(`/api/masterclasses?${params}`);
       const result = await response.json();
-      
+
       if (response.ok) {
         setMasterclasses(result.data || []);
       } else {
-        console.error('Error fetching masterclasses:', result.error);
+        console.error("Error fetching masterclasses:", result.error);
       }
     } catch (error) {
-      console.error('Error fetching masterclasses:', error);
+      console.error("Error fetching masterclasses:", error);
     } finally {
       setLoading(false);
     }
@@ -81,43 +87,71 @@ export default function MasterclassesAdmin({ mode = "light", toggleMode }) {
 
   const fetchCategories = useCallback(async () => {
     try {
-      const response = await fetch('/api/masterclasses/categories');
+      const response = await fetch("/api/masterclasses/categories");
       const result = await response.json();
       if (response.ok) {
         setCategories(result.data || []);
       }
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error("Error fetching categories:", error);
     }
   }, []);
 
   const fetchStats = useCallback(async () => {
     try {
       // Fetch basic stats
-      const [totalRes, publishedRes, draftRes, upcomingRes] = await Promise.all([
-        fetch('/api/masterclasses'),
-        fetch('/api/masterclasses?status=published'),
-        fetch('/api/masterclasses?status=draft'),
-        fetch('/api/masterclasses?upcoming_only=true&status=published')
-      ]);
+      const response = await fetch("/api/masterclasses");
+      const result = await response.json();
 
-      const [total, published, draft, upcoming] = await Promise.all([
-        totalRes.json(),
-        publishedRes.json(),
-        draftRes.json(),
-        upcomingRes.json()
-      ]);
+      if (response.ok) {
+        const data = result.data || [];
+        const now = new Date();
 
-      setStats({
-        total: total.data?.length || 0,
-        published: published.data?.length || 0,
-        draft: draft.data?.length || 0,
-        upcoming: upcoming.data?.length || 0
-      });
+        setStats({
+          total: data.length,
+          published: data.filter((m) => m.status === "published").length,
+          draft: data.filter((m) => m.status === "draft").length,
+          upcoming: data.filter(
+            (m) => new Date(m.start_date) > now && m.status === "published"
+          ).length,
+        });
+      }
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      console.error("Error fetching stats:", error);
     }
   }, []);
+
+  useEffect(() => {
+    fetchMasterclasses();
+    fetchCategories();
+    fetchStats();
+  }, [fetchMasterclasses, fetchCategories, fetchStats]);
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
+  const getStatusBadge = (status) => {
+    const statusConfig = {
+      draft: { color: "bg-gray-100 text-gray-800", label: "Draft" },
+      published: { color: "bg-green-100 text-green-800", label: "Published" },
+      cancelled: { color: "bg-red-100 text-red-800", label: "Cancelled" },
+      completed: { color: "bg-blue-100 text-blue-800", label: "Completed" },
+    };
+
+    const config = statusConfig[status] || statusConfig.draft;
+    return (
+      <span className={`px-2 py-1 text-xs font-medium rounded-full ${config.color}`}>
+        {config.label}
+      </span>
+    );
+  };
 
   // Modal actions
   const modalActions = {
@@ -139,15 +173,17 @@ export default function MasterclassesAdmin({ mode = "light", toggleMode }) {
       setEditingId(null);
       setFormData({});
     },
-    submitForm: async (masterclassData) => {
+    saveModal: async (masterclassData) => {
       try {
-        const url = isEditing ? `/api/masterclasses/${editingId}` : '/api/masterclasses';
-        const method = isEditing ? 'PUT' : 'POST';
-        
+        const url = isEditing
+          ? `/api/masterclasses/${editingId}`
+          : "/api/masterclasses";
+        const method = isEditing ? "PUT" : "POST";
+
         const response = await fetch(url, {
           method,
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify(masterclassData),
         });
@@ -158,12 +194,15 @@ export default function MasterclassesAdmin({ mode = "light", toggleMode }) {
           fetchMasterclasses();
           fetchStats();
           modalActions.closeModal();
+          toast.success(
+            isEditing ? "Masterclass updated successfully" : "Masterclass created successfully"
+          );
         } else {
-          alert(result.error || 'Error saving masterclass');
+          toast.error(result.error || "Error saving masterclass");
         }
       } catch (error) {
-        console.error('Error saving masterclass:', error);
-        alert('Error saving masterclass');
+        console.error("Error saving masterclass:", error);
+        toast.error("Error saving masterclass");
       }
     },
   };
@@ -181,23 +220,88 @@ export default function MasterclassesAdmin({ mode = "light", toggleMode }) {
   const confirmDelete = async () => {
     if (!masterclassToDelete) return;
 
+    const loadingToast = toast.loading("Deleting masterclass...");
+
     try {
-      const response = await fetch(`/api/masterclasses/${masterclassToDelete.id}`, {
-        method: 'DELETE'
-      });
+      const response = await fetch(
+        `/api/masterclasses/${masterclassToDelete.id}`,
+        {
+          method: "DELETE",
+        }
+      );
 
       if (response.ok) {
         fetchMasterclasses();
         fetchStats();
         closeDeleteModal();
+        toast.success("Masterclass deleted successfully", {
+          id: loadingToast,
+        });
       } else {
         const result = await response.json();
-        alert(result.error || 'Error deleting masterclass');
+        toast.error(result.error || "Error deleting masterclass", {
+          id: loadingToast,
+        });
       }
     } catch (error) {
-      console.error('Error deleting masterclass:', error);
-      alert('Error deleting masterclass');
+      console.error("Error deleting masterclass:", error);
+      toast.error("Error deleting masterclass", {
+        id: loadingToast,
+      });
     }
+  };
+
+  // Selection handlers
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedItems(masterclasses.map(m => m.id));
+    } else {
+      setSelectedItems([]);
+    }
+  };
+
+  const handleSelectItem = (id) => {
+    setSelectedItems(prev => 
+      prev.includes(id) 
+        ? prev.filter(item => item !== id)
+        : [...prev, id]
+    );
+  };
+
+  const handleBulkDelete = async (ids) => {
+    const loadingToast = toast.loading("Deleting masterclasses...");
+    
+    try {
+      const promises = ids.map(id => 
+        fetch(`/api/masterclasses/${id}`, { method: "DELETE" })
+      );
+      
+      await Promise.all(promises);
+      
+      fetchMasterclasses();
+      fetchStats();
+      setSelectedItems([]);
+      toast.success(`${ids.length} masterclass(es) deleted successfully`, {
+        id: loadingToast,
+      });
+    } catch (error) {
+      console.error("Error deleting masterclasses:", error);
+      toast.error("Error deleting masterclasses", {
+        id: loadingToast,
+      });
+    }
+  };
+
+  const handleView = (masterclass) => {
+    window.location.href = `/admin/masterclasses/${masterclass.id}`;
+  };
+
+  const handleEdit = (masterclass) => {
+    modalActions.openModal(masterclass);
+  };
+
+  const handleDelete = (masterclass) => {
+    openDeleteModal(masterclass);
   };
 
   const handleImageUpload = async (file) => {
@@ -240,47 +344,15 @@ export default function MasterclassesAdmin({ mode = "light", toggleMode }) {
         id: loadingToast,
       });
 
-      return uploadData;
-
+      return uploadData.url;
     } catch (error) {
       console.error("Error uploading image:", error);
       toast.error("Failed to upload image", {
         id: loadingToast,
       });
+      return null;
     }
   };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      draft: { color: 'bg-gray-100 text-gray-800', label: 'Draft' },
-      published: { color: 'bg-green-100 text-green-800', label: 'Published' },
-      cancelled: { color: 'bg-red-100 text-red-800', label: 'Cancelled' },
-      completed: { color: 'bg-blue-100 text-blue-800', label: 'Completed' }
-    };
-
-    const config = statusConfig[status] || statusConfig.draft;
-    return (
-      <span className={`px-2 py-1 text-xs font-medium rounded-full ${config.color}`}>
-        {config.label}
-      </span>
-    );
-  };
-
-  useEffect(() => {
-    fetchMasterclasses();
-    fetchCategories();
-    fetchStats();
-  }, [fetchMasterclasses, fetchCategories, fetchStats]);
 
   return (
     <div
@@ -298,7 +370,7 @@ export default function MasterclassesAdmin({ mode = "light", toggleMode }) {
         toggleMode={toggleMode}
         onLogout={handleLogout}
         pageName="Masterclasses"
-        pageDescription="Manage your masterclasses and training programs"
+        pageDescription="Manage and organize masterclasses"
       />
       <div className="flex flex-1">
         <HRSidebar
@@ -325,7 +397,8 @@ export default function MasterclassesAdmin({ mode = "light", toggleMode }) {
           }}
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-            <div className="relative group">
+            {/* Header */}
+            <div className="relative group mb-8">
               <div
                 className={`absolute inset-0 rounded-2xl backdrop-blur-xl ${
                   mode === "dark"
@@ -337,25 +410,30 @@ export default function MasterclassesAdmin({ mode = "light", toggleMode }) {
               ></div>
               <PageHeader
                 title="Masterclasses"
-                description="Manage your masterclasses and training programs. Create, schedule, and track enrollment for professional development courses."
+                description="Manage and organize masterclasses for your members"
                 mode={mode}
                 stats={[
                   {
                     icon: "heroicons:academic-cap",
-                    value: `${stats.total} total masterclasses`,
+                    value: `${stats.total} total`,
                   },
                   {
-                    icon: "heroicons:check-circle",
+                    icon: "heroicons:eye",
                     value: `${stats.published} published`,
                     iconColor: "text-green-500",
                   },
                   {
+                    icon: "heroicons:document-text",
+                    value: `${stats.draft} drafts`,
+                    iconColor: "text-yellow-500",
+                  },
+                  {
                     icon: "heroicons:calendar",
                     value: `${stats.upcoming} upcoming`,
-                    iconColor: "text-purple-500",
+                    iconColor: "text-blue-500",
                   },
                 ]}
-                actions={[
+                actions={[                  
                   {
                     label: "Create Masterclass",
                     icon: "heroicons:plus",
@@ -367,6 +445,7 @@ export default function MasterclassesAdmin({ mode = "light", toggleMode }) {
             </div>
 
             <div className="space-y-8">
+              {/* Quick Access Section */}
               <div className="relative group">
                 <div
                   className={`absolute inset-0 rounded-2xl backdrop-blur-xl ${
@@ -385,229 +464,282 @@ export default function MasterclassesAdmin({ mode = "light", toggleMode }) {
                   }`}
                 >
                   <div className="p-6">
-                    {/* Filters */}
-                    <div className="mb-6">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div>
-                          <label className={`block text-sm font-medium mb-1 ${
-                            mode === "dark" ? "text-gray-300" : "text-gray-700"
-                          }`}>Search</label>
-                          <input
-                            type="text"
-                            placeholder="Search masterclasses..."
-                            value={filters.search}
-                            onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                              mode === "dark" 
-                                ? "bg-gray-800 border-gray-600 text-white placeholder-gray-400" 
-                                : "bg-white border-gray-300 text-gray-900"
-                            }`}
-                          />
+                    <h3 className={`text-lg font-semibold mb-4 ${
+                      mode === "dark" ? "text-white" : "text-gray-900"
+                    }`}>
+                      Quick Access
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Link
+                        href="/admin/masterclasses/purchases"
+                        className={`p-4 rounded-lg border transition-all duration-200 hover:scale-105 ${
+                          mode === "dark"
+                            ? "bg-gray-800 border-gray-700 hover:bg-gray-700"
+                            : "bg-gray-50 border-gray-200 hover:bg-gray-100"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className={`p-2 rounded-lg ${
+                            mode === "dark" ? "bg-blue-900/30" : "bg-blue-100"
+                          }`}>
+                            <Icon 
+                              icon="heroicons:credit-card" 
+                              className="w-6 h-6 text-blue-600" 
+                            />
+                          </div>
+                          <div>
+                            <h4 className={`font-medium ${
+                              mode === "dark" ? "text-white" : "text-gray-900"
+                            }`}>
+                              Purchase Management
+                            </h4>
+                            <p className={`text-sm ${
+                              mode === "dark" ? "text-gray-400" : "text-gray-600"
+                            }`}>
+                              Track payments and revenue
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <label className={`block text-sm font-medium mb-1 ${
-                            mode === "dark" ? "text-gray-300" : "text-gray-700"
-                          }`}>Status</label>
-                          <select
-                            value={filters.status}
-                            onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                              mode === "dark" 
-                                ? "bg-gray-800 border-gray-600 text-white" 
-                                : "bg-white border-gray-300 text-gray-900"
-                            }`}
-                          >
-                            <option value="">All Statuses</option>
-                            <option value="draft">Draft</option>
-                            <option value="published">Published</option>
-                            <option value="cancelled">Cancelled</option>
-                            <option value="completed">Completed</option>
-                          </select>
+                      </Link>
+
+                      <Link
+                        href="/admin/masterclasses/tickets"
+                        className={`p-4 rounded-lg border transition-all duration-200 hover:scale-105 ${
+                          mode === "dark"
+                            ? "bg-gray-800 border-gray-700 hover:bg-gray-700"
+                            : "bg-gray-50 border-gray-200 hover:bg-gray-100"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className={`p-2 rounded-lg ${
+                            mode === "dark" ? "bg-green-900/30" : "bg-green-100"
+                          }`}>
+                            <Icon 
+                              icon="heroicons:ticket" 
+                              className="w-6 h-6 text-green-600" 
+                            />
+                          </div>
+                          <div>
+                            <h4 className={`font-medium ${
+                              mode === "dark" ? "text-white" : "text-gray-900"
+                            }`}>
+                              Ticket Management
+                            </h4>
+                            <p className={`text-sm ${
+                              mode === "dark" ? "text-gray-400" : "text-gray-600"
+                            }`}>
+                              Issue and manage tickets
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <label className={`block text-sm font-medium mb-1 ${
-                            mode === "dark" ? "text-gray-300" : "text-gray-700"
-                          }`}>Category</label>
-                          <select
-                            value={filters.category}
-                            onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-                            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                              mode === "dark" 
-                                ? "bg-gray-800 border-gray-600 text-white" 
-                                : "bg-white border-gray-300 text-gray-900"
-                            }`}
-                          >
-                            <option value="">All Categories</option>
-                            {categories.map((category) => (
-                              <option key={category.id} value={category.id}>
-                                {category.name}
-                              </option>
-                            ))}
-                          </select>
+                      </Link>
+
+                      <Link
+                        href="/admin/masterclasses/analytics"
+                        className={`p-4 rounded-lg border transition-all duration-200 hover:scale-105 ${
+                          mode === "dark"
+                            ? "bg-gray-800 border-gray-700 hover:bg-gray-700"
+                            : "bg-gray-50 border-gray-200 hover:bg-gray-100"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-3">
+                          <div className={`p-2 rounded-lg ${
+                            mode === "dark" ? "bg-purple-900/30" : "bg-purple-100"
+                          }`}>
+                            <Icon 
+                              icon="heroicons:chart-bar" 
+                              className="w-6 h-6 text-purple-600" 
+                            />
+                          </div>
+                          <div>
+                            <h4 className={`font-medium ${
+                              mode === "dark" ? "text-white" : "text-gray-900"
+                            }`}>
+                              Analytics & Reports
+                            </h4>
+                            <p className={`text-sm ${
+                              mode === "dark" ? "text-gray-400" : "text-gray-600"
+                            }`}>
+                              View performance metrics
+                            </p>
+                          </div>
                         </div>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Filters */}
+              <div className="relative group">
+                <div
+                  className={`absolute inset-0 rounded-2xl backdrop-blur-xl ${
+                    mode === "dark"
+                      ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60"
+                      : "bg-gradient-to-br from-white/80 via-white/20 to-white/80"
+                  } border ${
+                    mode === "dark" ? "border-white/10" : "border-white/20"
+                  } shadow-2xl group-hover:shadow-lg transition-all duration-500`}
+                ></div>
+                <div
+                  className={`relative rounded-2xl overflow-hidden shadow-lg border ${
+                    mode === "dark"
+                      ? "bg-gray-900 border-gray-800"
+                      : "bg-white border-gray-200"
+                  }`}
+                >
+                  <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label
+                          className={`block text-sm font-medium mb-2 ${
+                            mode === "dark" ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Search
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Search masterclasses..."
+                          value={filters.search}
+                          onChange={(e) =>
+                            setFilters({ ...filters, search: e.target.value })
+                          }
+                          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            mode === "dark"
+                              ? "bg-gray-800 border-gray-600 text-white"
+                              : "bg-white border-gray-300 text-gray-900"
+                          }`}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          className={`block text-sm font-medium mb-2 ${
+                            mode === "dark" ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Status
+                        </label>
+                        <select
+                          value={filters.status}
+                          onChange={(e) =>
+                            setFilters({ ...filters, status: e.target.value })
+                          }
+                          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            mode === "dark"
+                              ? "bg-gray-800 border-gray-600 text-white"
+                              : "bg-white border-gray-300 text-gray-900"
+                          }`}
+                        >
+                          <option value="">All Statuses</option>
+                          <option value="draft">Draft</option>
+                          <option value="published">Published</option>
+                          <option value="cancelled">Cancelled</option>
+                          <option value="completed">Completed</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label
+                          className={`block text-sm font-medium mb-2 ${
+                            mode === "dark" ? "text-gray-300" : "text-gray-700"
+                          }`}
+                        >
+                          Category
+                        </label>
+                        <select
+                          value={filters.category}
+                          onChange={(e) =>
+                            setFilters({ ...filters, category: e.target.value })
+                          }
+                          className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                            mode === "dark"
+                              ? "bg-gray-800 border-gray-600 text-white"
+                              : "bg-white border-gray-300 text-gray-900"
+                          }`}
+                        >
+                          <option value="">All Categories</option>
+                          {categories.map((category) => (
+                            <option key={category.id} value={category.id}>
+                              {category.name}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                     </div>
+                  </div>
 
-                    <div className="mt-8">
-                      {/* Masterclasses Table */}
-                      <div className={`rounded-lg shadow-sm overflow-hidden ${
-                        mode === "dark" ? "bg-gray-800" : "bg-white"
-                      }`}>
+                  <div className="mt-8">
+                    <div className="relative group">
+                      <div
+                        className={`absolute inset-0 rounded-2xl backdrop-blur-xl ${
+                          mode === "dark"
+                            ? "bg-gradient-to-br from-slate-800/60 via-slate-900/40 to-slate-800/60"
+                            : "bg-gradient-to-br from-white/80 via-white/20 to-white/80"
+                        } border ${
+                          mode === "dark" ? "border-white/10" : "border-white/20"
+                        } shadow-2xl group-hover:shadow-lg transition-all duration-500`}
+                      ></div>
+                      <div
+                        className={`relative rounded-2xl overflow-hidden shadow-lg border ${
+                          mode === "dark"
+                            ? "bg-gray-900 border-gray-800"
+                            : "bg-white border-gray-200"
+                        }`}
+                      >
                         {loading ? (
                           <div className="p-8 text-center">
-                            <Icon icon="heroicons:arrow-path" className="w-8 h-8 animate-spin mx-auto text-gray-400" />
-                            <p className={`mt-2 ${mode === "dark" ? "text-gray-400" : "text-gray-500"}`}>Loading masterclasses...</p>
+                            <Icon
+                              icon="heroicons:arrow-path"
+                              className="w-8 h-8 animate-spin mx-auto text-gray-400"
+                            />
+                            <p
+                              className={`mt-2 ${
+                                mode === "dark"
+                                  ? "text-gray-400"
+                                  : "text-gray-500"
+                              }`}
+                            >
+                              Loading masterclasses...
+                            </p>
                           </div>
                         ) : masterclasses.length === 0 ? (
                           <div className="p-8 text-center">
-                            <Icon icon="heroicons:academic-cap" className="w-12 h-12 mx-auto text-gray-400" />
-                            <p className={`mt-2 ${mode === "dark" ? "text-gray-400" : "text-gray-500"}`}>No masterclasses found</p>
+                            <Icon
+                              icon="heroicons:academic-cap"
+                              className="w-12 h-12 mx-auto text-gray-400"
+                            />
+                            <p
+                              className={`mt-2 ${
+                                mode === "dark"
+                                  ? "text-gray-400"
+                                  : "text-gray-500"
+                              }`}
+                            >
+                              No masterclasses found
+                            </p>
                             <button
                               onClick={() => modalActions.openModal()}
-                              className="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                              className="mt-4 inline-flex items-center px-4 py-2 bg-paan-blue text-white rounded-lg hover:bg-paan-blue/80 cursor-pointer"
                             >
-                              <Icon icon="heroicons:plus" className="w-4 h-4 mr-2" />
+                              <Icon
+                                icon="heroicons:plus"
+                                className="w-4 h-4 mr-2"
+                              />
                               Create your first masterclass
                             </button>
                           </div>
                         ) : (
-                          <div className="overflow-x-auto">
-                            <table className={`min-w-full divide-y ${
-                              mode === "dark" ? "divide-gray-700" : "divide-gray-200"
-                            }`}>
-                              <thead className={mode === "dark" ? "bg-gray-700" : "bg-gray-50"}>
-                                <tr>
-                                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                                    mode === "dark" ? "text-gray-300" : "text-gray-500"
-                                  }`}>
-                                    Masterclass
-                                  </th>
-                                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                                    mode === "dark" ? "text-gray-300" : "text-gray-500"
-                                  }`}>
-                                    Category
-                                  </th>
-                                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                                    mode === "dark" ? "text-gray-300" : "text-gray-500"
-                                  }`}>
-                                    Schedule
-                                  </th>
-                                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                                    mode === "dark" ? "text-gray-300" : "text-gray-500"
-                                  }`}>
-                                    Enrollment
-                                  </th>
-                                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                                    mode === "dark" ? "text-gray-300" : "text-gray-500"
-                                  }`}>
-                                    Status
-                                  </th>
-                                  <th className={`px-6 py-3 text-left text-xs font-medium uppercase tracking-wider ${
-                                    mode === "dark" ? "text-gray-300" : "text-gray-500"
-                                  }`}>
-                                    Actions
-                                  </th>
-                                </tr>
-                              </thead>
-                              <tbody className={`divide-y ${
-                                mode === "dark" 
-                                  ? "bg-gray-800 divide-gray-700" 
-                                  : "bg-white divide-gray-200"
-                              }`}>
-                                {masterclasses.map((masterclass) => (
-                                  <tr key={masterclass.id} className={`${
-                                    mode === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-50"
-                                  }`}>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center">
-                            {masterclass.image_url && (
-                              <div className="relative h-10 w-10 rounded-lg overflow-hidden mr-3">
-                                <Image
-                                  src={masterclass.image_url}
-                                  alt={masterclass.title}
-                                  fill
-                                  className="object-cover"
-                                />
-                              </div>
-                            )}
-                                    <div>
-                                      <div className={`text-sm font-medium ${
-                                        mode === "dark" ? "text-white" : "text-gray-900"
-                                      }`}>
-                                        {masterclass.title}
-                                      </div>
-                                      <div className={`text-sm ${
-                                        mode === "dark" ? "text-gray-400" : "text-gray-500"
-                                      }`}>
-                                        {masterclass.instructor?.name}
-                                      </div>
-                                    </div>
-                          </div>
-                        </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <span className={`text-sm ${
-                                    mode === "dark" ? "text-white" : "text-gray-900"
-                                  }`}>
-                                    {masterclass.category?.name || 'Uncategorized'}
-                                  </span>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className={`text-sm ${
-                                    mode === "dark" ? "text-white" : "text-gray-900"
-                                  }`}>
-                                    {formatDate(masterclass.start_date)}
-                                  </div>
-                                  <div className={`text-sm ${
-                                    mode === "dark" ? "text-gray-400" : "text-gray-500"
-                                  }`}>
-                                    {masterclass.duration_minutes} minutes
-                                  </div>
-                                </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
-                                  <div className={`text-sm ${
-                                    mode === "dark" ? "text-white" : "text-gray-900"
-                                  }`}>
-                                    {masterclass.max_seats - masterclass.available_seats} / {masterclass.max_seats}
-                                  </div>
-                                  <div className={`text-sm ${
-                                    mode === "dark" ? "text-gray-400" : "text-gray-500"
-                                  }`}>
-                                    {masterclass.available_seats} available
-                                  </div>
-                                </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          {getStatusBadge(masterclass.status)}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex items-center space-x-2">
-                            <Link
-                              href={`/admin/masterclasses/${masterclass.id}`}
-                              className="text-blue-600 hover:text-blue-900"
-                              title="View details"
-                            >
-                              <Icon icon="heroicons:eye" className="w-4 h-4" />
-                            </Link>
-                            <button
-                              onClick={() => modalActions.openModal(masterclass)}
-                              className="text-indigo-600 hover:text-indigo-900"
-                              title="Edit masterclass"
-                            >
-                              <Icon icon="heroicons:pencil" className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => openDeleteModal(masterclass)}
-                              className="text-red-600 hover:text-red-900"
-                              title="Delete masterclass"
-                            >
-                              <Icon icon="heroicons:trash" className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
+                          <MasterclassTable
+                            masterclasses={masterclasses}
+                            mode={mode}
+                            onEdit={handleEdit}
+                            onDelete={handleDelete}
+                            onView={handleView}
+                            selectedItems={selectedItems}
+                            onSelectAll={handleSelectAll}
+                            onSelectItem={handleSelectItem}
+                            onBulkDelete={handleBulkDelete}
+                          />
                         )}
                       </div>
                     </div>
@@ -636,16 +768,16 @@ export default function MasterclassesAdmin({ mode = "light", toggleMode }) {
         <ItemActionModal
           isOpen={isModalOpen}
           onClose={modalActions.closeModal}
-          title={isEditing ? "Edit Masterclass" : "Create Masterclass"}
+          title={isEditing ? "Edit Masterclass" : "Create New Masterclass"}
           mode={mode}
         >
           <MasterclassForm
             initialData={formData}
-            onSubmit={modalActions.submitForm}
+            onSubmit={modalActions.saveModal}
             onCancel={modalActions.closeModal}
-            loading={loading}
+            categories={categories}
             mode={mode}
-            onOpenImageLibrary={(callback) => {
+            onImageSelect={(callback) => {
               setImageLibraryCallback(() => callback);
               setShowImageLibrary(true);
             }}
@@ -656,7 +788,7 @@ export default function MasterclassesAdmin({ mode = "light", toggleMode }) {
         <ItemActionModal
           isOpen={isDeleteModalOpen}
           onClose={closeDeleteModal}
-          title="Confirm Deletion"
+          title="Delete Masterclass"
           mode={mode}
         >
           <div className="space-y-6">
@@ -666,10 +798,8 @@ export default function MasterclassesAdmin({ mode = "light", toggleMode }) {
               }`}
             >
               Are you sure you want to delete the masterclass{" "}
-              <strong>
-                &quot;{masterclassToDelete?.title || ""}&quot;
-              </strong>
-              ? This action cannot be undone.
+              <strong>&quot;{masterclassToDelete?.title || ""}&quot;</strong>?
+              This action cannot be undone.
             </p>
             <div className="flex justify-end space-x-4">
               <button
@@ -685,10 +815,8 @@ export default function MasterclassesAdmin({ mode = "light", toggleMode }) {
               </button>
               <button
                 onClick={confirmDelete}
-                className={`px-6 py-3 text-sm font-medium rounded-xl border transition-all duration-200 flex items-center shadow-sm ${
-                  mode === "dark"
-                    ? "border-red-600 text-red-200 bg-red-900/30 hover:bg-red-800/40"
-                    : "border-red-200 text-red-700 bg-white hover:bg-red-50"
+                className={`px-6 py-3 text-sm font-medium rounded-xl text-white bg-red-600 hover:bg-red-700 transition-all duration-200 flex items-center shadow-sm ${
+                  mode === "dark" ? "shadow-white/10" : "shadow-gray-200"
                 }`}
               >
                 <Icon icon="heroicons:trash" className="h-4 w-4 mr-2" />
@@ -707,7 +835,7 @@ export default function MasterclassesAdmin({ mode = "light", toggleMode }) {
           }}
           onSelect={(selectedImage) => {
             if (imageLibraryCallback) {
-              imageLibraryCallback(selectedImage);
+              imageLibraryCallback(selectedImage.url);
             }
             setShowImageLibrary(false);
             setImageLibraryCallback(null);

@@ -2,9 +2,13 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "react-hot-toast";
 
-export const useQuestions = (jobType = "agency") => {
-  const [questions, setQuestions] = useState([]);
-  const [categories, setCategories] = useState([]);
+export const useQuestions = (
+  jobType = "agency",
+  initialQuestions = [],
+  initialCategories = []
+) => {
+  const [questions, setQuestions] = useState(initialQuestions);
+  const [categories, setCategories] = useState(initialCategories);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortField, setSortField] = useState("order");
   const [sortDirection, setSortDirection] = useState("asc");
@@ -17,14 +21,13 @@ export const useQuestions = (jobType = "agency") => {
     return jt;
   };
 
-  useEffect(() => {
-    fetchQuestions();
-    fetchCategories();
-  }, [sortField, sortDirection, jobType, fetchQuestions]);
-
   const fetchQuestions = useCallback(async () => {
     const normalized = normalizeJobType(jobType);
-    console.log("[useQuestions] fetchQuestions start", { normalized, sortField, sortDirection });
+    console.log("[useQuestions] fetchQuestions start", {
+      normalized,
+      sortField,
+      sortDirection,
+    });
 
     let query = supabase
       .from("interview_questions")
@@ -47,14 +50,21 @@ export const useQuestions = (jobType = "agency") => {
       const validQuestions = data.filter(
         (q) => q.id && q.job_type && Number.isInteger(q.order)
       );
-      console.log("[useQuestions] fetched count:", data.length, "valid:", validQuestions.length);
+      console.log(
+        "[useQuestions] fetched count:",
+        data.length,
+        "valid:",
+        validQuestions.length
+      );
       console.table(
         validQuestions.map((q) => ({
           id: q.id,
           job_type: q.job_type,
           order: q.order,
           updated_at: q.updated_at,
-          options_last: Array.isArray(q.options) ? q.options[q.options.length - 1] : null,
+          options_last: Array.isArray(q.options)
+            ? q.options[q.options.length - 1]
+            : null,
         }))
       );
       setQuestions(validQuestions);
@@ -74,6 +84,22 @@ export const useQuestions = (jobType = "agency") => {
       setCategories(data || []);
     }
   };
+
+  useEffect(() => {
+    if (initialQuestions.length === 0) {
+      fetchQuestions();
+    }
+    if (initialCategories.length === 0) {
+      fetchCategories();
+    }
+  }, [
+    sortField,
+    sortDirection,
+    jobType,
+    initialQuestions.length,
+    initialCategories.length,
+    fetchQuestions,
+  ]);
 
   const addQuestion = async (questionData) => {
     console.log("[useQuestions] addQuestion", questionData);
@@ -234,9 +260,13 @@ export const useQuestions = (jobType = "agency") => {
     }
 
     setQuestions((prev) => {
-      const next = prev.map((q) => (q.id === parseInt(id) ? { ...q, ...data[0] } : q));
+      const next = prev.map((q) =>
+        q.id === parseInt(id) ? { ...q, ...data[0] } : q
+      );
       console.log("[useQuestions] Optimistic state updated for id", id, {
-        new_last_option: Array.isArray(data[0]?.options) ? data[0].options[data[0].options.length - 1] : null,
+        new_last_option: Array.isArray(data[0]?.options)
+          ? data[0].options[data[0].options.length - 1]
+          : null,
       });
       return next;
     });

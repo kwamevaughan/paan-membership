@@ -13,12 +13,6 @@ const DraggableQuestion = ({
   isComplete,
   className = "",
 }) => {
-  const ref = useCallback((node) => {
-    if (!node) return;
-    drop(node);
-    drag(node);
-  }, [drag, drop]);
-
   const [{ isDragging }, drag] = useDrag({
     type: "QUESTION",
     item: { index },
@@ -36,6 +30,12 @@ const DraggableQuestion = ({
       }
     },
   });
+
+  const ref = useCallback((node) => {
+    if (!node) return;
+    drop(node);
+    drag(node);
+  }, [drag, drop]);
 
   return (
     <tr

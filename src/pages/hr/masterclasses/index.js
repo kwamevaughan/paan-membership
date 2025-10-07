@@ -362,7 +362,7 @@ export default function MemberMasterclasses() {
                             </div>
                             <div className="flex items-center text-sm text-gray-500">
                               <Icon icon="heroicons:users" className="w-4 h-4 mr-2" />
-                              {masterclass.available_seats} seats available
+                              {masterclass.max_seats - (masterclass.enrollment_stats?.total_seats_booked || 0)} seats available
                             </div>
                           </div>
                           <div className="flex items-center justify-between">

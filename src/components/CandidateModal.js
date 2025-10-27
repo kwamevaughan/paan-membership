@@ -18,6 +18,9 @@ export default function CandidateModal({
   const [questionAnswerPairs, setQuestionAnswerPairs] = useState([]);
   const [activeTab, setActiveTab] = useState("profile");
   const [tierValue, setTierValue] = useState("");
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedData, setEditedData] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
   const tierOptions = [
     "Free Member (Tier 1)",
     "Associate Member (Tier 2)",
@@ -80,6 +83,23 @@ export default function CandidateModal({
   useEffect(() => {
     if (candidate) {
       setTierValue(normalizeTierLabel(candidate.selected_tier || "Free Member (Tier 1)"));
+      // Initialize edited data with current candidate data
+      setEditedData({
+        primaryContactName: candidate.primaryContactName || "",
+        primaryContactEmail: candidate.primaryContactEmail || "",
+        primaryContactPhone: candidate.primaryContactPhone || "",
+        primaryContactRole: candidate.primaryContactRole || "",
+        primaryContactLinkedin: candidate.primaryContactLinkedin || "",
+        secondaryContactName: candidate.secondaryContactName || "",
+        secondaryContactEmail: candidate.secondaryContactEmail || "",
+        secondaryContactPhone: candidate.secondaryContactPhone || "",
+        secondaryContactRole: candidate.secondaryContactRole || "",
+        agencyName: candidate.agencyName || "",
+        yearEstablished: candidate.yearEstablished || "",
+        headquartersLocation: candidate.headquartersLocation || "",
+        websiteUrl: candidate.websiteUrl || "",
+        countryOfResidence: candidate.countryOfResidence || "",
+      });
     }
   }, [candidate]);
 
@@ -131,6 +151,112 @@ export default function CandidateModal({
       console.error("Failed to update tier", err);
       toast.error("Failed to update tier", { id: savingToast });
     }
+  };
+
+  const handleEditToggle = () => {
+    if (isEditMode) {
+      // Cancel edit mode - reset to original data
+      setEditedData({
+        primaryContactName: candidate.primaryContactName || "",
+        primaryContactEmail: candidate.primaryContactEmail || "",
+        primaryContactPhone: candidate.primaryContactPhone || "",
+        primaryContactRole: candidate.primaryContactRole || "",
+        primaryContactLinkedin: candidate.primaryContactLinkedin || "",
+        secondaryContactName: candidate.secondaryContactName || "",
+        secondaryContactEmail: candidate.secondaryContactEmail || "",
+        secondaryContactPhone: candidate.secondaryContactPhone || "",
+        secondaryContactRole: candidate.secondaryContactRole || "",
+        agencyName: candidate.agencyName || "",
+        yearEstablished: candidate.yearEstablished || "",
+        headquartersLocation: candidate.headquartersLocation || "",
+        websiteUrl: candidate.websiteUrl || "",
+        countryOfResidence: candidate.countryOfResidence || "",
+      });
+    }
+    setIsEditMode(!isEditMode);
+  };
+
+  const handleSaveChanges = async () => {
+    setIsSaving(true);
+    const savingToast = toast.loading("Saving changes...");
+
+    try {
+      const { error } = await supabase
+        .from("candidates")
+        .update(editedData)
+        .eq("id", candidate.id);
+
+      if (error) throw error;
+
+      if (onCandidateUpdate) {
+        onCandidateUpdate({ ...candidate, ...editedData });
+      }
+
+      toast.success("Changes saved successfully", { id: savingToast });
+      setIsEditMode(false);
+    } catch (err) {
+      console.error("Failed to save changes", err);
+      toast.error("Failed to save changes", { id: savingToast });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleInputChange = (field, value) => {
+    setEditedData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const renderFormField = (item, idx, isLink = false) => {
+    const fieldValue = isEditMode ? editedData[item.field] : item.value;
+    
+    return (
+      <div key={idx} className="flex items-start gap-3">
+        <div
+          className={`p-2 rounded-lg ${
+            mode === "dark" ? "bg-gray-700/80" : "bg-white/80"
+          } shadow-sm backdrop-blur-sm`}
+        >
+          <Icon
+            icon={item.icon}
+            className="w-6 h-6 text-paan-blue"
+          />
+        </div>
+        <div className="flex-1">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {item.label}
+          </p>
+          {isEditMode ? (
+            <input
+              type={isLink ? "url" : "text"}
+              value={fieldValue || ""}
+              onChange={(e) => handleInputChange(item.field, e.target.value)}
+              className={`w-full px-3 py-2 rounded-lg border text-base font-normal transition-all duration-200 focus:ring-2 focus:ring-paan-blue/20 focus:border-paan-blue ${
+                mode === "dark"
+                  ? "bg-gray-700/80 border-gray-600/50 text-white"
+                  : "bg-white border-gray-300/60 text-gray-800"
+              }`}
+              placeholder={`Enter ${item.label.toLowerCase()}`}
+            />
+          ) : isLink && fieldValue && fieldValue !== "N/A" ? (
+            <a
+              href={fieldValue}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-paan-blue hover:text-paan-dark-blue text-base font-normal break-all transition-colors duration-200"
+            >
+              {fieldValue}
+            </a>
+          ) : (
+            <p className="text-base font-normal break-all">
+              {fieldValue || "N/A"}
+            </p>
+          )}
+        </div>
+      </div>
+    );
   };
 
   const openAnswersModal = () => setIsAnswersModalOpen(true);
@@ -421,19 +547,71 @@ export default function CandidateModal({
                 </div>
               </div>
 
-              <button
-                onClick={onClose}
-                className="group p-3 rounded-2xl transition-all duration-300 hover:bg-white/20 hover:scale-110 active:scale-95"
-                style={{
-                  backdropFilter: "blur(4px)",
-                  background: "rgba(255, 255, 255, 0.1)",
-                }}
-              >
-                <Icon
-                  icon="heroicons:x-mark"
-                  className="h-6 w-6 text-white transition-transform duration-300 group-hover:rotate-90"
-                />
-              </button>
+              <div className="flex items-center gap-2">
+                {!isEditMode ? (
+                  <button
+                    onClick={handleEditToggle}
+                    className="group px-4 py-2 rounded-xl transition-all duration-300 hover:bg-white/20 hover:scale-105 active:scale-95 flex items-center gap-2"
+                    style={{
+                      backdropFilter: "blur(4px)",
+                      background: "rgba(255, 255, 255, 0.1)",
+                    }}
+                  >
+                    <Icon
+                      icon="mdi:pencil"
+                      className="h-5 w-5 text-white"
+                    />
+                    <span className="text-white text-sm font-medium">Edit</span>
+                  </button>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleEditToggle}
+                      className="group px-4 py-2 rounded-xl transition-all duration-300 hover:bg-white/20 hover:scale-105 active:scale-95 flex items-center gap-2"
+                      style={{
+                        backdropFilter: "blur(4px)",
+                        background: "rgba(255, 255, 255, 0.1)",
+                      }}
+                    >
+                      <Icon
+                        icon="mdi:close"
+                        className="h-5 w-5 text-white"
+                      />
+                      <span className="text-white text-sm font-medium">Cancel</span>
+                    </button>
+                    <button
+                      onClick={handleSaveChanges}
+                      disabled={isSaving}
+                      className="group px-4 py-2 rounded-xl transition-all duration-300 hover:bg-green-500/80 hover:scale-105 active:scale-95 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      style={{
+                        backdropFilter: "blur(4px)",
+                        background: "rgba(34, 197, 94, 0.2)",
+                      }}
+                    >
+                      <Icon
+                        icon={isSaving ? "mdi:loading" : "mdi:content-save"}
+                        className={`h-5 w-5 text-white ${isSaving ? "animate-spin" : ""}`}
+                      />
+                      <span className="text-white text-sm font-medium">
+                        {isSaving ? "Saving..." : "Save"}
+                      </span>
+                    </button>
+                  </div>
+                )}
+                <button
+                  onClick={onClose}
+                  className="group p-3 rounded-2xl transition-all duration-300 hover:bg-white/20 hover:scale-110 active:scale-95"
+                  style={{
+                    backdropFilter: "blur(4px)",
+                    background: "rgba(255, 255, 255, 0.1)",
+                  }}
+                >
+                  <Icon
+                    icon="heroicons:x-mark"
+                    className="h-6 w-6 text-white transition-transform duration-300 group-hover:rotate-90"
+                  />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -546,59 +724,29 @@ export default function CandidateModal({
                           {
                             label: "Agency Name",
                             value: candidate.agencyName,
+                            field: "agencyName",
                             icon: "hugeicons:office",
                           },
                           {
                             label: "Year Established",
                             value: candidate.yearEstablished,
+                            field: "yearEstablished",
                             icon: "mdi:calendar",
                           },
                           {
                             label: "Headquarters",
                             value: candidate.headquartersLocation,
+                            field: "headquartersLocation",
                             icon: "mdi:earth",
                           },
                           {
                             label: "Website",
                             value: candidate.websiteUrl,
+                            field: "websiteUrl",
                             icon: "mdi:web",
                             isLink: true,
                           },
-                        ].map((item, idx) => (
-                          <div key={idx} className="flex items-start gap-3">
-                            <div
-                              className={`p-2 rounded-lg ${
-                                mode === "dark" ? "bg-gray-700/80" : "bg-white/80"
-                              } shadow-sm backdrop-blur-sm`}
-                            >
-                              <Icon
-                                icon={item.icon}
-                                className="w-6 h-6 text-paan-blue"
-                              />
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-500 dark:text-gray-400">
-                                {item.label}
-                              </p>
-                              {item.isLink &&
-                              item.value &&
-                              item.value !== "N/A" ? (
-                                <a
-                                  href={item.value}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-paan-blue hover:text-paan-dark-blue text-base font-normal break-all transition-colors duration-200"
-                                >
-                                  {item.value}
-                                </a>
-                              ) : (
-                                <p className="text-base font-normal break-all">
-                                  {item.value}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                        ))}
+                        ].map((item, idx) => renderFormField(item, idx, item.isLink))}
                       </div>
                     </div>
                   )}
@@ -629,69 +777,41 @@ export default function CandidateModal({
                         {
                           label: isAgencyCandidate ? "Name" : "Full Name",
                           value: candidate.primaryContactName,
+                          field: "primaryContactName",
                           icon: "mdi:account",
                         },
                         ...(isAgencyCandidate ? [{
                           label: "Role/Title",
                           value: candidate.primaryContactRole,
+                          field: "primaryContactRole",
                           icon: "mdi:briefcase",
                         }] : []),
                         {
                           label: "Email",
                           value: candidate.primaryContactEmail,
+                          field: "primaryContactEmail",
                           icon: "mdi:email",
                         },
                         {
                           label: "Phone",
                           value: candidate.primaryContactPhone || "N/A",
+                          field: "primaryContactPhone",
                           icon: "mdi:phone",
                         },
                         ...(isAgencyCandidate ? [{
                           label: "LinkedIn",
                           value: candidate.primaryContactLinkedin,
+                          field: "primaryContactLinkedin",
                           icon: "mdi:linkedin",
                           isLink: true,
                         }] : []),
                         ...(isFreelancerCandidate ? [{
                           label: "Country",
                           value: candidate.countryOfResidence,
+                          field: "countryOfResidence",
                           icon: "mdi:earth",
                         }] : []),
-                      ].map((item, idx) => (
-                        <div key={idx} className="flex items-start gap-3">
-                          <div
-                            className={`p-2 rounded-lg ${
-                              mode === "dark" ? "bg-gray-700/80" : "bg-white/80"
-                            } shadow-sm backdrop-blur-sm`}
-                          >
-                            <Icon
-                              icon={item.icon}
-                              className="w-6 h-6 text-paan-blue"
-                            />
-                          </div>
-                          <div>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              {item.label}
-                            </p>
-                            {item.isLink &&
-                            item.value &&
-                            item.value !== "N/A" ? (
-                              <a
-                                href={item.value}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-paan-blue hover:text-paan-dark-blue text-base font-normal break-all transition-colors duration-200"
-                              >
-                                {item.value}
-                              </a>
-                            ) : (
-                              <p className="text-base font-normal break-all">
-                                {item.value}
-                              </p>
-                            )}
-                          </div>
-                        </div>
-                      ))}
+                      ].map((item, idx) => renderFormField(item, idx, item.isLink))}
                     </div>
                   </div>
 
@@ -720,45 +840,28 @@ export default function CandidateModal({
                           {
                             label: "Name",
                             value: candidate.secondaryContactName,
+                            field: "secondaryContactName",
                             icon: "mdi:account",
                           },
                           {
                             label: "Role/Title",
                             value: candidate.secondaryContactRole,
+                            field: "secondaryContactRole",
                             icon: "mdi:briefcase",
                           },
                           {
                             label: "Email",
                             value: candidate.secondaryContactEmail,
+                            field: "secondaryContactEmail",
                             icon: "mdi:email",
                           },
                           {
                             label: "Phone",
                             value: candidate.secondaryContactPhone || "N/A",
+                            field: "secondaryContactPhone",
                             icon: "mdi:phone",
                           },
-                        ].map((item, idx) => (
-                          <div key={idx} className="flex items-start gap-3">
-                            <div
-                              className={`p-2 rounded-lg ${
-                                mode === "dark" ? "bg-gray-700/80" : "bg-white/80"
-                              } shadow-sm backdrop-blur-sm`}
-                            >
-                              <Icon
-                                icon={item.icon}
-                                className="w-6 h-6 text-paan-blue"
-                              />
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-500 dark:text-gray-400">
-                                {item.label}
-                              </p>
-                              <p className="text-base font-normal break-all">
-                                {item.value}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
+                        ].map((item, idx) => renderFormField(item, idx))}
                       </div>
                     </div>
                   )}

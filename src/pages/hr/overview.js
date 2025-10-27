@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 import dynamic from "next/dynamic";
 import toast from "react-hot-toast";
 import HRSidebar from "@/layouts/hrSidebar";
@@ -11,6 +12,7 @@ import StatusChart from "@/components/StatusChart";
 import CandidateList from "@/components/CandidateList";
 import EmailModal from "@/components/EmailModal";
 import CandidateModal from "@/components/CandidateModal";
+import AddCandidateModal from "@/components/AddCandidateModal";
 import ChartFilterModal from "@/components/ChartFilterModal";
 import useStatusChange from "@/hooks/useStatusChange";
 import { fetchHRData } from "../../../utils/hrData";
@@ -48,6 +50,7 @@ export default function HROverview({
   const [questions, setQuestions] = useState(initialQuestions || []);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [isCandidateModalOpen, setIsCandidateModalOpen] = useState(false);
+  const [isAddCandidateModalOpen, setIsAddCandidateModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [filteredCandidates, setFilteredCandidates] = useState([]);
@@ -226,6 +229,18 @@ export default function HROverview({
     setFilterValue("");
   };
 
+  const handleCandidateAdded = (newCandidate) => {
+    // Add the new candidate to the beginning of the list
+    const updatedCandidates = [newCandidate, ...candidates];
+    setCandidates(updatedCandidates);
+    
+    // Close the add candidate modal
+    setIsAddCandidateModalOpen(false);
+    
+    // Show success message
+    toast.success(`Candidate ${newCandidate.primaryContactName} added successfully!`);
+  };
+
   return (
     <div
       className={`min-h-screen flex flex-col ${
@@ -272,6 +287,34 @@ export default function HROverview({
           }}
         >
           <div className="max-w-8xl mx-auto">
+            {/* Action Bar */}
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  HR Dashboard
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">
+                  Overview of candidates and applications
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setIsAddCandidateModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-paan-blue text-white rounded-lg hover:bg-paan-dark-blue transition-colors duration-200 shadow-md hover:shadow-lg"
+                >
+                  <Icon icon="mdi:account-plus" className="w-5 h-5" />
+                  Add Candidate
+                </button>
+                <Link
+                  href="/hr/applicants"
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200 shadow-md hover:shadow-lg"
+                >
+                  <Icon icon="mdi:view-list" className="w-5 h-5" />
+                  View All
+                </Link>
+              </div>
+            </div>
+            
             <WelcomeCard
               totalApplicants={candidates.length}
               openPositions={jobOpenings.length}
@@ -354,6 +397,13 @@ export default function HROverview({
         onClose={handleCloseCandidateModal}
         onStatusChange={handleStatusChange}
         mode={mode}
+      />
+      <AddCandidateModal
+        isOpen={isAddCandidateModalOpen}
+        onClose={() => setIsAddCandidateModalOpen(false)}
+        onCandidateAdded={handleCandidateAdded}
+        mode={mode}
+        openings={initialJobOpenings || []}
       />
       {isFilterModalOpen && (
         <ChartFilterModal

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
 import toast from "react-hot-toast";
 import HRSidebar from "@/layouts/hrSidebar";
@@ -10,6 +10,7 @@ import SimpleFooter from "@/layouts/simpleFooter";
 import ApplicantsTable from "@/components/ApplicantsTable";
 import ApplicantsFilters from "@/components/ApplicantsFilters";
 import CandidateModal from "@/components/CandidateModal";
+import AddCandidateModal from "@/components/AddCandidateModal";
 import EmailModal from "@/components/EmailModal";
 import ExportModal from "@/components/ExportModal";
 import PreviewModal from "@/components/PreviewModal";
@@ -39,6 +40,7 @@ export default function HRApplicants({
   const router = useRouter();
   const [selectedCandidate, setSelectedCandidate] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddCandidateModalOpen, setIsAddCandidateModalOpen] = useState(false);
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
@@ -49,6 +51,20 @@ export default function HRApplicants({
   const [previewUrl, setPreviewUrl] = useState(null);
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [isLoadingCandidate, setIsLoadingCandidate] = useState(false);
+
+  // Derive available openings from current candidates
+  const openings = useMemo(() => {
+    try {
+      const set = new Set(
+        (candidates || [])
+          .map((c) => (typeof c.opening === "string" ? c.opening.trim() : ""))
+          .filter(Boolean)
+      );
+      return Array.from(set).sort((a, b) => a.localeCompare(b));
+    } catch (_) {
+      return [];
+    }
+  }, [candidates]);
 
   // Close candidate modal if email modal opens to avoid stacking/overlay issues
   useEffect(() => {
@@ -132,6 +148,19 @@ export default function HRApplicants({
 
     // Update the selected candidate in the modal
     setSelectedCandidate(updatedCandidate);
+  };
+
+  const handleCandidateAdded = (newCandidate) => {
+    // Add the new candidate to the beginning of the list
+    const updatedCandidates = [newCandidate, ...candidates];
+    setCandidates(updatedCandidates);
+    setFilteredCandidates(updatedCandidates);
+    
+    // Close the add candidate modal
+    setIsAddCandidateModalOpen(false);
+    
+    // Show success message
+    toast.success(`Candidate ${newCandidate.primaryContactName} added successfully!`);
   };
 
   const handleCloseModal = () => {
@@ -743,6 +772,34 @@ export default function HRApplicants({
           }}
         >
           <div className="max-w-7xl mx-auto space-y-6">
+            {/* Action Bar */}
+            <div className="flex justify-between items-center">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  Applicants
+                </h1>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">
+                  Manage candidate applications and profiles
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setIsAddCandidateModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-paan-blue text-white rounded-lg hover:bg-paan-dark-blue transition-colors duration-200 shadow-md hover:shadow-lg"
+                >
+                  <Icon icon="mdi:account-plus" className="w-5 h-5" />
+                  Add Candidate
+                </button>
+                <button
+                  onClick={() => setIsExportModalOpen(true)}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200 shadow-md hover:shadow-lg"
+                >
+                  <Icon icon="mdi:download" className="w-5 h-5" />
+                  Export
+                </button>
+              </div>
+            </div>
+            
             <ApplicantsFilters
               candidates={candidates}
               onFilterChange={handleFilterChange}
@@ -862,6 +919,13 @@ export default function HRApplicants({
         onClosePreview={closePreviewModal}
         onCloseAll={handleCloseAllModals}
         isLoading={isLoadingCandidate}
+      />
+      <AddCandidateModal
+        isOpen={isAddCandidateModalOpen}
+        onClose={() => setIsAddCandidateModalOpen(false)}
+        onCandidateAdded={handleCandidateAdded}
+        mode={mode}
+        openings={openings}
       />
       <EmailModal
         candidate={selectedCandidate}

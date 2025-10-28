@@ -297,7 +297,7 @@ export default function AdminBusinessOpportunities({
       }
     }, 0);
     return () => clearTimeout(t);
-  }, [router?.query?.showApplicants]);
+  }, [router, router?.query?.showApplicants, modalActions]);
 
   // Removed per-opportunity list from the total applications card per request
 

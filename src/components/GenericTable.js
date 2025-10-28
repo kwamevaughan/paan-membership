@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from "react";
+import React, { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { Icon } from "@iconify/react";
 import Image from "next/image";
 import { DateRange } from "react-date-range";
@@ -10,6 +10,7 @@ import toast from "react-hot-toast";
 import ConfirmDeleteModal from "./modals/ConfirmDeleteModal.js";
 import ExportModal from "./ExportModal";
 import { TableSkeleton } from "./LoadingStates";
+import StatusPill from "./StatusPill";
 
 // Import refactored components
 import { useTable } from "../hooks/useTable";
@@ -96,75 +97,6 @@ export function GenericTable({
   deleteConfirmationProps = {},
   getRowClassName = null,
 }) {
-  // Show loading skeleton if loading is true
-  if (loading) {
-    return (
-      <div
-        className={`mx-auto rounded-xl shadow-lg border overflow-hidden ${
-          mode === "dark"
-            ? "bg-gray-900 border-gray-700"
-            : "bg-white border-gray-200"
-        }`}
-      >
-        {/* Header skeleton */}
-        {(title || searchable || onAddNew || enableDateFilter) && (
-          <div
-            className={`p-3 sm:p-6 border-b ${
-              mode === "dark"
-                ? "border-gray-700 bg-gray-800"
-                : "border-gray-200 bg-gray-50"
-            }`}
-          >
-            <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
-              {title && (
-                <div className="w-48 h-6 bg-gray-200 rounded animate-pulse"></div>
-              )}
-              <div className="flex flex-1 flex-col sm:flex-row gap-2 sm:gap-3 items-start sm:items-center">
-                {searchable && (
-                  <div className="w-full sm:w-56 md:w-64 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
-                )}
-                {statusOptions && (
-                  <div className="w-full sm:w-auto md:w-32 h-10 bg-gray-200 rounded-md animate-pulse"></div>
-                )}
-                {enableSortFilter && (
-                  <div className="w-full sm:w-auto md:w-40 h-10 bg-gray-200 rounded-md animate-pulse"></div>
-                )}
-                {enableDateFilter && (
-                  <div className="w-full sm:w-auto h-10 bg-gray-200 rounded-lg animate-pulse"></div>
-                )}
-                {enableRefresh && (
-                  <div className="w-10 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
-                )}
-              </div>
-              <div className="w-24 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
-            </div>
-          </div>
-        )}
-
-        {/* Table skeleton */}
-        <TableSkeleton rows={5} columns={columns.length || 4} />
-
-        {/* Footer skeleton */}
-        <div
-          className={`px-3 sm:px-6 py-4 border-t ${
-            mode === "dark"
-              ? "bg-gray-800 border-gray-700"
-              : "bg-gray-50 border-gray-200"
-          }`}
-        >
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="w-48 h-4 bg-gray-200 rounded animate-pulse"></div>
-            <div className="flex items-center gap-2">
-              <div className="w-20 h-8 bg-gray-200 rounded-lg animate-pulse"></div>
-              <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse"></div>
-              <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse"></div>
-              <div className="w-20 h-8 bg-gray-200 rounded-lg animate-pulse"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // State management
   const [showConfirmDelete, setShowConfirmDelete] = useState(false);
@@ -479,7 +411,7 @@ export function GenericTable({
   };
 
   // Function to clear selection (can be called from parent component)
-  const clearSelection = () => {
+  const clearSelection = useCallback(() => {
     table.clearSelection();
     if (onSelectionChange) {
       onSelectionChange([]);
@@ -488,7 +420,7 @@ export function GenericTable({
     if (typeof onClearSelection === "function") {
       onClearSelection();
     }
-  };
+  }, [onSelectionChange, onClearSelection, table]);
 
   // Expose clearSelection to parent component through callback
   useEffect(() => {
@@ -503,14 +435,14 @@ export function GenericTable({
     if (table.selected.length > 0 && safeData.length < table.selected.length) {
       clearSelection();
     }
-  }, [safeData.length]);
+  }, [safeData.length, table.selected.length, clearSelection]);
 
   // Listen for external clear selection request
   useEffect(() => {
     if (onClearSelection === "clear") {
       clearSelection();
     }
-  }, [onClearSelection]);
+  }, [onClearSelection, clearSelection]);
 
   // Close popover on outside click
   useEffect(() => {
@@ -543,6 +475,70 @@ export function GenericTable({
     }
     setShowDatePicker((v) => !v);
   };
+
+  if (loading) {
+    return (
+      <div
+        className={`mx-auto rounded-xl shadow-lg border overflow-hidden ${
+          mode === "dark"
+            ? "bg-gray-900 border-gray-700"
+            : "bg-white border-gray-200"
+        }`}
+      >
+        {(title || searchable || onAddNew || enableDateFilter) && (
+          <div
+            className={`p-3 sm:p-6 border-b ${
+              mode === "dark"
+                ? "border-gray-700 bg-gray-800"
+                : "border-gray-200 bg-gray-50"
+            }`}
+          >
+            <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center sm:justify-between">
+              {title && (
+                <div className="w-48 h-6 bg-gray-200 rounded animate-pulse"></div>
+              )}
+              <div className="flex flex-1 flex-col sm:flex-row gap-2 sm:gap-3 items-start sm:items-center">
+                {searchable && (
+                  <div className="w-full sm:w-56 md:w-64 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+                )}
+                {statusOptions && (
+                  <div className="w-full sm:w-auto md:w-32 h-10 bg-gray-200 rounded-md animate-pulse"></div>
+                )}
+                {enableSortFilter && (
+                  <div className="w-full sm:w-auto md:w-40 h-10 bg-gray-200 rounded-md animate-pulse"></div>
+                )}
+                {enableDateFilter && (
+                  <div className="w-full sm:w-auto h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+                )}
+                {enableRefresh && (
+                  <div className="w-10 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+                )}
+              </div>
+              <div className="w-24 h-10 bg-gray-200 rounded-lg animate-pulse"></div>
+            </div>
+          </div>
+        )}
+        <TableSkeleton rows={5} columns={columns.length || 4} />
+        <div
+          className={`px-3 sm:px-6 py-4 border-t ${
+            mode === "dark"
+              ? "bg-gray-800 border-gray-700"
+              : "bg-gray-50 border-gray-200"
+          }`}
+        >
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="w-48 h-4 bg-gray-200 rounded animate-pulse"></div>
+            <div className="flex items-center gap-2">
+              <div className="w-20 h-8 bg-gray-200 rounded-lg animate-pulse"></div>
+              <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse"></div>
+              <div className="w-8 h-8 bg-gray-200 rounded-lg animate-pulse"></div>
+              <div className="w-20 h-8 bg-gray-200 rounded-lg animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div

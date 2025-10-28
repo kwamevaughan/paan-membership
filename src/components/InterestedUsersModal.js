@@ -400,8 +400,17 @@ const InterestedUsersModal = ({
       const tier = (u.tier || "").toString().toLowerCase();
       return tier !== "admin" && tier !== "admin member";
     });
-    if (openingFilter !== "all") {
-      list = list.filter((u) => (u.opportunity_title || "") === openingFilter);
+    
+    // If we have a specific opportunityId, filter to show only users for that opportunity
+    if (opportunityId && opportunity) {
+      const opportunityTitle = opportunity.tender_title || opportunity.gig_title || opportunity.organization_name;
+      if (opportunityTitle) {
+        list = list.filter((u) => (u.opportunity_title || "") === opportunityTitle);
+      }
+    } else if (openingFilter !== "all") {
+      // Only apply the dropdown filter when not viewing a specific opportunity
+      // Only apply the dropdown filter when not viewing a specific opportunity
+      list = list.filter((u) => (u.opportunity_title || "").toString().trim() === openingFilter);
     }
 
     if (searchTerm && searchTerm.length > 0) {
@@ -439,7 +448,7 @@ const InterestedUsersModal = ({
     });
 
     return list;
-  }, [users, searchTerm, tierFilter, jobTypeFilter, sortOrder, startDate, endDate, openingFilter]);
+  }, [users, searchTerm, tierFilter, jobTypeFilter, sortOrder, startDate, endDate, openingFilter, opportunityId, opportunity]);
 
   // No grouped view
 
@@ -562,6 +571,11 @@ const InterestedUsersModal = ({
               countryOfResidence: u.country || "",
             }))}
             openingsOverride={Array.from(new Set((Array.isArray(users) ? users : [])
+              .filter((u) => {
+                // Only include non-admin users when building the opportunities list
+                const tier = (u.tier || "").toString().toLowerCase();
+                return tier !== "admin" && tier !== "admin member";
+              })
               .map((u) => (u.opportunity_title || "").toString().trim())
               .filter((t) => t.length > 0)))}
             onFilterChange={({ searchQuery, filterOpening, filterStatus, filterTier, filterCountry }) => {

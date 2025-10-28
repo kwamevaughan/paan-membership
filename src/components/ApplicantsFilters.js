@@ -39,6 +39,8 @@ export default function ApplicantsFilters({
     : ["all", ...Array.from(new Set(candidates
         .map((c) => (c.opening || "").toString().trim())
         .filter((o) => o.length > 0)))];
+
+
   const statuses = [
     "all",
     "Accepted",

@@ -44,7 +44,6 @@ export const useOpportunities = () => {
           .order("created_at", { ascending: false });
 
       if (opportunitiesError) throw opportunitiesError;
-      console.log("[useOpportunities] Opportunities fetched:", opportunitiesData?.length || 0);
 
       setOpportunities(opportunitiesData || []);
     } catch (error) {

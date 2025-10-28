@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import Link from "next/link";
+import { GenericTable } from "./GenericTable";
 import { Icon } from "@iconify/react";
 import toast from "react-hot-toast";
 import { supabase } from "@/lib/supabase";
@@ -21,6 +23,9 @@ export default function CandidateModal({
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedData, setEditedData] = useState({});
   const [isSaving, setIsSaving] = useState(false);
+  const [interests, setInterests] = useState([]);
+  const [interestsLoading, setInterestsLoading] = useState(false);
+  const [interestsError, setInterestsError] = useState(null);
   const tierOptions = [
     "Free Member (Tier 1)",
     "Associate Member (Tier 2)",
@@ -60,6 +65,8 @@ export default function CandidateModal({
     // Only process if candidate exists and modal is open
     if (!candidate || !isOpen) {
       setQuestionAnswerPairs([]);
+      setInterests([]);
+      setInterestsError(null);
       return;
     }
 
@@ -79,6 +86,55 @@ export default function CandidateModal({
       setQuestionAnswerPairs([]);
     }
   }, [candidate, isOpen]);
+
+  // Fetch opportunities expressed by this candidate
+  useEffect(() => {
+    const fetchInterests = async () => {
+      if (!candidate?.id || !isOpen) return;
+      setInterestsLoading(true);
+      setInterestsError(null);
+      try {
+        const { data, error } = await supabase
+          .from("opportunity_interests")
+          .select(`
+            id,
+            created_at,
+            opportunity_id,
+            business_opportunities:business_opportunities!opportunity_interests_opportunity_id_fkey(
+              tender_title,
+              gig_title,
+              organization_name,
+              job_type
+            )
+          `)
+          .eq("user_id", candidate.id)
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        const mapped = (data || []).map((row) => ({
+          id: row.id,
+          expressed_at: row.created_at,
+          opportunity_id: row.opportunity_id,
+          opportunity_title:
+            row.business_opportunities?.tender_title ||
+            row.business_opportunities?.gig_title ||
+            row.business_opportunities?.organization_name ||
+            "Unknown Opportunity",
+          job_type: row.business_opportunities?.job_type || "Opportunity",
+        }));
+
+        setInterests(mapped);
+      } catch (e) {
+        console.error("Failed to fetch opportunity interests:", e);
+        setInterestsError(e.message || "Failed to load interests");
+      } finally {
+        setInterestsLoading(false);
+      }
+    };
+
+    fetchInterests();
+  }, [candidate?.id, isOpen]);
 
   useEffect(() => {
     if (candidate) {
@@ -624,7 +680,7 @@ export default function CandidateModal({
             } backdrop-blur-sm`}
           >
             <div className="flex space-x-1">
-              {["profile", "documents", "answers", "membership", "status"].map(
+              {["profile", "documents", "answers", "membership", "status", "opportunities"].map(
                 (tab) => (
                   <button
                     key={tab}
@@ -999,6 +1055,75 @@ export default function CandidateModal({
                       </p>
                     </div>
                   )}
+                </div>
+              )}
+
+              {activeTab === "opportunities" && (
+                <div className="space-y-6 animate-fade-in">
+                  <div
+                    className={`${
+                      mode === "dark" ? "bg-gray-800/60" : "bg-gray-50/60"
+                    } p-6 rounded-xl shadow-md backdrop-blur-sm`}
+                  >
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center gap-2">
+                        <Icon icon="mdi:briefcase" className="w-5 h-5 text-paan-blue" />
+                        <h3 className="text-lg font-medium">Opportunities Expressed</h3>
+                      </div>
+                      <span className={`${mode === "dark" ? "text-gray-300" : "text-gray-600"} text-sm`}>
+                        {interestsLoading ? "Loading..." : `${interests.length} record${interests.length === 1 ? "" : "s"}`}
+                      </span>
+                    </div>
+
+                    {interestsError && (
+                      <div className={`${mode === "dark" ? "text-red-300" : "text-red-600"} text-sm mb-3`}>
+                        {interestsError}
+                      </div>
+                    )}
+
+                    {interestsLoading ? (
+                      <div className="text-sm opacity-80">Fetching interests...</div>
+                    ) : (
+                      <GenericTable
+                        data={interests}
+                        columns={[
+                          { accessor: "opportunity_title", Header: "Opportunity" },
+                          { accessor: "job_type", Header: "Type" },
+                          {
+                            accessor: "expressed_at",
+                            Header: "Expressed",
+                            render: (row) => new Date(row.expressed_at).toLocaleString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                              year: "numeric",
+                              hour: "numeric",
+                              minute: "numeric",
+                              hour12: true,
+                            }),
+                          },
+                        ]}
+                        actions={[
+                          {
+                            label: "View",
+                            icon: "mdi:open-in-new",
+                            onClick: (row) => {
+                              const id = row.opportunity_id || "all";
+                              window.location.href = `/admin/opportunities?showApplicants=${encodeURIComponent(id)}`;
+                            },
+                          },
+                        ]}
+                        mode={mode}
+                        title={null}
+                        selectable={false}
+                        searchable={true}
+                        enableDateFilter={false}
+                        enableSortFilter={false}
+                        showBulkBar={false}
+                        enableRefresh={false}
+                        emptyMessage="No opportunities expressed"
+                      />
+                    )}
+                  </div>
                 </div>
               )}
 

@@ -1,5 +1,7 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Icon } from "@iconify/react";
+import Select from "react-select";
+import { getSelectStyles } from "@/utils/selectStyles";
 
 export default function ApplicantsFilters({
   candidates,
@@ -7,6 +9,8 @@ export default function ApplicantsFilters({
   onSortChange,
   mode,
   initialOpening,
+  fields = ["search", "opening", "status", "tier", "country", "sort"],
+  labels = {},
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterOpening, setFilterOpening] = useState(initialOpening || "all");
@@ -17,6 +21,14 @@ export default function ApplicantsFilters({
   const [isExpanded, setIsExpanded] = useState(true);
   const hasAppliedInitialFilter = useRef(false);
   const searchTimeoutRef = useRef(null);
+
+  // Normalize fields config
+  const showSearch = fields.includes("search");
+  const showOpening = fields.includes("opening");
+  const showStatus = fields.includes("status");
+  const showTier = fields.includes("tier");
+  const showCountry = fields.includes("country");
+  const showSort = fields.includes("sort");
 
   // Extract unique openings and add 'all' option
   const uniqueOpenings = ["all", ...new Set(candidates.map((c) => c.opening))];
@@ -75,6 +87,23 @@ export default function ApplicantsFilters({
       )
     ).sort(),
   ];
+
+  // Build react-select option lists
+  const openingOptions = uniqueOpenings.map((v) => ({ value: v, label: v === "all" ? (labels.openingAll || "All Positions") : v }));
+  const statusOptions = statuses.map((v) => ({ value: v, label: v === "all" ? "All Statuses" : v }));
+  const tierOptions = uniqueTiers.map((v) => ({ value: v, label: v === "all" ? "All Tiers" : v }));
+  const countryOptions = uniqueCountries.map((v) => ({ value: v, label: v === "all" ? "All Countries" : v }));
+  const sortOptionsSelect = sortOptions.map((o) => ({ value: o.value, label: o.label }));
+
+  // Ensure dropdown appears above modals
+  const selectStyles = useMemo(() => {
+    const base = getSelectStyles(mode);
+    return {
+      ...base,
+      menuPortal: (provided) => ({ ...provided, zIndex: 20000 }),
+      menu: (provided) => ({ ...provided, zIndex: 20000 }),
+    };
+  }, [mode]);
 
   // Validate candidates
   const areCandidatesValid = candidates.every(
@@ -282,8 +311,9 @@ export default function ApplicantsFilters({
       {/* Filter Content */}
       {isExpanded && (
         <div className="p-4">
-          <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
             {/* Search Field */}
+            {showSearch && (
             <div>
               <label
                 className={`block text-sm font-medium mb-1.5 ${mutedTextColor}`}
@@ -313,150 +343,131 @@ export default function ApplicantsFilters({
                 )}
               </div>
             </div>
+            )}
 
             {/* Opening Filter */}
+            {showOpening && (
             <div>
               <label
                 className={`block text-sm font-medium mb-1.5 ${mutedTextColor}`}
               >
-                Position
+                {labels.opening || "Position"}
               </label>
-              <div className="relative">
-                <select
-                  value={filterOpening}
-                  onChange={handleOpeningChange}
-                  className={`block w-full rounded-md shadow-sm pl-3 pr-8 py-2 text-sm focus:ring-2 focus:ring-[#f05d23] focus:border-transparent ${inputBg} ${inputBorder} ${textColor} border appearance-none`}
-                >
-                  {uniqueOpenings.map((opening) => (
-                    <option key={opening} value={opening}>
-                      {opening === "all" ? "All Positions" : opening}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                  <Icon
-                    icon="heroicons:chevron-down"
-                    className={`w-4 h-4 ${mutedTextColor}`}
-                  />
-                </div>
-              </div>
+              <Select
+                value={openingOptions.find((o) => o.value === filterOpening)}
+                onChange={(opt) => handleOpeningChange({ target: { value: opt?.value || "all" } })}
+                options={openingOptions}
+                isClearable={false}
+                isSearchable={true}
+                className="react-select-container"
+                classNamePrefix="react-select"
+                styles={selectStyles}
+                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                menuPosition="fixed"
+                menuPlacement="auto"
+              />
             </div>
+            )}
 
             {/* Status Filter */}
+            {showStatus && (
             <div>
               <label
                 className={`block text-sm font-medium mb-1.5 ${mutedTextColor}`}
               >
                 Status
               </label>
-              <div className="relative">
-                <select
-                  value={filterStatus}
-                  onChange={handleStatusChange}
-                  className={`block w-full rounded-md shadow-sm pl-3 pr-8 py-2 text-sm focus:ring-2 focus:ring-[#f05d23] focus:border-transparent ${inputBg} ${inputBorder} ${textColor} border appearance-none`}
-                >
-                  {statuses.map((status) => (
-                    <option key={status} value={status}>
-                      {status === "all" ? "All Statuses" : status}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                  <Icon
-                    icon="heroicons:chevron-down"
-                    className={`w-4 h-4 ${mutedTextColor}`}
-                  />
-                </div>
-              </div>
+              <Select
+                value={statusOptions.find((o) => o.value === filterStatus)}
+                onChange={(opt) => handleStatusChange({ target: { value: opt?.value || "all" } })}
+                options={statusOptions}
+                isClearable={false}
+                isSearchable={true}
+                className="react-select-container"
+                classNamePrefix="react-select"
+                styles={selectStyles}
+                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                menuPosition="fixed"
+                menuPlacement="auto"
+              />
             </div>
+            )}
 
             {/* Tier Filter */}
+            {showTier && (
             <div>
               <label
                 className={`block text-sm font-medium mb-1.5 ${mutedTextColor}`}
               >
                 Tier
               </label>
-              <div className="relative">
-                <select
-                  value={filterTier}
-                  onChange={handleTierChange}
-                  className={`block w-full rounded-md shadow-sm pl-3 pr-8 py-2 text-sm focus:ring-2 focus:ring-[#f05d23] focus:border-transparent ${inputBg} ${inputBorder} ${textColor} border appearance-none`}
-                >
-                  {uniqueTiers.map((tier) => (
-                    <option key={tier} value={tier}>
-                      {tier === "all" ? "All Tiers" : tier}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                  <Icon
-                    icon="heroicons:chevron-down"
-                    className={`w-4 h-4 ${mutedTextColor}`}
-                  />
-                </div>
-              </div>
+              <Select
+                value={tierOptions.find((o) => o.value === filterTier)}
+                onChange={(opt) => handleTierChange({ target: { value: opt?.value || "all" } })}
+                options={tierOptions}
+                isClearable={false}
+                isSearchable={true}
+                className="react-select-container"
+                classNamePrefix="react-select"
+                styles={selectStyles}
+                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                menuPosition="fixed"
+                menuPlacement="auto"
+              />
             </div>
+            )}
 
             {/* Country Filter */}
+            {showCountry && (
             <div>
               <label
                 className={`block text-sm font-medium mb-1.5 ${mutedTextColor}`}
               >
                 Country
               </label>
-              <div className="relative">
-                <select
-                  value={filterCountry}
-                  onChange={handleCountryChange}
-                  className={`block w-full rounded-md shadow-sm pl-3 pr-8 py-2 text-sm focus:ring-2 focus:ring-[#f05d23] focus:border-transparent ${inputBg} ${inputBorder} ${textColor} border appearance-none`}
-                >
-                  {uniqueCountries.map((country) => (
-                    <option key={country} value={country}>
-                      {country === "all" ? "All Countries" : country}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                  <Icon
-                    icon="heroicons:chevron-down"
-                    className={`w-4 h-4 ${mutedTextColor}`}
-                  />
-                </div>
-              </div>
+              <Select
+                value={countryOptions.find((o) => o.value === filterCountry)}
+                onChange={(opt) => handleCountryChange({ target: { value: opt?.value || "all" } })}
+                options={countryOptions}
+                isClearable={false}
+                isSearchable={true}
+                className="react-select-container"
+                classNamePrefix="react-select"
+                styles={selectStyles}
+                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                menuPosition="fixed"
+                menuPlacement="auto"
+              />
             </div>
+            )}
 
             {/* Sort By */}
+            {showSort && (
             <div>
               <label
                 className={`block text-sm font-medium mb-1.5 ${mutedTextColor}`}
               >
                 Sort By
               </label>
-              <div className="relative">
-                <select
-                  value={sortBy}
-                  onChange={handleSortChange}
-                  className={`block w-full rounded-md shadow-sm pl-3 pr-8 py-2 text-sm focus:ring-2 focus:ring-[#f05d23] focus:border-transparent ${inputBg} ${inputBorder} ${textColor} border appearance-none`}
-                >
-                  {sortOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
-                  <Icon
-                    icon="heroicons:bars-arrow-down"
-                    className={`w-4 h-4 ${mutedTextColor}`}
-                  />
-                </div>
-              </div>
+              <Select
+                value={sortOptionsSelect.find((o) => o.value === sortBy)}
+                onChange={(opt) => handleSortChange({ target: { value: opt?.value || "latest" } })}
+                options={sortOptionsSelect}
+                isClearable={false}
+                isSearchable={true}
+                className="react-select-container"
+                classNamePrefix="react-select"
+                styles={selectStyles}
+                menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
+                menuPosition="fixed"
+                menuPlacement="auto"
+              />
             </div>
+            )}
           </div>
 
           {/* Status Indicators */}
-          {filterStatus === "all" && (
+          {showStatus && filterStatus === "all" && (
             <div className="mt-4 flex flex-wrap gap-2">
               {statuses
                 .filter((s) => s !== "all")

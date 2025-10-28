@@ -127,6 +127,7 @@ export const useAllOpportunityInterests = () => {
           tier: interest.candidates?.selected_tier || "Free Member",
           job_type: interest.candidates?.job_type || "N/A",
           expressed_at: interest.created_at,
+          opportunity_id: interest.opportunity_id,
           opportunity_title:
             interest.business_opportunities?.tender_title ||
             interest.business_opportunities?.gig_title ||

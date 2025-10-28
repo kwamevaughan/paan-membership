@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { getUserCached } from "@/lib/sessionCache";
 
 export function useAuth() {
   const [user, setUser] = useState(null);
@@ -12,9 +13,8 @@ export function useAuth() {
     // Get initial session
     const getInitialSession = async () => {
       try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        setUser(session?.user ?? null);
+        const user = await getUserCached();
+        setUser(user ?? null);
       } catch (error) {
         console.error("Error getting initial session:", error.message);
       } finally {

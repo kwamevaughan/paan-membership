@@ -1,4 +1,5 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { useRouter } from "next/router";
 import toast, { Toaster } from "react-hot-toast";
 import HRHeader from "@/layouts/hrHeader";
 import HRSidebar from "@/layouts/hrSidebar";
@@ -27,6 +28,7 @@ export default function AdminBusinessOpportunities({
   tiers,
   breadcrumbs,
 }) {
+  const router = useRouter();
   const [filterTerm, setFilterTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterJobType, setFilterJobType] = useState("all");
@@ -280,6 +282,24 @@ export default function AdminBusinessOpportunities({
     loading: allUsersLoading,
     error: allUsersError,
   } = useAllOpportunityInterests();
+
+  // Open applicants modal based on deep-link query
+  useEffect(() => {
+    if (!router || !router.query) return;
+    const { showApplicants } = router.query;
+    if (!showApplicants) return;
+    // Delay to ensure component state is ready
+    const t = setTimeout(() => {
+      if (showApplicants === "all") {
+        modalActions.openAllUsersModal();
+      } else if (typeof showApplicants === "string" && showApplicants.trim()) {
+        modalActions.openUsersModal(showApplicants);
+      }
+    }, 0);
+    return () => clearTimeout(t);
+  }, [router?.query?.showApplicants]);
+
+  // Removed per-opportunity list from the total applications card per request
 
   // Extract unique values for filters
   const filterOptions = useMemo(() => {
@@ -847,6 +867,7 @@ export default function AdminBusinessOpportunities({
               error={allUsersError}
               mode={mode}
               opportunityId={null}
+              defaultGroupBy={true}
             />
           </div>
           <SimpleFooter mode={mode} isSidebarOpen={isSidebarOpen} />

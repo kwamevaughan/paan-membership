@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Icon } from "@iconify/react";
 import ItemActionModal from "./ItemActionModal";
 import EmailModal from "./EmailModal";
+import { GenericTable } from "./GenericTable";
+import ApplicantsFilters from "./ApplicantsFilters";
 import { supabase } from "@/lib/supabase";
 import toast from "react-hot-toast";
 
@@ -284,9 +286,18 @@ const InterestedUsersModal = ({
   error,
   mode,
   opportunityId,
+  defaultGroupBy = false,
 }) => {
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [tierFilter, setTierFilter] = useState("all");
+  const [jobTypeFilter, setJobTypeFilter] = useState("all");
+  const [sortOrder, setSortOrder] = useState("newest");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  // Removed group-by option; filtering by opportunity is available via dropdown
+  const [openingFilter, setOpeningFilter] = useState("all");
 
   const {
     opportunity,
@@ -382,6 +393,88 @@ const InterestedUsersModal = ({
   const showTier = opportunityId ? opportunity?.job_type !== "Freelancer" : true;
   const hasUsers = users.length > 0;
 
+  const filteredUsers = useMemo(() => {
+    let list = Array.isArray(users) ? users : [];
+    if (openingFilter !== "all") {
+      list = list.filter((u) => (u.opportunity_title || "") === openingFilter);
+    }
+
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      list = list.filter((u) =>
+        [u.name, u.email, u.opportunity_title]
+          .filter(Boolean)
+          .some((v) => String(v).toLowerCase().includes(q))
+      );
+    }
+
+    if (tierFilter !== "all") {
+      list = list.filter((u) => (u.tier || "").toLowerCase() === tierFilter.toLowerCase());
+    }
+
+    if (jobTypeFilter !== "all") {
+      list = list.filter((u) => (u.job_type || "").toLowerCase() === jobTypeFilter.toLowerCase());
+    }
+
+    if (startDate) {
+      const start = new Date(startDate).getTime();
+      list = list.filter((u) => new Date(u.expressed_at).getTime() >= start);
+    }
+
+    if (endDate) {
+      const end = new Date(endDate).getTime();
+      list = list.filter((u) => new Date(u.expressed_at).getTime() <= end);
+    }
+
+    list = [...list].sort((a, b) => {
+      const aT = new Date(a.expressed_at).getTime();
+      const bT = new Date(b.expressed_at).getTime();
+      return sortOrder === "newest" ? bT - aT : aT - bT;
+    });
+
+    return list;
+  }, [users, searchTerm, tierFilter, jobTypeFilter, sortOrder, startDate, endDate, openingFilter]);
+
+  // No grouped view
+
+  const columns = useMemo(() => {
+    const base = [
+      { accessor: "name", Header: "Name" },
+      { accessor: "email", Header: "Email" },
+      { accessor: "tier", Header: "Tier" },
+      { accessor: "job_type", Header: "Job Type" },
+      {
+        accessor: "expressed_at",
+        Header: "Expressed",
+        render: (row) => new Date(row.expressed_at).toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "numeric",
+          minute: "numeric",
+          hour12: true,
+        }),
+      },
+    ];
+    if (!opportunityId) {
+      base.splice(2, 0, {
+        accessor: "opportunity_title",
+        Header: "Opportunity",
+        render: (row) => row.opportunity_title || "—",
+      });
+    }
+    return base;
+  }, [opportunityId]);
+
+  const actions = useMemo(() => [
+    {
+      label: "Contact",
+      icon: "mdi:email",
+      onClick: (row) => handleOpenEmailModal(row),
+      className: "bg-blue-600 text-white hover:bg-blue-700",
+    },
+  ], [handleOpenEmailModal]);
+
   const modalContent = useMemo(() => {
     if (isLoading) {
       return <LoadingState mode={mode} />;
@@ -394,32 +487,31 @@ const InterestedUsersModal = ({
     if (!hasUsers) {
       return <EmptyState mode={mode} />;
     }
-
     return (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {users.map((user) => (
-            <UserCard
-              key={user.id}
-              user={user}
-              onEmailClick={handleOpenEmailModal}
-              mode={mode}
-              showTier={showTier}
-              showOpportunity={user.opportunity_title ? true : false}
-            />
-          ))}
-        </div>
-      </div>
+      <GenericTable
+        data={filteredUsers}
+        columns={columns}
+        mode={mode}
+        title={null}
+        selectable={true}
+        searchable={false}
+        enableDateFilter={false}
+        enableSortFilter={false}
+        actions={actions}
+        showBulkBar={false}
+        enableRefresh={false}
+        emptyMessage="No applicants"
+      />
     );
   }, [
     isLoading,
     hasError,
     hasUsers,
-    users,
+    filteredUsers,
     mode,
     errorMessage,
-    showTier,
-    handleOpenEmailModal,
+    columns,
+    actions,
   ]);
 
   return (
@@ -439,14 +531,53 @@ const InterestedUsersModal = ({
                     : "bg-blue-100 text-blue-700"
                 }`}
               >
-                {users.length}
+                {filteredUsers.length}
               </span>
             )}
           </div>
         }
         mode={mode}
       >
-        <div className="p-6">{modalContent}</div>
+        <div className="space-y-6">
+          <ApplicantsFilters
+            candidates={(Array.isArray(users) ? users : []).map((u) => ({
+              primaryContactName: u.name,
+              primaryContactEmail: u.email,
+              opening: u.opportunity_title || "",
+              selected_tier: u.tier,
+              job_type: (u.job_type || "").toLowerCase(),
+              countryOfResidence: u.country || "",
+            }))}
+            onFilterChange={({ searchQuery, filterOpening, filterStatus, filterTier, filterCountry }) => {
+              setSearchTerm(searchQuery || "");
+              setOpeningFilter(filterOpening || "all");
+              setTierFilter(filterTier || "all");
+              // status and country are not used in this view
+            }}
+            onSortChange={(sortValue) => {
+              switch (sortValue) {
+                case "latest":
+                  setSortOrder("newest");
+                  break;
+                case "oldest":
+                  setSortOrder("oldest");
+                  break;
+                case "name-asc":
+                  // emulate by search term sort? we will leave date sort; name sorting handled by table if needed
+                  setSortOrder("newest");
+                  break;
+                default:
+                  setSortOrder("newest");
+              }
+            }}
+            mode={mode}
+            initialOpening={"all"}
+            fields={["search", "opening", "tier", "sort"]}
+            labels={{ opening: "Opportunity", openingAll: "All Opportunities" }}
+          />
+
+          {modalContent}
+        </div>
       </ItemActionModal>
 
       <EmailModal

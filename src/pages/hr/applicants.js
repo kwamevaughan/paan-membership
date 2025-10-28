@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 import toast from "react-hot-toast";
 import HRSidebar from "@/layouts/hrSidebar";
 import HRHeader from "@/layouts/hrHeader";
@@ -790,13 +791,13 @@ export default function HRApplicants({
                   <Icon icon="mdi:account-plus" className="w-5 h-5" />
                   Add Candidate
                 </button>
-                <button
-                  onClick={() => setIsExportModalOpen(true)}
+                <Link
+                  href="/admin/opportunities?showApplicants=all"
                   className="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200 shadow-md hover:shadow-lg"
                 >
-                  <Icon icon="mdi:download" className="w-5 h-5" />
-                  Export
-                </button>
+                  <Icon icon="mdi:briefcase-search" className="w-5 h-5" />
+                  View Opportunities
+                </Link>
               </div>
             </div>
             

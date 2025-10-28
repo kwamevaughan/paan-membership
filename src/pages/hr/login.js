@@ -137,27 +137,6 @@ export default function HRLogin() {
 
       const cookies = getBrowserCookies();
       console.log("[HRLogin] Browser cookies after login:", cookies);
-
-      const {
-        data: { session: currentSession },
-        error: sessionError,
-      } = await supabase.auth.getSession();
-      console.log("[HRLogin] Current session after login:", {
-        currentSession: currentSession
-          ? { access_token: currentSession.access_token.slice(0, 10) + "..." }
-          : null,
-        sessionError: sessionError ? sessionError.message : null,
-      });
-
-      if (sessionError || !currentSession) {
-        console.error("[HRLogin] Session verification failed:", sessionError);
-        toast.error("Failed to verify session. Please try again.", { 
-          icon: "❌",
-          duration: 5000
-        });
-        setIsLoading(false);
-        return;
-      }
       
       // Reset attempt counter on successful login
       loginAttempts.current = 0;

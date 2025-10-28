@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { supabase } from "@/lib/supabase";
+import { getSessionCached } from "@/lib/sessionCache";
 
 export default function useAuthSession() {
   const router = useRouter();
@@ -12,10 +13,8 @@ export default function useAuthSession() {
         "[useAuthSession] Checking session at",
         new Date().toISOString()
       );
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
+      const session = await getSessionCached();
+      const sessionError = null;
       console.log("[useAuthSession] Session:", { session, sessionError });
 
       if (sessionError || !session) {

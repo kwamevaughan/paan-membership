@@ -10,7 +10,6 @@ import toast from "react-hot-toast";
 import ConfirmDeleteModal from "./modals/ConfirmDeleteModal.js";
 import ExportModal from "./ExportModal";
 import { TableSkeleton } from "./LoadingStates";
-import StatusPill from "./StatusPill";
 
 // Import refactored components
 import { useTable } from "../hooks/useTable";
@@ -132,74 +131,9 @@ export function GenericTable({
 
   // Enhance columns with automatic status pill rendering
   const enhancedColumns = useMemo(() => {
-    if (!enableStatusPills) return filteredColumns;
-
-    return filteredColumns.map((column) => {
-      // Check if this column should be treated as a status column
-      const isStatusColumn = statusColumnPatterns.some(
-        (pattern) =>
-          column.accessor.toLowerCase().includes(pattern.toLowerCase()) ||
-          (column.Header &&
-            column.Header.toLowerCase().includes(pattern.toLowerCase()))
-      );
-
-      // If it's a status column and doesn't already have a custom render function
-      if (isStatusColumn && !column.render) {
-        // Auto-detect the best context based on column name and data
-        const autoContext = getAutoStatusContext(
-          column,
-          safeData,
-          customStatusContexts,
-          statusContext
-        );
-
-        return {
-          ...column,
-          render: (row, value) => {
-            // Preprocess status values for better handling
-            let processedStatus = value;
-
-            // Handle null, undefined, empty, and "N/A" variations
-            if (value === null || value === undefined || value === "") {
-              processedStatus = "n/a";
-            } else if (typeof value === "string") {
-              const normalizedValue = value.toLowerCase().trim();
-              if (
-                normalizedValue === "n/a" ||
-                normalizedValue === "na" ||
-                normalizedValue === "not available" ||
-                normalizedValue === "unavailable" ||
-                normalizedValue === "none" ||
-                normalizedValue === "unknown"
-              ) {
-                processedStatus = "n/a";
-              }
-            }
-
-            return (
-              <StatusPill
-                status={processedStatus}
-                context={autoContext || statusContext}
-                size={statusPillSize}
-                variant={statusPillVariant}
-              />
-            );
-          },
-        };
-      }
-
-      return column;
-    });
-  }, [
-    filteredColumns,
-    enableStatusPills,
-    statusContext,
-    statusColumnPatterns,
-    safeData,
-    statusPillSize,
-    statusPillVariant,
-    customStatusContexts,
-  ]);
+    // StatusPill not available in this project; return columns unchanged
+    return filteredColumns;
+  }, [filteredColumns]);
 
   // Filter data by date range
   const filteredByDate = useMemo(() => {

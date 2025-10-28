@@ -169,10 +169,7 @@ export default function AddCandidateModal({
         primaryContactLinkedin: formData.primaryContactLinkedin.trim() || null,
         opening: formData.opening.trim(),
         selected_tier: formData.selected_tier,
-        status: formData.status,
         job_type: candidateType,
-        created_at: new Date().toISOString(),
-        submitted_at: new Date().toISOString(),
       };
 
       // Add type-specific fields

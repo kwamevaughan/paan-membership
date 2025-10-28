@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import toast from "react-hot-toast";
+import { Icon } from "@iconify/react";
 import HRSidebar from "@/layouts/hrSidebar";
 import HRHeader from "@/layouts/hrHeader";
 import useSidebar from "@/hooks/useSidebar";

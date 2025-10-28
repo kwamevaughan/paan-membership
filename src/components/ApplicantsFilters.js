@@ -11,6 +11,7 @@ export default function ApplicantsFilters({
   initialOpening,
   fields = ["search", "opening", "status", "tier", "country", "sort"],
   labels = {},
+  openingsOverride = null,
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterOpening, setFilterOpening] = useState(initialOpening || "all");
@@ -30,8 +31,14 @@ export default function ApplicantsFilters({
   const showCountry = fields.includes("country");
   const showSort = fields.includes("sort");
 
-  // Extract unique openings and add 'all' option
-  const uniqueOpenings = ["all", ...new Set(candidates.map((c) => c.opening))];
+  // Extract unique openings and add 'all' option, allow override
+  const uniqueOpenings = openingsOverride && Array.isArray(openingsOverride)
+    ? ["all", ...Array.from(new Set(openingsOverride
+        .map((o) => (o || "").toString().trim())
+        .filter((o) => o.length > 0)))]
+    : ["all", ...Array.from(new Set(candidates
+        .map((c) => (c.opening || "").toString().trim())
+        .filter((o) => o.length > 0)))];
   const statuses = [
     "all",
     "Accepted",
@@ -329,7 +336,9 @@ export default function ApplicantsFilters({
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                  }}
                   placeholder="Name, email, or reference number..."
                   className={`block w-full rounded-md shadow-sm pl-10 pr-3 py-2 text-sm focus:ring-2 focus:ring-[#f05d23] focus:border-transparent ${inputBg} ${inputBorder} ${textColor} border placeholder-gray-400`}
                 />

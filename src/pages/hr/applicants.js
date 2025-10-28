@@ -231,7 +231,6 @@ export default function HRApplicants({
             .toLowerCase()
             .includes(searchQuery.toLowerCase())
       );
-      console.log("After search filter:", result);
     }
     if (filterOpening !== "all") {
       result = result.filter((c) => c.opening === filterOpening);

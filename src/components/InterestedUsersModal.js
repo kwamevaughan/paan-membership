@@ -395,17 +395,23 @@ const InterestedUsersModal = ({
 
   const filteredUsers = useMemo(() => {
     let list = Array.isArray(users) ? users : [];
+    // Hide Admin users
+    list = list.filter((u) => {
+      const tier = (u.tier || "").toString().toLowerCase();
+      return tier !== "admin" && tier !== "admin member";
+    });
     if (openingFilter !== "all") {
       list = list.filter((u) => (u.opportunity_title || "") === openingFilter);
     }
 
-    if (searchTerm) {
-      const q = searchTerm.toLowerCase();
-      list = list.filter((u) =>
-        [u.name, u.email, u.opportunity_title]
-          .filter(Boolean)
-          .some((v) => String(v).toLowerCase().includes(q))
-      );
+    if (searchTerm && searchTerm.length > 0) {
+      const q = searchTerm;
+      list = list.filter((u) => {
+        const name = (u.name || "").toString().toLowerCase();
+        const email = (u.email || "").toString().toLowerCase();
+        const opp = (u.opportunity_title || "").toString().toLowerCase();
+        return name.includes(q) || email.includes(q) || opp.includes(q);
+      });
     }
 
     if (tierFilter !== "all") {
@@ -471,7 +477,7 @@ const InterestedUsersModal = ({
       label: "Contact",
       icon: "mdi:email",
       onClick: (row) => handleOpenEmailModal(row),
-      className: "bg-blue-600 text-white hover:bg-blue-700",
+      className: "cursor-pointer bg-blue-600 text-white hover:bg-blue-700",
     },
   ], [handleOpenEmailModal]);
 
@@ -489,6 +495,7 @@ const InterestedUsersModal = ({
     }
     return (
       <GenericTable
+        key={`${searchTerm}|${openingFilter}|${tierFilter}|${jobTypeFilter}|${startDate}|${endDate}`}
         data={filteredUsers}
         columns={columns}
         mode={mode}
@@ -512,6 +519,12 @@ const InterestedUsersModal = ({
     errorMessage,
     columns,
     actions,
+    searchTerm,
+    openingFilter,
+    tierFilter,
+    jobTypeFilter,
+    startDate,
+    endDate,
   ]);
 
   return (
@@ -541,15 +554,19 @@ const InterestedUsersModal = ({
         <div className="space-y-6">
           <ApplicantsFilters
             candidates={(Array.isArray(users) ? users : []).map((u) => ({
-              primaryContactName: u.name,
-              primaryContactEmail: u.email,
+              primaryContactName: typeof u.name === "string" ? u.name : "",
+              primaryContactEmail: typeof u.email === "string" ? u.email : "",
               opening: u.opportunity_title || "",
               selected_tier: u.tier,
               job_type: (u.job_type || "").toLowerCase(),
               countryOfResidence: u.country || "",
             }))}
+            openingsOverride={Array.from(new Set((Array.isArray(users) ? users : [])
+              .map((u) => (u.opportunity_title || "").toString().trim())
+              .filter((t) => t.length > 0)))}
             onFilterChange={({ searchQuery, filterOpening, filterStatus, filterTier, filterCountry }) => {
-              setSearchTerm(searchQuery || "");
+              const q = (searchQuery || "").toLowerCase().trim();
+              setSearchTerm(q);
               setOpeningFilter(filterOpening || "all");
               setTierFilter(filterTier || "all");
               // status and country are not used in this view

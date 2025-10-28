@@ -29,7 +29,9 @@ export default function AdminBusinessOpportunities({
   breadcrumbs,
 }) {
   const router = useRouter();
+  const [autoOpened, setAutoOpened] = useState(false);
   const [filterTerm, setFilterTerm] = useState("");
+  const [debouncedFilterTerm, setDebouncedFilterTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterJobType, setFilterJobType] = useState("all");
   const [filterProjectType, setFilterProjectType] = useState("all");
@@ -55,6 +57,15 @@ export default function AdminBusinessOpportunities({
   const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
 
   useAuthSession();
+
+  // Debounce the filter term to prevent flickering
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedFilterTerm(filterTerm);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [filterTerm]);
 
   const {
     isSidebarOpen,
@@ -112,6 +123,7 @@ export default function AdminBusinessOpportunities({
   // Function to reset all filters
   const resetFilters = useCallback(() => {
     setFilterTerm("");
+    setDebouncedFilterTerm("");
     setSortOrder("newest");
     setSelectedLocation("All");
     setSelectedServiceType("All");
@@ -124,7 +136,7 @@ export default function AdminBusinessOpportunities({
   // Function to check if there are active filters
   const hasActiveFilters = useCallback(() => {
     return (
-      filterTerm !== "" ||
+      debouncedFilterTerm !== "" ||
       sortOrder !== "newest" ||
       selectedLocation !== "All" ||
       selectedServiceType !== "All" ||
@@ -134,7 +146,7 @@ export default function AdminBusinessOpportunities({
       selectedTenderType !== "All"
     );
   }, [
-    filterTerm,
+    debouncedFilterTerm,
     sortOrder,
     selectedLocation,
     selectedServiceType,
@@ -148,17 +160,31 @@ export default function AdminBusinessOpportunities({
   const filteredOpportunities = useMemo(() => {
     if (!opportunities) return [];
 
-    return opportunities.filter((opportunity) => {
+    const filteredResults = opportunities.filter((opportunity) => {
       if (!opportunity) return false;
 
+      // Build a comprehensive searchable text across key fields
+      const searchableText = [
+        opportunity.gig_title,
+        opportunity.tender_title,
+        opportunity.organization_name,
+        opportunity.description,
+        Array.isArray(opportunity.skills_required)
+          ? opportunity.skills_required.join(" ")
+          : opportunity.skills_required,
+        opportunity.service_type,
+        opportunity.industry,
+        opportunity.project_type,
+        opportunity.job_type,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      // Simple search: check if the search term exists anywhere in the searchable text
+      const searchTerm = (debouncedFilterTerm || "").toLowerCase().trim();
       const matchesSearch =
-        !filterTerm ||
-        (opportunity.title &&
-          opportunity.title.toLowerCase().includes(filterTerm.toLowerCase())) ||
-        (opportunity.description &&
-          opportunity.description
-            .toLowerCase()
-            .includes(filterTerm.toLowerCase()));
+        searchTerm.length === 0 || searchableText.includes(searchTerm);
 
       const matchesLocation =
         selectedLocation === "All" || opportunity.location === selectedLocation;
@@ -181,19 +207,22 @@ export default function AdminBusinessOpportunities({
         (selectedTenderType === "Tender" && opportunity.is_tender) ||
         (selectedTenderType === "Regular" && !opportunity.is_tender);
 
-      return (
+      const finalMatch =
         matchesSearch &&
         matchesLocation &&
         matchesServiceType &&
         matchesIndustry &&
         matchesJobType &&
         matchesTier &&
-        matchesTenderType
-      );
+        matchesTenderType;
+
+      return finalMatch;
     });
+
+    return filteredResults;
   }, [
     opportunities,
-    filterTerm,
+    debouncedFilterTerm,
     selectedLocation,
     selectedServiceType,
     selectedIndustry,
@@ -226,44 +255,47 @@ export default function AdminBusinessOpportunities({
     }
   };
 
-  const modalActions = {
-    openModal: (opportunity = null) => {
-      if (opportunity) {
-        setIsEditing(true);
-        setEditingId(opportunity.id);
-        handleEdit(opportunity);
-      } else {
+  const modalActions = useMemo(
+    () => ({
+      openModal: (opportunity = null) => {
+        if (opportunity) {
+          setIsEditing(true);
+          setEditingId(opportunity.id);
+          handleEdit(opportunity);
+        } else {
+          setIsEditing(false);
+          setEditingId(null);
+          resetForm();
+        }
+        setIsModalOpen(true);
+      },
+      closeModal: () => {
+        setIsModalOpen(false);
         setIsEditing(false);
         setEditingId(null);
         resetForm();
-      }
-      setIsModalOpen(true);
-    },
-    closeModal: () => {
-      setIsModalOpen(false);
-      setIsEditing(false);
-      setEditingId(null);
-      resetForm();
-    },
-    openUsersModal: (opportunityId) => {
-      setSelectedOpportunityId(opportunityId);
-      setIsUsersModalOpen(true);
-    },
-    closeUsersModal: () => {
-      setIsUsersModalOpen(false);
-      setSelectedOpportunityId(null);
-    },
-    openAllUsersModal: () => {
-      setIsAllUsersModalOpen(true);
-    },
-    closeAllUsersModal: () => {
-      setIsAllUsersModalOpen(false);
-    },
-    submitForm: (e, id) => {
-      handleSubmit(e, id);
-      modalActions.closeModal();
-    },
-  };
+      },
+      openUsersModal: (opportunityId) => {
+        setSelectedOpportunityId(opportunityId);
+        setIsUsersModalOpen(true);
+      },
+      closeUsersModal: () => {
+        setIsUsersModalOpen(false);
+        setSelectedOpportunityId(null);
+      },
+      openAllUsersModal: () => {
+        setIsAllUsersModalOpen(true);
+      },
+      closeAllUsersModal: () => {
+        setIsAllUsersModalOpen(false);
+      },
+      submitForm: (e, id) => {
+        handleSubmit(e, id);
+        modalActions.closeModal();
+      },
+    }),
+    [handleEdit, resetForm, handleSubmit]
+  );
 
   const {
     interestedUsers,
@@ -283,21 +315,36 @@ export default function AdminBusinessOpportunities({
     error: allUsersError,
   } = useAllOpportunityInterests();
 
+  const nonAdminInterestedUsers = useMemo(() => {
+    return (allInterestedUsers || []).filter((u) => {
+      const tier = (u.tier || "").toString().toLowerCase();
+      return tier !== "admin" && tier !== "admin member";
+    });
+  }, [allInterestedUsers]);
+
   // Open applicants modal based on deep-link query
   useEffect(() => {
     if (!router || !router.query) return;
-    const { showApplicants } = router.query;
-    if (!showApplicants) return;
-    // Delay to ensure component state is ready
+    const { showApplicants, ...rest } = router.query;
+    if (!showApplicants || autoOpened) return;
+
     const t = setTimeout(() => {
       if (showApplicants === "all") {
         modalActions.openAllUsersModal();
       } else if (typeof showApplicants === "string" && showApplicants.trim()) {
         modalActions.openUsersModal(showApplicants);
       }
+      setAutoOpened(true);
+      // Remove the query param to prevent re-trigger when closing the modal
+      const newQuery = { ...rest };
+      router.replace(
+        { pathname: router.pathname, query: newQuery },
+        undefined,
+        { shallow: true }
+      );
     }, 0);
     return () => clearTimeout(t);
-  }, [router, router?.query?.showApplicants, modalActions]);
+  }, [router, router?.query, modalActions, autoOpened]);
 
   // Removed per-opportunity list from the total applications card per request
 
@@ -529,7 +576,9 @@ export default function AdminBusinessOpportunities({
                           mode === "dark" ? "text-white" : "text-gray-900"
                         }`}
                       >
-                        {totalInterestsLoading ? "..." : totalInterests}
+                        {totalInterestsLoading
+                          ? "..."
+                          : nonAdminInterestedUsers.length}
                       </div>
                       <div
                         className={`text-sm ${
@@ -719,7 +768,7 @@ export default function AdminBusinessOpportunities({
 
                     <div className="mt-8">
                       <OpportunityGrid
-                        opportunities={opportunities}
+                        opportunities={filteredOpportunities}
                         loading={loading}
                         mode={mode}
                         onEdit={modalActions.openModal}
@@ -728,7 +777,7 @@ export default function AdminBusinessOpportunities({
                         onViewUsers={modalActions.openUsersModal}
                         viewMode={viewMode}
                         setViewMode={handleViewModeChange}
-                        filterTerm={filterTerm}
+                        filterTerm={debouncedFilterTerm}
                         selectedLocation={selectedLocation}
                         selectedServiceType={selectedServiceType}
                         selectedIndustry={selectedIndustry}

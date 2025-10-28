@@ -26,46 +26,8 @@ export default function OpportunityGrid({
   onSelectAll,
   isSelectable = false,
 }) {
-  const filteredOpportunities = useMemo(() => {
-    if (!opportunities) return [];
-    
-    return opportunities.filter((opportunity) => {
-      const matchesSearch =
-        !filterTerm ||
-        opportunity.title?.toLowerCase().includes(filterTerm.toLowerCase()) ||
-        opportunity.description?.toLowerCase().includes(filterTerm.toLowerCase()) ||
-        opportunity.location?.toLowerCase().includes(filterTerm.toLowerCase()) ||
-        opportunity.service_type?.toLowerCase().includes(filterTerm.toLowerCase()) ||
-        opportunity.industry?.toLowerCase().includes(filterTerm.toLowerCase()) ||
-        opportunity.project_type?.toLowerCase().includes(filterTerm.toLowerCase()) ||
-        opportunity.tier_restriction?.toLowerCase().includes(filterTerm.toLowerCase()) ||
-        opportunity.skills_required?.some((skill) =>
-          skill.toLowerCase().includes(filterTerm.toLowerCase())
-        );
-      
-      const matchesLocation =
-        selectedLocation === "All" || opportunity.location === selectedLocation;
-      
-      const matchesServiceType =
-        selectedServiceType === "All" || opportunity.service_type === selectedServiceType;
-      
-      const matchesIndustry =
-        selectedIndustry === "All" || opportunity.industry === selectedIndustry;
-      
-      const matchesJobType =
-        selectedJobType === "All" || opportunity.job_type === selectedJobType;
-      
-      const matchesTier =
-        selectedTier === "All" || opportunity.tier_restriction === selectedTier;
-      
-      const matchesTenderType =
-        selectedTenderType === "All" || 
-        (selectedTenderType === "Tender" && opportunity.is_tender) ||
-        (selectedTenderType === "Regular" && !opportunity.is_tender);
-      
-      return matchesSearch && matchesLocation && matchesServiceType && matchesIndustry && matchesJobType && matchesTier && matchesTenderType;
-    });
-  }, [opportunities, filterTerm, selectedLocation, selectedServiceType, selectedIndustry, selectedJobType, selectedTier, selectedTenderType]);
+  // The parent component already handles filtering, so we just use the opportunities passed to us
+  const filteredOpportunities = opportunities || [];
 
   const sortedOpportunities = useMemo(() => {
     return [...(filteredOpportunities || [])].sort((a, b) => {

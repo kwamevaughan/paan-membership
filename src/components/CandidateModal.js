@@ -90,7 +90,13 @@ export default function CandidateModal({
   // Fetch opportunities expressed by this candidate
   useEffect(() => {
     const fetchInterests = async () => {
-      if (!candidate?.id || !isOpen) return;
+      if (!isOpen) return;
+      const idCandidate = candidate?.id || null;
+      const idUser = candidate?.user_id || null;
+      const idAlt = candidate?.auth_user_id || candidate?.uuid || null;
+      const userIds = [idCandidate, idUser].filter(Boolean);
+      if (userIds.length === 0) return;
+      console.log("[CandidateModal] Fetching opportunity_interests for userIds:", userIds);
       setInterestsLoading(true);
       setInterestsError(null);
       try {
@@ -107,13 +113,42 @@ export default function CandidateModal({
               job_type
             )
           `)
-          .eq("user_id", candidate.id)
+          .in("user_id", userIds)
           .order("created_at", { ascending: false });
 
         if (error) throw error;
 
-        const mapped = (data || []).map((row) => ({
-          id: row.id,
+        let rows = data || [];
+
+        // If no results, attempt email-based fallback
+        if ((!rows || rows.length === 0) && candidate?.primaryContactEmail) {
+          console.log("[CandidateModal] No interests by user_id. Falling back to email:", candidate.primaryContactEmail);
+          const { data: byEmail, error: emailErr } = await supabase
+            .from("opportunity_interests")
+            .select(`
+              id,
+              created_at,
+              opportunity_id,
+              candidates!opportunity_interests_user_id_fkey(primaryContactEmail),
+              business_opportunities:business_opportunities!opportunity_interests_opportunity_id_fkey(
+                tender_title,
+                gig_title,
+                organization_name,
+                job_type
+              )
+            `)
+            .eq("candidates.primaryContactEmail", candidate.primaryContactEmail)
+            .order("created_at", { ascending: false });
+          if (emailErr) {
+            throw emailErr;
+          }
+          const byEmailRows = byEmail || [];
+          // If we have both candidate id and email, prefer rows whose joined candidate email exactly matches
+          rows = byEmailRows.filter((r) => r?.candidates?.primaryContactEmail === candidate.primaryContactEmail);
+        }
+
+        const mapped = (rows || []).map((row) => ({
+          id: `${row.id}-${row.created_at}`,
           expressed_at: row.created_at,
           opportunity_id: row.opportunity_id,
           opportunity_title:
@@ -125,6 +160,10 @@ export default function CandidateModal({
         }));
 
         setInterests(mapped);
+        console.log("[CandidateModal] Interests fetched:", {
+          count: mapped.length,
+          sample: mapped.slice(0, 3),
+        });
       } catch (e) {
         console.error("Failed to fetch opportunity interests:", e);
         setInterestsError(e.message || "Failed to load interests");
@@ -134,7 +173,7 @@ export default function CandidateModal({
     };
 
     fetchInterests();
-  }, [candidate?.id, isOpen]);
+  }, [candidate?.id, candidate?.user_id, candidate?.auth_user_id, candidate?.uuid, candidate?.primaryContactEmail, isOpen]);
 
   useEffect(() => {
     if (candidate) {

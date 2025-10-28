@@ -19,10 +19,17 @@ export const useOpportunityInterests = (opportunityId) => {
             id,
             created_at,
             user_id,
+            opportunity_id,
             candidates!opportunity_interests_user_id_fkey(
               primaryContactName,
               primaryContactEmail,
               selected_tier,
+              job_type
+            ),
+            business_opportunities!opportunity_interests_opportunity_id_fkey(
+              tender_title,
+              gig_title,
+              organization_name,
               job_type
             )
           `
@@ -38,6 +45,13 @@ export const useOpportunityInterests = (opportunityId) => {
           tier: interest.candidates?.selected_tier || "Free Member",
           job_type: interest.candidates?.job_type || "N/A",
           expressed_at: interest.created_at,
+          opportunity_id: interest.opportunity_id,
+          opportunity_title:
+            interest.business_opportunities?.tender_title ||
+            interest.business_opportunities?.gig_title ||
+            interest.business_opportunities?.organization_name ||
+            "Unknown Opportunity",
+          opportunity_type: interest.business_opportunities?.job_type || "Opportunity",
         }));
 
         setInterestedUsers(users);

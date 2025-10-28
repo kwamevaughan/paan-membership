@@ -570,14 +570,23 @@ const InterestedUsersModal = ({
               job_type: (u.job_type || "").toLowerCase(),
               countryOfResidence: u.country || "",
             }))}
-            openingsOverride={Array.from(new Set((Array.isArray(users) ? users : [])
-              .filter((u) => {
-                // Only include non-admin users when building the opportunities list
-                const tier = (u.tier || "").toString().toLowerCase();
-                return tier !== "admin" && tier !== "admin member";
-              })
-              .map((u) => (u.opportunity_title || "").toString().trim())
-              .filter((t) => t.length > 0)))}
+            openingsOverride={(() => {
+              // If viewing a specific opportunity, use that opportunity's title
+              if (opportunityId && opportunity) {
+                const opportunityTitle = opportunity.tender_title || opportunity.gig_title || opportunity.organization_name;
+                return opportunityTitle ? [opportunityTitle] : [];
+              }
+              
+              // Otherwise, extract from users data
+              return Array.from(new Set((Array.isArray(users) ? users : [])
+                .filter((u) => {
+                  // Only include non-admin users when building the opportunities list
+                  const tier = (u.tier || "").toString().toLowerCase();
+                  return tier !== "admin" && tier !== "admin member";
+                })
+                .map((u) => (u.opportunity_title || "").toString().trim())
+                .filter((t) => t.length > 0)));
+            })()}
             onFilterChange={({ searchQuery, filterOpening, filterStatus, filterTier, filterCountry }) => {
               const q = (searchQuery || "").toLowerCase().trim();
               setSearchTerm(q);
@@ -603,7 +612,7 @@ const InterestedUsersModal = ({
             }}
             mode={mode}
             initialOpening={"all"}
-            fields={["search", "opening", "tier", "sort"]}
+            fields={opportunityId ? ["search", "tier", "sort"] : ["search", "opening", "tier", "sort"]}
             labels={{ opening: "Opportunity", openingAll: "All Opportunities" }}
           />
 

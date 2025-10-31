@@ -27,12 +27,17 @@ const createProps = (data, breadcrumbs) => ({
 const fetchHRUser = async (supabaseServer, userId) => {
   const { data: hrUser, error: hrUserError } = await supabaseServer
     .from("hr_users")
-    .select("id, name")
+    .select("id, name, role")
     .eq("id", userId)
     .single();
 
   if (hrUserError || !hrUser) {
     throw new Error(hrUserError?.message || "User not in hr_users");
+  }
+
+  // Check if user has admin privileges
+  if (hrUser.role !== 'admin') {
+    throw new Error("User does not have admin privileges");
   }
 
   return hrUser;

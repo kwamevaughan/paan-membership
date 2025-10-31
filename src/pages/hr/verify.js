@@ -29,25 +29,32 @@ export default function Verify() {
         return;
       }
 
-      // Check if user exists in hr_users
+      // Check if user exists in hr_users and has admin role
       const { data: hrUser, error: hrError } = await supabase
         .from("hr_users")
-        .select("id")
+        .select("id, role")
         .eq("id", session.user.id)
         .single();
 
       if (hrError || !hrUser) {
-        // Add user to hr_users
-        const { error: insertError } = await supabase
-          .from("hr_users")
-          .insert([{ id: session.user.id, username: email }]);
+        console.error("User not found in hr_users:", hrError);
+        toast.error("Access denied. You don't have admin privileges.", { 
+          icon: "🚫",
+          duration: 5000 
+        });
+        setTimeout(() => router.push("/hr/login"), 2000);
+        return;
+      }
 
-        if (insertError) {
-          console.error("Error adding to hr_users:", insertError);
-          toast.error("Failed to authorize user.", { icon: "❌" });
-          setTimeout(() => router.push("/hr/login"), 2000);
-          return;
-        }
+      // Check if user has admin role
+      if (hrUser.role !== 'admin') {
+        console.error("User does not have admin role");
+        toast.error("Access denied. Admin privileges required.", { 
+          icon: "🚫",
+          duration: 5000 
+        });
+        setTimeout(() => router.push("/hr/login"), 2000);
+        return;
       }
 
       toast.success("Login successful! Redirecting...", { icon: "✅" });

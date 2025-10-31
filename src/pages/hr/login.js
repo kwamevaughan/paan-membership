@@ -145,7 +145,7 @@ export default function HRLogin() {
       console.log("[HRLogin] Checking hr_users for user ID:", user.id);
       const { data: hrUser, error: hrError } = await supabase
         .from("hr_users")
-        .select("id")
+        .select("id, role")
         .eq("id", user.id)
         .single();
 
@@ -155,19 +155,24 @@ export default function HRLogin() {
       });
 
       if (hrError || !hrUser) {
-        console.log("[HRLogin] Adding user to hr_users");
-        const { error: insertError } = await supabase
-          .from("hr_users")
-          .insert([{ id: user.id, username: email }]);
-        if (insertError) {
-          console.error("[HRLogin] Error adding to hr_users:", insertError);
-          toast.error("Failed to authorize user.", { icon: "❌" });
-          return;
-        }
-        console.log("[HRLogin] Added user to hr_users:", {
-          id: user.id,
-          username: email,
+        console.log("[HRLogin] User not found in hr_users - access denied");
+        toast.error("Access denied. You don't have admin privileges.", { 
+          icon: "🚫",
+          duration: 5000 
         });
+        setIsLoading(false);
+        return;
+      }
+
+      // Check if user has admin role
+      if (hrUser.role !== 'admin') {
+        console.log("[HRLogin] User does not have admin role - access denied");
+        toast.error("Access denied. Admin privileges required.", { 
+          icon: "🚫",
+          duration: 5000 
+        });
+        setIsLoading(false);
+        return;
       }
 
       if (rememberMe) {

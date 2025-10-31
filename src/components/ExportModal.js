@@ -99,8 +99,17 @@ export default function ExportModal({ isOpen, onClose, candidates, mode, type = 
     const [fieldsOrder, setFieldsOrder] = useState(getFieldsOrder());
     const [showDatePicker, setShowDatePicker] = useState(false);
 
-    const { filterStatus, setFilterStatus, dateRange, setDateRange, filteredCandidates } =
-        useExportFilters(candidates);
+    const { 
+        filterStatus, 
+        setFilterStatus, 
+        filterTier, 
+        setFilterTier, 
+        filterJobType, 
+        setFilterJobType, 
+        dateRange, 
+        setDateRange, 
+        filteredCandidates 
+    } = useExportFilters(candidates);
 
 
     // Format the created_at field in filteredCandidates
@@ -129,6 +138,35 @@ export default function ExportModal({ isOpen, onClose, candidates, mode, type = 
 
 
     const statuses = ["all", "Pending", "Reviewed", "Shortlisted", "Rejected"];
+    
+    // Extract unique tiers from candidates (excluding Admin tier)
+    const uniqueTiers = [
+        "all",
+        ...Array.from(
+            new Set(
+                candidates
+                    .map((c) =>
+                        c.selected_tier && typeof c.selected_tier === "string"
+                            ? c.selected_tier.split(" - ")[0].trim()
+                            : null
+                    )
+                    .filter(Boolean)
+                    .filter((tier) => tier !== "Admin") // Hide Admin tier
+            )
+        ),
+    ];
+    
+    // Extract unique job types from candidates
+    const uniqueJobTypes = [
+        "all",
+        ...Array.from(
+            new Set(
+                candidates
+                    .map((c) => c.job_type)
+                    .filter(Boolean)
+            )
+        ),
+    ];
 
     const fallbackStaticRanges = [
         {
@@ -206,19 +244,41 @@ export default function ExportModal({ isOpen, onClose, candidates, mode, type = 
         doc.text("Applicants Export", 14, 22);
         doc.setFontSize(11);
         doc.setTextColor(100);
+        
+        // Add filter information
+        let yPosition = 30;
+        const activeFilters = [];
+        if (filterStatus !== "all") activeFilters.push(`Status: ${filterStatus}`);
+        if (filterTier !== "all") activeFilters.push(`Tier: ${filterTier}`);
+        if (filterJobType !== "all") activeFilters.push(`Job Type: ${filterJobType.charAt(0).toUpperCase() + filterJobType.slice(1)}`);
+        if (dateRange[0]?.startDate && dateRange[0]?.endDate) {
+            activeFilters.push(`Date: ${dateRange[0].startDate.toLocaleDateString()} - ${dateRange[0].endDate.toLocaleDateString()}`);
+        }
+        
+        if (activeFilters.length > 0) {
+            doc.setFontSize(10);
+            doc.text(`Filters Applied: ${activeFilters.join(", ")}`, 14, yPosition);
+            yPosition += 10;
+        }
+        
+        doc.text(`Total Records: ${filteredCandidates.length}`, 14, yPosition);
+        yPosition += 10;
 
         autoTable(doc, {
             head: [selectedKeys.map((key) => fieldsOrder.find((f) => f.key === key).label)],
             body: formattedCandidates.map((candidate) =>
                 selectedKeys.map((key) => candidate[key] || "-")
             ),
-            startY: 30,
+            startY: yPosition,
             theme: "striped",
             headStyles: { fillColor: [240, 93, 35] },
             styles: { textColor: mode === "dark" ? 255 : 35 },
         });
 
-        doc.save("applicants_export.pdf");
+        // Generate filename with filters
+        const filterSuffix = activeFilters.length > 0 ? "_filtered" : "";
+        const timestamp = new Date().toISOString().split('T')[0];
+        doc.save(`applicants_export${filterSuffix}_${timestamp}.pdf`);
         toast.success("PDF exported successfully!", { icon: "✅" });
     };
 
@@ -229,20 +289,32 @@ export default function ExportModal({ isOpen, onClose, candidates, mode, type = 
         }
         toast.success("CSV exported successfully!", { icon: "✅" });
     };
+    
+    // Generate dynamic filename for CSV
+    const generateCSVFilename = () => {
+        const activeFilters = [];
+        if (filterStatus !== "all") activeFilters.push(filterStatus.toLowerCase());
+        if (filterTier !== "all") activeFilters.push(filterTier.toLowerCase().replace(/\s+/g, "_"));
+        if (filterJobType !== "all") activeFilters.push(filterJobType);
+        
+        const filterSuffix = activeFilters.length > 0 ? `_${activeFilters.join("_")}` : "";
+        const timestamp = new Date().toISOString().split('T')[0];
+        return `applicants_export${filterSuffix}_${timestamp}.csv`;
+    };
 
     if (!isOpen) return null;
 
     return (
         <div className="fixed inset-0 bg-black/40 bg-opacity-60 flex justify-center items-center z-[9999]">
             <div
-                className={`rounded-xl max-w-2xl w-full mx-0 shadow-2xl transform transition-all duration-300 animate-fade-in flex flex-col max-h-[80vh] ${
+                className={`rounded-xl max-w-4xl w-full mx-0 shadow-2xl transform transition-all duration-300 animate-fade-in flex flex-col max-h-[80vh] ${
                     mode === "dark" ? "bg-gray-800 text-white" : "bg-white text-[#231812]"
                 }`}
             >
                 <div className="bg-gradient-to-r from-blue-400 to-blue-600 rounded-t-xl p-4 flex items-center justify-between">
                     <div className="flex items-center">
                         <Icon icon="mdi:export" className="w-8 h-8 text-white mr-3" />
-                        <h2 className="text-2xl font-bold text-white">
+                        <h2 className="text-2xl font-semibold text-white">
                             {type === "events" ? "Export Event Registrations" : "Export Applicants"}
                         </h2>
                     </div>
@@ -298,17 +370,102 @@ export default function ExportModal({ isOpen, onClose, candidates, mode, type = 
                                 />
                             </DragDropContext>
                         </div>
-                        <FilterSection
-                            filterStatus={filterStatus}
-                            setFilterStatus={setFilterStatus}
-                            dateRange={dateRange}
-                            setDateRange={setDateRange}
-                            showDatePicker={showDatePicker}
-                            setShowDatePicker={setShowDatePicker}
-                            mode={mode}
-                            statuses={statuses}
-                            fallbackStaticRanges={fallbackStaticRanges}
-                        />
+                        <div>
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className={`text-lg font-medium ${
+                                    mode === "dark" ? "text-gray-200" : "text-[#231812]"
+                                }`}>
+                                    Filter Data
+                                </h3>
+                                {(filterStatus !== "all" || filterTier !== "all" || filterJobType !== "all" || 
+                                  (dateRange[0]?.startDate && dateRange[0]?.endDate)) && (
+                                    <button
+                                        onClick={() => {
+                                            setFilterStatus("all");
+                                            setFilterTier("all");
+                                            setFilterJobType("all");
+                                            setDateRange([{ startDate: null, endDate: null, key: "selection" }]);
+                                            toast.success("Filters cleared", { icon: "✅" });
+                                        }}
+                                        className={`text-sm px-3 py-1 rounded-full flex items-center gap-1 transition-colors ${
+                                            mode === "dark"
+                                                ? "bg-gray-700 text-blue-400 hover:bg-gray-600"
+                                                : "bg-gray-200 text-blue-600 hover:bg-gray-300"
+                                        }`}
+                                    >
+                                        <Icon icon="mdi:filter-off" className="w-4 h-4" />
+                                        Clear Filters
+                                    </button>
+                                )}
+                            </div>
+                            <FilterSection
+                                filterStatus={filterStatus}
+                                setFilterStatus={setFilterStatus}
+                                filterTier={filterTier}
+                                setFilterTier={setFilterTier}
+                                filterJobType={filterJobType}
+                                setFilterJobType={setFilterJobType}
+                                dateRange={dateRange}
+                                setDateRange={setDateRange}
+                                showDatePicker={showDatePicker}
+                                setShowDatePicker={setShowDatePicker}
+                                mode={mode}
+                                statuses={statuses}
+                                tiers={uniqueTiers}
+                                jobTypes={uniqueJobTypes}
+                                fallbackStaticRanges={fallbackStaticRanges}
+                            />
+                            <div className="mt-4 space-y-2">
+                                {/* Active Filter Badges */}
+                                {(filterStatus !== "all" || filterTier !== "all" || filterJobType !== "all" || 
+                                  (dateRange[0]?.startDate && dateRange[0]?.endDate)) && (
+                                    <div className="flex flex-wrap gap-2">
+                                        {filterStatus !== "all" && (
+                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                                mode === "dark" 
+                                                    ? "bg-blue-900 text-blue-200" 
+                                                    : "bg-blue-100 text-blue-800"
+                                            }`}>
+                                                Status: {filterStatus}
+                                            </span>
+                                        )}
+                                        {filterTier !== "all" && (
+                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                                mode === "dark" 
+                                                    ? "bg-green-900 text-green-200" 
+                                                    : "bg-green-100 text-green-800"
+                                            }`}>
+                                                Tier: {filterTier}
+                                            </span>
+                                        )}
+                                        {filterJobType !== "all" && (
+                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                                mode === "dark" 
+                                                    ? "bg-purple-900 text-purple-200" 
+                                                    : "bg-purple-100 text-purple-800"
+                                            }`}>
+                                                Job Type: {filterJobType.charAt(0).toUpperCase() + filterJobType.slice(1)}
+                                            </span>
+                                        )}
+                                        {dateRange[0]?.startDate && dateRange[0]?.endDate && (
+                                            <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                                mode === "dark" 
+                                                    ? "bg-orange-900 text-orange-200" 
+                                                    : "bg-orange-100 text-orange-800"
+                                            }`}>
+                                                Date: {dateRange[0].startDate.toLocaleDateString()} - {dateRange[0].endDate.toLocaleDateString()}
+                                            </span>
+                                        )}
+                                    </div>
+                                )}
+                                
+                                <div className={`text-sm ${
+                                    mode === "dark" ? "text-gray-400" : "text-gray-600"
+                                }`}>
+                                    Showing {filteredCandidates.length} of {candidates.length} applicants
+                                </div>
+                            </div>
+                        </div>
                         <div>
                             <label
                                 className={`block text-sm font-medium mb-2 ${
@@ -385,7 +542,7 @@ export default function ExportModal({ isOpen, onClose, candidates, mode, type = 
                             <CSVLink
                                 data={formattedCandidates}
                                 headers={csvHeaders}
-                                filename="applicants_export.csv"
+                                filename={generateCSVFilename()}
                                 onClick={handleExportClick}
                                 className={`px-6 py-2 rounded-full flex items-center gap-2 transition duration-200 shadow-md hover:shadow-lg ${
                                     mode === "dark"

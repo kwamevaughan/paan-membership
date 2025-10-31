@@ -3,6 +3,8 @@ import { useState } from "react";
 export default function useExportFilters(candidates) {
 
     const [filterStatus, setFilterStatus] = useState("all");
+    const [filterTier, setFilterTier] = useState("all");
+    const [filterJobType, setFilterJobType] = useState("all");
     const [dateRange, setDateRange] = useState([{
         startDate: null,
         endDate: null,
@@ -17,6 +19,21 @@ export default function useExportFilters(candidates) {
                 const result = (candidate.status || "Pending") === filterStatus;
                 console.log(`Status filter result: ${result}`);
                 return result;
+            }
+            return true;
+        })
+        .filter((candidate) => {
+            if (filterTier !== "all") {
+                const candidateTier = candidate.selected_tier && typeof candidate.selected_tier === "string"
+                    ? candidate.selected_tier.split(" - ")[0].trim()
+                    : null;
+                return candidateTier === filterTier;
+            }
+            return true;
+        })
+        .filter((candidate) => {
+            if (filterJobType !== "all") {
+                return candidate.job_type === filterJobType;
             }
             return true;
         })
@@ -63,5 +80,15 @@ export default function useExportFilters(candidates) {
             return result;
         });
 
-    return { filterStatus, setFilterStatus, dateRange, setDateRange, filteredCandidates };
+    return { 
+        filterStatus, 
+        setFilterStatus, 
+        filterTier, 
+        setFilterTier, 
+        filterJobType, 
+        setFilterJobType, 
+        dateRange, 
+        setDateRange, 
+        filteredCandidates 
+    };
 }

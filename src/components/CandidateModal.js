@@ -23,9 +23,12 @@ export default function CandidateModal({
   const [isEditMode, setIsEditMode] = useState(false);
   const [editedData, setEditedData] = useState({});
   const [isSaving, setIsSaving] = useState(false);
+  const [isAnswersEditMode, setIsAnswersEditMode] = useState(false);
+  const [editedAnswers, setEditedAnswers] = useState([]);
   const [interests, setInterests] = useState([]);
   const [interestsLoading, setInterestsLoading] = useState(false);
   const [interestsError, setInterestsError] = useState(null);
+  const [questionsMetadata, setQuestionsMetadata] = useState([]);
   const tierOptions = [
     "Free Member (Tier 1)",
     "Associate Member (Tier 2)",
@@ -62,13 +65,45 @@ export default function CandidateModal({
   };
 
   useEffect(() => {
-    // Only process if candidate exists and modal is open
+    // Reset all state when modal closes or candidate changes
     if (!candidate || !isOpen) {
       setQuestionAnswerPairs([]);
       setInterests([]);
       setInterestsError(null);
+      setQuestionsMetadata([]);
+      setIsAnswersEditMode(false);
+      setActiveTab("profile");
       return;
     }
+
+    // Reset edit mode and active tab when candidate changes
+    setIsAnswersEditMode(false);
+    setActiveTab("profile");
+
+    // Fetch full question metadata from database
+    const fetchQuestionsMetadata = async () => {
+      if (!candidate.questions || candidate.questions.length === 0) return;
+      
+      try {
+        const questionIds = candidate.questions.map(q => q.id);
+        const { data, error } = await supabase
+          .from("interview_questions")
+          .select("id, text, description, options, is_multi_select, other_option_text, is_open_ended, is_country_select, max_words, text_input_option, structured_answers")
+          .in("id", questionIds);
+
+        if (error) throw error;
+
+        // Create a map for quick lookup
+        const metadataMap = {};
+        data.forEach(q => {
+          metadataMap[q.id] = q;
+        });
+
+        setQuestionsMetadata(metadataMap);
+      } catch (error) {
+        console.error("Failed to fetch questions metadata:", error);
+      }
+    };
 
     if (candidate.questions && candidate.answers) {
       const pairs = candidate.questions.map((question, index) => ({
@@ -78,12 +113,16 @@ export default function CandidateModal({
       }));
 
       setQuestionAnswerPairs(pairs);
+      setEditedAnswers(candidate.answers.map((a) => (a == null ? "" : a.toString())));
+      fetchQuestionsMetadata();
     } else {
       // Only warn if we have a candidate but missing data (not when candidate is null during closing)
       if (candidate.id) {
         console.warn(`Missing questions or answers data for candidate:`, candidate.primaryContactName || candidate.id);
       }
       setQuestionAnswerPairs([]);
+      setEditedAnswers([]);
+      setQuestionsMetadata([]);
     }
   }, [candidate, isOpen]);
 
@@ -517,6 +556,207 @@ export default function CandidateModal({
     return answer.toString() || "No answer provided";
   };
 
+  const handleSaveAnswers = async () => {
+    if (!candidate?.id) return;
+    setIsSaving(true);
+    const savingToast = toast.loading("Saving answers...");
+    try {
+      // Persist edited answers to responses table
+      const { error } = await supabase
+        .from("responses")
+        .update({ answers: editedAnswers })
+        .eq("user_id", candidate.id);
+      if (error) throw error;
+
+      // Update local pairs and candidate data
+      const updatedPairs = questionAnswerPairs.map((p, idx) => ({
+        ...p,
+        answer: editedAnswers[idx] ?? null,
+      }));
+      setQuestionAnswerPairs(updatedPairs);
+      
+      // Update parent component's candidate data
+      if (onCandidateUpdate) {
+        onCandidateUpdate({
+          ...candidate,
+          answers: editedAnswers,
+        });
+      }
+      
+      setIsAnswersEditMode(false);
+      toast.success("Answers updated", { id: savingToast });
+    } catch (e) {
+      console.error("Failed to save answers", e);
+      toast.error(e.message || "Failed to save answers", { id: savingToast });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const renderAnswerInput = (item, idx) => {
+    const metadata = questionsMetadata[item.questionId];
+    const currentValue = editedAnswers[idx] ?? "";
+
+    if (!metadata) {
+      // Fallback to textarea if metadata not loaded
+      return (
+        <textarea
+          value={currentValue}
+          onChange={(e) => {
+            const next = [...editedAnswers];
+            next[idx] = e.target.value;
+            setEditedAnswers(next);
+          }}
+          className={`w-full min-h-[88px] px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-paan-blue/20 focus:border-paan-blue ${
+            mode === "dark"
+              ? "bg-gray-700/80 border-gray-600/50 text-white"
+              : "bg-white border-gray-300/60 text-gray-800"
+          }`}
+          placeholder="Enter answer..."
+        />
+      );
+    }
+
+    // Country select
+    if (metadata.is_country_select) {
+      return (
+        <select
+          value={currentValue}
+          onChange={(e) => {
+            const next = [...editedAnswers];
+            next[idx] = e.target.value;
+            setEditedAnswers(next);
+          }}
+          className={`w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-paan-blue/20 focus:border-paan-blue ${
+            mode === "dark"
+              ? "bg-gray-700/80 border-gray-600/50 text-white"
+              : "bg-white border-gray-300/60 text-gray-800"
+          }`}
+        >
+          <option value="">Select a country...</option>
+          {/* You can import countries from your data/countries.js */}
+          <option value="United States">United States</option>
+          <option value="United Kingdom">United Kingdom</option>
+          <option value="Canada">Canada</option>
+          {/* Add more countries as needed */}
+        </select>
+      );
+    }
+
+    // Open-ended text
+    if (metadata.is_open_ended) {
+      return (
+        <textarea
+          value={currentValue}
+          onChange={(e) => {
+            const next = [...editedAnswers];
+            next[idx] = e.target.value;
+            setEditedAnswers(next);
+          }}
+          maxLength={metadata.max_words ? metadata.max_words * 6 : undefined}
+          className={`w-full min-h-[88px] px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-paan-blue/20 focus:border-paan-blue ${
+            mode === "dark"
+              ? "bg-gray-700/80 border-gray-600/50 text-white"
+              : "bg-white border-gray-300/60 text-gray-800"
+          }`}
+          placeholder={metadata.max_words ? `Max ${metadata.max_words} words` : "Enter answer..."}
+        />
+      );
+    }
+
+    // Multiple choice (dropdown or checkboxes)
+    if (metadata.options && Array.isArray(metadata.options)) {
+      if (metadata.is_multi_select) {
+        // Multi-select checkboxes
+        const selectedValues = currentValue ? currentValue.split(";").map(v => v.trim()) : [];
+        
+        return (
+          <div className="space-y-2">
+            {metadata.options.map((option, optIdx) => (
+              <label key={optIdx} className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={selectedValues.includes(option)}
+                  onChange={(e) => {
+                    const next = [...editedAnswers];
+                    let newSelected = [...selectedValues];
+                    
+                    if (e.target.checked) {
+                      newSelected.push(option);
+                    } else {
+                      newSelected = newSelected.filter(v => v !== option);
+                    }
+                    
+                    next[idx] = newSelected.join("; ");
+                    setEditedAnswers(next);
+                  }}
+                  className="rounded border-gray-300 text-paan-blue focus:ring-paan-blue"
+                />
+                <span className="text-sm">{option}</span>
+              </label>
+            ))}
+            {metadata.other_option_text && (
+              <div className="mt-2">
+                <input
+                  type="text"
+                  placeholder={metadata.other_option_text}
+                  className={`w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-paan-blue/20 focus:border-paan-blue ${
+                    mode === "dark"
+                      ? "bg-gray-700/80 border-gray-600/50 text-white"
+                      : "bg-white border-gray-300/60 text-gray-800"
+                  }`}
+                />
+              </div>
+            )}
+          </div>
+        );
+      } else {
+        // Single select dropdown
+        return (
+          <select
+            value={currentValue}
+            onChange={(e) => {
+              const next = [...editedAnswers];
+              next[idx] = e.target.value;
+              setEditedAnswers(next);
+            }}
+            className={`w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-paan-blue/20 focus:border-paan-blue ${
+              mode === "dark"
+                ? "bg-gray-700/80 border-gray-600/50 text-white"
+                : "bg-white border-gray-300/60 text-gray-800"
+            }`}
+          >
+            <option value="">Select an option...</option>
+            {metadata.options.map((option, optIdx) => (
+              <option key={optIdx} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        );
+      }
+    }
+
+    // Default: text input
+    return (
+      <input
+        type="text"
+        value={currentValue}
+        onChange={(e) => {
+          const next = [...editedAnswers];
+          next[idx] = e.target.value;
+          setEditedAnswers(next);
+        }}
+        className={`w-full px-3 py-2 rounded-lg border text-sm focus:ring-2 focus:ring-paan-blue/20 focus:border-paan-blue ${
+          mode === "dark"
+            ? "bg-gray-700/80 border-gray-600/50 text-white"
+            : "bg-white border-gray-300/60 text-gray-800"
+        }`}
+        placeholder="Enter answer..."
+      />
+    );
+  };
+
   const openingLower = candidate.opening?.toLowerCase() || "";
   const isAgencyCandidate =
     openingLower.includes("agency") || openingLower.includes("agencies");
@@ -643,23 +883,8 @@ export default function CandidateModal({
               </div>
 
               <div className="flex items-center gap-2">
-                {!isEditMode ? (
-                  <button
-                    onClick={handleEditToggle}
-                    className="group px-4 py-2 rounded-xl transition-all duration-300 hover:bg-white/20 hover:scale-105 active:scale-95 flex items-center gap-2"
-                    style={{
-                      backdropFilter: "blur(4px)",
-                      background: "rgba(255, 255, 255, 0.1)",
-                    }}
-                  >
-                    <Icon
-                      icon="mdi:pencil"
-                      className="h-5 w-5 text-white"
-                    />
-                    <span className="text-white text-sm font-medium">Edit</span>
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-2">
+                {activeTab !== "answers" && (
+                  !isEditMode ? (
                     <button
                       onClick={handleEditToggle}
                       className="group px-4 py-2 rounded-xl transition-all duration-300 hover:bg-white/20 hover:scale-105 active:scale-95 flex items-center gap-2"
@@ -669,29 +894,46 @@ export default function CandidateModal({
                       }}
                     >
                       <Icon
-                        icon="mdi:close"
+                        icon="mdi:pencil"
                         className="h-5 w-5 text-white"
                       />
-                      <span className="text-white text-sm font-medium">Cancel</span>
+                      <span className="text-white text-sm font-medium">Edit</span>
                     </button>
-                    <button
-                      onClick={handleSaveChanges}
-                      disabled={isSaving}
-                      className="group px-4 py-2 rounded-xl transition-all duration-300 hover:bg-green-500/80 hover:scale-105 active:scale-95 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                      style={{
-                        backdropFilter: "blur(4px)",
-                        background: "rgba(34, 197, 94, 0.2)",
-                      }}
-                    >
-                      <Icon
-                        icon={isSaving ? "mdi:loading" : "mdi:content-save"}
-                        className={`h-5 w-5 text-white ${isSaving ? "animate-spin" : ""}`}
-                      />
-                      <span className="text-white text-sm font-medium">
-                        {isSaving ? "Saving..." : "Save"}
-                      </span>
-                    </button>
-                  </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleEditToggle}
+                        className="group px-4 py-2 rounded-xl transition-all duration-300 hover:bg-white/20 hover:scale-105 active:scale-95 flex items-center gap-2"
+                        style={{
+                          backdropFilter: "blur(4px)",
+                          background: "rgba(255, 255, 255, 0.1)",
+                        }}
+                      >
+                        <Icon
+                          icon="mdi:close"
+                          className="h-5 w-5 text-white"
+                        />
+                        <span className="text-white text-sm font-medium">Cancel</span>
+                      </button>
+                      <button
+                        onClick={handleSaveChanges}
+                        disabled={isSaving}
+                        className="group px-4 py-2 rounded-xl transition-all duration-300 hover:bg-green-500/80 hover:scale-105 active:scale-95 flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                        style={{
+                          backdropFilter: "blur(4px)",
+                          background: "rgba(34, 197, 94, 0.2)",
+                        }}
+                      >
+                        <Icon
+                          icon={isSaving ? "mdi:loading" : "mdi:content-save"}
+                          className={`h-5 w-5 text-white ${isSaving ? "animate-spin" : ""}`}
+                        />
+                        <span className="text-white text-sm font-medium">
+                          {isSaving ? "Saving..." : "Save"}
+                        </span>
+                      </button>
+                    </div>
+                  )
                 )}
                 <button
                   onClick={onClose}
@@ -1025,6 +1267,47 @@ export default function CandidateModal({
 
               {activeTab === "answers" && (
                 <div className="space-y-6 animate-fade-in">
+                  <div className="flex justify-end gap-2">
+                    {!isAnswersEditMode ? (
+                      <button
+                        onClick={() => setIsAnswersEditMode(true)}
+                        className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                          mode === "dark"
+                            ? "bg-gray-700 hover:bg-gray-600 text-white"
+                            : "bg-gray-100 hover:bg-gray-200 text-gray-800"
+                        }`}
+                      >
+                        Edit Answers
+                      </button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => {
+                            setIsAnswersEditMode(false);
+                            setEditedAnswers(questionAnswerPairs.map((p) => (p.answer == null ? "" : p.answer.toString())));
+                          }}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                            mode === "dark"
+                              ? "bg-gray-700 hover:bg-gray-600 text-white"
+                              : "bg-gray-100 hover:bg-gray-200 text-gray-800"
+                          }`}
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={handleSaveAnswers}
+                          disabled={isSaving}
+                          className={`px-4 py-2 rounded-lg text-sm font-medium ${
+                            isSaving
+                              ? "opacity-60 cursor-not-allowed"
+                              : "hover:opacity-90"
+                          } ${"bg-paan-blue text-white"}`}
+                        >
+                          {isSaving ? "Saving..." : "Save Answers"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   {questionAnswerPairs.length > 0 ? (
                     questionAnswerPairs.map((item, idx) => (
                       <div
@@ -1044,7 +1327,7 @@ export default function CandidateModal({
                               className="w-5 h-5 text-paan-blue"
                             />
                           </div>
-                          <div>
+                          <div className="flex-1">
                             <p className="text-sm text-gray-500 dark:text-gray-400">
                               Question
                             </p>
@@ -1064,13 +1347,17 @@ export default function CandidateModal({
                               className="w-5 h-5 text-blue-500"
                             />
                           </div>
-                          <div>
+                          <div className="flex-1">
                             <p className="text-sm text-gray-500 dark:text-gray-400">
                               Answer
                             </p>
-                            <p className="text-base">
-                              {renderAnswer(item.answer)}
-                            </p>
+                            {!isAnswersEditMode ? (
+                              <p className="text-base">
+                                {renderAnswer(item.answer)}
+                              </p>
+                            ) : (
+                              renderAnswerInput(item, idx)
+                            )}
                           </div>
                         </div>
                       </div>

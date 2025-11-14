@@ -531,7 +531,7 @@ export function GenericTable({
                 {onAddNew && (
                   <button
                     onClick={onAddNew}
-                    className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-richBlue text-white rounded-lg hover:bg-richBlueLight transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 w-full sm:w-auto"
+                    className="flex items-center justify-center gap-2 px-3 sm:px-4 py-2 text-xs sm:text-sm bg-paan-blue text-white rounded-lg hover:bg-paan-dark-blue transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 w-full sm:w-auto"
                   >
                     <Icon icon="mdi:plus" className="w-3 h-3 sm:w-4 sm:h-4" />
                     {addNewLabel}
@@ -560,7 +560,7 @@ export function GenericTable({
             <div className="flex items-center gap-2 w-full sm:w-auto">
               <button
                 onClick={() => setShowExportModal(true)}
-                className="flex items-center justify-center gap-2 px-3 py-2 bg-richBlue text-white rounded-lg hover:bg-richBlue/80 transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 w-full sm:w-auto"
+                className="flex items-center justify-center gap-2 px-3 py-2 bg-paan-blue text-white rounded-lg hover:bg-paan-blue/80 transition-colors focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 w-full sm:w-auto"
                 title="Export Data"
               >
                 <Icon icon="mdi:export" className="w-3 h-3 sm:w-4 sm:h-4" />

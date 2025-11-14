@@ -753,3 +753,33 @@ export async function getAdminOffersProps({ req, res }) {
     return handleDBError(error, "getAdminOffersProps");
   }
 }
+
+// Summit Admin Props - accepts custom breadcrumbs
+export async function getSummitAdminProps({ req, res, breadcrumbs }) {
+  console.log("[getSummitAdminProps] Starting at", new Date().toISOString());
+
+  try {
+    const authResult = await withAuth(req, res);
+    if (authResult.redirect) return authResult;
+
+    const { supabaseServer, hrUser } = authResult;
+
+    // Default breadcrumbs if not provided
+    const defaultBreadcrumbs = [
+      { label: "Dashboard", href: "/admin" },
+      { label: "Summit", href: "/admin/summit/purchases" },
+    ];
+
+    return createProps(
+      {
+        mode: "light",
+        user: hrUser,
+        userName: hrUser.name,
+      },
+      breadcrumbs || defaultBreadcrumbs
+    );
+  } catch (error) {
+    console.error("[getSummitAdminProps] Error:", error);
+    return handleDBError(error, "getSummitAdminProps");
+  }
+}

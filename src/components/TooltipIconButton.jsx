@@ -10,7 +10,7 @@ const TooltipIconButton = ({
   children,
 }) => {
   return (
-    <div className="relative group">
+    <div className="relative group/tooltip">
       <button
         onClick={onClick}
         className={`p-2 rounded-full focus:outline-none ${
@@ -24,8 +24,8 @@ const TooltipIconButton = ({
         className={`
           absolute top-full left-1/2 -translate-x-1/2 mt-2 w-max
           bg-white text-xs py-2 px-3 rounded-full shadow-lg
-          opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0
-          transition-all duration-200 ease-in-out
+          opacity-0 group-hover/tooltip:opacity-100 translate-y-1 group-hover/tooltip:translate-y-0
+          transition-all duration-200 ease-in-out pointer-events-none z-50
           ${mode === "dark" ? "text-gray-200" : "text-gray-900"}
           before:content-[''] before:absolute before:-top-1.5 before:left-1/2
           before:-translate-x-1/2 before:border-4 before:border-transparent before:border-b-white

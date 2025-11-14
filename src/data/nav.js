@@ -42,29 +42,38 @@ export const sidebarNav = [
       // { href: "/hr/recruiters", icon: "stash:search-box", label: "Recruiters" },
     ],
   },
-
   {
-    category: "Masterclass Management",
+    category: "Summit Management",
     items: [
       {
-        href: "/admin/masterclasses",
-        icon: "mdi:school-outline",
-        label: "Masterclasses",
+        href: "/admin/summit/purchases",
+        icon: "mdi:cart-outline",
+        label: "Purchases",
       },
       {
-        href: "/admin/masterclasses/purchases",
-        icon: "mdi:credit-card-outline",
-        label: "Purchase Management",
-      },
-      {
-        href: "/admin/masterclasses/tickets",
+        href: "/admin/summit/ticket-types",
         icon: "mdi:ticket-outline",
-        label: "Ticket Management",
+        label: "Ticket Types",
       },
       {
-        href: "/admin/masterclasses/analytics",
-        icon: "mdi:chart-line",
-        label: "Analytics & Reports",
+        href: "/admin/summit/promo-codes",
+        icon: "mdi:coupon-outline",
+        label: "Promo Codes",
+      },
+      {
+        href: "/admin/summit/attendees",
+        icon: "mdi:account-group-outline",
+        label: "Attendees",
+      },
+      {
+        href: "/admin/summit/payments",
+        icon: "mdi:credit-card-check-outline",
+        label: "Payments",
+      },
+      {
+        href: "/admin/summit/analytics",
+        icon: "mdi:chart-box-outline",
+        label: "Analytics",
       },
     ],
   },

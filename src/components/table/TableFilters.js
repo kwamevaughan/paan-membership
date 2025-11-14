@@ -2,7 +2,7 @@ import React from "react";
 import { Icon } from "@iconify/react";
 import Select from "react-select";
 import TooltipIconButton from "../TooltipIconButton";
-import { CustomOption, CustomSingleValue, sortOptions } from "./SelectComponents";
+import { CustomOption, CustomSingleValue, sortOptions, getSelectStyles } from "./SelectComponents";
 
 const TableFilters = ({
   mode,

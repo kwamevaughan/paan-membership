@@ -44,7 +44,7 @@ const FormActions = ({
               ? 'bg-red-600 hover:bg-red-700 text-white hover:shadow-red-500/10' 
               : variant === 'warning'
               ? 'bg-amber-600 hover:bg-amber-700 text-white hover:shadow-amber-500/10'
-              : 'bg-gradient-to-r from-richBlue to-richBlueLight hover:from-richBlueLight hover:to-richBlue text-white hover:shadow-richBlue/10'
+              : 'bg-gradient-to-r from-paan-blue to-paan-dark-blue hover:from-paan-dark-blue hover:to-paan-blue text-white hover:shadow-paan-blue/10'
           }`}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>

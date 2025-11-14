@@ -3,8 +3,8 @@
  * Supports both light and dark modes and uses brand colors from Tailwind config
  *
  * Brand Colors Used:
- * - richBlue: #1b234f (primary focus and selection color)
- * - richBlueLight: #3a517d (hover and active states)
+ * - paan-blue: #1b234f (primary focus and selection color)
+ * - paan-dark-blue: #3a517d (hover and active states)
  *
  * @param {string} mode - Current theme mode ('light' or 'dark')
  * @returns {Object} React Select styles object
@@ -15,11 +15,11 @@ export const getSelectStyles = (mode = "light") => {
   const textColor = isDark ? "#E5E7EB" : "#111827";
   const bgColor = isDark ? "#1F2937" : "white";
   const borderColor = isDark ? "#4B5563" : "#D1D5DB";
-  const hoverBorderColor = isDark ? "#6B7280" : "#1b234f"; // richBlue
-  const focusBorderColor = "#1b234f"; // richBlue
+  const hoverBorderColor = isDark ? "#6B7280" : "#1b234f"; // paan-blue
+  const focusBorderColor = "#1b234f"; // paan-blue
   const placeholderColor = isDark ? "#9CA3AF" : "#6B7280";
   const optionHoverBg = isDark ? "#374151" : "#f0f4ff"; // Light blue tint
-  const optionSelectedBg = "#1b234f"; // richBlue
+  const optionSelectedBg = "#1b234f"; // paan-blue
   const optionSelectedColor = "white";
 
   return {
@@ -31,7 +31,7 @@ export const getSelectStyles = (mode = "light") => {
       borderColor: state.isFocused ? focusBorderColor : borderColor,
       borderWidth: "1px",
       borderRadius: "0.375rem",
-      boxShadow: state.isFocused ? `0 0 0 2px rgba(27, 35, 79, 0.2)` : "none", // richBlue with opacity
+      boxShadow: state.isFocused ? `0 0 0 2px rgba(27, 35, 79, 0.2)` : "none", // paan-blue with opacity
       "&:hover": {
         borderColor: hoverBorderColor,
       },
@@ -47,7 +47,7 @@ export const getSelectStyles = (mode = "light") => {
         : bgColor,
       color: state.isSelected ? optionSelectedColor : textColor,
       "&:active": {
-        backgroundColor: isDark ? "#4B5563" : "#3a517d", // richBlueLight for active state
+        backgroundColor: isDark ? "#4B5563" : "#3a517d", // paan-dark-blue for active state
       },
     }),
     menu: (provided) => ({
@@ -78,14 +78,14 @@ export const getSelectStyles = (mode = "light") => {
       ...provided,
       color: placeholderColor,
       "&:hover": {
-        color: isDark ? "#D1D5DB" : "#1b234f", // richBlue on hover
+        color: isDark ? "#D1D5DB" : "#1b234f", // paan-blue on hover
       },
     }),
     clearIndicator: (provided) => ({
       ...provided,
       color: placeholderColor,
       "&:hover": {
-        color: isDark ? "#D1D5DB" : "#1b234f", // richBlue on hover
+        color: isDark ? "#D1D5DB" : "#1b234f", // paan-blue on hover
       },
     }),
     indicatorSeparator: () => ({
@@ -112,7 +112,7 @@ export const getSelectStyles = (mode = "light") => {
       ...provided,
       color: placeholderColor,
       "&:hover": {
-        backgroundColor: isDark ? "#4B5563" : "#3a517d", // richBlueLight
+        backgroundColor: isDark ? "#4B5563" : "#3a517d", // paan-dark-blue
         color: "white",
       },
     }),

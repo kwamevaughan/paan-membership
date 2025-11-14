@@ -46,3 +46,70 @@ export const pageSizeOptions = [
   { value: 100, label: "100" },
   { value: -1, label: "All" }
 ];
+
+// React Select custom styles based on mode
+export const getSelectStyles = (mode) => ({
+  control: (base, state) => ({
+    ...base,
+    backgroundColor: mode === "dark" ? "#1f2937" : "#ffffff",
+    borderColor: mode === "dark" ? "#4b5563" : "#d1d5db",
+    color: mode === "dark" ? "#f3f4f6" : "#111827",
+    minHeight: "38px",
+    boxShadow: state.isFocused ? "0 0 0 1px #3b82f6" : "none",
+    "&:hover": {
+      borderColor: mode === "dark" ? "#6b7280" : "#9ca3af",
+    },
+  }),
+  menu: (base) => ({
+    ...base,
+    backgroundColor: mode === "dark" ? "#1f2937" : "#ffffff",
+    border: `1px solid ${mode === "dark" ? "#4b5563" : "#d1d5db"}`,
+    zIndex: 9999,
+  }),
+  option: (base, state) => ({
+    ...base,
+    backgroundColor: state.isSelected
+      ? mode === "dark"
+        ? "#3b82f6"
+        : "#3b82f6"
+      : state.isFocused
+      ? mode === "dark"
+        ? "#374151"
+        : "#f3f4f6"
+      : mode === "dark"
+      ? "#1f2937"
+      : "#ffffff",
+    color: state.isSelected
+      ? "#ffffff"
+      : mode === "dark"
+      ? "#f3f4f6"
+      : "#111827",
+    cursor: "pointer",
+    "&:active": {
+      backgroundColor: mode === "dark" ? "#3b82f6" : "#3b82f6",
+    },
+  }),
+  singleValue: (base) => ({
+    ...base,
+    color: mode === "dark" ? "#f3f4f6" : "#111827",
+  }),
+  input: (base) => ({
+    ...base,
+    color: mode === "dark" ? "#f3f4f6" : "#111827",
+  }),
+  placeholder: (base) => ({
+    ...base,
+    color: mode === "dark" ? "#9ca3af" : "#6b7280",
+  }),
+  indicatorSeparator: (base) => ({
+    ...base,
+    backgroundColor: mode === "dark" ? "#4b5563" : "#d1d5db",
+  }),
+  dropdownIndicator: (base) => ({
+    ...base,
+    color: mode === "dark" ? "#9ca3af" : "#6b7280",
+    "&:hover": {
+      color: mode === "dark" ? "#f3f4f6" : "#111827",
+    },
+  }),
+});

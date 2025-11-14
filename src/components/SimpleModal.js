@@ -155,10 +155,10 @@ const SimpleModal = ({
       >
         {/* Header */}
         <div
-          className={`relative px-8 py-4 overflow-hidden rounded-t-3xl ${
+          className={`bg-paan-blue relative px-8 py-4 overflow-hidden rounded-t-3xl ${
             mode === "dark"
-              ? "bg-gradient-to-r from-richBlue to-richBlue/80"
-              : "bg-gradient-to-r from-richBlueLight to-richBlue"
+              ? "bg-gradient-to-r from-paan-blue to-paan-blue/80"
+              : "bg-gradient-to-r from-paan-blue to-paan-dark-blue"
           }`}
           style={{
             backdropFilter: "blur(8px)",

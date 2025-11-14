@@ -280,7 +280,7 @@ export default function AdminSummitTicketTypes({
                 mode === "dark" ? "text-gray-300" : "text-gray-600"
               }`}
             >
-              Are you sure you want to delete "{ticketTypeToDelete?.name}"? This
+              Are you sure you want to delete &ldquo;{ticketTypeToDelete?.name}&rdquo;? This
               action cannot be undone. If this ticket type has been used in any
               purchases, it cannot be deleted.
             </p>

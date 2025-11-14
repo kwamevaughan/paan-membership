@@ -65,6 +65,7 @@ export default function AdminSummitPromoCodes({
   // Fetch ticket types on mount
   useEffect(() => {
     fetchTicketTypes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Handle query parameters for deep linking
@@ -78,7 +79,6 @@ export default function AdminSummitPromoCodes({
     if (code) {
       // The table will show all codes, and we could add highlighting logic here
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router.isReady, router.query]);
 
   const handleAddNew = () => {
@@ -326,7 +326,7 @@ export default function AdminSummitPromoCodes({
                 mode === "dark" ? "text-gray-300" : "text-gray-600"
               }`}
             >
-              Are you sure you want to delete "{promoCodeToDelete?.code}"? This
+              Are you sure you want to delete &ldquo;{promoCodeToDelete?.code}&rdquo;? This
               action cannot be undone. If this promo code has been used in any
               purchases, it cannot be deleted.
             </p>

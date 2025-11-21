@@ -12,12 +12,11 @@ jobs:
     steps:
       - name: Process pending email submissions
         run: |
-          response=$(curl -s -X POST https://membership.paan.africa/api/trigger-email-processing \
-            -H "Content-Type: application/json" \
-            -w "HTTP_STATUS:%{http_code}")
-
-          http_status=$(echo $response | grep -o "HTTP_STATUS:[0-9]*" | cut -d: -f2)
-          body=$(echo $response | sed -E 's/HTTP_STATUS:[0-9]*$//')
+          response_file=$(mktemp)
+          http_status=$(curl -sS --retry 3 --retry-delay 2 --connect-timeout 10 -o "$response_file" -w "%{http_code}" -X POST https://membership.paan.africa/api/trigger-email-processing \
+            -H "Content-Type: application/json")
+          body=$(cat "$response_file")
+          rm "$response_file"
 
           echo "HTTP Status: $http_status"
           echo "Response: $body"

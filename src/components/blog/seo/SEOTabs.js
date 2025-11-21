@@ -4,7 +4,6 @@ import BasicSEO from './BasicSEO';
 import MetaInformation from './MetaInformation';
 import AdditionalSEO from './AdditionalSEO';
 import Readability from './Readability';
-import Preview from './Preview';
 import { calculateSEOScore, getScoreColor, getScoreBgColor, getScoreIcon } from '@/utils/seo';
 
 // Export calculateTotalScore as an alias for calculateSEOScore for backward compatibility
@@ -23,8 +22,7 @@ export default function SEOTabs({ formData, editorContent, mode, handleInputChan
     { id: 'basic', label: 'Basic SEO', icon: 'heroicons:document-text' },
     { id: 'meta', label: 'Meta Tags', icon: 'heroicons:tag' },
     { id: 'additional', label: 'Additional', icon: 'heroicons:adjustments-horizontal' },
-    { id: 'readability', label: 'Readability', icon: 'heroicons:academic-cap' },
-    { id: 'preview', label: 'Preview', icon: 'heroicons:eye' }
+    { id: 'readability', label: 'Readability', icon: 'heroicons:academic-cap' }
   ];
 
   return (
@@ -66,9 +64,6 @@ export default function SEOTabs({ formData, editorContent, mode, handleInputChan
         )}
         {activeTab === 'readability' && (
           <Readability formData={formData} editorContent={editorContent} mode={mode} />
-        )}
-        {activeTab === 'preview' && (
-          <Preview formData={formData} mode={mode} />
         )}
       </div>
     </div>

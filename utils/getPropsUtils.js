@@ -638,6 +638,7 @@ export async function getAdminBlogProps({ req, res }) {
       .select(
         `
         id, article_name, slug, is_published, created_at, updated_at, author, category_id,
+        focus_keyword, article_tags, article_body,
         author_details:hr_users(name, username),
         category:blog_categories(name)
         
@@ -652,7 +653,7 @@ export async function getAdminBlogProps({ req, res }) {
     const transformedBlogs = blogs.map((blog) => ({
       ...blog,
       article_category: blog.category?.name || null,
-      article_tags: [], // Tags removed for performance
+      article_tags: blog.article_tags || [], // Include tags for related articles matching
       author:
         blog.author_details?.name ||
         blog.author_details?.username ||

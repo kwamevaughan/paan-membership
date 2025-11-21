@@ -18,6 +18,7 @@ export const useBlog = (blogId) => {
     category_id: null,
     tag_ids: [],
     article_image: "",
+    article_image_alt: "", // Alt text for featured image
     meta_title: "",
     meta_description: "",
     meta_keywords: "",
@@ -123,6 +124,7 @@ export const useBlog = (blogId) => {
           article_name,
           slug,
           article_image,
+          article_image_alt,
           meta_description,
           focus_keyword,
           seo_score,
@@ -318,10 +320,12 @@ export const useBlog = (blogId) => {
       } = dataToUse;
 
 
+      // Set publish status based on publish_option
       const is_published = publish_option === "publish";
       const is_draft = publish_option === "draft";
-      const publish_date =
-        publish_option === "schedule" ? scheduled_date : null;
+      const publish_date = publish_option === "scheduled" ? scheduled_date : 
+                          publish_option === "publish" ? new Date().toISOString() : 
+                          null;
 
       let article_category = null;
       if (category_id) {
@@ -344,12 +348,16 @@ export const useBlog = (blogId) => {
       const finalContent = dataToUse.article_body || editorContent || content || "";
       
 
-      // Calculate SEO score
+      // Automatically set featured image alt text to focus keyword for SEO
+      const featuredImageAlt = focus_keyword || article_name || "Featured image";
+      
+      // Calculate SEO score (now includes featured image alt check)
       const blogToUpsert = {
         id: id || undefined,
         article_name,
         article_body: finalContent,
         article_image: finalImageUrl,
+        article_image_alt: featuredImageAlt, // Auto-set to focus keyword
         meta_title: title || article_name,
         meta_description: description || "",
         meta_keywords: finalMetaKeywords,
@@ -367,6 +375,7 @@ export const useBlog = (blogId) => {
           description,
           slug,
           focus_keyword,
+          article_image: finalImageUrl, // Pass image to check if it exists
           article_body: finalContent
         }, finalContent),
         updated_at: new Date().toISOString(),
@@ -487,7 +496,10 @@ export const useBlog = (blogId) => {
       featured_image_upload: null,
       featured_image_library: blog.article_image || null,
       content: blog.article_body || "",
-      publish_option: blog.is_published ? "publish" : "draft",
+      // Determine publish_option based on blog status
+      publish_option: blog.is_published ? "publish" : 
+                     (blog.publish_date && new Date(blog.publish_date) > new Date()) ? "scheduled" : 
+                     "draft",
       scheduled_date: blog.publish_date || null,
     };
 

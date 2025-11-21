@@ -88,9 +88,9 @@ const editorStyles = `
 
   .editor-toolbar {
     position: sticky;
-    top: 0;
+    top: 20px;
     z-index: 50;
-    background: rgb(255 255 255 / 50%);
+    background: rgb(255 255 255 / 90%);
     border-bottom: 1px solid #e2e8f0;
     padding: 0.5rem;
     backdrop-filter: blur(8px);

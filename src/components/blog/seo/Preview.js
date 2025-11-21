@@ -58,7 +58,7 @@ export default function Preview({ formData, mode }) {
           {/* Title Preview */}
           <h3
             className={`text-lg font-medium line-clamp-2 transition-colors duration-200 ${
-              formData.article_name
+              (formData.title || formData.article_name)
                 ? mode === "dark"
                   ? "text-blue-400"
                   : "text-blue-600"
@@ -67,7 +67,7 @@ export default function Preview({ formData, mode }) {
                 : "text-gray-400"
             }`}
           >
-            {formData.article_name || "Your post title will appear here"}
+            {formData.title || formData.article_name || "Your post title will appear here"}
           </h3>
 
           {/* Description Preview */}

@@ -64,25 +64,36 @@ export default function AdditionalSEO({ formData, editorContent, mode }) {
     
     checks.push({
       title: "Focus Keyword in Headings",
-      status: hasKeywordInHeadings ? "good" : "error",
+      status: hasKeywordInHeadings ? "good" : headings.length > 0 ? "warning" : "error",
       message: hasKeywordInHeadings 
         ? "Focus keyword found in headings" 
-        : "Add focus keyword to at least one heading",
-      icon: getStatusIcon(hasKeywordInHeadings ? "good" : "error")
+        : headings.length > 0
+          ? "Consider adding focus keyword to at least one heading"
+          : "Add headings with your focus keyword",
+      icon: getStatusIcon(hasKeywordInHeadings ? "good" : headings.length > 0 ? "warning" : "error")
     });
 
-    // Keyword in alt text
+    // Keyword in alt text (body images OR featured image)
     const altTexts = editorContent?.match(/alt="[^"]*"/gi) || [];
-    const hasKeywordInAltText = formData.focus_keyword && 
+    const hasKeywordInBodyAltText = formData.focus_keyword && 
       altTexts.some(alt => alt.toLowerCase().includes(formData.focus_keyword.toLowerCase()));
+    
+    // Check if featured image exists with focus keyword (auto-set as alt text)
+    const hasFeaturedImageWithKeyword = formData.article_image && formData.focus_keyword;
+    
+    const hasKeywordInAltText = hasKeywordInBodyAltText || hasFeaturedImageWithKeyword;
     
     checks.push({
       title: "Focus Keyword in Alt Text",
-      status: hasKeywordInAltText ? "good" : "error",
+      status: hasKeywordInAltText ? "good" : (formData.article_image || altTexts.length > 0) ? "warning" : "error",
       message: hasKeywordInAltText 
-        ? "Focus keyword found in image alt text" 
-        : "Add focus keyword to image alt text",
-      icon: getStatusIcon(hasKeywordInAltText ? "good" : "error")
+        ? hasFeaturedImageWithKeyword && !hasKeywordInBodyAltText
+          ? "Focus keyword in featured image alt text (auto-set)"
+          : "Focus keyword found in image alt text"
+        : (formData.article_image || altTexts.length > 0)
+          ? "Consider adding focus keyword to image alt text"
+          : "Add images with focus keyword in alt text",
+      icon: getStatusIcon(hasKeywordInAltText ? "good" : (formData.article_image || altTexts.length > 0) ? "warning" : "error")
     });
 
     // Keyword density
@@ -102,13 +113,15 @@ export default function AdditionalSEO({ formData, editorContent, mode }) {
     
     checks.push({
       title: "Keyword Density",
-      status: density >= 0.5 && density <= 2.5 ? "good" : density < 0.5 ? "error" : "warning",
+      status: density >= 0.5 && density <= 2.5 ? "good" : density >= 0.3 && density <= 3.5 ? "warning" : density > 0 ? "warning" : "error",
       message: density >= 0.5 && density <= 2.5 
-        ? `Good density (${density.toFixed(1)}%)` 
-        : density < 0.5 
-          ? `Too low (${density.toFixed(1)}%, minimum 0.5%)` 
-          : `Too high (${density.toFixed(1)}%, maximum 2.5%)`,
-      icon: getStatusIcon(density >= 0.5 && density <= 2.5 ? "good" : density < 0.5 ? "error" : "warning"),
+        ? `Perfect density (${density.toFixed(1)}%)` 
+        : density >= 0.3 && density <= 3.5
+          ? `Acceptable density (${density.toFixed(1)}%, aim for 0.5-2.5%)`
+          : density > 0
+            ? `Density is ${density < 0.3 ? 'low' : 'high'} (${density.toFixed(1)}%)`
+            : "Add focus keyword to content",
+      icon: getStatusIcon(density >= 0.5 && density <= 2.5 ? "good" : density > 0 ? "warning" : "error"),
       progress: density >= 2.5 ? 100 : (density / 2.5) * 100
     });
 

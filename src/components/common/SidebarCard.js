@@ -29,7 +29,7 @@ export default function SidebarCard({
               mode === "dark" ? "text-gray-400" : "text-gray-500"
             }`}
           />
-          <h3 className={`text-lg font-semibold ${
+          <h3 className={`text-md font-semibold ${
             mode === "dark" ? "text-gray-100" : "text-gray-900"
           }`}>
             {title}

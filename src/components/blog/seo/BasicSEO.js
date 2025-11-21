@@ -64,23 +64,27 @@ export default function BasicSEO({ formData, editorContent, mode }) {
     
     checks.push({
       title: "Title Length",
-      status: titleLength >= 30 && titleLength <= 60 ? "good" : titleLength < 30 ? "error" : "warning",
-      message: titleLength >= 30 && titleLength <= 60 
-        ? "Good length (30-60 characters)" 
-        : titleLength < 30 
-          ? "Too short (minimum 30 characters)" 
-          : "Too long (maximum 60 characters)",
-      icon: getStatusIcon(titleLength >= 30 && titleLength <= 60 ? "good" : titleLength < 30 ? "error" : "warning"),
-      progress: titleLength >= 60 ? 100 : (titleLength / 60) * 100
+      status: titleLength >= 30 && titleLength <= 70 ? "good" : titleLength >= 20 && titleLength < 30 ? "warning" : titleLength > 70 ? "warning" : "error",
+      message: titleLength >= 30 && titleLength <= 70 
+        ? `Good length (${titleLength} characters)` 
+        : titleLength >= 20 && titleLength < 30
+          ? `A bit short (${titleLength} characters, aim for 30-70)`
+          : titleLength > 70
+            ? `A bit long (${titleLength} characters, aim for 30-70)`
+            : `Too short (${titleLength} characters, minimum 20)`,
+      icon: getStatusIcon(titleLength >= 30 && titleLength <= 70 ? "good" : titleLength >= 20 ? "warning" : "error"),
+      progress: titleLength >= 70 ? 100 : (titleLength / 70) * 100
     });
 
     checks.push({
       title: "Focus Keyword in Title",
-      status: hasKeywordInTitle ? "good" : "error",
+      status: hasKeywordInTitle ? "good" : formData.article_name ? "warning" : "error",
       message: hasKeywordInTitle 
         ? "Focus keyword found in title" 
-        : "Add focus keyword to title",
-      icon: getStatusIcon(hasKeywordInTitle ? "good" : "error")
+        : formData.article_name
+          ? "Consider adding focus keyword to title for better SEO"
+          : "Add a title with your focus keyword",
+      icon: getStatusIcon(hasKeywordInTitle ? "good" : formData.article_name ? "warning" : "error")
     });
 
     // URL/Slug checks
@@ -89,11 +93,13 @@ export default function BasicSEO({ formData, editorContent, mode }) {
     
     checks.push({
       title: "Focus Keyword in URL",
-      status: hasKeywordInUrl ? "good" : "error",
+      status: hasKeywordInUrl ? "good" : formData.slug ? "warning" : "error",
       message: hasKeywordInUrl 
         ? "Focus keyword found in URL" 
-        : "Add focus keyword to URL",
-      icon: getStatusIcon(hasKeywordInUrl ? "good" : "error")
+        : formData.slug
+          ? "Consider adding focus keyword to URL for better SEO"
+          : "Add a URL slug with your focus keyword",
+      icon: getStatusIcon(hasKeywordInUrl ? "good" : formData.slug ? "warning" : "error")
     });
 
     // Meta description checks
@@ -103,23 +109,31 @@ export default function BasicSEO({ formData, editorContent, mode }) {
     
     checks.push({
       title: "Meta Description Length",
-      status: descLength >= 120 && descLength <= 160 ? "good" : descLength < 120 ? "error" : "warning",
+      status: descLength >= 120 && descLength <= 160 ? "good" : descLength >= 100 && descLength < 120 ? "warning" : descLength > 160 && descLength <= 180 ? "warning" : descLength > 0 ? "warning" : "error",
       message: descLength >= 120 && descLength <= 160 
-        ? "Good length (120-160 characters)" 
-        : descLength < 120 
-          ? "Too short (minimum 120 characters)" 
-          : "Too long (maximum 160 characters)",
-      icon: getStatusIcon(descLength >= 120 && descLength <= 160 ? "good" : descLength < 120 ? "error" : "warning"),
+        ? `Perfect length (${descLength} characters)` 
+        : descLength >= 100 && descLength < 120
+          ? `A bit short (${descLength} characters, aim for 120-160)`
+          : descLength > 160 && descLength <= 180
+            ? `A bit long (${descLength} characters, aim for 120-160)`
+            : descLength > 180
+              ? `Too long (${descLength} characters, maximum 180)`
+              : descLength > 0
+                ? `Too short (${descLength} characters, minimum 100)`
+                : "Add a meta description",
+      icon: getStatusIcon(descLength >= 120 && descLength <= 160 ? "good" : descLength > 0 ? "warning" : "error"),
       progress: descLength >= 160 ? 100 : (descLength / 160) * 100
     });
 
     checks.push({
       title: "Focus Keyword in Meta Description",
-      status: hasKeywordInDesc ? "good" : "error",
+      status: hasKeywordInDesc ? "good" : formData.description ? "warning" : "error",
       message: hasKeywordInDesc 
         ? "Focus keyword found in meta description" 
-        : "Add focus keyword to meta description",
-      icon: getStatusIcon(hasKeywordInDesc ? "good" : "error")
+        : formData.description
+          ? "Consider adding focus keyword to meta description"
+          : "Add a meta description with your focus keyword",
+      icon: getStatusIcon(hasKeywordInDesc ? "good" : formData.description ? "warning" : "error")
     });
 
     // Content checks
@@ -129,21 +143,27 @@ export default function BasicSEO({ formData, editorContent, mode }) {
     
     checks.push({
       title: "Content Length",
-      status: wordCount >= 300 ? "good" : "error",
-      message: wordCount >= 300 
-        ? `Good length (${wordCount} words)` 
-        : `Too short (${wordCount} words, minimum 300)`,
-      icon: getStatusIcon(wordCount >= 300 ? "good" : "error"),
+      status: wordCount >= 300 ? "good" : wordCount >= 200 ? "warning" : "error",
+      message: wordCount >= 600
+        ? `Excellent length (${wordCount} words)`
+        : wordCount >= 300 
+          ? `Good length (${wordCount} words)` 
+          : wordCount >= 200
+            ? `A bit short (${wordCount} words, aim for 300+)`
+            : `Too short (${wordCount} words, minimum 200)`,
+      icon: getStatusIcon(wordCount >= 300 ? "good" : wordCount >= 200 ? "warning" : "error"),
       progress: wordCount >= 600 ? 100 : (wordCount / 600) * 100
     });
 
     checks.push({
       title: "Focus Keyword in Content",
-      status: hasKeywordInContent ? "good" : "error",
+      status: hasKeywordInContent ? "good" : editorContent ? "warning" : "error",
       message: hasKeywordInContent 
         ? "Focus keyword found in content" 
-        : "Add focus keyword to content",
-      icon: getStatusIcon(hasKeywordInContent ? "good" : "error")
+        : editorContent
+          ? "Consider adding focus keyword to your content"
+          : "Add content with your focus keyword",
+      icon: getStatusIcon(hasKeywordInContent ? "good" : editorContent ? "warning" : "error")
     });
 
     return checks;

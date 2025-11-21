@@ -313,3 +313,79 @@ body.sidebar-hidden .content-container {
 .react-datepicker-wrapper {
     width: 100%;
 }
+
+/* Blog Article Typography Styles */
+.prose {
+    @apply text-base leading-relaxed;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+    @apply font-bold text-[#172840] tracking-tight;
+}
+
+.prose h1 {
+    @apply text-4xl mb-8 mt-12;
+}
+
+.prose h2 {
+    @apply text-3xl mb-6 mt-10;
+}
+
+.prose h3 {
+    @apply text-2xl mb-4 mt-8;
+}
+
+.prose h4 {
+    @apply text-xl mb-4 mt-6;
+}
+
+.prose p {
+    @apply text-gray-600 leading-relaxed mb-6;
+}
+
+.prose a {
+    @apply text-[#F25849] no-underline;
+}
+
+.prose a:hover {
+    @apply underline;
+}
+
+.prose strong {
+    @apply text-[#172840] font-semibold;
+}
+
+.prose img {
+    @apply rounded-xl shadow-lg my-8;
+}
+
+.prose blockquote {
+    @apply border-l-4 border-[#F25849] pl-4 italic;
+}
+
+.prose ul {
+    @apply list-disc pl-6 my-6;
+}
+
+.prose ol {
+    @apply list-decimal pl-6 my-6;
+}
+
+.prose li {
+    @apply mb-2 text-gray-600;
+}
+
+.prose code {
+    @apply text-[#F25849] bg-gray-100 px-1 py-0.5 rounded;
+}
+
+.prose pre {
+    @apply bg-gray-900 text-white p-4 rounded-lg;
+}
+
+.prose hr {
+    @apply my-8 border-gray-200;
+}

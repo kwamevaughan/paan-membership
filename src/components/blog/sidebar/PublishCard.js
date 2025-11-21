@@ -16,6 +16,7 @@ export default function PublishCard({
   onDelete,
   isEditMode = false,
   publishedDate = null,
+  onPreview,
 }) {
   const formatDate = (dateString) => {
     if (!dateString) return null;
@@ -46,7 +47,7 @@ export default function PublishCard({
           }`}>
             Status
           </label>
-          <div className="space-y-2">
+          <div className="flex flex-wrap gap-3">
             <label className="flex items-center cursor-pointer">
               <input
                 type="radio"
@@ -117,7 +118,7 @@ export default function PublishCard({
 
         {/* Published Date Info */}
         {isEditMode && publishedDate && publishOption === "publish" && (
-          <div className={`p-3 rounded-lg border ${
+          <div className={`p-2 rounded-lg border ${
             mode === "dark" ? "bg-gray-800/50 border-gray-700" : "bg-blue-50 border-blue-200"
           }`}>
             <div className="flex items-start gap-2">
@@ -178,7 +179,7 @@ export default function PublishCard({
               type="submit"
               disabled={loading}
               onClick={onSubmit}
-              className={`px-4 py-2.5 rounded-lg font-medium transition-colors ${
+              className={`px-3 py-2 rounded-lg font-medium transition-colors ${
                 publishOption === "publish"
                   ? "bg-blue-600 hover:bg-blue-700 text-white"
                   : "bg-gray-600 hover:bg-gray-700 text-white"
@@ -197,7 +198,7 @@ export default function PublishCard({
             <button
               type="button"
               onClick={onCancel}
-              className={`px-4 py-2.5 rounded-lg font-medium transition-colors ${
+              className={`px-3 py-2 rounded-lg font-medium transition-colors ${
                 mode === "dark"
                   ? "bg-gray-700 hover:bg-gray-600 text-gray-200"
                   : "bg-gray-200 hover:bg-gray-300 text-gray-700"
@@ -206,6 +207,23 @@ export default function PublishCard({
               Cancel
             </button>
           </div>
+
+          {/* Preview Button - Icon only */}
+          {isEditMode && (
+            <button
+              type="button"
+              onClick={onPreview}
+              title="Preview blog post"
+              className={`w-full px-3 py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5 text-sm ${
+                mode === "dark"
+                  ? "bg-gray-700 hover:bg-gray-600 text-gray-300"
+                  : "bg-gray-100 hover:bg-gray-200 text-gray-700"
+              }`}
+            >
+              <Icon icon="heroicons:eye" className="w-4 h-4" />
+              <span className="text-xs">Preview</span>
+            </button>
+          )}
           
           {/* Delete Link - Only show in edit mode */}
           {isEditMode && onDelete && (

@@ -16,6 +16,7 @@ import PublishCard from "@/components/blog/sidebar/PublishCard";
 import CategoryCard from "@/components/blog/sidebar/CategoryCard";
 import TagsCard from "@/components/blog/sidebar/TagsCard";
 import FeaturedImageCard from "@/components/blog/sidebar/FeaturedImageCard";
+import RelatedArticlesCard from "@/components/blog/sidebar/RelatedArticlesCard";
 import ImageLibrary from "@/components/common/ImageLibrary";
 import ItemActionModal from "@/components/ItemActionModal";
 import { getAdminBlogProps } from "utils/getPropsUtils";
@@ -28,6 +29,7 @@ export default function EditBlogPage({
   tags,
   hrUser,
   blogData,
+  initialBlogs = [],
 }) {
   const router = useRouter();
   const { id } = router.query;
@@ -42,6 +44,7 @@ export default function EditBlogPage({
   const [isCategoryCollapsed, setIsCategoryCollapsed] = useState(false);
   const [isTagsCollapsed, setIsTagsCollapsed] = useState(false);
   const [isImageCollapsed, setIsImageCollapsed] = useState(false);
+  const [isRelatedCollapsed, setIsRelatedCollapsed] = useState(true); // Collapsed by default
   const [showImageLibrary, setShowImageLibrary] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   
@@ -178,6 +181,8 @@ export default function EditBlogPage({
       tag_ids: tagIds,
       article_body: editorContent,
       content: editorContent,
+      publish_option: publishOption, // Pass publish_option to useBlog hook
+      scheduled_date: scheduledDate,
       is_published: publishOption === "publish",
       is_draft: publishOption === "draft",
       publish_date: publishOption === "scheduled" ? scheduledDate : null,
@@ -228,6 +233,21 @@ export default function EditBlogPage({
       toast.error("Failed to delete blog post");
       setIsDeleteModalOpen(false);
     }
+  };
+
+  const handlePreview = () => {
+    // Store current blog data in sessionStorage for preview
+    const previewData = {
+      ...formData,
+      article_body: editorContent,
+      article_tags: selectedTags,
+      category_name: categories.find(c => c.id === formData.category_id)?.name || "",
+      created_at: blogData?.created_at || new Date().toISOString(),
+      author_name: hrUser?.name || "PAAN Admin",
+    };
+    
+    sessionStorage.setItem('blog_preview_data', JSON.stringify(previewData));
+    window.open(`/blog/preview/${id}`, '_blank');
   };
 
   return (
@@ -390,6 +410,20 @@ export default function EditBlogPage({
                     onToggle={() => setIsPublishCollapsed(!isPublishCollapsed)}
                     isEditMode={true}
                     publishedDate={blogData?.publish_date || blogData?.created_at}
+                    onPreview={handlePreview}
+                  />
+
+                  {/* Related Articles Card */}
+                  <RelatedArticlesCard
+                    mode={mode}
+                    currentBlog={{
+                      ...formData,
+                      article_tags: selectedTags,
+                      article_body: editorContent, // Add editor content for content analysis
+                    }}
+                    allBlogs={initialBlogs}
+                    isCollapsed={isRelatedCollapsed}
+                    onToggle={() => setIsRelatedCollapsed(!isRelatedCollapsed)}
                   />
 
                   {/* Category Card */}

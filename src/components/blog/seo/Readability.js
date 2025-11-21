@@ -57,8 +57,8 @@ export default function Readability({ formData, editorContent, mode }) {
   const analyzeReadability = () => {
     const checks = [];
 
-    // Keyword placement
-    const firstWords = formData.article_name?.toLowerCase().split(' ').slice(0, 3).join(' ');
+    // Keyword placement (more lenient)
+    const firstWords = formData.article_name?.toLowerCase().split(' ').slice(0, 5).join(' ');
     const hasKeywordInFirstWords = formData.focus_keyword && 
       firstWords?.includes(formData.focus_keyword.toLowerCase());
     
@@ -66,39 +66,24 @@ export default function Readability({ formData, editorContent, mode }) {
       title: "Keyword Placement",
       status: hasKeywordInFirstWords ? "good" : "warning",
       message: hasKeywordInFirstWords 
-        ? "Focus keyword found in first 3 words" 
-        : "Consider placing focus keyword in first 3 words",
+        ? "Focus keyword found near start of title" 
+        : "Consider placing focus keyword earlier in title (optional)",
       icon: getStatusIcon(hasKeywordInFirstWords ? "good" : "warning")
     });
 
-    // Sentiment words
-    const sentimentWords = ['best', 'worst', 'amazing', 'terrible', 'great', 'poor', 'excellent', 'bad', 'good', 'fantastic', 'awful'];
-    const hasSentimentWords = sentimentWords.some(word => 
+    // Engaging title words (combined sentiment + power words)
+    const engagingWords = ['best', 'top', 'guide', 'how', 'why', 'ultimate', 'complete', 'essential', 'proven', 'great', 'excellent', 'amazing', 'tips', 'ways', 'steps'];
+    const hasEngagingWords = engagingWords.some(word => 
       formData.article_name?.toLowerCase().includes(word)
     );
     
     checks.push({
-      title: "Sentiment Words",
-      status: hasSentimentWords ? "good" : "warning",
-      message: hasSentimentWords 
-        ? "Sentiment words found in title" 
-        : "Consider adding sentiment words to title",
-      icon: getStatusIcon(hasSentimentWords ? "good" : "warning")
-    });
-
-    // Power words
-    const powerWords = ['ultimate', 'essential', 'proven', 'exclusive', 'secret', 'guaranteed', 'powerful', 'revolutionary', 'breakthrough', 'innovative'];
-    const hasPowerWords = powerWords.some(word => 
-      formData.article_name?.toLowerCase().includes(word)
-    );
-    
-    checks.push({
-      title: "Power Words",
-      status: hasPowerWords ? "good" : "warning",
-      message: hasPowerWords 
-        ? "Power words found in title" 
-        : "Consider adding power words to title",
-      icon: getStatusIcon(hasPowerWords ? "good" : "warning")
+      title: "Engaging Title",
+      status: hasEngagingWords ? "good" : "warning",
+      message: hasEngagingWords 
+        ? "Title uses engaging words" 
+        : "Consider adding engaging words like 'best', 'guide', 'how to' (optional)",
+      icon: getStatusIcon(hasEngagingWords ? "good" : "warning")
     });
 
     // Numbers in title
@@ -107,35 +92,51 @@ export default function Readability({ formData, editorContent, mode }) {
       title: "Numbers in Title",
       status: hasNumbers ? "good" : "warning",
       message: hasNumbers 
-        ? "Numbers found in title" 
-        : "Consider adding numbers to title",
+        ? "Numbers found in title (great for CTR!)" 
+        : "Consider adding numbers to title (e.g., '5 Ways', 'Top 10') (optional)",
       icon: getStatusIcon(hasNumbers ? "good" : "warning")
     });
 
-    // Paragraph length
+    // Paragraph length (more lenient)
     const paragraphs = editorContent?.split('</p>') || [];
-    const hasGoodParagraphLength = paragraphs.every(p => {
+    const longParagraphs = paragraphs.filter(p => {
       const words = p.split(/\s+/).filter(Boolean).length;
-      return words <= 150;
-    });
+      return words > 150;
+    }).length;
+    
     checks.push({
       title: "Paragraph Length",
-      status: hasGoodParagraphLength ? "good" : "warning",
-      message: hasGoodParagraphLength 
-        ? "All paragraphs are under 150 words" 
-        : "Some paragraphs are too long (max 150 words)",
-      icon: getStatusIcon(hasGoodParagraphLength ? "good" : "warning")
+      status: longParagraphs === 0 ? "good" : longParagraphs <= 2 ? "warning" : "warning",
+      message: longParagraphs === 0
+        ? "All paragraphs are easy to read" 
+        : `${longParagraphs} paragraph${longParagraphs > 1 ? 's' : ''} over 150 words (consider breaking up for readability)`,
+      icon: getStatusIcon(longParagraphs === 0 ? "good" : "warning")
     });
 
     // Images
-    const hasImages = editorContent?.includes('<img');
+    const imageCount = (editorContent?.match(/<img/g) || []).length;
     checks.push({
-      title: "Images",
-      status: hasImages ? "good" : "warning",
-      message: hasImages 
-        ? "Images found in content" 
-        : "Consider adding images to content",
-      icon: getStatusIcon(hasImages ? "good" : "warning")
+      title: "Visual Content",
+      status: imageCount >= 2 ? "good" : imageCount >= 1 ? "warning" : "warning",
+      message: imageCount >= 2
+        ? `${imageCount} images found (great for engagement!)` 
+        : imageCount === 1
+          ? "1 image found (consider adding more for better engagement)"
+          : "Consider adding images to break up text (optional)",
+      icon: getStatusIcon(imageCount >= 2 ? "good" : "warning")
+    });
+
+    // Subheadings
+    const headingCount = (editorContent?.match(/<h[2-4]/g) || []).length;
+    checks.push({
+      title: "Subheadings",
+      status: headingCount >= 3 ? "good" : headingCount >= 1 ? "warning" : "warning",
+      message: headingCount >= 3
+        ? `${headingCount} subheadings found (well structured!)` 
+        : headingCount >= 1
+          ? `${headingCount} subheading${headingCount > 1 ? 's' : ''} found (consider adding more for better structure)`
+          : "Consider adding subheadings (H2, H3) to structure your content",
+      icon: getStatusIcon(headingCount >= 3 ? "good" : "warning")
     });
 
     return checks;

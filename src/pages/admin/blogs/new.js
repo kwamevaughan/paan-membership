@@ -16,6 +16,7 @@ import PublishCard from "@/components/blog/sidebar/PublishCard";
 import CategoryCard from "@/components/blog/sidebar/CategoryCard";
 import TagsCard from "@/components/blog/sidebar/TagsCard";
 import FeaturedImageCard from "@/components/blog/sidebar/FeaturedImageCard";
+import RelatedArticlesCard from "@/components/blog/sidebar/RelatedArticlesCard";
 import ImageLibrary from "@/components/common/ImageLibrary";
 import { getAdminBlogProps } from "utils/getPropsUtils";
 
@@ -38,6 +39,7 @@ export default function NewBlogPage({
   const [isCategoryCollapsed, setIsCategoryCollapsed] = useState(false);
   const [isTagsCollapsed, setIsTagsCollapsed] = useState(false);
   const [isImageCollapsed, setIsImageCollapsed] = useState(false);
+  const [isRelatedCollapsed, setIsRelatedCollapsed] = useState(true); // Collapsed by default
   const [showImageLibrary, setShowImageLibrary] = useState(false);
   
   useAuthSession();
@@ -140,6 +142,8 @@ export default function NewBlogPage({
       tag_ids: tagIds,
       article_body: editorContent,
       content: editorContent,
+      publish_option: publishOption, // Pass publish_option to useBlog hook
+      scheduled_date: scheduledDate,
       is_published: publishOption === "publish",
       is_draft: publishOption === "draft",
       publish_date: publishOption === "scheduled" ? scheduledDate : null,
@@ -333,6 +337,18 @@ export default function NewBlogPage({
                     isCollapsed={isPublishCollapsed}
                     onToggle={() => setIsPublishCollapsed(!isPublishCollapsed)}
                     isEditMode={false}
+                  />
+
+                  {/* Related Articles Card */}
+                  <RelatedArticlesCard
+                    mode={mode}
+                    currentBlog={{
+                      ...formData,
+                      article_tags: selectedTags,
+                    }}
+                    allBlogs={[]}
+                    isCollapsed={isRelatedCollapsed}
+                    onToggle={() => setIsRelatedCollapsed(!isRelatedCollapsed)}
                   />
 
                   {/* Category Card */}

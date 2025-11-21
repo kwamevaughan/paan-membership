@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/router";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import { Icon } from "@iconify/react";
 import HRSidebar from "@/layouts/hrSidebar";
 import HRHeader from "@/layouts/hrHeader";
@@ -9,7 +9,6 @@ import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useBlog } from "@/hooks/useBlog";
 import SimpleFooter from "@/layouts/simpleFooter";
-import BlogForm from "@/components/blog/BlogForm";
 import BlogGrid from "@/components/blog/BlogGrid";
 import ItemActionModal from "@/components/ItemActionModal";
 import { getAdminBlogProps } from "utils/getPropsUtils";
@@ -26,7 +25,6 @@ export default function AdminBlog({
   breadcrumbs,
   hrUser,
 }) {
-  const [showForm, setShowForm] = useState(false);
   const [viewMode, setViewMode] = useState("grid");
   const [selectedIds, setSelectedIds] = useState([]);
   const [filterTerm, setFilterTerm] = useState("");
@@ -57,27 +55,17 @@ export default function AdminBlog({
 
   const {
     blogs,
-    formData,
-    setFormData,
     loading,
     sortBy,
     setSortBy,
     filters,
     updateFilters,
     handleSearch,
-    handleInputChange,
-    handleEdit,
     handleDelete,
-    handleSubmit,
     fetchBlogs,
-    editorContent,
-    setEditorContent,
   } = useBlog();
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editingId, setEditingId] = useState(null);
   const [itemToDelete, setItemToDelete] = useState(null);
 
   // Extract unique authors and create date ranges
@@ -161,146 +149,17 @@ export default function AdminBlog({
     };
   }, [selectedCategory, selectedTags, filterTerm, selectedStatus, selectedAuthor, selectedDateRange, sortOrder, updateFilters, filters.sort]);
 
-  const handleCreateBlog = useCallback(() => {
-    setSelectedIds([]);
-    
-    // Reset form data first
-    setFormData({
-      id: null,
-      article_name: "",
-      article_body: "",
-      category_id: null,
-      tag_ids: [],
-      article_image: "",
-      meta_title: "",
-      meta_description: "",
-      meta_keywords: "",
-      slug: "",
-      is_published: false,
-      is_draft: true,
-      publish_date: null,
-      author: "",
-      title: "",
-      description: "",
-      keywords: [],
-      featured_image_url: "",
-      featured_image_upload: null,
-      featured_image_library: null,
-      content: "",
-      publish_option: "draft",
-      scheduled_date: null,
-    });
+  const router = useRouter();
 
-    // Then open modal for new post
-    setIsEditing(false);
-    setEditingId(null);
-    setIsModalOpen(true);
-  }, [setFormData]);
+  const handleCreateBlog = useCallback(() => {
+    router.push("/admin/blogs/new");
+  }, [router]);
 
   const handleEditClick = useCallback((blog) => {
-    setSelectedIds([]);
-    
-    // Reset form data first
-    setFormData({
-      id: null,
-      article_name: "",
-      article_body: "",
-      category_id: null,
-      tag_ids: [],
-      article_image: "",
-      meta_title: "",
-      meta_description: "",
-      meta_keywords: "",
-      slug: "",
-      is_published: false,
-      is_draft: true,
-      publish_date: null,
-      author: "",
-      title: "",
-      description: "",
-      keywords: [],
-      featured_image_url: "",
-      featured_image_upload: null,
-      featured_image_library: null,
-      content: "",
-      publish_option: "draft",
-      scheduled_date: null,
-    });
+    router.push(`/admin/blogs/${blog.id}/edit`);
+  }, [router]);
 
-    // Then set editing state and load new data
-    setIsEditing(true);
-    setEditingId(blog.id);
-    handleEdit(blog);
-    setIsModalOpen(true);
-  }, [handleEdit, setFormData]);
 
-  const handleCancel = useCallback(() => {
-    setIsModalOpen(false);
-    setSelectedIds([]);
-    // Reset form after modal closes
-    setTimeout(() => {
-      setIsEditing(false);
-      setEditingId(null);
-      handleEdit({
-        id: null,
-        article_name: "",
-        article_body: "",
-        article_category: "General",
-        article_tags: [],
-        article_image: "",
-        meta_title: "",
-        meta_description: "",
-        meta_keywords: "",
-        slug: "",
-        is_published: false,
-      });
-    }, 50);
-  }, [handleEdit]);
-
-  // Add effect to monitor modal state
-  useEffect(() => {
-  }, [isModalOpen, isEditing, editingId]);
-
-  const handleFormSubmit = useCallback(async (e, updatedFormData) => {
-    e.preventDefault();
-    try {
-      const success = await handleSubmit(e, updatedFormData);
-      
-      if (success) {
-        await fetchBlogs();
-        setFormData({
-          id: null,
-          article_name: "",
-          article_body: "",
-          category_id: null,
-          tag_ids: [],
-          article_image: "",
-          meta_title: "",
-          meta_description: "",
-          meta_keywords: "",
-          slug: "",
-          is_published: false,
-          is_draft: true,
-          publish_date: null,
-          author: "",
-          title: "",
-          description: "",
-          keywords: [],
-          featured_image_url: "",
-          featured_image_upload: null,
-          featured_image_library: null,
-          content: "",
-          publish_option: "draft",
-          scheduled_date: null,
-        });
-        return true; // Explicitly return true on success
-      }
-      return false; // Return false if not successful
-    } catch (error) {
-      console.error('Error in handleFormSubmit:', error);
-      return false;
-    }
-  }, [handleSubmit, fetchBlogs, setFormData]);
 
   const handleDeleteClick = useCallback((blog) => {
     setItemToDelete(blog);
@@ -552,29 +411,6 @@ export default function AdminBlog({
           </div>
           <SimpleFooter mode={mode} isSidebarOpen={isSidebarOpen} />
         </div>
-
-        {isModalOpen && (
-          <div
-            className={`fixed inset-0 bg-black/30 backdrop-blur-md z-40`}
-          />
-        )}
-
-        <BlogForm
-          showForm={isModalOpen}
-          mode={mode}
-          blogId={editingId}
-          formData={formData}
-          handleInputChange={handleInputChange}
-          handleSubmit={handleFormSubmit}
-          handleCancel={handleCancel}
-          loading={loading}
-          isEditing={isEditing}
-          categories={categories}
-          tags={tags}
-          hrUser={hrUser}
-          fetchBlogs={fetchBlogs}
-          width="max-w-7xl"
-        />
 
         <ItemActionModal
           isOpen={isDeleteModalOpen}

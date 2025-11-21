@@ -441,7 +441,7 @@ const TipTapEditor = memo(({
         },
         draggable: true,
         resizing: true,
-        allowBase64: true,
+        allowBase64: false,
         addAttributes() {
           return {
             ...this.parent?.(),

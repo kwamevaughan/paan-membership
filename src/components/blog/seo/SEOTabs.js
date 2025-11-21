@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Icon } from "@iconify/react";
 import BasicSEO from './BasicSEO';
+import MetaInformation from './MetaInformation';
 import AdditionalSEO from './AdditionalSEO';
 import Readability from './Readability';
 import Preview from './Preview';
@@ -70,7 +71,7 @@ export const getScoreIcon = (score) => {
   return 'heroicons:x-circle';
 };
 
-export default function SEOTabs({ formData, editorContent, mode }) {
+export default function SEOTabs({ formData, editorContent, mode, handleInputChange }) {
   const [activeTab, setActiveTab] = useState('basic');
 
   const handleTabClick = (e, tab) => {
@@ -80,6 +81,7 @@ export default function SEOTabs({ formData, editorContent, mode }) {
 
   const tabs = [
     { id: 'basic', label: 'Basic SEO', icon: 'heroicons:document-text' },
+    { id: 'meta', label: 'Meta Tags', icon: 'heroicons:tag' },
     { id: 'additional', label: 'Additional', icon: 'heroicons:adjustments-horizontal' },
     { id: 'readability', label: 'Readability', icon: 'heroicons:academic-cap' },
     { id: 'preview', label: 'Preview', icon: 'heroicons:eye' }
@@ -115,6 +117,9 @@ export default function SEOTabs({ formData, editorContent, mode }) {
       <div className="p-6">
         {activeTab === 'basic' && (
           <BasicSEO formData={formData} editorContent={editorContent} mode={mode} />
+        )}
+        {activeTab === 'meta' && (
+          <MetaInformation formData={formData} handleInputChange={handleInputChange} mode={mode} focusKeyword={formData.focus_keyword} />
         )}
         {activeTab === 'additional' && (
           <AdditionalSEO formData={formData} editorContent={editorContent} mode={mode} />

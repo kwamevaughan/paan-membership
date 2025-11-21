@@ -11,6 +11,16 @@ const EditorComponent = dynamic(
   { ssr: false }
 );
 
+/**
+ * FieldSEOIndicator component - Shows SEO analysis for individual form fields
+ * 
+ * @param {Object} props - Component props
+ * @param {string} props.type - Field type ('title', 'slug', 'description')
+ * @param {string} props.value - Current field value
+ * @param {string} props.focusKeyword - Focus keyword for SEO analysis
+ * @param {string} props.mode - Theme mode ('light' or 'dark')
+ * @returns {JSX.Element} SEO indicator component
+ */
 const FieldSEOIndicator = ({ type, value, focusKeyword, mode }) => {
   const analyzeField = () => {
     switch (type) {
@@ -199,6 +209,25 @@ const FieldSEOIndicator = ({ type, value, focusKeyword, mode }) => {
   );
 };
 
+/**
+ * BlogFormFields component - Main form fields for blog post creation/editing
+ * Includes title, slug, focus keyword, category, tags, content editor, and meta fields
+ * 
+ * @param {Object} props - Component props
+ * @param {string} props.mode - Theme mode ('light' or 'dark')
+ * @param {Object} props.formData - Form data object containing all blog fields
+ * @param {Function} props.handleInputChange - Handler for input changes
+ * @param {Array} props.categories - Available blog categories
+ * @param {Array} props.tags - Available blog tags
+ * @param {Array} props.selectedTags - Currently selected tags
+ * @param {Function} props.handleTagSelect - Handler for tag selection
+ * @param {Function} props.handleTagRemove - Handler for tag removal
+ * @param {string} props.editorContent - Rich text editor content
+ * @param {Function} props.setEditorContent - Setter for editor content
+ * @param {Function} props.onAddCategory - Callback when new category is added
+ * @param {Function} props.onAddTag - Callback when new tag is added
+ * @returns {JSX.Element} BlogFormFields component
+ */
 export default function BlogFormFields({
   mode,
   formData,
@@ -212,6 +241,7 @@ export default function BlogFormFields({
   setEditorContent,
   onAddCategory,
   onAddTag,
+  showCategoryAndTags = true,
 }) {
   const [showAddCategory, setShowAddCategory] = useState(false);
   const [showAddTag, setShowAddTag] = useState(false);
@@ -398,12 +428,6 @@ export default function BlogFormFields({
           placeholder="Enter blog title"
           required
         />
-        <FieldSEOIndicator
-          type="title"
-          value={formData.article_name}
-          focusKeyword={formData.focus_keyword}
-          mode={mode}
-        />
       </div>
 
       {/* Slug (editable) */}
@@ -438,14 +462,14 @@ export default function BlogFormFields({
               <Icon icon="heroicons:arrow-path" className="w-4 h-4" />
               Regenerate
             </button>
-            <div className="relative group">
+            <div className="relative group/tooltip">
               <Icon 
                 icon="heroicons:information-circle" 
-                className={`w-4 h-4 ${
+                className={`w-4 h-4 cursor-help ${
                   mode === "dark" ? "text-gray-400" : "text-gray-500"
                 }`}
               />
-              <div className={`absolute right-0 w-64 p-2 rounded-lg shadow-lg text-sm z-10 hidden group-hover:block ${
+              <div className={`absolute right-0 w-64 p-2 rounded-lg shadow-lg text-sm z-10 hidden group-hover/tooltip:block ${
                 mode === "dark" 
                   ? "bg-gray-800 text-gray-200 border border-gray-700" 
                   : "bg-white text-gray-700 border border-gray-200"
@@ -506,39 +530,6 @@ export default function BlogFormFields({
           placeholder="blog-post-slug"
           required
         />
-        <FieldSEOIndicator
-          type="slug"
-          value={formData.slug}
-          focusKeyword={formData.focus_keyword}
-          mode={mode}
-        />
-      </div>
-
-      {/* Focus Keyword */}
-      <div>
-        <label
-          className={`block text-sm font-bold mb-2 ${
-            mode === "dark" ? "text-gray-300" : "text-gray-700"
-          }`}
-        >
-          Focus Keyword *
-        </label>
-        <input
-          type="text"
-          name="focus_keyword"
-          value={formData.focus_keyword || ""}
-          onChange={handleInputChange}
-          className={`w-full px-4 py-2 rounded-xl border ${
-            mode === "dark"
-              ? "bg-gray-800 border-gray-700 text-gray-100"
-              : "bg-white border-gray-300 text-gray-900"
-          } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-          placeholder="Enter focus keyword for SEO"
-          required
-        />
-        <p className={`mt-1 text-sm ${mode === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-          The main keyword you want to rank for. This will be used for SEO analysis.
-        </p>
       </div>
 
       {/* Content */}
@@ -592,15 +583,10 @@ export default function BlogFormFields({
             height=""
           />
         </div>
-        <FieldSEOIndicator
-          type="content"
-          value={editorContent}
-          focusKeyword={formData.focus_keyword}
-          mode={mode}
-        />
       </div>
 
       {/* Category and Tags in same row */}
+      {showCategoryAndTags && (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Category */}
         <div>
@@ -777,121 +763,7 @@ export default function BlogFormFields({
           </div>
         </div>
       </div>
-
-      {/* Meta Information */}
-      <CollapsibleSection
-        title="Meta Information"
-        description="Optimize your content for search engines"
-        icon="heroicons:document-text"
-        isCollapsed={isMetaCollapsed}
-        onToggle={() => setIsMetaCollapsed(!isMetaCollapsed)}
-        mode={mode}
-      >
-        {/* Meta Title */}
-        <div>
-          <label
-            className={`block text-sm font-bold mb-2 ${
-              mode === "dark" ? "text-gray-300" : "text-gray-700"
-            }`}
-          >
-            Meta Title
-          </label>
-          <input
-            type="text"
-            name="title"
-            value={formData.title || ""}
-            onChange={handleInputChange}
-            className={`w-full px-4 py-2 rounded-xl border ${
-              mode === "dark"
-                ? "bg-gray-800 border-gray-700 text-gray-100"
-                : "bg-white border-gray-300 text-gray-900"
-            } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-            placeholder="SEO title for the blog post"
-          />
-          <FieldSEOIndicator
-            type="title"
-            value={formData.title}
-            focusKeyword={formData.focus_keyword}
-            mode={mode}
-          />
-        </div>
-
-        {/* Meta Description */}
-        <div className="mt-6">
-          <label
-            className={`block text-sm font-bold mb-2 ${
-              mode === "dark" ? "text-gray-300" : "text-gray-700"
-            }`}
-          >
-            Meta Description
-          </label>
-          <textarea
-            name="description"
-            value={formData.description || ""}
-            onChange={handleInputChange}
-            className={`w-full px-4 py-2 rounded-xl border ${
-              mode === "dark"
-                ? "bg-gray-800 border-gray-700 text-gray-100"
-                : "bg-white border-gray-300 text-gray-900"
-            } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-            placeholder="SEO description for the blog post"
-            rows={3}
-          />
-          <FieldSEOIndicator
-            type="description"
-            value={formData.description}
-            focusKeyword={formData.focus_keyword}
-            mode={mode}
-          />
-        </div>
-
-        {/* Meta Keywords */}
-        <div className="mt-6">
-          <label
-            className={`block text-sm font-bold mb-2 ${
-              mode === "dark" ? "text-gray-300" : "text-gray-700"
-            }`}
-          >
-            Meta Keywords
-          </label>
-          <div className="flex flex-wrap gap-2 mb-2">
-            {keywords.map((keyword) => (
-              <span
-                key={keyword}
-                className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${
-                  mode === "dark"
-                    ? "bg-purple-900 text-purple-100"
-                    : "bg-purple-100 text-purple-800"
-                }`}
-              >
-                {keyword}
-                <button
-                  type="button"
-                  onClick={() => handleKeywordRemove(keyword)}
-                  className="ml-2 hover:text-red-500"
-                >
-                  <Icon icon="heroicons:x-mark" className="w-4 h-4" />
-                </button>
-              </span>
-            ))}
-          </div>
-          <input
-            type="text"
-            value={keywordInput}
-            onChange={handleKeywordChange}
-            onKeyPress={handleKeyPress}
-            className={`w-full px-4 py-2 rounded-xl border ${
-              mode === "dark"
-                ? "bg-gray-800 border-gray-700 text-gray-100"
-                : "bg-white border-gray-300 text-gray-900"
-            } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-            placeholder="Type keywords and press Enter or add comma"
-          />
-          <p className={`mt-1 text-sm ${mode === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-            Press Enter or add a comma to create a keyword
-          </p>
-        </div>
-      </CollapsibleSection>
+      )}
     </div>
   );
 } 

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Image from "next/image";
 import { Icon } from "@iconify/react";
 import toast from "react-hot-toast";
 import ImageLibrary from "@/components/common/ImageLibrary";
@@ -8,10 +7,13 @@ export default function ImageUpload({
   mode,
   imageSource,
   setImageSource,
-  formData,
+  formData = {},
   handleInputChange,
   uploadedImage,
   setUploadedImage,
+  onImageSelect,
+  currentImage,
+  showPreview = true,
 }) {
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -57,19 +59,24 @@ export default function ImageUpload({
         filePath: response.filePath,
       });
 
-      setUploadedImage(response);
+      setUploadedImage?.(response);
       const imageUrl = response.url;
-      handleInputChange({
-        target: {
-          name: "multiple",
-          value: {
-            article_image: imageUrl,
-            featured_image_url: imageUrl,
-            featured_image_upload: imageUrl,
-            featured_image_library: "",
+      
+      if (onImageSelect) {
+        onImageSelect(imageUrl);
+      } else if (handleInputChange) {
+        handleInputChange({
+          target: {
+            name: "multiple",
+            value: {
+              article_image: imageUrl,
+              featured_image_url: imageUrl,
+              featured_image_upload: imageUrl,
+              featured_image_library: "",
+            },
           },
-        },
-      });
+        });
+      }
       toast.success("Image uploaded successfully");
     } catch (error) {
       console.error("Upload error:", error);
@@ -84,86 +91,40 @@ export default function ImageUpload({
     const imageUrl = selectedImage.url;
     console.log("ImageUpload handleMediaSelect - Setting image URL:", imageUrl);
 
-    handleInputChange({
-      target: {
-        name: "multiple",
-        value: {
-          article_image: imageUrl,
-          featured_image_url: imageUrl,
-          featured_image_library: imageUrl,
-          featured_image_upload: "",
+    if (onImageSelect) {
+      onImageSelect(imageUrl);
+    } else if (handleInputChange) {
+      handleInputChange({
+        target: {
+          name: "multiple",
+          value: {
+            article_image: imageUrl,
+            featured_image_url: imageUrl,
+            featured_image_library: imageUrl,
+            featured_image_upload: "",
+          },
         },
-      },
-    });
+      });
+    }
     setShowMediaLibrary(false);
     toast.success("Image selected successfully");
   };
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-4">
-        <label className="flex items-center gap-2">
-          <input
-            type="radio"
-            value="url"
-            checked={imageSource === "url"}
-            onChange={(e) => setImageSource(e.target.value)}
-            className={`w-4 h-4 ${
-              mode === "dark" ? "text-blue-500" : "text-blue-600"
-            }`}
-          />
-          <span
-            className={`text-sm ${
-              mode === "dark" ? "text-gray-300" : "text-gray-700"
-            }`}
-          >
-            Image URL
-          </span>
-        </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="radio"
-            value="upload"
-            checked={imageSource === "upload"}
-            onChange={(e) => setImageSource(e.target.value)}
-            className={`w-4 h-4 ${
-              mode === "dark" ? "text-blue-500" : "text-blue-600"
-            }`}
-          />
-          <span
-            className={`text-sm ${
-              mode === "dark" ? "text-gray-300" : "text-gray-700"
-            }`}
-          >
-            Upload Image
-          </span>
-        </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="radio"
-            value="library"
-            checked={imageSource === "library"}
-            onChange={(e) => setImageSource(e.target.value)}
-            className={`w-4 h-4 ${
-              mode === "dark" ? "text-blue-500" : "text-blue-600"
-            }`}
-          />
-          <span
-            className={`text-sm ${
-              mode === "dark" ? "text-gray-300" : "text-gray-700"
-            }`}
-          >
-            Choose from Library
-          </span>
-        </label>
-      </div>
-
+      {/* Upload interface - no radio buttons needed since tabs handle selection */}
       {imageSource === "url" && (
         <input
           type="url"
           name="article_image"
-          value={formData.article_image || ""}
-          onChange={handleInputChange}
+          value={formData?.article_image || currentImage || ""}
+          onChange={(e) => {
+            if (onImageSelect) {
+              onImageSelect(e.target.value);
+            } else if (handleInputChange) {
+              handleInputChange(e);
+            }
+          }}
           className={`w-full px-4 py-2 rounded-xl border ${
             mode === "dark"
               ? "bg-gray-800 border-gray-700 text-gray-100"
@@ -216,39 +177,33 @@ export default function ImageUpload({
         </div>
       )}
 
-      {imageSource === "library" && (
-        <button
-          type="button"
-          onClick={() => setShowMediaLibrary(true)}
-          className={`w-full px-4 py-2 rounded-xl border ${
-            mode === "dark"
-              ? "bg-gray-800 border-gray-700 text-gray-100 hover:bg-gray-700"
-              : "bg-white border-gray-300 text-gray-900 hover:bg-gray-50"
-          } focus:ring-2 focus:ring-blue-500 focus:border-transparent`}
-        >
-          <Icon icon="heroicons:photo" className="w-5 h-5 inline-block mr-2" />
-          Browse Image Library
-        </button>
-      )}
-
-      {(formData.article_image || uploadedImage) && (
+      {showPreview && (formData?.article_image || currentImage || uploadedImage) && (
         <div className="mt-4">
-          <Image
-            src={uploadedImage?.url || formData.article_image}
-            alt="Preview"
-            className="w-full h-48 object-cover rounded-xl"
-            width={400}
-            height={192}
-          />
+          {(() => {
+            const imageSrc = uploadedImage?.url || formData?.article_image || currentImage;
+            if (imageSrc && imageSrc.startsWith('data:')) {
+              return (
+                <div className={`p-4 rounded-xl ${mode === 'dark' ? 'bg-red-900/20 text-red-400' : 'bg-red-100 text-red-600'}`}>
+                  <p className="text-sm">Invalid image format. Base64 data URLs are not supported.</p>
+                </div>
+              );
+            }
+            return (
+              /* eslint-disable-next-line @next/next/no-img-element */
+              <img
+                src={imageSrc}
+                alt="Preview"
+                className="w-full h-48 object-cover rounded-xl"
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                  toast.error('Failed to load image preview');
+                }}
+              />
+            );
+          })()}
         </div>
       )}
 
-      <ImageLibrary
-        isOpen={showMediaLibrary}
-        onClose={() => setShowMediaLibrary(false)}
-        onSelect={handleMediaSelect}
-        mode={mode}
-      />
     </div>
   );
 }

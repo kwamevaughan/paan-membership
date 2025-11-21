@@ -132,7 +132,6 @@ function ImageNode({ node, updateAttributes, selected, deleteNode }) {
                 style={{
                   objectFit: 'contain',
                   maxWidth: '100%',
-                  height: 'auto'
                 }}
                 unoptimized={src.startsWith('http')}
               />
@@ -147,7 +146,6 @@ function ImageNode({ node, updateAttributes, selected, deleteNode }) {
               style={{
                 objectFit: 'contain',
                 maxWidth: '100%',
-                height: 'auto'
               }}
               unoptimized={src.startsWith('http')}
             />

@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Icon } from "@iconify/react";
-import Image from "next/image";
 import toast from "react-hot-toast";
 
 const FileUploader = ({ onUpload, uploading, mode }) => {
@@ -133,7 +132,6 @@ export default function ImageLibrary({
   folder = "/Blog",
 }) {
   const [files, setFiles] = useState([]);
-  const [selectedFiles, setSelectedFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [sortBy, setSortBy] = useState("newest");
   const [searchTerm, setSearchTerm] = useState("");
@@ -284,6 +282,11 @@ export default function ImageLibrary({
 
   const getSortedFiles = () => {
     let sortedFiles = [...files];
+
+    // Filter out base64 data URLs
+    sortedFiles = sortedFiles.filter((file) => 
+      file.url && !file.url.startsWith('data:')
+    );
 
     if (searchTerm) {
       sortedFiles = sortedFiles.filter((file) =>
@@ -518,13 +521,19 @@ export default function ImageLibrary({
                         e.stopPropagation();
                       }}
                     >
-                      <div className="w-full h-48">
-                        <Image
-                          src={file.url}
-                          alt={file.name}
-                          fill
-                          className="object-cover"
-                        />
+                      <div className="relative w-full aspect-[4/3]">
+                        {file.url && !file.url.startsWith('data:') ? (
+                          /* eslint-disable-next-line @next/next/no-img-element */
+                          <img
+                            src={file.url}
+                            alt={file.name}
+                            className="absolute inset-0 w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-700">
+                            <Icon icon="heroicons:photo" className="w-12 h-12 text-gray-400" />
+                          </div>
+                        )}
                       </div>
                       <div
                         className={`absolute inset-0 bg-opacity-0 group-hover:bg-opacity-40 transition-opacity flex items-center justify-center ${
@@ -573,7 +582,7 @@ export default function ImageLibrary({
           }}
         >
           <div
-            className="absolute inset-0 bg-black bg-opacity-50"
+            className="absolute inset-0 bg-black/50 bg-opacity-50"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();

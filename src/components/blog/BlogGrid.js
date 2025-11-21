@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useMemo, useCallback } from "react";
 import DataView from "@/components/common/DataView";
 import BlogCard from "./BlogCard";
+import BlogSkeleton from "@/components/common/BlogSkeleton";
 
 export default function BlogGrid({
   mode,
@@ -179,26 +180,9 @@ export default function BlogGrid({
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {[...Array(6)].map((_, i) => (
-          <div
-            key={i}
-            className={`relative rounded-2xl overflow-hidden border ${
-              mode === "dark"
-                ? "bg-gray-800/50 border-gray-700"
-                : "bg-white border-gray-200"
-            }`}
-          >
-            <div className="h-48 bg-gray-200 dark:bg-gray-700 animate-pulse" />
-            <div className="p-6">
-              <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4 animate-pulse" />
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2 animate-pulse" />
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3 animate-pulse" />
-            </div>
-            <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 animate-pulse" />
-            </div>
-          </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {[...Array(itemsPerPage || 12)].map((_, i) => (
+          <BlogSkeleton key={i} mode={mode} />
         ))}
       </div>
     );

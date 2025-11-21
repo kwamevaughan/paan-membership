@@ -8,9 +8,11 @@ import useSidebar from "@/hooks/useSidebar";
 import useLogout from "@/hooks/useLogout";
 import useAuthSession from "@/hooks/useAuthSession";
 import { useBlog } from "@/hooks/useBlog";
+import { useBlogOptimized } from "@/hooks/useBlogOptimized";
 import SimpleFooter from "@/layouts/simpleFooter";
 import BlogGrid from "@/components/blog/BlogGrid";
 import ItemActionModal from "@/components/ItemActionModal";
+import Pagination from "@/components/common/Pagination";
 import { getAdminBlogProps } from "utils/getPropsUtils";
 import PageHeader from "@/components/common/PageHeader";
 import BlogFilters from "@/components/filters/BlogFilters";
@@ -390,6 +392,19 @@ export default function AdminBlog({
                         onSelectAll={handleSelectAll}
                         isSelectable={true}
                       />
+                      
+                      {/* Pagination Component */}
+                      {blogs && blogs.length > itemsPerPage && (
+                        <div className="mt-6">
+                          <Pagination
+                            currentPage={currentPage}
+                            totalPages={Math.ceil(blogs.length / itemsPerPage)}
+                            onPageChange={setCurrentPage}
+                            mode={mode}
+                            loading={loading}
+                          />
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -116,14 +116,23 @@ export const useBlog = (blogId) => {
         .from("blogs")
         .select(
           `
-          *,
-          category:blog_categories(name),
+          id,
+          article_name,
+          slug,
+          article_image,
+          created_at,
+          updated_at,
+          is_published,
+          is_draft,
+          category_id,
+          category:blog_categories(id, name),
           tags:blog_post_tags(
-            tag:blog_tags(name)
+            tag:blog_tags(id, name)
           ),
           author_details:hr_users(name, username)
         `
         )
+        .limit(50)
         .order("created_at", { ascending: false });
 
       if (error) throw error;

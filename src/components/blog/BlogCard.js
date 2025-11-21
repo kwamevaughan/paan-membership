@@ -14,7 +14,10 @@ export default function BlogCard({
   isSelectable = false,
 }) {
   const [isHovered, setIsHovered] = useState(false);
-  const seoScore = calculateSEOScore(blog);
+  
+  // Use stored seo_score from database (calculated on save)
+  // Fallback to 0 if not available (shouldn't happen for saved blogs)
+  const seoScore = blog.seo_score || 0;
 
   const handleEdit = (e) => {
     e.stopPropagation();
@@ -79,14 +82,14 @@ export default function BlogCard({
           </span>
           <div className="flex items-center gap-2">
             <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
-              getScoreBgColor(blog.seo_score || calculateSEOScore(blog, blog.article_body), mode)
+              getScoreBgColor(seoScore, mode)
             }`}>
-              <span className={`text-sm font-medium ${getScoreColor(blog.seo_score || calculateSEOScore(blog, blog.article_body), mode)}`}>
-                SEO: {blog.seo_score || calculateSEOScore(blog, blog.article_body)}%
+              <span className={`text-sm font-medium ${getScoreColor(seoScore, mode)}`}>
+                SEO: {seoScore}%
               </span>
               <Icon 
-                icon={getScoreIcon(blog.seo_score || calculateSEOScore(blog, blog.article_body))}
-                className={`w-4 h-4 ${getScoreColor(blog.seo_score || calculateSEOScore(blog, blog.article_body), mode)}`}
+                icon={getScoreIcon(seoScore)}
+                className={`w-4 h-4 ${getScoreColor(seoScore, mode)}`}
               />
             </div>
           </div>
@@ -117,7 +120,7 @@ export default function BlogCard({
             mode === "dark" ? "text-gray-400" : "text-gray-600"
           }`}
         >
-          {blog.article_body?.replace(/<[^>]*>/g, "") || "No content"}
+          {blog.meta_description || "No description available"}
         </p>
       </div>
 

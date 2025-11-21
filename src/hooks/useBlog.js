@@ -112,6 +112,9 @@ export const useBlog = (blogId) => {
         throw new Error("Not authenticated");
       }
 
+      // Optimized query: Only fetch necessary fields for list view
+      // article_body is excluded to reduce payload size (can be 1000s of chars)
+      // Use meta_description for preview instead
       const { data, error } = await supabase
         .from("blogs")
         .select(
@@ -120,6 +123,9 @@ export const useBlog = (blogId) => {
           article_name,
           slug,
           article_image,
+          meta_description,
+          focus_keyword,
+          seo_score,
           created_at,
           updated_at,
           is_published,

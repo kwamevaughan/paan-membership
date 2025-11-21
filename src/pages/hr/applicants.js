@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo, memo } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import toast from "react-hot-toast";
@@ -21,6 +21,7 @@ import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { supabase } from "@/lib/supabase";
 import { getApplicantsProps } from "utils/getPropsUtils";
 import ItemActionModal from "@/components/ItemActionModal";
+import ApplicantsSkeleton from "@/components/common/ApplicantsSkeleton";
 
 export default function HRApplicants({
   mode = "light",
@@ -31,9 +32,13 @@ export default function HRApplicants({
   pagination,
 }) {
   const [candidates, setCandidates] = useState(initialCandidates || []);
-  const [filteredCandidates, setFilteredCandidates] = useState(
-    initialCandidates || []
-  );
+  const [filters, setFilters] = useState({
+    searchQuery: "",
+    filterOpening: "all",
+    filterStatus: "all",
+    filterTier: "all",
+    filterCountry: "all",
+  });
   const [sortField, setSortField] = useState("submitted_at");
   const [sortDirection, setSortDirection] = useState("desc");
   const [currentPage, setCurrentPage] = useState(pagination?.currentPage || 1);
@@ -67,6 +72,86 @@ export default function HRApplicants({
     }
   }, [candidates]);
 
+  // Optimized filtering and sorting with useMemo
+  const filteredCandidates = useMemo(() => {
+    let result = [...candidates];
+
+    // Apply search filter
+    if (filters.searchQuery) {
+      const query = filters.searchQuery.toLowerCase();
+      result = result.filter(
+        (c) =>
+          (c.primaryContactName || "").toLowerCase().includes(query) ||
+          (c.primaryContactEmail || "").toLowerCase().includes(query) ||
+          (c.reference_number || "").toLowerCase().includes(query)
+      );
+    }
+
+    // Apply opening filter
+    if (filters.filterOpening !== "all") {
+      result = result.filter((c) => c.opening === filters.filterOpening);
+    }
+
+    // Apply status filter
+    if (filters.filterStatus !== "all") {
+      result = result.filter((c) => (c.status || "Pending") === filters.filterStatus);
+    }
+
+    // Apply tier filter
+    if (filters.filterTier !== "all") {
+      result = result.filter((c) => {
+        if (!c.selected_tier) return false;
+        const tierValue = c.selected_tier.split(" - ")[0].trim();
+        return tierValue === filters.filterTier;
+      });
+    }
+
+    // Always filter out Admin tier candidates
+    result = result.filter((c) => {
+      if (!c.selected_tier) return true;
+      const tierValue = c.selected_tier.split(" - ")[0].trim();
+      return tierValue !== "Admin";
+    });
+
+    // Apply country filter
+    if (filters.filterCountry !== "all") {
+      result = result.filter((c) => {
+        const countryValue = c.job_type === "agency" 
+          ? c.headquartersLocation 
+          : c.countryOfResidence;
+        return countryValue === filters.filterCountry;
+      });
+    }
+
+    // Apply sorting
+    result.sort((a, b) => {
+      let aValue = a[sortField] || "";
+      let bValue = b[sortField] || "";
+
+      if (sortField === "selected_tier") {
+        aValue = a.selected_tier
+          ? a.selected_tier.split(" - ")[0].trim().toLowerCase()
+          : "";
+        bValue = b.selected_tier
+          ? b.selected_tier.split(" - ")[0].trim().toLowerCase()
+          : "";
+      } else if (sortField === "submitted_at") {
+        aValue = new Date(a.submitted_at || a.created_at || 0);
+        bValue = new Date(b.submitted_at || b.created_at || 0);
+      }
+
+      if (sortField === "submitted_at") {
+        return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
+      }
+
+      return sortDirection === "asc"
+        ? aValue.toString().localeCompare(bValue.toString())
+        : bValue.toString().localeCompare(aValue.toString());
+    });
+
+    return result;
+  }, [candidates, filters, sortField, sortDirection]);
+
   // Close candidate modal if email modal opens to avoid stacking/overlay issues
   useEffect(() => {
     if (isEmailModalOpen) {
@@ -93,7 +178,7 @@ export default function HRApplicants({
   const { handleStatusChange } = useStatusChange({
     candidates,
     setCandidates,
-    setFilteredCandidates,
+    setFilteredCandidates: setCandidates, // Use setCandidates since filtering is now memoized
     setSelectedCandidate,
     setEmailData,
     setIsEmailModalOpen,
@@ -139,30 +224,28 @@ export default function HRApplicants({
     }
   };
 
-  const handleCandidateUpdate = (updatedCandidate) => {
+  const handleCandidateUpdate = useCallback((updatedCandidate) => {
     // Update the candidate in the candidates list
     const updatedCandidates = candidates.map((c) =>
       c.id === updatedCandidate.id ? updatedCandidate : c
     );
     setCandidates(updatedCandidates);
-    setFilteredCandidates(updatedCandidates);
 
     // Update the selected candidate in the modal
     setSelectedCandidate(updatedCandidate);
-  };
+  }, [candidates]);
 
-  const handleCandidateAdded = (newCandidate) => {
+  const handleCandidateAdded = useCallback((newCandidate) => {
     // Add the new candidate to the beginning of the list
     const updatedCandidates = [newCandidate, ...candidates];
     setCandidates(updatedCandidates);
-    setFilteredCandidates(updatedCandidates);
     
     // Close the add candidate modal
     setIsAddCandidateModalOpen(false);
     
     // Show success message
     toast.success(`Candidate ${newCandidate.primaryContactName} added successfully!`);
-  };
+  }, [candidates]);
 
   const handleCloseModal = () => {
     // Close modal first, then clear candidate data to prevent null processing
@@ -209,92 +292,23 @@ export default function HRApplicants({
     setPreviewUrl(null);
   };
 
-  const handleFilterChange = ({
+  const handleFilterChange = useCallback(({
     searchQuery,
     filterOpening,
     filterStatus,
     filterTier,
     filterCountry,
   }) => {
-    let result = [...candidates];
-
-    if (searchQuery) {
-      result = result.filter(
-        (c) =>
-          (c.primaryContactName || "")
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          (c.primaryContactEmail || "")
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase()) ||
-          (c.reference_number || "")
-            .toLowerCase()
-            .includes(searchQuery.toLowerCase())
-      );
-    }
-    if (filterOpening !== "all") {
-      result = result.filter((c) => c.opening === filterOpening);
-      console.log("After opening filter:", result);
-    }
-    if (filterStatus !== "all") {
-      result = result.filter((c) => (c.status || "Pending") === filterStatus);
-      console.log("After status filter:", result);
-    }
-    if (filterTier !== "all") {
-      result = result.filter((c) => {
-        if (!c.selected_tier) return false;
-        // Normalize for possible 'Tier 1 - Requirement: ...' values
-        const tierValue = c.selected_tier.split(" - ")[0].trim();
-        return tierValue === filterTier;
-      });
-      console.log("After tier filter:", result);
-    }
-
-    // Always filter out Admin tier candidates from the table
-    result = result.filter((c) => {
-      if (!c.selected_tier) return true;
-      const tierValue = c.selected_tier.split(" - ")[0].trim();
-      return tierValue !== "Admin";
-    });
-    if (filterCountry !== "all") {
-      result = result.filter((c) => {
-        // For agencies, check headquartersLocation; for freelancers, check countryOfResidence
-        const countryValue = c.job_type === "agency" 
-          ? c.headquartersLocation 
-          : c.countryOfResidence;
-        return countryValue === filterCountry;
-      });
-      console.log("After country filter:", result);
-    }
-
-    // Apply current sort to the filtered data
-    const sortedResult = [...result].sort((a, b) => {
-      let aValue = a[sortField] || "";
-      let bValue = b[sortField] || "";
-
-      if (sortField === "selected_tier") {
-        aValue = a.selected_tier
-          ? a.selected_tier.split(" - ")[0].trim().toLowerCase()
-          : "";
-        bValue = b.selected_tier
-          ? b.selected_tier.split(" - ")[0].trim().toLowerCase()
-          : "";
-      } else if (sortField === "submitted_at") {
-        aValue = new Date(a.submitted_at || a.created_at || 0);
-        bValue = new Date(b.submitted_at || b.created_at || 0);
-      }
-
-      if (sortField === "submitted_at") {
-        return sortDirection === "asc" ? aValue - bValue : bValue - aValue;
-      }
-
-      return sortDirection === "asc"
-        ? aValue.toString().localeCompare(bValue.toString())
-        : bValue.toString().localeCompare(aValue.toString());
+    // Update filters state - useMemo will handle the actual filtering
+    setFilters({
+      searchQuery: searchQuery || "",
+      filterOpening: filterOpening || "all",
+      filterStatus: filterStatus || "all",
+      filterTier: filterTier || "all",
+      filterCountry: filterCountry || "all",
     });
 
-    setFilteredCandidates(sortedResult);
-
+    // Update localStorage and URL
     const currentOpening = localStorage.getItem("filterOpening") || "all";
     const currentStatus = localStorage.getItem("filterStatus") || "all";
     const currentTier = localStorage.getItem("filterTier") || "all";
@@ -324,33 +338,16 @@ export default function HRApplicants({
         }
       }
     }
-  };
+  }, [router]);
 
-  const handleSort = (field) => {
+  const handleSort = useCallback((field) => {
     const newDirection =
       sortField === field && sortDirection === "asc" ? "desc" : "asc";
     setSortField(field);
     setSortDirection(newDirection);
+  }, [sortField, sortDirection]);
 
-    const sorted = [...filteredCandidates].sort((a, b) => {
-      let aValue = a[field] || "";
-      let bValue = b[field] || "";
-      if (field === "tier") {
-        aValue = a.selected_tier
-          ? a.selected_tier.split(" - ")[0].trim().toLowerCase()
-          : "";
-        bValue = b.selected_tier
-          ? b.selected_tier.split(" - ")[0].trim().toLowerCase()
-          : "";
-      }
-      return newDirection === "asc"
-        ? aValue.toString().localeCompare(bValue.toString())
-        : bValue.toString().localeCompare(aValue.toString());
-    });
-    setFilteredCandidates(sorted);
-  };
-
-  const handleSortChange = useCallback((sortValue, dataToSort = null) => {
+  const handleSortChange = useCallback((sortValue) => {
     let field, direction;
 
     switch (sortValue) {
@@ -389,37 +386,9 @@ export default function HRApplicants({
 
     setSortField(field);
     setSortDirection(direction);
+  }, []);
 
-    const dataToSortArray = dataToSort || filteredCandidates;
-    const sorted = [...dataToSortArray].sort((a, b) => {
-      let aValue = a[field] || "";
-      let bValue = b[field] || "";
-
-      if (field === "selected_tier") {
-        aValue = a.selected_tier
-          ? a.selected_tier.split(" - ")[0].trim().toLowerCase()
-          : "";
-        bValue = b.selected_tier
-          ? b.selected_tier.split(" - ")[0].trim().toLowerCase()
-          : "";
-      } else if (field === "submitted_at") {
-        aValue = new Date(a.submitted_at || a.created_at || 0);
-        bValue = new Date(b.submitted_at || b.created_at || 0);
-      }
-
-      if (field === "submitted_at") {
-        return direction === "asc" ? aValue - bValue : bValue - aValue;
-      }
-
-      return direction === "asc"
-        ? aValue.toString().localeCompare(bValue.toString())
-        : bValue.toString().localeCompare(aValue.toString());
-    });
-
-    setFilteredCandidates(sorted);
-  }, [filteredCandidates]);
-
-  const handlePageChange = async (newPage) => {
+  const handlePageChange = useCallback(async (newPage) => {
     if (newPage === currentPage || isLoading) return;
 
     setIsLoading(true);
@@ -431,7 +400,6 @@ export default function HRApplicants({
 
       const data = await response.json();
       setCandidates(data.candidates);
-      setFilteredCandidates(data.candidates);
       setCurrentPage(newPage);
 
       // Update URL without page reload
@@ -444,7 +412,7 @@ export default function HRApplicants({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentPage, isLoading, pagination?.limit, router]);
 
   // Apply initial sorting and filtering when component mounts
   useEffect(() => {
@@ -455,20 +423,21 @@ export default function HRApplicants({
     const { opening } = router.query;
     const savedOpening = localStorage.getItem("filterOpening") || "all";
     const savedStatus = localStorage.getItem("filterStatus") || "all";
+    const savedTier = localStorage.getItem("filterTier") || "all";
+    const savedCountry = localStorage.getItem("filterCountry") || "all";
     const savedSort = localStorage.getItem("sortBy") || "latest";
 
-    let initialFilter = [...candidates];
-    if (opening && initialFilter.some((c) => c.opening === opening)) {
-      initialFilter = initialFilter.filter((c) => c.opening === opening);
-    } else if (savedOpening !== "all") {
-      initialFilter = initialFilter.filter((c) => c.opening === savedOpening);
-    }
-    if (savedStatus !== "all") {
-      initialFilter = initialFilter.filter((c) => c.status === savedStatus);
-    }
+    // Set initial filters
+    setFilters({
+      searchQuery: "",
+      filterOpening: opening || savedOpening,
+      filterStatus: savedStatus,
+      filterTier: savedTier,
+      filterCountry: savedCountry,
+    });
 
-    // Apply initial sorting to the filtered data
-    handleSortChange(savedSort, initialFilter);
+    // Apply initial sorting
+    handleSortChange(savedSort);
     hasAppliedInitialSort.current = true;
   }, [router, candidates, handleSortChange]);
 
@@ -577,7 +546,6 @@ export default function HRApplicants({
         (c) => c.id !== candidateToDelete
       );
       setCandidates(updatedCandidates);
-      setFilteredCandidates(updatedCandidates);
       toast.success("Candidate deleted successfully!", {
         id: loadingToast,
         icon: "✅",
@@ -714,7 +682,6 @@ export default function HRApplicants({
         (c) => !selectedIds.includes(c.id)
       );
       setCandidates(updatedCandidates);
-      setFilteredCandidates(updatedCandidates);
       setSelectedIds([]);
       toast.success(
         `${selectedIds.length} candidate(s) and associated files deleted successfully!`,
@@ -807,19 +774,25 @@ export default function HRApplicants({
               mode={mode}
               initialOpening={router.query.opening || "all"}
             />
-            <ApplicantsTable
-              candidates={filteredCandidates}
-              mode={mode}
-              onViewCandidate={handleViewCandidate}
-              onDeleteCandidate={handleDeleteCandidate}
-              onSort={handleSort}
-              sortField={sortField}
-              sortDirection={sortDirection}
-              selectedIds={selectedIds}
-              setSelectedIds={setSelectedIds}
-              handleBulkDelete={handleBulkDelete}
-              setIsExportModalOpen={setIsExportModalOpen}
-            />
+            
+            {isLoading ? (
+              <ApplicantsSkeleton mode={mode} rows={10} />
+            ) : (
+              <ApplicantsTable
+                candidates={filteredCandidates}
+                mode={mode}
+                onViewCandidate={handleViewCandidate}
+                onDeleteCandidate={handleDeleteCandidate}
+                onSort={handleSort}
+                sortField={sortField}
+                sortDirection={sortDirection}
+                selectedIds={selectedIds}
+                setSelectedIds={setSelectedIds}
+                handleBulkDelete={handleBulkDelete}
+                setIsExportModalOpen={setIsExportModalOpen}
+                loading={isLoading}
+              />
+            )}
 
             {/* Pagination Controls */}
             {pagination && pagination.totalPages > 1 && (

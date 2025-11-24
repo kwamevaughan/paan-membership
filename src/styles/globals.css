@@ -359,7 +359,7 @@ body.sidebar-hidden .content-container {
 }
 
 .prose img {
-    @apply rounded-xl shadow-lg my-8;
+    @apply block max-w-full h-auto rounded-xl shadow-lg my-8;
 }
 
 .prose blockquote {

@@ -205,7 +205,7 @@ export default function BlogPreview() {
                     prose-p:text-gray-600 prose-p:leading-relaxed prose-p:mb-6
                     prose-a:text-red-500 prose-a:no-underline hover:prose-a:underline
                     prose-strong:text-[#172840] prose-strong:font-semibold
-                    prose-img:rounded-xl prose-img:shadow-lg prose-img:my-8
+                    prose-img:block prose-img:max-w-full prose-img:h-auto prose-img:rounded-xl prose-img:shadow-lg prose-img:my-8
                     prose-blockquote:border-l-4 prose-blockquote:border-red-500 prose-blockquote:pl-4 prose-blockquote:italic
                     prose-ul:list-disc prose-ul:pl-6 prose-ul:my-6
                     prose-ol:list-decimal prose-ol:pl-6 prose-ol:my-6

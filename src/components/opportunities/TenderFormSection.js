@@ -52,7 +52,6 @@ export default function TenderFormSection({
     "Technical Assistance",
     "Social Media",
     "E-learning Course Development",
-    "Digital Marketing",
     "Media Monitoring Services",
     "Copywriting and Editing",
     "Consultancy Engagement",

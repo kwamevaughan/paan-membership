@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import FileUpload from "@/components/common/FileUpload";
 import * as XLSX from 'xlsx';
 import Select from "react-select";
@@ -20,6 +20,19 @@ export default function TenderFormSection({
   const [parsedTenders, setParsedTenders] = useState([]);
   const [parsingError, setParsingError] = useState("");
   const [isDragOver, setIsDragOver] = useState(false);
+
+  // Auto-select a random tier when component mounts or when tiers change
+  useEffect(() => {
+    if (tiers && tiers.length > 0 && !formData.tier_restriction) {
+      const randomTier = tiers[Math.floor(Math.random() * tiers.length)];
+      handleInputChange({
+        target: {
+          name: "tier_restriction",
+          value: randomTier
+        }
+      });
+    }
+  }, [tiers, formData.tier_restriction, handleInputChange]);
 
   const tenderCategories = [
     "Advertising and Market Research",

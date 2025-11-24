@@ -4,6 +4,7 @@ import FileUpload from "@/components/common/FileUpload";
 import * as XLSX from 'xlsx';
 import Select from "react-select";
 import { useCountry } from "@/hooks/useCountry";
+import { getRandomTier } from "@/constants/membershipTiers";
 
 export default function TenderFormSection({
   formData,
@@ -28,7 +29,16 @@ export default function TenderFormSection({
     const tierWasCleared = previousTierRef.current && !formData.tier_restriction;
     
     if (tiers && tiers.length > 0 && (!formData.tier_restriction || tierWasCleared)) {
-      const randomTier = tiers[Math.floor(Math.random() * tiers.length)];
+      // Use the centralized helper to get a random tier
+      // If form was reset, exclude the previous tier to ensure variety
+      const randomTier = tierWasCleared 
+        ? getRandomTier(previousTierRef.current)
+        : getRandomTier();
+      
+      console.log('[TenderFormSection] Available tiers:', tiers);
+      console.log('[TenderFormSection] Previous tier:', previousTierRef.current);
+      console.log('[TenderFormSection] Selected random tier:', randomTier);
+      
       handleInputChange({
         target: {
           name: "tier_restriction",

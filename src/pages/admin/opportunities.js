@@ -21,6 +21,7 @@ import { Icon } from "@iconify/react";
 import PageHeader from "@/components/common/PageHeader";
 import OpportunityFilters from "@/components/filters/OpportunityFilters";
 import BaseFilters from "@/components/filters/BaseFilters";
+import { MEMBERSHIP_TIERS } from "@/constants/membershipTiers";
 
 export default function AdminBusinessOpportunities({
   mode = "light",
@@ -362,9 +363,8 @@ export default function AdminBusinessOpportunities({
     const jobTypes = [
       ...new Set(opportunities.map((opp) => opp.job_type)),
     ].filter(Boolean);
-    const tiers = [
-      ...new Set(opportunities.map((opp) => opp.tier_restriction)),
-    ].filter(Boolean);
+    // Use centralized membership tiers constant
+    const tiers = MEMBERSHIP_TIERS;
     const tenderTypes = ["Regular", "Tender"]; // Static options for tender type
 
     return {

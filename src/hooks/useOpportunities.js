@@ -379,7 +379,9 @@ export const useOpportunities = () => {
     }
   };
 
-  const resetForm = () => {
+  const resetForm = (preserveOpportunityType = false) => {
+    const currentIsTender = preserveOpportunityType ? formData.is_tender : false;
+    
     setFormData({
       organization_name: "",
       gig_title: "",
@@ -401,7 +403,7 @@ export const useOpportunities = () => {
       attachment_name: "",
       attachment_type: "",
       attachment_size: null,
-      is_tender: false,
+      is_tender: currentIsTender,
       tender_organization: "",
       tender_category: "",
       tender_issued: "",

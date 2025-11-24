@@ -828,7 +828,7 @@ export default function AdminBusinessOpportunities({
                   
                   // If stayOnPage is true, reset the form but keep modal open
                   if (stayOnPage && !isEditing) {
-                    resetForm();
+                    resetForm(true); // Pass true to preserve opportunity type
                     toast.success("Opportunity added! Form has been reset.");
                   } else {
                     // Otherwise, close the modal as usual

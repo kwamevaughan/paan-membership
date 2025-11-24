@@ -818,14 +818,22 @@ export default function AdminBusinessOpportunities({
               <OpportunityForm
                 formData={formData}
                 handleInputChange={handleInputChange}
-                submitForm={async (e) => {
+                submitForm={async (e, stayOnPage = false) => {
                   e.preventDefault();
                   let loadingToastId = toast.loading("Please wait...");
                   await handleSubmit(e, editingId);
                   if (loadingToastId) {
                     toast.dismiss(loadingToastId);
                   }
-                  modalActions.closeModal();
+                  
+                  // If stayOnPage is true, reset the form but keep modal open
+                  if (stayOnPage && !isEditing) {
+                    resetForm();
+                    toast.success("Opportunity added! Form has been reset.");
+                  } else {
+                    // Otherwise, close the modal as usual
+                    modalActions.closeModal();
+                  }
                 }}
                 cancelForm={modalActions.closeModal}
                 isEditing={isEditing}

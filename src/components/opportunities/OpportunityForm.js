@@ -27,6 +27,7 @@ export default function OpportunityForm({
   const [memberCount, setMemberCount] = useState(0);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isTender, setIsTender] = useState(formData.is_tender || false);
+  const [stayOnPage, setStayOnPage] = useState(false);
 
   useEffect(() => {
     async function fetchProjectTypes() {
@@ -209,8 +210,8 @@ export default function OpportunityForm({
       });
     }
 
-    // Submit the form
-    submitForm(e);
+    // Submit the form and pass stayOnPage flag
+    await submitForm(e, stayOnPage);
   };
 
   return (
@@ -306,6 +307,8 @@ export default function OpportunityForm({
           isEditing={isEditing}
           isFreelancer={isFreelancer}
           buttonText={modalButtonText}
+          stayOnPage={stayOnPage}
+          setStayOnPage={setStayOnPage}
         />
       </form>
 

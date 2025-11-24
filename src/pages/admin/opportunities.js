@@ -363,8 +363,11 @@ export default function AdminBusinessOpportunities({
     const jobTypes = [
       ...new Set(opportunities.map((opp) => opp.job_type)),
     ].filter(Boolean);
-    // Use centralized membership tiers constant
-    const tiers = MEMBERSHIP_TIERS;
+    // Extract tiers from existing opportunities, fallback to predefined tiers if none exist
+    const dynamicTiers = [
+      ...new Set(opportunities.map((opp) => opp.tier_restriction)),
+    ].filter(Boolean);
+    const tiers = dynamicTiers.length > 0 ? dynamicTiers : MEMBERSHIP_TIERS;
     const tenderTypes = ["Regular", "Tender"]; // Static options for tender type
 
     return {

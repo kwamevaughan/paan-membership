@@ -563,15 +563,44 @@ const TipTapEditor = memo(({
         throw new Error("No image URL received from server");
       }
 
-      // Insert the image into the editor
-      editor.chain().focus().setImage({ 
-        src: data.url,
-        alt: data.name || 'Image'
-      }).run();
+      // Load image to get dimensions before inserting
+      const img = new Image();
+      img.onload = () => {
+        // Constrain image to max editor width (800px) while maintaining aspect ratio
+        const maxWidth = 800;
+        let width = img.naturalWidth;
+        let height = img.naturalHeight;
+        
+        if (width > maxWidth) {
+          const ratio = maxWidth / width;
+          width = maxWidth;
+          height = Math.round(height * ratio);
+        }
+        
+        // Insert the image into the editor with constrained dimensions
+        editor.chain().focus().setImage({ 
+          src: data.url,
+          alt: data.name || 'Image',
+          width: width,
+          height: height
+        }).run();
 
-      toast.success("Image uploaded successfully", {
-        id: loadingToast,
-      });
+        toast.success("Image uploaded successfully", {
+          id: loadingToast,
+        });
+      };
+      img.onerror = () => {
+        // If image fails to load, insert without dimensions
+        editor.chain().focus().setImage({ 
+          src: data.url,
+          alt: data.name || 'Image'
+        }).run();
+
+        toast.success("Image uploaded successfully", {
+          id: loadingToast,
+        });
+      };
+      img.src = data.url;
     } catch (error) {
       console.error("Error uploading image:", error);
       toast.error(`Failed to upload image: ${error.message}`, {
@@ -1130,11 +1159,37 @@ const TipTapEditor = memo(({
           uploading={uploadingImage}
           onSelect={(selectedImage) => {
             if (editor) {
-              editor.chain().focus().setImage({ 
-                src: selectedImage.url,
-                alt: selectedImage.name || 'Image'
-              }).run();
-              setShowImageLibrary(false);
+              // Load image to get dimensions before inserting
+              const img = new Image();
+              img.onload = () => {
+                // Constrain image to max editor width (800px) while maintaining aspect ratio
+                const maxWidth = 800;
+                let width = img.naturalWidth;
+                let height = img.naturalHeight;
+                
+                if (width > maxWidth) {
+                  const ratio = maxWidth / width;
+                  width = maxWidth;
+                  height = Math.round(height * ratio);
+                }
+                
+                editor.chain().focus().setImage({ 
+                  src: selectedImage.url,
+                  alt: selectedImage.name || 'Image',
+                  width: width,
+                  height: height
+                }).run();
+                setShowImageLibrary(false);
+              };
+              img.onerror = () => {
+                // If image fails to load, insert without dimensions
+                editor.chain().focus().setImage({ 
+                  src: selectedImage.url,
+                  alt: selectedImage.name || 'Image'
+                }).run();
+                setShowImageLibrary(false);
+              };
+              img.src = selectedImage.url;
             }
           }}
         />,
@@ -1263,11 +1318,37 @@ function EditorComponent({
           uploading={uploadingImage}
           onSelect={(selectedImage) => {
             if (editorRef.current) {
-              editorRef.current.chain().focus().setImage({ 
-                src: selectedImage.url,
-                alt: selectedImage.name || 'Image'
-              }).run();
-              setShowImageLibrary(false);
+              // Load image to get dimensions before inserting
+              const img = new Image();
+              img.onload = () => {
+                // Constrain image to max editor width (800px) while maintaining aspect ratio
+                const maxWidth = 800;
+                let width = img.naturalWidth;
+                let height = img.naturalHeight;
+                
+                if (width > maxWidth) {
+                  const ratio = maxWidth / width;
+                  width = maxWidth;
+                  height = Math.round(height * ratio);
+                }
+                
+                editorRef.current.chain().focus().setImage({ 
+                  src: selectedImage.url,
+                  alt: selectedImage.name || 'Image',
+                  width: width,
+                  height: height
+                }).run();
+                setShowImageLibrary(false);
+              };
+              img.onerror = () => {
+                // If image fails to load, insert without dimensions
+                editorRef.current.chain().focus().setImage({ 
+                  src: selectedImage.url,
+                  alt: selectedImage.name || 'Image'
+                }).run();
+                setShowImageLibrary(false);
+              };
+              img.src = selectedImage.url;
             }
           }}
         />,

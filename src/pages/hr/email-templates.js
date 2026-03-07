@@ -331,10 +331,6 @@ export async function getServerSideProps({ req, res }) {
       .select("id")
       .eq("id", session.user.id)
       .single();
-    console.log("[EmailTemplates] HR User Check:", {
-      hrUser,
-      hrUserError: hrUserError ? hrUserError.message : null,
-    });
 
     if (hrUserError || !hrUser) {
       console.error(

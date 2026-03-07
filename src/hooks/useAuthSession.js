@@ -9,16 +9,10 @@ export default function useAuthSession() {
 
   useEffect(() => {
     const checkSession = async () => {
-      console.log(
-        "[useAuthSession] Checking session at",
-        new Date().toISOString()
-      );
       const session = await getSessionCached();
       const sessionError = null;
-      console.log("[useAuthSession] Session:", { session, sessionError });
 
       if (sessionError || !session) {
-        console.log("[useAuthSession] No session found, redirecting to login");
         router.push("/hr/login");
         return;
       }
@@ -28,10 +22,8 @@ export default function useAuthSession() {
         .select("id")
         .eq("id", session.user.id)
         .single();
-      console.log("[useAuthSession] HR User:", { hrUser, hrUserError });
 
       if (hrUserError || !hrUser) {
-        console.log("[useAuthSession] No HR user found, signing out");
         await supabase.auth.signOut();
         router.push("/hr/login");
       }
@@ -41,7 +33,6 @@ export default function useAuthSession() {
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (event, session) => {
-        // console.log("[useAuthSession] Auth State Change:", { event, session });
         if (event === "SIGNED_OUT" || !session) {
           router.push("/hr/login");
         }

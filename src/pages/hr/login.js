@@ -89,16 +89,7 @@ export default function HRLogin() {
         password,
       });
 
-      console.log("[HRLogin] Auth response:", {
-        user: user ? { id: user.id, email: user.email } : null,
-        session: session
-          ? { access_token: session.access_token.slice(0, 10) + "..." }
-          : null,
-        authError: authError ? authError.message : null,
-      });
-
       if (authError) {
-        console.error("[HRLogin] Supabase auth error:", authError);
         
         // Handle rate limiting specifically
         if (authError.status === 429) {
@@ -136,26 +127,18 @@ export default function HRLogin() {
       }
 
       const cookies = getBrowserCookies();
-      console.log("[HRLogin] Browser cookies after login:", cookies);
       
       // Reset attempt counter on successful login
       loginAttempts.current = 0;
       setIsLoading(false);
 
-      console.log("[HRLogin] Checking hr_users for user ID:", user.id);
       const { data: hrUser, error: hrError } = await supabase
         .from("hr_users")
         .select("id, role")
         .eq("id", user.id)
         .single();
 
-      console.log("[HRLogin] HR User check:", {
-        hrUser,
-        hrError: hrError ? hrError.message : null,
-      });
-
       if (hrError || !hrUser) {
-        console.log("[HRLogin] User not found in hr_users - access denied");
         toast.error("Access denied. You don't have admin privileges.", { 
           icon: "🚫",
           duration: 5000 
@@ -166,7 +149,6 @@ export default function HRLogin() {
 
       // Check if user has admin role
       if (hrUser.role !== 'admin') {
-        console.log("[HRLogin] User does not have admin role - access denied");
         toast.error("Access denied. Admin privileges required.", { 
           icon: "🚫",
           duration: 5000 

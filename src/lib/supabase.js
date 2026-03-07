@@ -18,9 +18,4 @@ const supabaseAdmin = typeof window === 'undefined' && process.env.SUPABASE_SERV
     )
   : null;
 
-console.log(
-  "[supabase] Client initialized with cookie name:",
-  "sb-" + process.env.NEXT_PUBLIC_SUPABASE_PROJECT_ID + "-auth-token"
-);
-
 export { supabase, supabaseAdmin };

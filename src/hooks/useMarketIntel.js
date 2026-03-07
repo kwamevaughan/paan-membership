@@ -51,10 +51,7 @@ export function useMarketIntel(candidatesMap = {}) {
         .eq("id", user.id)
         .single();
 
-      console.log("[useMarketIntel] HR user check:", { hrUser, hrError });
-
       if (hrError) {
-        console.error("[useMarketIntel] HR user check error:", hrError);
         toast.error("Error checking HR user status");
         return;
       }

@@ -5,6 +5,11 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  const providedSecret = req.headers['x-cron-secret'];
+  if (!process.env.CRON_SECRET || providedSecret !== process.env.CRON_SECRET) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
   try {
     console.log('[send-missing-welcome-emails] Starting bulk email processing...');
     

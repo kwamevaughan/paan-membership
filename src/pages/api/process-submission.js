@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
 import { uploadFileToDrive } from "../../../utils/driveUtils";
 import { sendEmails } from "../../../utils/emailUtils";
+import { notifyNewRegistrationSlack } from "../../../utils/slackUtils";
 import { upsertCandidate, upsertResponse } from "../../../utils/dbUtils";
 import { format } from "date-fns";
 
@@ -349,6 +350,16 @@ export default async function handler(req, res) {
       ]);
       throw new Error("Failed to update response");
     }
+
+    await notifyNewRegistrationSlack({
+      primaryContactName,
+      agencyName,
+      primaryContactEmail,
+      job_type,
+      opening,
+      selectedTier: normalizedTier,
+      referenceNumber,
+    });
 
     const templateNames =
       job_type === "freelancer"

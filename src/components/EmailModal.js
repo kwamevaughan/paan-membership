@@ -242,7 +242,6 @@ export default function EmailModal({
                   onChange={(newContent) => setBody(newContent)}
                   onBlur={(newContent) => setBody(newContent)}
                   mode={mode}
-                  holderId="jodit-editor-email-modal"
                   height=""
                   className="w-full h-full"
                 />

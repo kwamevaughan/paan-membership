@@ -425,7 +425,6 @@ export default function EditJobModal({
               setEditJob((prev) => ({ ...prev, description: newContent }))
             }
             mode={mode}
-            holderId="jodit-editor-edit-modal"
             className="w-full rounded-lg shadow-inner transition-shadow duration-200 hover:shadow-md"
           />
         </div>

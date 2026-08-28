@@ -391,7 +391,6 @@ export default function JobForm({ mode, onJobAdded }) {
                   initialValue={description}
                   onBlur={(newContent) => setDescription(newContent)}
                   mode={mode}
-                  holderId="jodit-editor-job-form"
                   className="w-full"
                 />
               </div>

@@ -27,7 +27,6 @@ export default function QuestionTextEditor({
           defaultView="rich"
           onBlur={handleTextBlur}
           mode={mode}
-          holderId="jodit-editor-question-form"
           className="w-full"
           id="question-text"
         />
@@ -46,8 +45,6 @@ export default function QuestionTextEditor({
           defaultView="rich"
           onBlur={handleDescriptionBlur}
           mode={mode}
-          holderId="jodit-editor-description-form"
-          className="w-full"
           id="question-description"
         />
       </div>

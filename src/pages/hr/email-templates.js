@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import toast from "react-hot-toast";
 import HRSidebar from "@/layouts/hrSidebar";
 import HRHeader from "@/layouts/hrHeader";
@@ -9,7 +9,6 @@ import EmailTemplateEditor from "@/components/EmailTemplateEditor";
 import ImageLibrary from "@/components/common/ImageLibrary";
 import EmailPreviewModal from "@/components/EmailPreviewModal";
 import { useEmailTemplates } from "@/hooks/useEmailTemplates";
-import { getJoditConfig } from "@/config/getJoditConfig";
 import useAuthSession from "@/hooks/useAuthSession";
 import useLogout from "@/hooks/useLogout";
 import { createSupabaseServerClient } from "@/lib/supabaseServer";
@@ -29,12 +28,10 @@ export default function EmailTemplates({
     useSidebar();
   const handleLogout = useLogout();
   useAuthSession();
-  const editorRef = useRef(null);
   const [currentEditor, setCurrentEditor] = useState(null);
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [galleryImages, setGalleryImages] = useState([]);
   const [isLoadingImages, setIsLoadingImages] = useState(false);
-  const [editorConfig, setEditorConfig] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
@@ -54,21 +51,6 @@ export default function EmailTemplates({
       handleSelectTemplate(templates[0]);
     }
   }, [templates, selectedTemplate, handleSelectTemplate]);
-
-  useEffect(() => {
-    setEditorConfig(
-      getJoditConfig(
-        mode,
-        handleImageUpload,
-        (editor) => {
-          setCurrentEditor(editor);
-          fetchGalleryImages();
-          setIsGalleryOpen(true);
-        },
-        setCurrentEditor
-      )
-    );
-  }, [mode, handleImageUpload]);
 
   const fetchGalleryImages = async () => {
     setIsLoadingImages(true);
@@ -261,9 +243,6 @@ export default function EmailTemplates({
                   setSubject={setSubject}
                   body={body}
                   setBody={setBody}
-                  editorLoaded={!!editorConfig}
-                  editorConfig={editorConfig}
-                  editorRef={editorRef}
                   onSave={handleSaveTemplate}
                   onPreview={handlePreviewTemplate}
                   isUploading={isUploading}

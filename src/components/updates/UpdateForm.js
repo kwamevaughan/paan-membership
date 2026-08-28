@@ -175,7 +175,6 @@ export default function UpdatesForm({
                 initialValue={formData.description}
                 onBlur={handleEditorChange}
                 mode={mode}
-                holderId="jodit-editor-updates-form"
                 className="w-full"
                 height="300"
               />
